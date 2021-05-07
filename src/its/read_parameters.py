@@ -64,6 +64,9 @@ class read_parameters:
             elif i_parameter.split()[0].upper() == 'ITS_delta_pk'.upper():
                 self.its_parameters['its_delta_pk'] = float(i_parameter.split()[1])
                 
+            elif i_parameter.split()[0].upper() == 'ITS_energy_shift'.upper():
+                self.its_parameters['its_energy_shift'] = float(i_parameter.split()[1])
+                
     def get_its_parameters(self):
         if not 'its_replica_temperature' in self.its_parameters:
             if int(self.its_parameters['its_replica_arrange']) == -1:
@@ -81,12 +84,14 @@ class read_parameters:
                 self.__log_morest.close()
                 raise Exception('No ITS_replica_arrange type was matched.')
             self.its_parameters['its_replica_temperature'] = replica_temperature
+        
+        self.its_parameters['its_replica_beta'] = 1/(self.its_parameters['its_replica_temperature'] *\
+                                                    scipy.constants.value('Boltzmann constant in eV/K'))
             
         if not 'its_initial_nk' in self.its_parameters:
-            self.its_parameters['its_initial_nk'] = np.exp(1/(self.its_parameters['its_replica_temperature'] *\
-                                                    scipy.constants.value('Boltzmann constant in eV/K')))
+            self.its_parameters['its_initial_nk'] = np.exp(-1*self.its_parameters['its_replica_beta'])
             self.its_parameters['its_initial_nk'] = self.its_parameters['its_initial_nk'] /\
-                                                    np.min(self.its_parameters['its_initial_nk'])
+                                                    np.max(self.its_parameters['its_initial_nk'])
             
         if not 'its_pk0' in self.its_parameters:
             self.its_parameters['its_pk0'] = np.ones((self.its_parameters['its_number_of_replica'])) /\
