@@ -89,7 +89,7 @@ class read_parameters:
                                                     scipy.constants.value('Boltzmann constant in eV/K'))
             
         if not 'its_initial_nk' in self.its_parameters:
-            self.its_parameters['its_initial_nk'] = np.exp(-1*self.its_parameters['its_replica_beta'])
+            self.its_parameters['its_initial_nk'] = np.exp(self.its_parameters['its_replica_beta'])
             self.its_parameters['its_initial_nk'] = self.its_parameters['its_initial_nk'] /\
                                                     np.max(self.its_parameters['its_initial_nk'])
             

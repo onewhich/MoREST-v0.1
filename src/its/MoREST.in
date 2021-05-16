@@ -5,6 +5,6 @@ ITS_replica_arrange            0     # -1: arithmetic progression   0:  geometri
 # ITS_replica_temperature        [290, 310, 330, 350, 370]   # specify or default
 # ITS_initial_nk                 [1, 10, 100, 1000, 10000]   # specify or default
 # ITS_pk0                        [1/5, 1/5, 1/5, 1/5, 1/5]   # specify or default
-ITS_trial_MD_steps             2
-ITS_delta_pk                   1e-2
+ITS_trial_MD_steps             100
+ITS_delta_pk                   1e-3
 ITS_energy_shift               0

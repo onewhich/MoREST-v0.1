@@ -12,18 +12,28 @@ class its:
         #self.log_its = open('MoREST_ITS.log','w')
         
         
-    def its_optimization(self, simulation_temperature, potential_energy, current_md_step, md_force):
+    def its_optimization(self, simulation_temperature, potential_energy, current_md_step, md_force, log_morest):
         if current_md_step >= self.its_parameters['its_trial_MD_steps']:
-            print('opting')
+            #print('opting')
             current_md_step = 0
             p_k, n_k = self.__pk_nk()
+            
+            log_morest.write('Current p_k:    ')
+            for i_p in p_k:
+                log_morest.write(str(i_p)+'    ')
+            log_morest.write('\n')
+            log_morest.write('Current n_k:    ')
+            for i_n in n_k:
+                log_morest.write(str(i_n)+'    ')
+            log_morest.write('\n\n')
+            
             new_nk = n_k * self.its_parameters['its_pk0'] / p_k
             np.savetxt('MoREST_ITS_nk.npy',new_nk)
             bias_force = self.__bias_force(simulation_temperature, potential_energy, md_force)
             os.remove('MoREST_ITS_potential_energy.list')
             return bias_force, current_md_step
         else:
-            print('not opting')
+            #print('not opting')
             with open('MoREST_ITS_potential_energy.list','a') as potential_energy_list:
                 potential_energy_list.write(str(potential_energy)+'\n')
             bias_force = self.__bias_force(simulation_temperature, potential_energy, md_force)
@@ -42,7 +52,7 @@ class its:
             return False
         
     def its_sampling(self, simulation_temperature, potential_energy, current_md_step, md_force):
-        print('sampling')
+        #print('sampling')
         bias_force = self.__bias_force(simulation_temperature, potential_energy, md_force)
         return bias_force, current_md_step
             
@@ -76,5 +86,5 @@ class its:
         P_k = np.array(P_k)
         p_k = P_k/np.sum(P_k)
         np.savetxt('MoREST_ITS_pk.npy',p_k)
-        print(p_k)
+        #print(p_k)
         return p_k,n_k
