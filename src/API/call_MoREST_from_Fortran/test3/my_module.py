@@ -14,6 +14,8 @@ for prefix in ('int', 'uint'):
         #print('dtype : ', dtype )
         ctype2dtype[ctype] = np.dtype(dtype)
 
+#ctype2dtype['int'] = np.dtype('int')
+
 # Floating point types
 ctype2dtype['float'] = np.dtype('f4')
 ctype2dtype['double'] = np.dtype('f8')
@@ -35,6 +37,10 @@ def asarray(ffi, ptr, shape, **kwargs):
     return a
 
 @ffi.def_extern()
-def add_one(a_ptr):
-    a = asarray(ffi, a_ptr, shape=(10,))
+def add_one(a_ptr, n_ptr):
+    n_ptr_type = ffi.getctype(ffi.typeof(n_ptr).item)
+    n_atom = np.frombuffer((ffi.buffer(n_ptr, 2*ffi.sizeof(n_ptr_type))),ctype2dtype[n_ptr_type])[1]
+    a = asarray(ffi, a_ptr, shape=(n_atom,3))
+    print(a)
     a[:] += 1
+    print(a)

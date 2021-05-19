@@ -613,6 +613,11 @@ static const char _CFFI_PYTHON_STARTUP_CODE[] = {
 41,10,
 // '\n
 10,
+// "#ctype2dtype['int'] = np.dtype('int')\n
+35,99,116,121,112,101,50,100,116,121,112,101,91,39,105,110,116,39,93,32,61,32,
+110,112,46,100,116,121,112,101,40,39,105,110,116,39,41,10,
+// '\n
+10,
 // '# Floating point types\n
 35,32,70,108,111,97,116,105,110,103,32,112,111,105,110,116,32,116,121,112,101,
 115,10,
@@ -659,27 +664,43 @@ static const char _CFFI_PYTHON_STARTUP_CODE[] = {
 112,101,58,32,37,115,34,32,37,32,84,41,10,
 // '\n
 10,
-// '    a = np.frombuffer(ffi.buffer(ptr, length * ffi.sizeof(T)), ctype2dtype[T])#\\\n
+// '    a = np.frombuffer(ffi.buffer(ptr, length * ffi.sizeof(T)), ctype2dtype[T])\\\n
 32,32,32,32,97,32,61,32,110,112,46,102,114,111,109,98,117,102,102,101,114,40,
 102,102,105,46,98,117,102,102,101,114,40,112,116,114,44,32,108,101,110,103,116,
 104,32,42,32,102,102,105,46,115,105,122,101,111,102,40,84,41,41,44,32,99,116,
-121,112,101,50,100,116,121,112,101,91,84,93,41,35,92,10,
-// '#          .reshape(shape, **kwargs)\n
-35,32,32,32,32,32,32,32,32,32,32,46,114,101,115,104,97,112,101,40,115,104,97,
-112,101,44,32,42,42,107,119,97,114,103,115,41,10,
+121,112,101,50,100,116,121,112,101,91,84,93,41,92,10,
+// '          .reshape(shape, **kwargs)\n
+32,32,32,32,32,32,32,32,32,32,46,114,101,115,104,97,112,101,40,115,104,97,112,
+101,44,32,42,42,107,119,97,114,103,115,41,10,
 // '    return a\n
 32,32,32,32,114,101,116,117,114,110,32,97,10,
 // '\n
 10,
 // '@ffi.def_extern()\n
 64,102,102,105,46,100,101,102,95,101,120,116,101,114,110,40,41,10,
-// 'def add_one(a_ptr):\n
-100,101,102,32,97,100,100,95,111,110,101,40,97,95,112,116,114,41,58,10,
-// '    a = asarray(ffi, a_ptr, shape=(10,))\n
+// 'def add_one(a_ptr, n_ptr):\n
+100,101,102,32,97,100,100,95,111,110,101,40,97,95,112,116,114,44,32,110,95,112,
+116,114,41,58,10,
+// '    n_ptr_type = ffi.getctype(ffi.typeof(n_ptr).item)\n
+32,32,32,32,110,95,112,116,114,95,116,121,112,101,32,61,32,102,102,105,46,103,
+101,116,99,116,121,112,101,40,102,102,105,46,116,121,112,101,111,102,40,110,
+95,112,116,114,41,46,105,116,101,109,41,10,
+// '    n_atom = np.frombuffer((ffi.buffer(n_ptr, 2*ffi.sizeof(n_ptr_type))),ctype2dtype[n_ptr_type])[1]\n
+32,32,32,32,110,95,97,116,111,109,32,61,32,110,112,46,102,114,111,109,98,117,
+102,102,101,114,40,40,102,102,105,46,98,117,102,102,101,114,40,110,95,112,116,
+114,44,32,50,42,102,102,105,46,115,105,122,101,111,102,40,110,95,112,116,114,
+95,116,121,112,101,41,41,41,44,99,116,121,112,101,50,100,116,121,112,101,91,
+110,95,112,116,114,95,116,121,112,101,93,41,91,49,93,10,
+// '    a = asarray(ffi, a_ptr, shape=(n_atom,3))\n
 32,32,32,32,97,32,61,32,97,115,97,114,114,97,121,40,102,102,105,44,32,97,95,
-112,116,114,44,32,115,104,97,112,101,61,40,49,48,44,41,41,10,
+112,116,114,44,32,115,104,97,112,101,61,40,110,95,97,116,111,109,44,51,41,41,
+10,
+// '    print(a)\n
+32,32,32,32,112,114,105,110,116,40,97,41,10,
 // '    a[:] += 1\n
 32,32,32,32,97,91,58,93,32,43,61,32,49,10,
+// '    print(a)\n
+32,32,32,32,112,114,105,110,116,40,97,41,10,
 0 };
 #ifdef PYPY_VERSION
 # define _CFFI_PYTHON_STARTUP_FUNC  _cffi_pypyinit_my_plugin
@@ -1371,27 +1392,30 @@ static int cffi_start_python(void)
 /************************************************************/
 
 static void *_cffi_types[] = {
-/*  0 */ _CFFI_OP(_CFFI_OP_FUNCTION, 5), // void()(double *)
-/*  1 */ _CFFI_OP(_CFFI_OP_POINTER, 3), // double *
-/*  2 */ _CFFI_OP(_CFFI_OP_FUNCTION_END, 0),
-/*  3 */ _CFFI_OP(_CFFI_OP_PRIMITIVE, 14), // double
-/*  4 */ _CFFI_OP(_CFFI_OP_POINTER, 0), // void(*)(double *)
-/*  5 */ _CFFI_OP(_CFFI_OP_PRIMITIVE, 0), // void
+/*  0 */ _CFFI_OP(_CFFI_OP_FUNCTION, 7), // void()(double *, int64_t *)
+/*  1 */ _CFFI_OP(_CFFI_OP_POINTER, 4), // double *
+/*  2 */ _CFFI_OP(_CFFI_OP_POINTER, 5), // int64_t *
+/*  3 */ _CFFI_OP(_CFFI_OP_FUNCTION_END, 0),
+/*  4 */ _CFFI_OP(_CFFI_OP_PRIMITIVE, 14), // double
+/*  5 */ _CFFI_OP(_CFFI_OP_PRIMITIVE, 23), // int64_t
+/*  6 */ _CFFI_OP(_CFFI_OP_POINTER, 0), // void(*)(double *, int64_t *)
+/*  7 */ _CFFI_OP(_CFFI_OP_PRIMITIVE, 0), // void
 };
 
 static struct _cffi_externpy_s _cffi_externpy__add_one =
   { "my_plugin.add_one", 0, 0, 0 };
 
-CFFI_DLLEXPORT void add_one(double * a0)
+CFFI_DLLEXPORT void add_one(double * a0, int64_t * a1)
 {
-  char a[8];
+  char a[16];
   char *p = a;
   *(double * *)(p + 0) = a0;
+  *(int64_t * *)(p + 8) = a1;
   _cffi_call_python(&_cffi_externpy__add_one, p);
 }
 
 static const struct _cffi_global_s _cffi_globals[] = {
-  { "add_one", (void *)&_cffi_externpy__add_one, _CFFI_OP(_CFFI_OP_EXTERN_PYTHON, 4), (void *)add_one },
+  { "add_one", (void *)&_cffi_externpy__add_one, _CFFI_OP(_CFFI_OP_EXTERN_PYTHON, 6), (void *)add_one },
 };
 
 static const struct _cffi_type_context_s _cffi_type_context = {
@@ -1406,7 +1430,7 @@ static const struct _cffi_type_context_s _cffi_type_context = {
   0,  /* num_enums */
   0,  /* num_typenames */
   NULL,  /* no includes */
-  6,  /* num_types */
+  8,  /* num_types */
   1,  /* flags */
 };
 

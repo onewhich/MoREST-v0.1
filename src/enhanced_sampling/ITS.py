@@ -13,7 +13,7 @@ class its:
         
         
     def its_optimization(self, simulation_temperature, potential_energy, current_md_step, md_force, log_morest):
-        if current_md_step >= self.its_parameters['its_trial_MD_steps']:
+        if current_md_step % self.its_parameters['its_trial_MD_steps'] == 0 :
             #print('opting')
             current_md_step = 0
             p_k, n_k = self.__pk_nk()

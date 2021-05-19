@@ -2,7 +2,7 @@ import cffi
 ffibuilder = cffi.FFI()
 
 header = """
-extern void add_one (double *);
+extern void add_one (double *, int64_t *);
 """
 
 with open('my_module.py') as f:
