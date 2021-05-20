@@ -55,10 +55,11 @@ def call_morest_its(ptr_if_initial, ptr_simulation_temperature, ptr_potential_en
     current_md_step = get_value(ffi, ptr_current_md_step)
     md_force = get_md_force(ffi, ptr_md_force, ptr_md_force_shape)
 
-    print(if_initial, simulation_temperature, potential_energy, current_md_step)
-    print(md_force)
+#    print(if_initial, simulation_temperature, potential_energy, current_md_step)
+#    print(md_force)
 
-#    bias_force, current_md_step = MoREST.enhanced_sampling('its', if_initial,\
-#                  simulation_temperature, simulation_maxsteps,\
-#                  time_step, potential_energy, current_md_step, md_force)
-
+    bias_force, current_md_step = MoREST.enhanced_sampling('its', if_initial,\
+                  simulation_temperature, simulation_maxsteps,\
+                  time_step, potential_energy, current_md_step, md_force)
+#    print(current_md_step)
+#    print(bias_force)
