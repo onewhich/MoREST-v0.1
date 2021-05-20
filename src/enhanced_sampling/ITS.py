@@ -13,9 +13,9 @@ class its:
         
         
     def its_optimization(self, simulation_temperature, potential_energy, current_md_step, md_force, log_morest):
-        if current_md_step >= self.its_parameters['its_trial_MD_steps'] :
+        if current_md_step % self.its_parameters['its_trial_MD_steps'] == 0 :
             #print('opting')
-            current_md_step = 0
+            #current_md_step = 0
             p_k, n_k = self.__pk_nk()
             
             log_morest.write('Current p_k:    ')
@@ -31,13 +31,13 @@ class its:
             np.savetxt('MoREST_ITS_nk.npy',new_nk)
             bias_force = self.__bias_force(simulation_temperature, potential_energy, md_force)
             os.remove('MoREST_ITS_potential_energy.list')
-            return bias_force, current_md_step
+            return bias_force#, current_md_step
         else:
             #print('not opting')
             with open('MoREST_ITS_potential_energy.list','a') as potential_energy_list:
                 potential_energy_list.write(str(potential_energy)+'\n')
             bias_force = self.__bias_force(simulation_temperature, potential_energy, md_force)
-            return bias_force, current_md_step
+            return bias_force#, current_md_step
             
        
     def its_if_converge(self):
@@ -51,10 +51,10 @@ class its:
         else:
             return False
         
-    def its_sampling(self, simulation_temperature, potential_energy, current_md_step, md_force):
+    def its_sampling(self, simulation_temperature, potential_energy, md_force):
         #print('sampling')
         bias_force = self.__bias_force(simulation_temperature, potential_energy, md_force)
-        return bias_force, current_md_step
+        return bias_force
             
     def __bias_force(self, simulation_temperature, potential_energy, md_force):
         Epot = potential_energy - self.its_parameters['its_energy_shift']

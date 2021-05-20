@@ -3,6 +3,7 @@ sys.path.append('../../../enhanced_sampling/')
 from api_morest import ffi
 import MoREST
 import numpy as np
+import copy
 
 # Create the dictionary mapping ctypes to np dtypes.
 ctype2dtype = {}
@@ -57,9 +58,20 @@ def call_morest_its(ptr_if_initial, ptr_simulation_temperature, ptr_potential_en
 
 #    print(if_initial, simulation_temperature, potential_energy, current_md_step)
 #    print(md_force)
+#    print(id(current_md_step))
 
-    bias_force, current_md_step = MoREST.enhanced_sampling('its', if_initial,\
+    bias_force = MoREST.enhanced_sampling('its', if_initial,\
                   simulation_temperature, simulation_maxsteps,\
                   time_step, potential_energy, current_md_step, md_force)
+
+#    for i in range(len(bias_force)):
+#        for j in range(len(bias_force[i])):
+#            md_force[i,j] = bias_force[i,j]
+    np.put(md_force, range(len(bias_force.flatten())), bias_force)
+
+#    with open('zz.txt','a') as zz:
+#        zz.write(str(current_md_step)+'\n')
+#    print(id(current_md_step))
 #    print(current_md_step)
-#    print(bias_force)
+
+#    print(md_force)

@@ -15,12 +15,13 @@ program call_morest
   end interface
 
   simulation_temperature = 798
+  current_md_step = 1
   md_force_shape = (/3,4/)
 !  md_force = reshape((/1, 2, 3, 1, 3, 2, 3, 1, 2, 3, 2, 1/), md_force_shape)
 
   call random_seed()
 
-  do i = 1,1000
+  do i = 1,10000
     if (i == 1) then
       if_initial = 1
     else
@@ -29,9 +30,17 @@ program call_morest
 
   call random_number(potential_energy)
   call random_number(md_force)
-  current_md_step = i-1
+
+!  write(*,*) md_force
+!  write(*,*) current_md_step
+
   call call_morest_its(if_initial, simulation_temperature, potential_energy,&
                        current_md_step, md_force, md_force_shape)
+
+!  write(*,*) md_force
+!  write(*,*) current_md_step
+
+  current_md_step = current_md_step + 1
 
   enddo
 

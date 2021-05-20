@@ -21,17 +21,17 @@ program call_python
     enddo
   enddo
 
-  do i=1,3
-    do j=1,n_atom
-      write(*,*) x(i,j)
-    enddo
-  enddo
+!  do i=1,3
+!    do j=1,n_atom
+!      write(*,*) x(i,j)
+!    enddo
+!  enddo
   print *, x
 
   x_shape = shape(x)
   call add_one(x, x_shape)
   print *, x
 
-  print *, x_shape
+!  print *, x_shape
 
 end program call_python

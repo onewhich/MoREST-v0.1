@@ -47,21 +47,27 @@ def enhanced_sampling(enhanced_sampling_method, if_initial,\
             for key in its_para:
                 log_morest.write(key+':    '+str(its_para[key])+'\n')
             log_morest.write('\n')
-            
-            bias_force, current_md_step = ITS.its().its_optimization(simulation_temperature,\
-                                                             potential_energy, current_md_step,\
-                                                             md_force, log_morest)
-            return bias_force, current_md_step
+           
+            bias_force = ITS.its().its_optimization(simulation_temperature,\
+                                                    potential_energy, current_md_step,\
+                                                    md_force, log_morest) 
+#            bias_force, current_md_step = ITS.its().its_optimization(simulation_temperature,\
+#                                                             potential_energy, current_md_step,\
+#                                                             md_force, log_morest)
+            return bias_force#, current_md_step
         else:
             if ITS.its().its_if_converge():
                 bias_force = ITS.its().its_sampling(simulation_temperature,\
-                                                    potential_energy, current_md_step, md_force) 
-                return bias_force, current_md_step
+                                                    potential_energy, md_force) 
+                return bias_force
             else:
-                bias_force, current_md_step = ITS.its().its_optimization(simulation_temperature,\
-                                                           potential_energy, current_md_step,\
-                                                           md_force, log_morest)
-                return bias_force, current_md_step
+                bias_force = ITS.its().its_optimization(simulation_temperature,\
+                                                        potential_energy, current_md_step,\
+                                                        md_force, log_morest)
+#                bias_force, current_md_step = ITS.its().its_optimization(simulation_temperature,\
+#                                                           potential_energy, current_md_step,\
+#                                                           md_force, log_morest)
+                return bias_force#, current_md_step
     else:
         log_morest.write('No enhanced sampling method was matched.\n')
         log_morest.close()
