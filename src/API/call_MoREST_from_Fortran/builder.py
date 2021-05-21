@@ -17,5 +17,5 @@ ffibuilder.set_source("api_morest", r'''
 ''')
 
 ffibuilder.embedding_init_code(module)
-ffibuilder.compile(target="libmorest.so", verbose=True) # for linux
+ffibuilder.compile(target="../../../lib/libmorest.so", verbose=True) # for linux
 
