@@ -20,9 +20,8 @@ for _ in range(1000):
         
     potential_energy = np.random.random_sample()
     md_force = np.random.rand(2,3)
-    current_md_step += 1
     
-    bias_force, current_md_step = MoREST.enhanced_sampling('its', if_initial,\
+    bias_force = MoREST.enhanced_sampling('its', if_initial,\
                   simulation_temperature, simulation_maxsteps,\
                   time_step, potential_energy, current_md_step, md_force)
-    
+    current_md_step += 1

@@ -13,25 +13,27 @@ class its:
         
         
     def its_optimization(self, simulation_temperature, potential_energy, current_md_step, md_force, log_morest):
+        #print(current_md_step)
         if current_md_step % self.its_parameters['its_trial_MD_steps'] == 0 :
-            #print('opting')
-            #current_md_step = 0
-            p_k, n_k = self.__pk_nk()
+            if current_md_step != 0 :
+                #print('opting')
+                #current_md_step = 0
+                p_k, n_k = self.__pk_nk()
             
-            log_morest.write('Current p_k:    ')
-            for i_p in p_k:
-                log_morest.write(str(i_p)+'    ')
-            log_morest.write('\n')
-            log_morest.write('Current n_k:    ')
-            for i_n in n_k:
-                log_morest.write(str(i_n)+'    ')
-            log_morest.write('\n\n')
+                log_morest.write('Current p_k:    ')
+                for i_p in p_k:
+                    log_morest.write(str(i_p)+'    ')
+                log_morest.write('\n')
+                log_morest.write('Current n_k:    ')
+                for i_n in n_k:
+                    log_morest.write(str(i_n)+'    ')
+                log_morest.write('\n\n')
             
-            new_nk = n_k * self.its_parameters['its_pk0'] / p_k
-            np.savetxt('MoREST_ITS_nk.npy',new_nk)
-            bias_force = self.__bias_force(simulation_temperature, potential_energy, md_force)
-            os.remove('MoREST_ITS_potential_energy.list')
-            return bias_force#, current_md_step
+                new_nk = n_k * self.its_parameters['its_pk0'] / p_k
+                np.savetxt('MoREST_ITS_nk.npy',new_nk)
+                bias_force = self.__bias_force(simulation_temperature, potential_energy, md_force)
+                os.remove('MoREST_ITS_potential_energy.list')
+                return bias_force#, current_md_step
         else:
             #print('not opting')
             with open('MoREST_ITS_potential_energy.list','a') as potential_energy_list:
