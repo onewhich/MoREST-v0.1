@@ -29,7 +29,7 @@ def enhanced_sampling(enhanced_sampling_method, if_initial,\
     log_morest = open('MoREST.log','a')
     
     if enhanced_sampling_method in ['ITS','its']:
-        if if_initial:
+        if if_initial or ( if_initial == 1 ):
             if os.path.isfile('MoREST_ITS_pk.npy'):
                 os.remove('MoREST_ITS_pk.npy')
             if os.path.isfile('MoREST_ITS_nk.npy'):
@@ -55,7 +55,7 @@ def enhanced_sampling(enhanced_sampling_method, if_initial,\
 #                                                             potential_energy, current_md_step,\
 #                                                             md_force, log_morest)
             return bias_force#, current_md_step
-        else:
+        elif ( not if_initial ) or ( if_initial == 0 ):
             if ITS.its().its_if_converge():
                 bias_force = ITS.its().its_sampling(simulation_temperature,\
                                                     potential_energy, md_force) 

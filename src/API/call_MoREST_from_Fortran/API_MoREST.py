@@ -1,5 +1,5 @@
 import sys
-sys.path.append('../../enhanced_sampling/')
+sys.path.append('/u/weiqiw/software/molecular-reaction-simulation-toolkit/src/enhanced_sampling')
 from api_morest import ffi
 import MoREST
 import numpy as np

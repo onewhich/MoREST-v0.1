@@ -7,7 +7,8 @@ program call_morest
 
   simulation_temperature = 798
   current_md_step = 1
-  md_force_shape = (/3,4/)
+  allocate(md_force(3,4))
+  md_force_shape = shape(md_force) !(/3,4/)
 !  md_force = reshape((/1, 2, 3, 1, 3, 2, 3, 1, 2, 3, 2, 1/), md_force_shape)
 
   call random_seed()
