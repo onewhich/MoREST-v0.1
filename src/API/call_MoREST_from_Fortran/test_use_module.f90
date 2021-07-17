@@ -26,7 +26,7 @@ program call_morest
 !  write(*,*) md_force
 !  write(*,*) current_md_step
 
-  call call_morest_its(if_initial, simulation_temperature, potential_energy,&
+  call call_morest_its(if_initial, simulation_temperature, potential_energy*1000,&
                        current_md_step, md_force, md_force_shape)
 
 !  write(*,*) md_force

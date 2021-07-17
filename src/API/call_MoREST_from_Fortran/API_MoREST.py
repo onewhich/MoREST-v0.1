@@ -1,8 +1,9 @@
-import sys
-sys.path.append('/u/weiqiw/software/molecular-reaction-simulation-toolkit/src/enhanced_sampling')
+import sys, os
 from api_morest import ffi
-import MoREST
+#sys.path.append(os.path.join(os.path.split(os.path.abspath(__file__))[0],'../../enhanced_sampling/'))
+sys.path.append('../../enhanced_sampling')
 import numpy as np
+import enhanced_sampling
 import copy
 
 # Create the dictionary mapping ctypes to np dtypes.
@@ -60,7 +61,7 @@ def call_morest_its(ptr_if_initial, ptr_simulation_temperature, ptr_potential_en
 #    print(md_force)
 #    print(id(current_md_step))
 
-    bias_force = MoREST.enhanced_sampling('its', if_initial,\
+    bias_force = enhanced_sampling.enhanced_sampling('its', if_initial,\
                   simulation_temperature, simulation_maxsteps,\
                   time_step, potential_energy, current_md_step, md_force)
 

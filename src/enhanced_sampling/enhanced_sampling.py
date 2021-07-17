@@ -1,5 +1,6 @@
-import os
+import sys, os
 import numpy as np
+sys.path.append(os.path.join(os.path.split(os.path.abspath(__file__))[0],'../read_parameters'))
 import read_parameters
 import ITS
 

@@ -1,7 +1,7 @@
-import sys
-sys.path.append('../../enhanced_sampling/')
+import sys, os
+sys.path.append(os.path.join(os.path.split(os.path.abspath(__file__))[0],'../../enhanced_sampling/'))
 import numpy as np
-import MoREST
+import enhanced_sampling
 
 simulation_temperature = 798 # K
 simulation_maxsteps = 10000
@@ -21,7 +21,7 @@ for _ in range(1000):
     potential_energy = np.random.random_sample()
     md_force = np.random.rand(2,3)
     
-    bias_force = MoREST.enhanced_sampling('its', if_initial,\
+    bias_force = enhanced_sampling.enhanced_sampling('its', if_initial,\
                   simulation_temperature, simulation_maxsteps,\
                   time_step, potential_energy, current_md_step, md_force)
     current_md_step += 1
