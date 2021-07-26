@@ -38,8 +38,8 @@ def enhanced_sampling(enhanced_sampling_method, if_initial,\
             if os.path.isfile('MoREST_ITS_potential_energy.list'):
                 os.remove('MoREST_ITS_potential_energy.list')
             #if os.path.isfile('MoREST.log'):
-            log_morest.close()
-            log_morest = open('MoREST.log','w')
+            #log_morest.close()
+            #log_morest = open('MoREST.log','w')
             
             log_morest.write('Start to initialize integrated tempering sampling method.\n\n')
             its_parameters = read_parameters.read_parameters(log_morest,parameter_file).get_its_parameters()
