@@ -19,7 +19,10 @@ class read_parameters:
         log_morest:     log file for MoREST.
         parameter_file: parameter file name. Default name is 'MoREST.parameter' in current directory.
     --------
+    Enhanced sampling parameters are stored in dictionary named 'enhanced_sampling_parameters'.
     ITS parameters are stored in dictionary named 'its_parameters'.
+    Wall potential parameters are stored in dictionary named 'wall_potential_parameters'.
+    Plane wall parameters are stored in dictionary named 'plane_wall_parameters'.
     '''
     
     def __init__(self, log_morest, parameter_file='MoREST.parameter'):
@@ -31,10 +34,27 @@ class read_parameters:
             self.__log_morest.close()
             sys.exit(0)
         
+        self.enhanced_sampling_parameters = {}
         self.its_parameters = {}
+        self.wall_potential_parameters = {}
+        self.plane_wall_parameters = {}
         for i_parameter in self.__parameters:
-            # ITS parameters
-            if i_parameter.split()[0].upper() == 'ITS_lower_bound_temperature'.upper():
+            ########################## Enhanced sampling ##########################
+            if i_parameter.split()[0].upper() == 'Enhanced_sampling'.upper():
+                if i_parameter.split()[1].upper() == 'True'.upper():
+                    self.enhanced_sampling_parameters['enhanced_sampling'] = True
+                elif i_parameter.split()[1].upper() == 'False'.upper():
+                    self.enhanced_sampling_parameters['enhanced_sampling'] = False
+                else:
+                    self.__log_morest.write('It is not clear whether the enhanced sampling will be used.\n')
+                    self.__log_morest.close()
+                    raise Exception('Will you use enhanced sampling or not?')
+                
+            elif i_parameter.split()[0].upper() == 'Enhanced_sampling_method'.upper():
+                self.enhanced_sampling_parameters['enhanced_sampling_method'] = str(i_parameter.split()[1])
+            
+            ########################## ITS parameters    ##########################
+            elif i_parameter.split()[0].upper() == 'ITS_lower_bound_temperature'.upper():
                 self.its_parameters['its_lower_bound_temperature'] = float(i_parameter.split()[1])
                 
             elif i_parameter.split()[0].upper() == 'ITS_upper_bound_temperature'.upper():
@@ -47,16 +67,22 @@ class read_parameters:
                 self.its_parameters['its_replica_arrange'] = float(i_parameter.split()[1])
                 
             elif i_parameter.split()[0].upper() == 'ITS_replica_temperature'.upper():
-                self.its_parameters['its_replica_temperature'] = np.array(i_parameter.split()[1])
-                # TODO: read array labeled by [] including blank space ‘ ’
+                tmp_temperature = []
+                for i in range(self.its_parameters['its_number_of_replica']):
+                    tmp_temperature.append(float(i_parameter.split()[i+1]))
+                self.its_parameters['its_replica_temperature'] = np.array(tmp_temperature)
                 
             elif i_parameter.split()[0].upper() == 'ITS_initial_nk'.upper():
-                self.its_parameters['its_initial_nk'] = np.array(i_parameter.split()[1])
-                # TODO: read array labeled by [] including blank space ‘ ’
+                tmp_nk = []
+                for i in range(self.its_parameters['its_number_of_replica']):
+                    tmp_nk.append(float(i_parameter.split()[i+1]))
+                self.its_parameters['its_initial_nk'] = np.array(tmp_nk)
                 
             elif i_parameter.split()[0].upper() == 'ITS_pk0'.upper():
-                self.its_parameters['its_pk0'] = np.array(i_parameter.split()[1])
-                # TODO: read array labeled by [] including blank space ‘ ’
+                tmp_pk0 = []
+                for i in range(self.its_parameters['its_number_of_replica']):
+                    tmp_pk0.append(float(i_parameter.split()[i+1]))
+                self.its_parameters['its_pk0'] = np.array(tmp_pk0)
                 
             elif i_parameter.split()[0].upper() == 'ITS_trial_MD_steps'.upper():
                 self.its_parameters['its_trial_MD_steps'] = int(i_parameter.split()[1])
@@ -67,6 +93,54 @@ class read_parameters:
             elif i_parameter.split()[0].upper() == 'ITS_energy_shift'.upper():
                 self.its_parameters['its_energy_shift'] = float(i_parameter.split()[1])
                 
+            ########################## Wall potential #############################
+            elif i_parameter.split()[0].upper() == 'Wall_potential'.upper():
+                if i_parameter.split()[1].upper() == 'True'.upper():
+                    self.wall_potential_parameters['wall_potential'] = True
+                elif i_parameter.split()[1].upper() == 'False'.upper():
+                    self.wall_potential_parameters['wall_potential'] = False
+                else:
+                    self.__log_morest.write('It is not clear whether the wall potential will be used.\n')
+                    self.__log_morest.close()
+                    raise Exception('Will you use wall potential or not?')
+                    
+            elif i_parameter.split()[0].upper() == 'Collective_variable'.upper():
+                if i_parameter.split()[1].upper() == 'True'.upper():
+                    self.wall_potential_parameters['collective_variable'] = True
+                elif i_parameter.split()[1].upper() == 'False'.upper():
+                    self.wall_potential_parameters['collective_variable'] = False
+                else:
+                    self.__log_morest.write('It is not clear whether the collective variable will be used.\n')
+                    self.__log_morest.close()
+                    raise Exception('Will you use collective variable or not?')
+                
+            elif i_parameter.split()[0].upper() == 'Wall_type'.upper():
+                self.wall_potential_parameters['wall_type'] = str(i_parameter.split()[1])
+                
+            ########################## Plane wall #################################
+            elif i_parameter.split()[0].upper() == 'Plane_wall_point'.upper():
+                tmp_wall_point = []
+                for i in range(3):
+                    tmp_wall_point.append(i_parameter.split()[i+1])
+                self.plane_wall_parameters['plane_wall_point'] = np.array(tmp_wall_point)
+            
+            elif i_parameter.split()[0].upper() == 'Plane_wall_normal_vector'.upper():
+                tmp_wall_normal_vector = []
+                for i in range(3):
+                    tmp_wall_normal_vector.append(i_parameter.split()[i+1])
+                tmp_wall_normal_vector = np.array(tmp_wall_normal_vector)
+                self.plane_wall_parameters['plane_wall_normal_vector'] = tmp_wall_normal_vector/np.linalg.norm(tmp_wall_normal_vector)
+                
+            elif i_parameter.split()[0].upper() == 'Plane_wall_scaling'.upper():
+                self.plane_wall_parameters['plane_wall_scaling'] = str(i_parameter.split()[1])
+                
+            elif i_parameter.split()[0].upper() == 'Plane_wall_scope'.upper():
+                self.plane_wall_parameters['plane_wall_scope'] = str(i_parameter.split()[1])
+                
+    def get_enhanced_sampling_parameters(self):
+        np.save('MoREST_enhanced_sampling_parameters.npy',self.enhanced_sampling_parameters)
+        return self.enhanced_sampling_parameters
+        
     def get_its_parameters(self):
         if not 'its_replica_temperature' in self.its_parameters:
             if int(self.its_parameters['its_replica_arrange']) == -1:
@@ -100,3 +174,11 @@ class read_parameters:
         #    json.dump(self.its_parameters,its_json, cls=NumpyArrayEncoder)
         np.save('MoREST_ITS_parameters.npy',self.its_parameters)
         return self.its_parameters
+    
+    def get_wall_potential_parameters(self):
+        np.save('MoREST_wall_potential_parameters.npy', self.wall_potential_parameters)
+        return self.wall_potential_parameters
+    
+    def get_plane_wall_parameters(self):
+        np.save('MoREST_plane_wall_parameters.npy', self.plane_wall_parameters)
+        return self.plane_wall_parameters

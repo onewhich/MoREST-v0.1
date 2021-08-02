@@ -15,6 +15,6 @@ Wall_potential                 True
 Collective_variable            False
 Wall_type                      plane_opaque_wall
 Plane_wall_point               0 0 10 # This point and normal vector determine the parameter b in the plane potential.
-Plane_wall_normal_vector       0 0 -1 # The normal vector does not have to be a unit vector. It will be normalized after reading.
+Plane_wall_normal_vector         0 0 -1 # The normal vector does not have to be a unit vector. It will be normalized after reading.
 Plane_wall_scaling             1      # This is parameter a in the plane potential
 Plane_wall_scope               1      # This is parameter c in the plane potential
