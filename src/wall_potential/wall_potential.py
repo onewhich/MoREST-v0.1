@@ -1,7 +1,8 @@
 import sys, os
 import numpy as np
-sys.path.append(os.path.join(os.path.split(os.path.abspath(__file__))[0],'../read_parameters'))
-import read_parameters
+#sys.path.append(os.path.join(os.path.split(os.path.abspath(__file__))[0],'../read_parameters'))
+#import read_parameters
+sys.path.append(os.path.join(os.path.split(os.path.abspath(__file__))[0],'../wall_potential'))
 import Plane_wall
 
 def wall_potential(wall_type, general_coordinate,\

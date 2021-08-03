@@ -2,6 +2,7 @@ import sys, os
 import numpy as np
 sys.path.append(os.path.join(os.path.split(os.path.abspath(__file__))[0],'../read_parameters'))
 import read_parameters
+sys.path.append(os.path.join(os.path.split(os.path.abspath(__file__))[0],'../enhanced_sampling'))
 import ITS
 
 def enhanced_sampling(enhanced_sampling_method, if_initial,\
