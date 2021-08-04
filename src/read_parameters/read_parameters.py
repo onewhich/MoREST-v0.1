@@ -25,10 +25,10 @@ class read_parameters:
     Plane wall parameters are stored in dictionary named 'plane_wall_parameters'.
     '''
     
-    def __init__(self, log_morest, parameter_file='MoREST.parameter'):
+    def __init__(self, log_morest, parameter_file='MoREST.in'):
         self.__log_morest = log_morest
         try:
-            self.__parameters = open(parameter_file,'r').readlines()
+            __parameters = open(parameter_file,'r').readlines()
         except FileNotFoundError:
             self.__log_morest.write('Can not open parameter file.\n')
             self.__log_morest.close()
@@ -38,7 +38,9 @@ class read_parameters:
         self.its_parameters = {}
         self.wall_potential_parameters = {}
         self.plane_wall_parameters = {}
-        for i_parameter in self.__parameters:
+        for i_parameter in __parameters:
+            if len(i_parameter.split()) < 2:
+                continue
             ########################## Enhanced sampling ##########################
             if i_parameter.split()[0].upper() == 'Enhanced_sampling'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():
@@ -121,21 +123,21 @@ class read_parameters:
             elif i_parameter.split()[0].upper() == 'Plane_wall_point'.upper():
                 tmp_wall_point = []
                 for i in range(3):
-                    tmp_wall_point.append(i_parameter.split()[i+1])
+                    tmp_wall_point.append(float(i_parameter.split()[i+1]))
                 self.plane_wall_parameters['plane_wall_point'] = np.array(tmp_wall_point)
             
             elif i_parameter.split()[0].upper() == 'Plane_wall_normal_vector'.upper():
                 tmp_wall_normal_vector = []
                 for i in range(3):
-                    tmp_wall_normal_vector.append(i_parameter.split()[i+1])
+                    tmp_wall_normal_vector.append(float(i_parameter.split()[i+1]))
                 tmp_wall_normal_vector = np.array(tmp_wall_normal_vector)
-                self.plane_wall_parameters['plane_wall_normal_vector'] = tmp_wall_normal_vector/np.linalg.norm(tmp_wall_normal_vector)
+                self.plane_wall_parameters['plane_wall_normal_vector'] = tmp_wall_normal_vector / np.linalg.norm(tmp_wall_normal_vector)
                 
             elif i_parameter.split()[0].upper() == 'Plane_wall_scaling'.upper():
-                self.plane_wall_parameters['plane_wall_scaling'] = str(i_parameter.split()[1])
+                self.plane_wall_parameters['plane_wall_scaling'] = float(i_parameter.split()[1])
                 
             elif i_parameter.split()[0].upper() == 'Plane_wall_scope'.upper():
-                self.plane_wall_parameters['plane_wall_scope'] = str(i_parameter.split()[1])
+                self.plane_wall_parameters['plane_wall_scope'] = float(i_parameter.split()[1])
                 
     def get_enhanced_sampling_parameters(self):
         np.save('MoREST_enhanced_sampling_parameters.npy',self.enhanced_sampling_parameters)

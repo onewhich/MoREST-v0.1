@@ -16,14 +16,15 @@ class plane_opaque_wall:
         # calculate the force and potential on an atom with xyz_coordinate
         a = self.plane_wall_parameters['plane_wall_scaling']
         c = self.plane_wall_parameters['plane_wall_scope']
-        vec_gc_b = np.dot((xyz_coordinate - self.plane_wall_parameters['plane_wall_point']),self.plane_wall_parameters['plane_wall_normal_vector'])
+        vec_gc_b = np.dot((xyz_coordinate - self.plane_wall_parameters['plane_wall_point']),self.plane_wall_parameters['plane_wall_normal_vector']) * self.plane_wall_parameters['plane_wall_normal_vector']
         norm_gc_b = np.linalg.norm(vec_gc_b)
+        #print(vec_gc_b,norm_gc_b)
         if norm_gc_b > c:
             return np.zeros(np.shape(xyz_coordinate)), 0.
         else:
-            prefactor = a/(c^2)
-            wall_force = prefactor * ((c^2)/(norm_gc_b^2)-1) * vec_gc_b/norm_gc_b
-            wall_potential = prefactor * (1/norm_gc_b) * (norm_gc_b - c)^2
+            prefactor = a/(c**2)
+            wall_force = prefactor * ((c**2)/(norm_gc_b**2)-1) * vec_gc_b/norm_gc_b
+            wall_potential = prefactor * (1/norm_gc_b) * (norm_gc_b - c)**2
             return wall_force, wall_potential
     
     
@@ -43,13 +44,13 @@ class plane_translucent_wall:
         # calculate the force and potential on an atom with xyz_coordinate
         a = self.plane_wall_parameters['plane_wall_scaling']
         c = self.plane_wall_parameters['plane_wall_scope']
-        vec_gc_b = np.dot((xyz_coordinate - self.plane_wall_parameters['plane_wall_point']),self.plane_wall_parameters['plane_wall_normal_vector'])
+        vec_gc_b = np.dot((xyz_coordinate - self.plane_wall_parameters['plane_wall_point']),self.plane_wall_parameters['plane_wall_normal_vector']) * self.plane_wall_parameters['plane_wall_normal_vector']
         norm_gc_b = np.linalg.norm(vec_gc_b)
         if norm_gc_b > c:
             return np.zeros(np.shape(xyz_coordinate)), 0.
         else:
-            prefactor = a/(c^4)
-            wall_force = 6 * prefactor * (c^2 * norm_gc_b - c * norm_gc_b^2) * vec_gc_b/norm_gc_b
-            wall_potential = prefactor * (2*c * norm_gc_b + c^2) * (norm_gc_b -c )^2
+            prefactor = a/(c**4)
+            wall_force = 6 * prefactor * (c**2 * norm_gc_b - c * norm_gc_b**2) * vec_gc_b/norm_gc_b
+            wall_potential = prefactor * (2*c * norm_gc_b + c**2) * (norm_gc_b -c )**2
             return wall_force, wall_potential
         

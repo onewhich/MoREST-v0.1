@@ -43,7 +43,7 @@ def enhanced_sampling(enhanced_sampling_method, if_initial,\
             #log_morest = open('MoREST.log','w')
             
             log_morest.write('Start to initialize integrated tempering sampling method.\n\n')
-            its_parameters = read_parameters.read_parameters(log_morest,parameter_file).get_its_parameters()
+            #its_parameters = read_parameters.read_parameters(log_morest,parameter_file).get_its_parameters()
             #print(its_parameters)
             its_para = np.load('MoREST_ITS_parameters.npy',allow_pickle=True).item()
             for key in its_para:
