@@ -1,9 +1,9 @@
 import sys, os
 import numpy as np
-sys.path.append(os.path.join(os.path.split(os.path.abspath(__file__))[0],'../read_parameters'))
+#sys.path.append(os.path.join(os.path.split(os.path.abspath(__file__))[0],'../read_parameters'))
 import read_parameters
-sys.path.append(os.path.join(os.path.split(os.path.abspath(__file__))[0],'../enhanced_sampling'))
-import ITS
+#sys.path.append(os.path.join(os.path.split(os.path.abspath(__file__))[0],'../enhanced_sampling'))
+import enhanced_sampling_ITS
 
 def enhanced_sampling(enhanced_sampling_method, if_initial,\
                       simulation_temperature, simulation_maxsteps, time_step,\
@@ -50,23 +50,23 @@ def enhanced_sampling(enhanced_sampling_method, if_initial,\
                 log_morest.write(key+':    '+str(its_para[key])+'\n')
             log_morest.write('\n')
            
-            bias_force = ITS.its().its_optimization(simulation_temperature,\
+            bias_force = enhanced_sampling_ITS.its().its_optimization(simulation_temperature,\
                                                     potential_energy, current_md_step,\
                                                     md_force, log_morest) 
-#            bias_force, current_md_step = ITS.its().its_optimization(simulation_temperature,\
+#            bias_force, current_md_step = enhanced_sampling_ITS.its().its_optimization(simulation_temperature,\
 #                                                             potential_energy, current_md_step,\
 #                                                             md_force, log_morest)
             return bias_force#, current_md_step
         elif ( not if_initial ) or ( if_initial == 0 ):
-            if ITS.its().its_if_converge():
-                bias_force = ITS.its().its_sampling(simulation_temperature,\
+            if enhanced_sampling_ITS.its().its_if_converge():
+                bias_force = enhanced_sampling_ITS.its().its_sampling(simulation_temperature,\
                                                     potential_energy, md_force) 
                 return bias_force
             else:
-                bias_force = ITS.its().its_optimization(simulation_temperature,\
+                bias_force = enhanced_sampling_ITS.its().its_optimization(simulation_temperature,\
                                                         potential_energy, current_md_step,\
                                                         md_force, log_morest)
-#                bias_force, current_md_step = ITS.its().its_optimization(simulation_temperature,\
+#                bias_force, current_md_step = enhanced_sampling_ITS.its().its_optimization(simulation_temperature,\
 #                                                           potential_energy, current_md_step,\
 #                                                           md_force, log_morest)
                 return bias_force#, current_md_step

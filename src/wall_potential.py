@@ -2,8 +2,8 @@ import sys, os
 import numpy as np
 #sys.path.append(os.path.join(os.path.split(os.path.abspath(__file__))[0],'../read_parameters'))
 #import read_parameters
-sys.path.append(os.path.join(os.path.split(os.path.abspath(__file__))[0],'../wall_potential'))
-import Plane_wall
+#sys.path.append(os.path.join(os.path.split(os.path.abspath(__file__))[0],'../wall_potential'))
+import wall_potential_Plane_wall
 
 def wall_potential(wall_type, general_coordinate,\
                     parameter_file='MoREST.in'):
@@ -30,7 +30,7 @@ def wall_potential(wall_type, general_coordinate,\
             log_morest.write('The plane opaque wall potential and force on atoms: XYZ coordinate, Potential, Forces\n')
             wall_force = []
             for i_coordinate in general_coordinate:
-                i_wall_force, i_wall_potential = Plane_wall.plane_opaque_wall().get_opaque_wall_force_potential(i_coordinate)
+                i_wall_force, i_wall_potential = wall_potential_Plane_wall.plane_opaque_wall().get_opaque_wall_force_potential(i_coordinate)
                 wall_force.append(i_wall_force)
                 log_morest.write(str(i_coordinate)+' '+str(i_wall_potential)+' '+str(i_wall_force))
                 log_morest.write('\n')
@@ -45,7 +45,7 @@ def wall_potential(wall_type, general_coordinate,\
             log_morest.write('The plane translucent wall potential and force on atoms: XYZ coordinate, Potential, Forces\n')
             wall_force = []
             for i_coordinate in general_coordinate:
-                i_wall_force, i_wall_potential = Plane_wall.plane_translucent_wall().get_translucent_wall_force_potential(i_coordinate)
+                i_wall_force, i_wall_potential = wall_potential_Plane_wall.plane_translucent_wall().get_translucent_wall_force_potential(i_coordinate)
                 wall_force.append(i_wall_force)
                 log_morest.write(str(i_coordinate)+' '+str(i_wall_potential)+' '+str(i_wall_force))
                 log_morest.write('\n')
