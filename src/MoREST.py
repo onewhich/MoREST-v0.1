@@ -35,4 +35,5 @@ class morest:
 
     
     
-    
+   def bias_sampling():
+
