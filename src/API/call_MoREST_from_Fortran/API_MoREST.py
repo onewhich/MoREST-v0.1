@@ -1,9 +1,9 @@
 import sys, os
 from api_morest import ffi
-#sys.path.append(os.path.join(os.path.split(os.path.abspath(__file__))[0],'../../enhanced_sampling/'))
-sys.path.append('../../enhanced_sampling')
+#sys.path.append(os.path.join(os.path.split(os.path.abspath(__file__))[0],'../../'))
+sys.path.append('../../')
 import numpy as np
-import enhanced_sampling
+from MoREST import morest
 import copy
 
 # Create the dictionary mapping ctypes to np dtypes.
@@ -31,23 +31,24 @@ def get_value(ffi, ptr):
     value = np.frombuffer(ffi.buffer(ptr, ffi.sizeof(type_value)), ctype2dtype[type_value])[0]
     return value
 
-def get_md_force(ffi, ptr, ptr_shape):
-    length_md_force_shape = 2
-    type_md_force_shape = ffi.getctype(ffi.typeof(ptr_shape).item)
-    md_force_shape = np.frombuffer(ffi.buffer(ptr_shape,\
-                     length_md_force_shape * ffi.sizeof(type_md_force_shape)),\
-                     ctype2dtype[type_md_force_shape])
+def get_xyz_matrix(ffi, ptr, ptr_shape):
+    length_matrix_shape = 2
+    type_matrix_shape = ffi.getctype(ffi.typeof(ptr_shape).item)
+    matrix_shape = np.frombuffer(ffi.buffer(ptr_shape,\
+                     length_matrix_shape * ffi.sizeof(type_matrix_shape)),\
+                     ctype2dtype[type_matrix_shape])
 
-    length_md_force = np.prod(md_force_shape)
-    type_md_force = ffi.getctype(ffi.typeof(ptr).item)
-    md_force = np.frombuffer(ffi.buffer(ptr, length_md_force * ffi.sizeof(type_md_force)),\
-                     ctype2dtype[type_md_force]).reshape(-1,3)
+    length_matrix = np.prod(matrix_shape)
+    type_matrix = ffi.getctype(ffi.typeof(ptr).item)
+    matrix = np.frombuffer(ffi.buffer(ptr, length_matrix * ffi.sizeof(type_matrix)),\
+                     ctype2dtype[type_matrix]).reshape(-1,3)
 
-    return md_force
+    return matrix
 
 @ffi.def_extern()
-def call_morest_its(ptr_if_initial, ptr_simulation_temperature, ptr_potential_energy,\
-                    ptr_current_md_step, ptr_md_force, ptr_md_force_shape):
+def call_morest_bias_sampling(ptr_if_initial, ptr_simulation_temperature, ptr_potential_energy,\
+                    ptr_current_md_step, ptr_md_force, ptr_md_force_shape,\
+                     ptr_coordinate, ptr_coordinate_shape):
 
     simulation_maxsteps = 9999 # This value is not used in ITS
     time_step = 0.001 # This value is not used in ITS
@@ -55,15 +56,16 @@ def call_morest_its(ptr_if_initial, ptr_simulation_temperature, ptr_potential_en
     simulation_temperature = get_value(ffi, ptr_simulation_temperature)
     potential_energy = get_value(ffi, ptr_potential_energy)
     current_md_step = get_value(ffi, ptr_current_md_step)
-    md_force = get_md_force(ffi, ptr_md_force, ptr_md_force_shape)
+    md_force = get_xyz_matrix(ffi, ptr_md_force, ptr_md_force_shape)
+    general_coordinate = get_xyz_matrix(ffi, ptr_coordinate, ptr_coordinate_shape)# TODO 
 
 #    print(if_initial, simulation_temperature, potential_energy, current_md_step)
 #    print(md_force)
 #    print(id(current_md_step))
 
-    bias_force = enhanced_sampling.enhanced_sampling('its', if_initial,\
-                  simulation_temperature, simulation_maxsteps,\
-                  time_step, potential_energy, current_md_step, md_force)
+    bias_force = morest().bias_sampling(if_initial, simulation_temperature, simulation_maxsteps,\
+                            time_step, potential_energy, current_md_step, md_force, \
+                            general_coordinate)
 
 #    for i in range(len(bias_force)):
 #        for j in range(len(bias_force[i])):
