@@ -182,5 +182,21 @@ class read_parameters:
         return self.wall_potential_parameters
     
     def get_plane_wall_parameters(self):
+        if self.wall_potential_parameters['wall_type'] in ['Plane_opaque_wall', 'plane_opaque_wall']:
+            self.__log_morest.write('The defination of the plane opaque wall: Point in plane, Normal vector\n')
+            self.__log_morest.write(str(self.plane_wall_parameters['plane_wall_point']) + \
+                               ' '+str(self.plane_wall_parameters['plane_wall_normal_vector']))
+            self.__log_morest.write('\n')
+            self.__log_morest.write('Plane_wall_scaling : '+str(self.plane_wall_parameters['plane_wall_scaling'])+'\n')
+            self.__log_morest.write('Plane_wall_scope : '+str(self.plane_wall_parameters['plane_wall_scope'])+'\n')
+            self.__log_morest.write('\n')
+        if self.wall_potential_parameters['wall_type'] in ['Plane_translucent_wall', 'plane_translucent_wall']:
+            self.__log_morest.write('The defination of the plane translucent wall: Point in plane, Normal vector\n')
+            self.__log_morest.write(str(self.plane_wall_parameters['plane_wall_point']) + \
+                               ' ' + str(self.plane_wall_parameters['plane_wall_normal_vector']))
+            self.__log_morest.write('\n')
+            self.__log_morest.write('Plane_wall_scaling : '+str(self.plane_wall_parameters['plane_wall_scaling'])+'\n')
+            self.__log_morest.write('Plane_wall_scope : '+str(self.plane_wall_parameters['plane_wall_scope'])+'\n')
+            self.__log_morest.write('\n')
         np.save('MoREST_plane_wall_parameters.npy', self.plane_wall_parameters)
         return self.plane_wall_parameters
