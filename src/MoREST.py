@@ -50,12 +50,16 @@ class morest:
         if_call_enhanced_sampling = False
         if_call_wall_potential = False
 
+        #self.__log_morest.write('Debug: calling bias sampling\n')
+
         if self.enhanced_sampling_parameters['enhanced_sampling']:
+            #self.__log_morest.write('Debug: calling enhanced sampling\n')
             bias_force_enhanced_sampling = self.__enhanced_sampling(if_initial, simulation_temperature, simulation_maxsteps, \
                                  time_step, potential_energy, current_md_step, md_force)
             if_call_enhanced_sampling = True
             #print(bias_force_enhanced_sampling)
         if self.wall_potential_parameters['wall_potential']:
+            #self.__log_morest.write('Debug: calling wall potential\n')
             bias_force_wall_potential = self.__wall_potential(general_coordinate)
             if_call_wall_potential = True
             #print(bias_force_wall_potential)
@@ -92,6 +96,7 @@ class morest:
         '''
 
         if self.enhanced_sampling_parameters['enhanced_sampling_method'] in ['ITS','its']:
+            self.__log_morest.write('Debug: '+str(if_initial)+'\n')
             if if_initial or ( if_initial == 1 ):
                 if os.path.isfile('MoREST_ITS_pk.npy'):
                     os.remove('MoREST_ITS_pk.npy')
