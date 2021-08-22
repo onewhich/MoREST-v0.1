@@ -42,19 +42,24 @@ class morest:
             bias_force: The bias forces are combined from enhanced sampling and wall potential.
         '''
         
+        if_call_enhanced_sampling = False
+        if_call_wall_potential = False
+
         if self.enhanced_sampling_parameters['enhanced_sampling']:
             bias_force_enhanced_sampling = self.__enhanced_sampling(if_initial, simulation_temperature, simulation_maxsteps, \
                                  time_step, potential_energy, current_md_step, md_force)
+            if_call_enhanced_sampling = True
             #print(bias_force_enhanced_sampling)
         if self.wall_potential_parameters['wall_potential']:
             bias_force_wall_potential = self.__wall_potential(general_coordinate)
+            if_call_wall_potential = True
             #print(bias_force_wall_potential)
             
-        if 'bias_force_enhanced_sampling' and 'bias_force_wall_potential' in dir():
+        if if_call_enhanced_sampling and if_call_wall_potential:
             return bias_force_enhanced_sampling + bias_force_wall_potential
-        elif 'bias_force_enhanced_sampling' in dir():
+        elif if_call_enhanced_sampling:
             return bias_force_enhanced_sampling
-        elif 'bias_force_wall_potential' in dir():
+        elif if_call_wall_potential:
             return bias_force_wall_potential
         else:
             self.__log_morest.write('Both enhanced sampling and wall potential do not work.\n')
@@ -132,7 +137,7 @@ class morest:
                 for i_coordinate in general_coordinate:
                     i_wall_force, i_wall_potential = plane_opaque_wall().get_opaque_wall_force_potential(i_coordinate)
                     wall_force.append(i_wall_force)
-                    self.__log_morest.write(str(i_coordinate)+' '+str(i_wall_potential)+' '+str(i_wall_force))
+                    self.__log_morest.write(str(i_coordinate)+' , '+str(i_wall_potential)+' , '+str(i_wall_force))
                     self.__log_morest.write('\n')
                 self.__log_morest.write('\n')
                 return np.array(wall_force)
@@ -144,7 +149,7 @@ class morest:
                 for i_coordinate in general_coordinate:
                     i_wall_force, i_wall_potential = plane_translucent_wall().get_translucent_wall_force_potential(i_coordinate)
                     wall_force.append(i_wall_force)
-                    self.__log_morest.write(str(i_coordinate)+' '+str(i_wall_potential)+' '+str(i_wall_force))
+                    self.__log_morest.write(str(i_coordinate)+' , '+str(i_wall_potential)+' , '+str(i_wall_force))
                     self.__log_morest.write('\n')
                 self.__log_morest.write('\n')
                 return np.array(wall_force)

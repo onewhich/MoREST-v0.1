@@ -62,6 +62,7 @@ def call_morest_bias_sampling(ptr_if_initial, ptr_simulation_temperature, ptr_po
 #    print(if_initial, simulation_temperature, potential_energy, current_md_step)
 #    print(md_force)
 #    print(id(current_md_step))
+#    print(general_coordinate)
 
     bias_force = morest().bias_sampling(if_initial, simulation_temperature, simulation_maxsteps,\
                             time_step, potential_energy, current_md_step, md_force, \

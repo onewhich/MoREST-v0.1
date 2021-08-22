@@ -7,24 +7,28 @@ program call_morest
 
   simulation_temperature = 798
   current_md_step = 1
-  allocate(md_force(3,4))
-  allocate(coordinate(3,4))
+  allocate(md_force(3,2))
+  allocate(coordinate(3,2))
   md_force_shape = shape(md_force) !(/3,4/)
   coordinate_shape = shape(coordinate)
-!  md_force = reshape((/1, 2, 3, 1, 3, 2, 3, 1, 2, 3, 2, 1/), md_force_shape)
+  md_force = reshape((/1, 2, 3, 1, 3, 2/), md_force_shape) !, 3, 1, 2, 3, 2, 1/), md_force_shape)
+  coordinate = reshape((/3, 1, 2, 3, 2, 1/), coordinate_shape)
+  potential_energy = 0.2
 
   call random_seed()
 
-  do i = 1,10000
+  do i = 1,100
     if (i == 1) then
       if_initial = 1
     else
       if_initial = 0
     endif
 
-  call random_number(potential_energy)
-  call random_number(md_force)
-  call random_number(coordinate)
+!  write(*,*) if_initial
+
+!  call random_number(potential_energy)
+!  call random_number(md_force)
+!  call random_number(coordinate)
 
 !  write(*,*) md_force
 !  write(*,*) current_md_step
