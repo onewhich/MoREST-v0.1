@@ -36,7 +36,7 @@ class morest:
         #        print(key+' : '+str(self.plane_wall_parameters[key]))
 
         
-    def bias_sampling(self, if_initial, simulation_temperature, simulation_maxsteps, \
+    def bias_sampling(self, simulation_temperature, simulation_maxsteps, \
                    time_step, potential_energy, current_md_step, md_force, general_coordinate):
         '''
         This function combines enhanced_sampling and wall_potential together to be used by MD/MC module.
@@ -54,7 +54,7 @@ class morest:
 
         if self.enhanced_sampling_parameters['enhanced_sampling']:
             #self.__log_morest.write('Debug: calling enhanced sampling\n')
-            bias_force_enhanced_sampling = self.__enhanced_sampling(if_initial, simulation_temperature, simulation_maxsteps, \
+            bias_force_enhanced_sampling = self.__enhanced_sampling(simulation_temperature, simulation_maxsteps, \
                                  time_step, potential_energy, current_md_step, md_force)
             if_call_enhanced_sampling = True
             #print(bias_force_enhanced_sampling)
@@ -76,14 +76,14 @@ class morest:
             return np.array([0])
     
     
-    def __enhanced_sampling(self, if_initial, simulation_temperature, simulation_maxsteps, \
+    def __enhanced_sampling(self, simulation_temperature, simulation_maxsteps, \
                    time_step, potential_energy, current_md_step, md_force):
         '''
         This function is called to excute enhanced sampling by MD/MC module.
         --------
         INPUT:
             enhanced_sampling_method: Specify the method will be used, e.g., ITS, REMD...
-            if_initial:               Specify whether this API is called for the first time.
+            #if_initial:               Specify whether this API is called for the first time.
             simulation_temperature:   The temperature used in MD/MC module. Unit: K.
             simulation_maxsteps:      The simulation length, which is specified in number of steps, in MD/MC module.
             time_step:                The time step in MD/MC module. Unit: ps.
@@ -96,7 +96,8 @@ class morest:
         '''
 
         if self.enhanced_sampling_parameters['enhanced_sampling_method'] in ['ITS','its']:
-            self.__log_morest.write('Debug: '+str(if_initial)+'\n')
+            #self.__log_morest.write('Debug: '+str(if_initial)+'\n')
+            '''
             if if_initial or ( if_initial == 1 ):
                 if os.path.isfile('MoREST_ITS_pk.npy'):
                     os.remove('MoREST_ITS_pk.npy')
@@ -114,6 +115,7 @@ class morest:
                                         potential_energy, current_md_step,\
                                         md_force, self.__log_morest)
                 return bias_force
+
             elif ( not if_initial ) or ( if_initial == 0 ):
                 if its().its_if_converge():
                     bias_force = its().its_sampling(simulation_temperature, potential_energy, md_force) 
@@ -122,6 +124,14 @@ class morest:
                     bias_force = its().its_optimization(simulation_temperature, potential_energy, \
                                             current_md_step, md_force, self.__log_morest)
                     return bias_force
+            '''
+            if its().its_if_converge():
+                bias_force = its().its_sampling(simulation_temperature, potential_energy, md_force) 
+                return bias_force
+            else:
+                bias_force = its().its_optimization(simulation_temperature, potential_energy, \
+                                        current_md_step, md_force, self.__log_morest)
+                return bias_force
         else:
             self.__log_morest.write('No enhanced sampling method was matched.\n')
             self.__log_morest.close()

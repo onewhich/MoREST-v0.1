@@ -1,4 +1,4 @@
-import sys
+import os,sys
 import numpy as np
 import scipy.constants
 import json
@@ -56,6 +56,12 @@ class read_parameters:
                 self.enhanced_sampling_parameters['enhanced_sampling_method'] = str(i_parameter.split()[1])
             
             ########################## ITS parameters    ##########################
+            elif i_parameter.split()[0].upper() == 'ITS_initialization'.upper():
+                if i_parameter.split()[1].upper() == 'True'.upper():
+                    self.its_parameters['its_initialization'] = True
+                elif i_parameter.split()[1].upper() == 'False'.upper():
+                    self.its_parameters['its_initialization'] = False                    
+                
             elif i_parameter.split()[0].upper() == 'ITS_lower_bound_temperature'.upper():
                 self.its_parameters['its_lower_bound_temperature'] = float(i_parameter.split()[1])
                 
@@ -172,12 +178,23 @@ class read_parameters:
         if not 'its_pk0' in self.its_parameters:
             self.its_parameters['its_pk0'] = np.ones((self.its_parameters['its_number_of_replica'])) /\
                                                    self.its_parameters['its_number_of_replica']
+            
         #with open('MoREST_ITS_parameters.json','w') as its_json:
         #    json.dump(self.its_parameters,its_json, cls=NumpyArrayEncoder)
         np.save('MoREST_ITS_parameters.npy',self.its_parameters)
         for key in self.its_parameters:
             self.__log_morest.write(key+' : '+str(self.its_parameters[key])+'\n')
         self.__log_morest.write('\n')
+        
+        if self.its_parameters['its_initialization']:
+            if os.path.isfile('MoREST_ITS_pk.npy'):
+                os.remove('MoREST_ITS_pk.npy')
+            if os.path.isfile('MoREST_ITS_nk.npy'):
+                os.remove('MoREST_ITS_nk.npy')
+            if os.path.isfile('MoREST_ITS_potential_energy.list'):
+                os.remove('MoREST_ITS_potential_energy.list')
+            self.__log_morest.write('Start to initialize integrated tempering sampling method.\n\n')
+            
         return self.its_parameters
     
     def get_wall_potential_parameters(self):
