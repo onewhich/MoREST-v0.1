@@ -26,14 +26,14 @@ program call_morest
   call random_number(md_force)
   call random_number(coordinate)
 
-  write(*,*) md_force
+!  write(*,*) md_force
 !  write(*,*) current_md_step
 
   call call_morest_bias_sampling(if_initial, simulation_temperature, potential_energy,&
                        current_md_step, md_force, md_force_shape,&
                        coordinate, coordinate_shape)
 
-  write(*,*) md_force
+!  write(*,*) md_force
 !  write(*,*) current_md_step
 
   current_md_step = current_md_step + 1
