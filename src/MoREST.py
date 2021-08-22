@@ -12,12 +12,15 @@ class morest:
 
     def __init__(self, __parameter_file='MoREST.in'):
         self.__log_morest = open('MoREST.log','w')
+        self.__log_morest.write('-----------MoREST start to work-----------\n\n')
         MoREST_parameters = read_parameters(log_morest=self.__log_morest, parameter_file=__parameter_file)
 
         self.enhanced_sampling_parameters = MoREST_parameters.get_enhanced_sampling_parameters()
         #for key in self.enhanced_sampling_parameters:
         #    print(key+' : '+str(self.enhanced_sampling_parameters[key]))
         if self.enhanced_sampling_parameters['enhanced_sampling']:
+            self.__log_morest.write('Enahanced sampling method \"'+\
+                    str(self.enhanced_sampling_parameters['enhanced_sampling_method'])+'\" is called:\n')
             self.its_parameters = MoREST_parameters.get_its_parameters()
         #    for key in self.its_parameters:
         #        print(key+' : '+str(self.its_parameters[key]))
@@ -26,6 +29,8 @@ class morest:
         #for key in self.wall_potential_parameters:
         #    print(key+' : '+str(self.wall_potential_parameters[key]))
         if self.wall_potential_parameters['wall_potential']:
+            self.__log_morest.write('Wall potential \"'+\
+                    str(self.wall_potential_parameters['wall_type'])+'\" is called:\n')
             self.plane_wall_parameters = MoREST_parameters.get_plane_wall_parameters()
         #    for key in self.plane_wall_parameters:
         #        print(key+' : '+str(self.plane_wall_parameters[key]))
@@ -95,10 +100,10 @@ class morest:
                 if os.path.isfile('MoREST_ITS_potential_energy.list'):
                     os.remove('MoREST_ITS_potential_energy.list')
 
-                self.__log_morest.write('Start to initialize integrated tempering sampling method.\n\n')
-                for key in self.its_parameters:
-                    self.__log_morest.write(key+' : '+str(self.its_parameters[key])+'\n')
-                self.__log_morest.write('\n')
+                self.__log_morest.write('Start to initialize integrated tempering sampling method.\n')
+                #for key in self.its_parameters:
+                #    self.__log_morest.write(key+' : '+str(self.its_parameters[key])+'\n')
+                #self.__log_morest.write('\n')
 
                 bias_force = its().its_optimization(simulation_temperature,\
                                         potential_energy, current_md_step,\

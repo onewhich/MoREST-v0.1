@@ -175,6 +175,9 @@ class read_parameters:
         #with open('MoREST_ITS_parameters.json','w') as its_json:
         #    json.dump(self.its_parameters,its_json, cls=NumpyArrayEncoder)
         np.save('MoREST_ITS_parameters.npy',self.its_parameters)
+        for key in self.its_parameters:
+            self.__log_morest.write(key+' : '+str(self.its_parameters[key])+'\n')
+        self.__log_morest.write('\n')
         return self.its_parameters
     
     def get_wall_potential_parameters(self):
@@ -182,6 +185,7 @@ class read_parameters:
         return self.wall_potential_parameters
     
     def get_plane_wall_parameters(self):
+        '''
         if self.wall_potential_parameters['wall_type'] in ['Plane_opaque_wall', 'plane_opaque_wall']:
             self.__log_morest.write('The defination of the plane opaque wall: Point in plane, Normal vector\n')
             self.__log_morest.write(str(self.plane_wall_parameters['plane_wall_point']) + \
@@ -198,5 +202,9 @@ class read_parameters:
             self.__log_morest.write('Plane_wall_scaling : '+str(self.plane_wall_parameters['plane_wall_scaling'])+'\n')
             self.__log_morest.write('Plane_wall_scope : '+str(self.plane_wall_parameters['plane_wall_scope'])+'\n')
             self.__log_morest.write('\n')
+        '''
+        for key in self.plane_wall_parameters:
+            self.__log_morest.write(key+' : '+str(self.plane_wall_parameters[key])+'\n')
+        self.__log_morest.write('\n')
         np.save('MoREST_plane_wall_parameters.npy', self.plane_wall_parameters)
         return self.plane_wall_parameters
