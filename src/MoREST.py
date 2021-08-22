@@ -21,7 +21,8 @@ class morest:
         if self.enhanced_sampling_parameters['enhanced_sampling']:
             self.__log_morest.write('Enahanced sampling method \"'+\
                     str(self.enhanced_sampling_parameters['enhanced_sampling_method'])+'\" is called:\n')
-            self.its_parameters = MoREST_parameters.get_its_parameters()
+            if self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['its'.upper()]:
+                self.its_parameters = MoREST_parameters.get_its_parameters()
         #    for key in self.its_parameters:
         #        print(key+' : '+str(self.its_parameters[key]))
 
@@ -31,7 +32,9 @@ class morest:
         if self.wall_potential_parameters['wall_potential']:
             self.__log_morest.write('Wall potential \"'+\
                     str(self.wall_potential_parameters['wall_type'])+'\" is called:\n')
-            self.plane_wall_parameters = MoREST_parameters.get_plane_wall_parameters()
+            if self.wall_potential_parameters['wall_type'].upper() in ['Plane_opaque_wall'.upper(),\
+                                                                  'Plane_translucent_wall'.upper()]:
+                self.plane_wall_parameters = MoREST_parameters.get_plane_wall_parameters()
         #    for key in self.plane_wall_parameters:
         #        print(key+' : '+str(self.plane_wall_parameters[key]))
 
@@ -95,7 +98,7 @@ class morest:
             #current_md_step:          The current MD step is returned to identify the number of opt and sampling steps in ITS
         '''
 
-        if self.enhanced_sampling_parameters['enhanced_sampling_method'] in ['ITS','its']:
+        if self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['its'.upper()]:
             #self.__log_morest.write('Debug: '+str(if_initial)+'\n')
             '''
             if if_initial or ( if_initial == 1 ):
@@ -150,7 +153,7 @@ class morest:
         '''
 
         if not self.wall_potential_parameters['collective_variable']:
-            if self.wall_potential_parameters['wall_type'] in ['Plane_opaque_wall', 'plane_opaque_wall']:
+            if self.wall_potential_parameters['wall_type'].upper() in ['Plane_opaque_wall'.upper()]:
                 self.__log_morest.write('\n')
                 self.__log_morest.write('The plane opaque wall potential and force on atoms: XYZ coordinate, Potential, Forces\n')
                 wall_force = []
@@ -162,7 +165,7 @@ class morest:
                 self.__log_morest.write('\n')
                 return np.array(wall_force)
 
-            if self.wall_potential_parameters['wall_type'] in ['Plane_translucent_wall', 'plane_translucent_wall']:
+            if self.wall_potential_parameters['wall_type'].upper() in ['Plane_translucent_wall'.upper()]:
                 self.__log_morest.write('\n')
                 self.__log_morest.write('The plane translucent wall potential and force on atoms: XYZ coordinate, Potential, Forces\n')
                 wall_force = []

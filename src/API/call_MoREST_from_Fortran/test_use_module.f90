@@ -6,7 +6,7 @@ program call_morest
   integer(c_int64_t) :: i
 
   simulation_temperature = 798
-  current_md_step = 1
+!  current_md_step = 1
   allocate(md_force(3,2))
   allocate(coordinate(3,2))
   md_force_shape = shape(md_force) !(/3,4/)
@@ -17,8 +17,9 @@ program call_morest
 
   call random_seed()
 
-  if_initial = 1
+!  if_initial = 1
   do i = 1,100
+    current_md_step = i
 !    if (i == 1) then
 !      if_initial = 0
 !    else
@@ -32,17 +33,17 @@ program call_morest
 !  call random_number(coordinate)
 
 !  write(*,*) md_force
-!  write(*,*) current_md_step
+  write(*,*) current_md_step
 
-    call call_morest_bias_sampling(if_initial, simulation_temperature, potential_energy,&
+    call call_morest_bias_sampling(simulation_temperature, potential_energy,&
                        current_md_step, md_force, md_force_shape,&
                        coordinate, coordinate_shape)
 
 !  write(*,*) md_force
 !  write(*,*) current_md_step
 
-    if_initial = 0
-    current_md_step = current_md_step + 1
+!    if_initial = 0
+!    current_md_step = current_md_step + 1
 
   enddo
 

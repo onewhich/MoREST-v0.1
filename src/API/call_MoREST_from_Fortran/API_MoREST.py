@@ -46,13 +46,13 @@ def get_xyz_matrix(ffi, ptr, ptr_shape):
     return matrix
 
 @ffi.def_extern()
-def call_morest_bias_sampling(ptr_if_initial, ptr_simulation_temperature, ptr_potential_energy,\
+def call_morest_bias_sampling(ptr_simulation_temperature, ptr_potential_energy,\
                     ptr_current_md_step, ptr_md_force, ptr_md_force_shape,\
                      ptr_coordinate, ptr_coordinate_shape):
 
     simulation_maxsteps = 9999 # This value is not used in ITS
     time_step = 0.001 # This value is not used in ITS
-    if_initial = get_value(ffi, ptr_if_initial)
+#    if_initial = get_value(ffi, ptr_if_initial)
     simulation_temperature = get_value(ffi, ptr_simulation_temperature)
     potential_energy = get_value(ffi, ptr_potential_energy)
     current_md_step = get_value(ffi, ptr_current_md_step)
@@ -64,7 +64,7 @@ def call_morest_bias_sampling(ptr_if_initial, ptr_simulation_temperature, ptr_po
 #    print(id(current_md_step))
 #    print(general_coordinate)
 
-    bias_force = morest().bias_sampling(if_initial, simulation_temperature, simulation_maxsteps,\
+    bias_force = morest().bias_sampling(simulation_temperature, simulation_maxsteps,\
                             time_step, potential_energy, current_md_step, md_force, \
                             general_coordinate)
 

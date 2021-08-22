@@ -2,7 +2,7 @@ import cffi
 ffibuilder = cffi.FFI()
 
 header = """
-extern void call_morest_bias_sampling(int64_t *, double *, double *, int64_t *, double *, int64_t *, double *, int64_t *);
+extern void call_morest_bias_sampling(double *, double *, int64_t *, double *, int64_t *, double *, int64_t *);
 """
 
 with open('API_MoREST.py') as f:

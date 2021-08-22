@@ -29,7 +29,7 @@ for _ in range(100):
     print('----')
     print(md_force)
     print('----')
-    bias_force = test_morest.bias_sampling(if_initial, simulation_temperature, simulation_maxsteps,\
+    bias_force = test_morest.bias_sampling(simulation_temperature, simulation_maxsteps,\
                                           time_step, potential_energy, current_md_step, md_force, coordinate)
     print(bias_force)
     print('====')
