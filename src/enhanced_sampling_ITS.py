@@ -32,12 +32,36 @@ class its:
                 new_nk = n_k * self.its_parameters['its_pk0'] / p_k
                 np.savetxt('MoREST_ITS_nk.npy',new_nk)
                 bias_force = self.__bias_force(simulation_temperature, potential_energy, md_force)
-                os.remove('MoREST_ITS_potential_energy.list')
+                os.remove('MoREST_ITS_potential_energy.npy')
                 return bias_force#, current_md_step
         else:
             #print('not opting')
-            with open('MoREST_ITS_potential_energy.list','a') as potential_energy_list:
+            with open('MoREST_ITS_potential_energy.npy','a+') as potential_energy_list:
                 potential_energy_list.write(str(potential_energy)+'\n')
+            '''
+            try:
+                potential_energy_list = []
+                potential_energy_list.append(np.loadtxt('MoREST_ITS_potential_energy.npy'))
+                print('list exist: read ',potential_energy_list)
+                potential_energy_list = np.array(potential_energy_list)
+                potential_energy_list = np.append(potential_energy_list, potential_energy)
+                print('list exist: ',potential_energy_list)
+                np.savetxt('MoREST_ITS_potential_energy.npy',potential_energy_list)
+            except:
+                potential_energy_list = []
+                potential_energy_list.append(potential_energy)
+                potential_energy_list = np.array(potential_energy_list)
+                print('list not exist:',potential_energy_list)
+                np.savetxt('MoREST_ITS_potential_energy.npy', potential_energy_list)
+            '''
+            '''
+            potential_energy_list = []
+            potential_energy_list.append(np.loadtxt('MoREST_ITS_potential_energy.npy'))
+            potential_energy_list = np.array(potential_energy_list)
+            potential_energy_list = np.append(potential_energy_list, potential_energy)
+            print('list exist: ',potential_energy_list)
+            np.savetxt('MoREST_ITS_potential_energy.npy',potential_energy_list)
+            '''
             bias_force = self.__bias_force(simulation_temperature, potential_energy, md_force)
             return bias_force#, current_md_step
             
@@ -47,8 +71,8 @@ class its:
             return False
         p_k = np.loadtxt('MoREST_ITS_pk.npy')
         if abs(np.max(p_k - self.its_parameters['its_pk0'])) < self.its_parameters['its_delta_pk']:
-            if os.path.isfile('MoREST_ITS_potential_energy.list'):
-                os.remove('MoREST_ITS_potential_energy.list')
+            if os.path.isfile('MoREST_ITS_potential_energy.npy'):
+                os.remove('MoREST_ITS_potential_energy.npy')
             return True
         else:
             return False
@@ -76,9 +100,9 @@ class its:
     
     def __pk_nk(self):
         if abs(self.its_parameters['its_energy_shift'] - 0.) > 1e-5:
-            potential_energy_list = np.loadtxt('MoREST_ITS_potential_energy.list') - self.its_parameters['its_energy_shift']
+            potential_energy_list = np.loadtxt('MoREST_ITS_potential_energy.npy') - self.its_parameters['its_energy_shift']
         else:
-            tmp_potential_energy_list = np.loadtxt('MoREST_ITS_potential_energy.list')
+            tmp_potential_energy_list = np.loadtxt('MoREST_ITS_potential_energy.npy')
             potential_energy_list = tmp_potential_energy_list - np.min(tmp_potential_energy_list)
         if os.path.isfile('MoREST_ITS_nk.npy'):
             n_k = np.loadtxt('MoREST_ITS_nk.npy')

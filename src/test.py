@@ -15,7 +15,7 @@ md_force = np.array([[1.,2.,3.],[1.,3.,2.]])
 
 
 current_md_step = 0
-for _ in range(100):
+for _ in range(2):
     if _ == 0:
         if_initial = True
     else:
@@ -25,6 +25,7 @@ for _ in range(100):
     #md_force = np.random.rand(2,3)
     #coordinate = np.random.rand(2,3)
     current_md_step += 1
+#    potential_energy += 1
     print(coordinate)
     print('----')
     print(md_force)

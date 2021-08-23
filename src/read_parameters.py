@@ -191,8 +191,8 @@ class read_parameters:
                 os.remove('MoREST_ITS_pk.npy')
             if os.path.isfile('MoREST_ITS_nk.npy'):
                 os.remove('MoREST_ITS_nk.npy')
-            if os.path.isfile('MoREST_ITS_potential_energy.list'):
-                os.remove('MoREST_ITS_potential_energy.list')
+            if os.path.isfile('MoREST_ITS_potential_energy.npy'):
+                os.remove('MoREST_ITS_potential_energy.npy')
             self.__log_morest.write('Start to initialize integrated tempering sampling method.\n\n')
             
         return self.its_parameters
