@@ -187,13 +187,16 @@ class read_parameters:
         self.__log_morest.write('\n')
         
         if self.its_parameters['its_initialization']:
-            if os.path.isfile('MoREST_ITS_pk.npy'):
+            try:
+            #if os.path.isfile('MoREST_ITS_pk.npy'):
                 os.remove('MoREST_ITS_pk.npy')
-            if os.path.isfile('MoREST_ITS_nk.npy'):
+            #if os.path.isfile('MoREST_ITS_nk.npy'):
                 os.remove('MoREST_ITS_nk.npy')
-            if os.path.isfile('MoREST_ITS_potential_energy.npy'):
+            #if os.path.isfile('MoREST_ITS_potential_energy.npy'):
                 os.remove('MoREST_ITS_potential_energy.npy')
-            self.__log_morest.write('Start to initialize integrated tempering sampling method.\n\n')
+            except:
+                pass
+            self.__log_morest.write('Integrated tempering sampling method is initialized.\n\n')
             
         return self.its_parameters
     

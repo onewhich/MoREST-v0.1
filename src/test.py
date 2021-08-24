@@ -15,7 +15,7 @@ md_force = np.array([[1.,2.,3.],[1.,3.,2.]])
 
 
 current_md_step = 0
-for _ in range(2):
+for _ in range(50):
     if _ == 0:
         if_initial = True
     else:

@@ -13,26 +13,31 @@ program call_morest
   coordinate_shape = shape(coordinate)
   md_force = reshape((/1, 2, 3, 1, 3, 2/), md_force_shape) !, 3, 1, 2, 3, 2, 1/), md_force_shape)
   coordinate = reshape((/3, 1, 2, 3, 2, 1/), coordinate_shape)
-  potential_energy = 1
+  potential_energy = 0.2
 
   call random_seed()
 
 !  if_initial = 1
-  do i = 1,2
+  do i = 1,60
     current_md_step = i
 !    if (i == 1) then
 !      if_initial = 0
 !    else
 !      if_initial = 0
 !    endif
-
+  md_force = reshape((/1, 2, 3, 1, 3, 2/), md_force_shape) !, 3, 1, 2, 3, 2, 1/), md_force_shape)
+  coordinate = reshape((/3, 1, 2, 3, 2, 1/), coordinate_shape)
+  potential_energy = 0.2
 !  write(*,*) if_initial
 
 !  call random_number(potential_energy)
 !  call random_number(md_force)
 !  call random_number(coordinate)
 
-!  write(*,*) md_force
+  write(*,*) coordinate
+  write(*,*) "----"
+  write(*,*) md_force
+  write(*,*) "----"
 !    write(*,*) current_md_step
 
     call call_morest_bias_sampling(simulation_temperature, potential_energy,&
@@ -40,7 +45,8 @@ program call_morest
                        coordinate, coordinate_shape)
 
     potential_energy = potential_energy + 1
-!  write(*,*) md_force
+  write(*,*) md_force
+  write(*,*) "===="
 !  write(*,*) current_md_step
 
 !    if_initial = 0

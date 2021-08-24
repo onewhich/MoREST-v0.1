@@ -67,12 +67,20 @@ class its:
             
        
     def its_if_converge(self):
-        if not os.path.isfile('MoREST_ITS_pk.npy'):
+        #if not os.path.isfile('MoREST_ITS_pk.npy'):
+        #    return False
+        try:
+            p_k = np.loadtxt('MoREST_ITS_pk.npy')
+            #print('Debug: enhanced_sampling_ITS/its_if_converge: MoREST_ITS_pk is opened.')
+        except:
+            #print('Debug: enhanced_sampling_ITS/its_if_converge: MoREST_ITS_pk does not exist.')
             return False
-        p_k = np.loadtxt('MoREST_ITS_pk.npy')
         if abs(np.max(p_k - self.its_parameters['its_pk0'])) < self.its_parameters['its_delta_pk']:
-            if os.path.isfile('MoREST_ITS_potential_energy.npy'):
+            #if os.path.isfile('MoREST_ITS_potential_energy.npy'):
+            try:
                 os.remove('MoREST_ITS_potential_energy.npy')
+            except:
+                pass
             return True
         else:
             return False
@@ -85,10 +93,14 @@ class its:
     def __bias_force(self, simulation_temperature, potential_energy, md_force):
         Epot = potential_energy - self.its_parameters['its_energy_shift']
         simulation_beta = 1/(simulation_temperature*scipy.constants.value('Boltzmann constant in eV/K'))
-        if os.path.isfile('MoREST_ITS_nk.npy'):
+        #if os.path.isfile('MoREST_ITS_nk.npy'):
+        try:
             n_k = np.loadtxt('MoREST_ITS_nk.npy')
-        else:
+            #print('Debug: enhanced_sampling_ITS/__bias_force: MoREST_ITS_nk is opened.')
+        #else:
+        except:
             n_k = self.its_parameters['its_initial_nk']
+            #print('Debug: enhanced_sampling_ITS/__bias_force: MoREST_ITS_nk does not exist.')
         #print(n_k,type(n_k))
         bias_numerator = 0
         bias_denominator = 0
@@ -104,10 +116,14 @@ class its:
         else:
             tmp_potential_energy_list = np.loadtxt('MoREST_ITS_potential_energy.npy')
             potential_energy_list = tmp_potential_energy_list - np.min(tmp_potential_energy_list)
-        if os.path.isfile('MoREST_ITS_nk.npy'):
+        #if os.path.isfile('MoREST_ITS_nk.npy'):
+        try:
             n_k = np.loadtxt('MoREST_ITS_nk.npy')
-        else:
+            #print('Debug: enhanced_sampling_ITS/__pk_nk: MoREST_ITS_nk is opened.')
+        #else:
+        except:
             n_k = self.its_parameters['its_initial_nk']
+            #print('Debug: enhanced_sampling_ITS/__pk_nk: MoREST_ITS_nk does not exist.')
         P_k = []
         for i,i_beta in enumerate(self.its_parameters['its_replica_beta']):
             tmp_Pk = np.sum(np.exp(-1*i_beta*potential_energy_list))
