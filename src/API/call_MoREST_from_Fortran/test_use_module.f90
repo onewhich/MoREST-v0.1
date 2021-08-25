@@ -18,7 +18,7 @@ program call_morest
   call random_seed()
 
 !  if_initial = 1
-  do i = 1,60
+  do i = 1,20
     current_md_step = i
 !    if (i == 1) then
 !      if_initial = 0

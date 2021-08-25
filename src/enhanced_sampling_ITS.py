@@ -36,7 +36,7 @@ class its:
                 return bias_force#, current_md_step
         else:
             #print('not opting')
-            with open('MoREST_ITS_potential_energy.npy','a+') as potential_energy_list:
+            with open('MoREST_ITS_potential_energy.npy','a') as potential_energy_list:
                 potential_energy_list.write(str(potential_energy)+'\n')
             '''
             try:

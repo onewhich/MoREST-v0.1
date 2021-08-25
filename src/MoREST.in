@@ -2,7 +2,7 @@
 
 Enhanced_sampling              True
 Enhanced_sampling_method       ITS
-ITS_initialization             True  # Set True for the first time running ITS. It will delete all relvent files such as TIS_nk.npy, ITS_pk.npy. This parameter should always be False when MoREST is called by Fortran.
+ITS_initialization             False  # Set True for the first time running ITS. It will delete all relvent files such as TIS_nk.npy, ITS_pk.npy. This parameter should always be False when MoREST is called by Fortran.
 ITS_lower_bound_temperature    700
 ITS_upper_bound_temperature    2000
 ITS_number_of_replica          10
@@ -10,7 +10,7 @@ ITS_replica_arrange            0     # -1: arithmetic progression   0:  geometri
 #ITS_replica_temperature        290 310 330 350 370   # specify or default
 #ITS_initial_nk                 1 0.1 0.01 0.001 0.0001   # specify or default
 #ITS_pk0                        0.2 0.2 0.2 0.2 0.2   # specify or default
-ITS_trial_MD_steps             10
+ITS_trial_MD_steps             5
 ITS_delta_pk                   1e-1
 ITS_energy_shift               0
 

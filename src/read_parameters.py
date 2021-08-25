@@ -150,6 +150,15 @@ class read_parameters:
         return self.enhanced_sampling_parameters
         
     def get_its_parameters(self):
+        if self.its_parameters['its_initialization']:
+            try:
+                os.remove('MoREST_ITS_pk.npy')
+                os.remove('MoREST_ITS_nk.npy')
+                os.remove('MoREST_ITS_potential_energy.npy')
+            except:
+                pass
+            self.__log_morest.write('Integrated tempering sampling method is initialized.\n\n')
+
         if not 'its_replica_temperature' in self.its_parameters:
             if int(self.its_parameters['its_replica_arrange']) == -1:
                 replica_temperature = np.linspace(self.its_parameters['its_lower_bound_temperature'],\
@@ -170,11 +179,19 @@ class read_parameters:
         self.its_parameters['its_replica_beta'] = 1/(self.its_parameters['its_replica_temperature'] *\
                                                     scipy.constants.value('Boltzmann constant in eV/K'))
             
+        try:
+            self.its_parameters['its_initial_nk'] = np.loadtxt('MoREST_ITS_nk.npy')
+        except:
+            pass
         if not 'its_initial_nk' in self.its_parameters:
             self.its_parameters['its_initial_nk'] = np.exp(self.its_parameters['its_replica_beta'])
             self.its_parameters['its_initial_nk'] = self.its_parameters['its_initial_nk'] /\
                                                     np.max(self.its_parameters['its_initial_nk'])
             
+        try:
+            self.its_parameters['its_pk0'] = np.loadtxt('MoREST_ITS_pk.npy')
+        except:
+            pass
         if not 'its_pk0' in self.its_parameters:
             self.its_parameters['its_pk0'] = np.ones((self.its_parameters['its_number_of_replica'])) /\
                                                    self.its_parameters['its_number_of_replica']
@@ -186,18 +203,6 @@ class read_parameters:
             self.__log_morest.write(key+' : '+str(self.its_parameters[key])+'\n')
         self.__log_morest.write('\n')
         
-        if self.its_parameters['its_initialization']:
-            try:
-            #if os.path.isfile('MoREST_ITS_pk.npy'):
-                os.remove('MoREST_ITS_pk.npy')
-            #if os.path.isfile('MoREST_ITS_nk.npy'):
-                os.remove('MoREST_ITS_nk.npy')
-            #if os.path.isfile('MoREST_ITS_potential_energy.npy'):
-                os.remove('MoREST_ITS_potential_energy.npy')
-            except:
-                pass
-            self.__log_morest.write('Integrated tempering sampling method is initialized.\n\n')
-            
         return self.its_parameters
     
     def get_wall_potential_parameters(self):
