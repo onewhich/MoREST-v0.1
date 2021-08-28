@@ -12,8 +12,16 @@ class morest:
 
     def __init__(self, __parameter_file='MoREST.in'):
         self.__log_morest = open('MoREST.log','a')
-        self.__log_morest.write('-----------MoREST start to work-----------\n\n')
         MoREST_parameters = read_parameters(log_morest=self.__log_morest, parameter_file=__parameter_file)
+        self.morest_parameters = MoREST_parameters.get_morest_parameters()
+        self.if_morest_initialization = self.morest_parameters['morest_initialization']
+        
+        if self.if_morest_initialization:
+            self.__log_morest.close()
+            self.__log_morest = open('MoREST.log','w')
+            self.__log_morest.write('-----------MoREST start to work-----------\n\n')
+        else:
+            self.__log_morest.write('\n-----------MoREST continue to work--------\n\n')
 
         self.enhanced_sampling_parameters = MoREST_parameters.get_enhanced_sampling_parameters()
         #for key in self.enhanced_sampling_parameters:
@@ -22,7 +30,13 @@ class morest:
             self.__log_morest.write('Enahanced sampling method \"'+\
                     str(self.enhanced_sampling_parameters['enhanced_sampling_method'])+'\" is called:\n')
             if self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['its'.upper()]:
-                self.its_parameters = MoREST_parameters.get_its_parameters()
+                if self.if_morest_initialization:
+                    self.its_parameters = MoREST_parameters.get_its_parameters(self.__log_morest)
+                else:
+                    try:
+                        self.its_parameters = np.load('MoREST_ITS_parameters.npy',allow_pickle=True).item()
+                    except:
+                        self.its_parameters = MoREST_parameters.get_its_parameters(self.__log_morest)
         #    for key in self.its_parameters:
         #        print(key+' : '+str(self.its_parameters[key]))
 
@@ -34,7 +48,13 @@ class morest:
                     str(self.wall_potential_parameters['wall_type'])+'\" is called:\n')
             if self.wall_potential_parameters['wall_type'].upper() in ['Plane_opaque_wall'.upper(),\
                                                                   'Plane_translucent_wall'.upper()]:
-                self.plane_wall_parameters = MoREST_parameters.get_plane_wall_parameters()
+                if self.if_morest_initialization:
+                    self.plane_wall_parameters = MoREST_parameters.get_plane_wall_parameters(self.__log_morest)
+                else:
+                    try:
+                        self.plane_wall_parameters = np.load('MoREST_plane_wall_parameters.npy',allow_pickle=True).item()
+                    except:
+                        self.plane_wall_parameters = MoREST_parameters.get_plane_wall_parameters(self.__log_morest)
         #    for key in self.plane_wall_parameters:
         #        print(key+' : '+str(self.plane_wall_parameters[key]))
 
@@ -54,16 +74,16 @@ class morest:
         if_call_wall_potential = False
 
         #self.__log_morest.write('Debug: calling bias sampling\n')
-        self.__log_morest.write('Debug: MD step: '+str(current_md_step)+'\n')
+        #self.__log_morest.write('Debug: MD step: '+str(current_md_step)+'\n')
 
         if self.enhanced_sampling_parameters['enhanced_sampling']:
-            self.__log_morest.write('Debug: calling enhanced sampling\n')
+            #self.__log_morest.write('Debug: calling enhanced sampling\n')
             bias_force_enhanced_sampling = self.__enhanced_sampling(simulation_temperature, simulation_maxsteps, \
                                  time_step, potential_energy, current_md_step, md_force)
             if_call_enhanced_sampling = True
             #print(bias_force_enhanced_sampling)
         if self.wall_potential_parameters['wall_potential']:
-            self.__log_morest.write('Debug: calling wall potential\n')
+            #self.__log_morest.write('Debug: calling wall potential\n')
             bias_force_wall_potential = self.__wall_potential(general_coordinate)
             if_call_wall_potential = True
             #print(bias_force_wall_potential)
@@ -100,8 +120,8 @@ class morest:
         '''
 
         if self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['its'.upper()]:
-            self.__log_morest.write('Debug: In ITS sampling\n')
-            self.__log_morest.write('Debug: ITS MD step: '+str(current_md_step)+'\n')
+            #self.__log_morest.write('Debug: In ITS sampling\n')
+            #self.__log_morest.write('Debug: ITS MD step: '+str(current_md_step)+'\n')
             '''
             if if_initial or ( if_initial == 1 ):
                 #if os.path.isfile('MoREST_ITS_pk.npy'):
@@ -155,7 +175,7 @@ class morest:
         '''
 
         if not self.wall_potential_parameters['collective_variable']:
-            self.__log_morest.write('Debug: In wall potential \n')
+            #self.__log_morest.write('Debug: In wall potential \n')
             if self.wall_potential_parameters['wall_type'].upper() in ['Plane_opaque_wall'.upper()]:
                 self.__log_morest.write('\n')
                 self.__log_morest.write('The plane opaque wall potential and force on atoms: XYZ coordinate, Potential, Forces\n')

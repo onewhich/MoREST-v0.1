@@ -26,30 +26,47 @@ class read_parameters:
     '''
     
     def __init__(self, log_morest, parameter_file='MoREST.in'):
-        self.__log_morest = log_morest
+        __log_moresddt = log_morest
         try:
             __parameters = open(parameter_file,'r').readlines()
         except FileNotFoundError:
-            self.__log_morest.write('Can not open parameter file.\n')
-            self.__log_morest.close()
+            __log_morest.write('Can not open parameter file: '+str(parameter_file)+'\n')
+            __log_morest.close()
             sys.exit(0)
         
+        self.morest_parameters = {}
+        self.morest_parameters['morest_initialization'] = False
         self.enhanced_sampling_parameters = {}
+        self.enhanced_sampling_parameters['enhanced_sampling'] = False
         self.its_parameters = {}
+        self.its_parameters['its_initialization'] = False
         self.wall_potential_parameters = {}
+        self.wall_potential_parameters['wall_potential'] = False
+        self.wall_potential_parameters['collective_variable'] = False
         self.plane_wall_parameters = {}
         for i_parameter in __parameters:
             if len(i_parameter.split()) < 2:
                 continue
+            ########################## MoREST            ##########################
+            if i_parameter.split()[0].upper() == 'MoREST_initialization'.upper():
+                if i_parameter.split()[1].upper() == 'True'.upper():
+                    self.morest_parameters['morest_initialization'] = True
+                elif i_parameter.split()[1].upper() == 'False'.upper():
+                    self.morest_parameters['morest_initialization'] = False
+                else:
+                    __log_morest.write('It is not clear whether the MoREST will be initialized.\n')
+                    __log_morest.close()
+                    raise Exception('Will you initialize the MoREST or not?')
+
             ########################## Enhanced sampling ##########################
-            if i_parameter.split()[0].upper() == 'Enhanced_sampling'.upper():
+            elif i_parameter.split()[0].upper() == 'Enhanced_sampling'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():
                     self.enhanced_sampling_parameters['enhanced_sampling'] = True
                 elif i_parameter.split()[1].upper() == 'False'.upper():
                     self.enhanced_sampling_parameters['enhanced_sampling'] = False
                 else:
-                    self.__log_morest.write('It is not clear whether the enhanced sampling will be used.\n')
-                    self.__log_morest.close()
+                    __log_morest.write('It is not clear whether the enhanced sampling will be used.\n')
+                    __log_morest.close()
                     raise Exception('Will you use enhanced sampling or not?')
                 
             elif i_parameter.split()[0].upper() == 'Enhanced_sampling_method'.upper():
@@ -108,8 +125,8 @@ class read_parameters:
                 elif i_parameter.split()[1].upper() == 'False'.upper():
                     self.wall_potential_parameters['wall_potential'] = False
                 else:
-                    self.__log_morest.write('It is not clear whether the wall potential will be used.\n')
-                    self.__log_morest.close()
+                    __log_morest.write('It is not clear whether the wall potential will be used.\n')
+                    __log_morest.close()
                     raise Exception('Will you use wall potential or not?')
                     
             elif i_parameter.split()[0].upper() == 'Collective_variable'.upper():
@@ -118,8 +135,8 @@ class read_parameters:
                 elif i_parameter.split()[1].upper() == 'False'.upper():
                     self.wall_potential_parameters['collective_variable'] = False
                 else:
-                    self.__log_morest.write('It is not clear whether the collective variable will be used.\n')
-                    self.__log_morest.close()
+                    __log_morest.write('It is not clear whether the collective variable will be used.\n')
+                    __log_morest.close()
                     raise Exception('Will you use collective variable or not?')
                 
             elif i_parameter.split()[0].upper() == 'Wall_type'.upper():
@@ -145,11 +162,17 @@ class read_parameters:
             elif i_parameter.split()[0].upper() == 'Plane_wall_scope'.upper():
                 self.plane_wall_parameters['plane_wall_scope'] = float(i_parameter.split()[1])
                 
+
+    def get_morest_parameters(self):
+        #np.save('MoREST_morest_parameters.npy', self.morest_parameters)
+        return self.morest_parameters
+
     def get_enhanced_sampling_parameters(self):
-        np.save('MoREST_enhanced_sampling_parameters.npy',self.enhanced_sampling_parameters)
+        #np.save('MoREST_enhanced_sampling_parameters.npy', self.enhanced_sampling_parameters)
         return self.enhanced_sampling_parameters
         
-    def get_its_parameters(self):
+    def get_its_parameters(self, log_morest):
+        __log_morest = log_morest
         if self.its_parameters['its_initialization']:
             try:
                 os.remove('MoREST_ITS_pk.npy')
@@ -157,7 +180,7 @@ class read_parameters:
                 os.remove('MoREST_ITS_potential_energy.npy')
             except:
                 pass
-            self.__log_morest.write('Integrated tempering sampling method is initialized.\n\n')
+            __log_morest.write('Integrated tempering sampling method is initialized.\n\n')
 
         if not 'its_replica_temperature' in self.its_parameters:
             if int(self.its_parameters['its_replica_arrange']) == -1:
@@ -171,8 +194,8 @@ class read_parameters:
                                                    num=self.its_parameters['its_number_of_replica'],\
                                                    endpoint=True)
             else:
-                self.__log_morest.write('No ITS_replica_arrange type was matched.\n')
-                self.__log_morest.close()
+                __log_morest.write('No ITS_replica_arrange type was matched.\n')
+                __log_morest.close()
                 raise Exception('No ITS_replica_arrange type was matched.')
             self.its_parameters['its_replica_temperature'] = replica_temperature
         
@@ -200,36 +223,37 @@ class read_parameters:
         #    json.dump(self.its_parameters,its_json, cls=NumpyArrayEncoder)
         np.save('MoREST_ITS_parameters.npy',self.its_parameters)
         for key in self.its_parameters:
-            self.__log_morest.write(key+' : '+str(self.its_parameters[key])+'\n')
-        self.__log_morest.write('\n')
+            __log_morest.write(key+' : '+str(self.its_parameters[key])+'\n')
+        __log_morest.write('\n')
         
         return self.its_parameters
     
     def get_wall_potential_parameters(self):
-        np.save('MoREST_wall_potential_parameters.npy', self.wall_potential_parameters)
+        #np.save('MoREST_wall_potential_parameters.npy', self.wall_potential_parameters)
         return self.wall_potential_parameters
     
-    def get_plane_wall_parameters(self):
+    def get_plane_wall_parameters(self, log_morest):
+        __log_morest = log_morest
         '''
         if self.wall_potential_parameters['wall_type'] in ['Plane_opaque_wall', 'plane_opaque_wall']:
-            self.__log_morest.write('The defination of the plane opaque wall: Point in plane, Normal vector\n')
-            self.__log_morest.write(str(self.plane_wall_parameters['plane_wall_point']) + \
+            __log_morest.write('The defination of the plane opaque wall: Point in plane, Normal vector\n')
+            __log_morest.write(str(self.plane_wall_parameters['plane_wall_point']) + \
                                ' '+str(self.plane_wall_parameters['plane_wall_normal_vector']))
-            self.__log_morest.write('\n')
-            self.__log_morest.write('Plane_wall_scaling : '+str(self.plane_wall_parameters['plane_wall_scaling'])+'\n')
-            self.__log_morest.write('Plane_wall_scope : '+str(self.plane_wall_parameters['plane_wall_scope'])+'\n')
-            self.__log_morest.write('\n')
+            __log_morest.write('\n')
+            __log_morest.write('Plane_wall_scaling : '+str(self.plane_wall_parameters['plane_wall_scaling'])+'\n')
+            __log_morest.write('Plane_wall_scope : '+str(self.plane_wall_parameters['plane_wall_scope'])+'\n')
+            __log_morest.write('\n')
         if self.wall_potential_parameters['wall_type'] in ['Plane_translucent_wall', 'plane_translucent_wall']:
-            self.__log_morest.write('The defination of the plane translucent wall: Point in plane, Normal vector\n')
-            self.__log_morest.write(str(self.plane_wall_parameters['plane_wall_point']) + \
+            __log_morest.write('The defination of the plane translucent wall: Point in plane, Normal vector\n')
+            __log_morest.write(str(self.plane_wall_parameters['plane_wall_point']) + \
                                ' ' + str(self.plane_wall_parameters['plane_wall_normal_vector']))
-            self.__log_morest.write('\n')
-            self.__log_morest.write('Plane_wall_scaling : '+str(self.plane_wall_parameters['plane_wall_scaling'])+'\n')
-            self.__log_morest.write('Plane_wall_scope : '+str(self.plane_wall_parameters['plane_wall_scope'])+'\n')
-            self.__log_morest.write('\n')
+            __log_morest.write('\n')
+            __log_morest.write('Plane_wall_scaling : '+str(self.plane_wall_parameters['plane_wall_scaling'])+'\n')
+            __log_morest.write('Plane_wall_scope : '+str(self.plane_wall_parameters['plane_wall_scope'])+'\n')
+            __log_morest.write('\n')
         '''
         for key in self.plane_wall_parameters:
-            self.__log_morest.write(key+' : '+str(self.plane_wall_parameters[key])+'\n')
-        self.__log_morest.write('\n')
+            __log_morest.write(key+' : '+str(self.plane_wall_parameters[key])+'\n')
+        __log_morest.write('\n')
         np.save('MoREST_plane_wall_parameters.npy', self.plane_wall_parameters)
         return self.plane_wall_parameters
