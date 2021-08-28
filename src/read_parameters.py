@@ -36,6 +36,7 @@ class read_parameters:
         
         self.morest_parameters = {}
         self.morest_parameters['morest_initialization'] = False
+        self.morest_parameters['morest_api_fortran'] = False
         self.enhanced_sampling_parameters = {}
         self.enhanced_sampling_parameters['enhanced_sampling'] = False
         self.its_parameters = {}
@@ -57,6 +58,16 @@ class read_parameters:
                     __log_morest.write('It is not clear whether the MoREST will be initialized.\n')
                     __log_morest.close()
                     raise Exception('Will you initialize the MoREST or not?')
+
+            elif i_parameter.split()[0].upper() == 'MoREST_API_Fortran'.upper():
+                if i_parameter.split()[1].upper() == 'True'.upper():
+                    self.morest_parameters['morest_api_fortran'] = True
+                elif i_parameter.split()[1].upper() == 'False'.upper():
+                    self.morest_parameters['morest_api_fortran'] = False
+                else:
+                    __log_morest.write('It is not clear whether the MoREST API for Fortran code will be used.\n')
+                    __log_morest.close()
+                    raise Exception('Will you use the MoREST API for Fortran code or not?')
 
             ########################## Enhanced sampling ##########################
             elif i_parameter.split()[0].upper() == 'Enhanced_sampling'.upper():

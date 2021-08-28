@@ -1,5 +1,8 @@
 # MoREST.in
 
+MoREST_initialization          False # This parameter should always be False when MoREST is called by Fortran.
+MoREST_API_Fortran             True  # This API is used for MoREST called by Fortran code
+
 Enhanced_sampling              True
 Enhanced_sampling_method       ITS
 ITS_initialization             False  # Set True for the first time running ITS. It will delete all relvent files such as TIS_nk.npy, ITS_pk.npy. This parameter should always be False when MoREST is called by Fortran.
