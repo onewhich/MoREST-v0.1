@@ -1,15 +1,17 @@
-# MoREST.in
+# MoREST.in unit: ps, AA, eV
 
 MoREST_initialization          False # This parameter should always be False when MoREST is called by Fortran.
 MoREST_API_Fortran             True  # This API is used for MoREST called by Fortran code
 
-Molecular_dynamics           True
-MD_type                  NVE   # Choose the ensemble in MD, e.g. NVE 
-Time_step                 1.0   # unit in ps
-Traj_interval               1    # Record sampling every Traj_interval steps
-New_traj                  True   # Overwrite or append the trajectory in MoREST.traj file
-Clear_rotation              True
-Clear_translation            True
+Phase_space_sampling           True
+Sampling_new_traj             True   # Overwrite or append the trajectory in MoREST.traj file
+Sampling_traj_interval          100    # Record sampling every Traj_interval steps
+Sampling_clean_rotation         True
+Sampling_clean_translation       True
+Sampling_method                MD    # MD, MC, GLE
+Sampling_ensemble             NVE   # Choose the ensemble in MD, e.g. NVE
+MD_time_step                 0.001   # unit in ps
+MD_simulation_time             10.0   # unit in ps
 
 Enhanced_sampling              True
 Enhanced_sampling_method       ITS

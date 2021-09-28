@@ -71,6 +71,9 @@ class morest:
         #        print(key+' : '+str(self.plane_wall_parameters[key]))
 
         
+    #def __md(self):
+        
+        
     def bias_sampling(self, simulation_temperature, simulation_maxsteps, \
                    time_step, potential_energy, current_md_step, md_force, general_coordinate):
         '''
