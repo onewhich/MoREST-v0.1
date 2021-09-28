@@ -37,6 +37,8 @@ class read_parameters:
         self.morest_parameters = {}
         self.morest_parameters['morest_initialization'] = False
         self.morest_parameters['morest_api_fortran'] = False
+        self.md_parameters = {}
+        self.md_parameters['molecular_dynamics'] = False
         self.enhanced_sampling_parameters = {}
         self.enhanced_sampling_parameters['enhanced_sampling'] = False
         self.its_parameters = {}
@@ -69,6 +71,44 @@ class read_parameters:
                     __log_morest.close()
                     raise Exception('Will you use the MoREST API for Fortran code or not?')
 
+            ########################## Molecular dynamics #########################
+            elif i_parameter.split()[0].upper() == 'Molecular_dynamics'.upper():
+                if i_parameter.split()[1].upper() == 'True'.upper():
+                    self.md_parameters['molecular_dynamics'] = True
+                elif i_parameter.split()[1].upper() == 'False'.upper():
+                    self.md_parameters['molecular_dynamics'] = False
+                else:
+                    __log_morest.write('It is not clear whether the molecular dynamics will be used.\n')
+                    __log_morest.close()
+                    raise Exception('Will you use molecular dynamics or not?')
+                    
+            elif i_parameter.split()[0].upper() == 'MD_type'.upper():
+                self.md_parameters['md_type'] = str(i_parameter.split()[1])
+                
+            elif i_parameter.split()[0].upper() == 'Time_step'.upper():
+                self.md_parameters['time_step'] = float(i_parameter.split()[1])
+            
+            elif i_parameter.split()[0].upper() == 'Traj_interval'.upper():
+                self.md_parameters['traj_interval'] = int(i_parameter.split()[1])
+            
+            elif i_parameter.split()[0].upper() == 'New_traj'.upper():
+                if i_parameter.split()[1].upper() == 'True'.upper():
+                    self.md_parameters['new_traj'] = True
+                elif i_parameter.split()[1].upper() == 'False'.upper():
+                    self.md_parameters['new_traj'] = False
+                    
+            elif i_parameter.split()[0].upper() == 'Clear_rotation'.upper():
+                if i_parameter.split()[1].upper() == 'True'.upper():
+                    self.md_parameters['clear_rotation'] = True
+                elif i_parameter.split()[1].upper() == 'False'.upper():
+                    self.md_parameters['clear_rotation'] = False
+                    
+            elif i_parameter.split()[0].upper() == 'Clear_translation'.upper():
+                if i_parameter.split()[1].upper() == 'True'.upper():
+                    self.md_parameters['clear_translation'] = True
+                elif i_parameter.split()[1].upper() == 'False'.upper():
+                    self.md_parameters['clear_translation'] = False
+                    
             ########################## Enhanced sampling ##########################
             elif i_parameter.split()[0].upper() == 'Enhanced_sampling'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():
@@ -172,11 +212,15 @@ class read_parameters:
                 
             elif i_parameter.split()[0].upper() == 'Plane_wall_scope'.upper():
                 self.plane_wall_parameters['plane_wall_scope'] = float(i_parameter.split()[1])
-                
 
+                
     def get_morest_parameters(self):
         #np.save('MoREST_morest_parameters.npy', self.morest_parameters)
         return self.morest_parameters
+
+    def get_md_parameters(self):
+        #np.save('MoREST_md_parameters.npy', self.md_parameters)
+        return self.md_parameters
 
     def get_enhanced_sampling_parameters(self):
         #np.save('MoREST_enhanced_sampling_parameters.npy', self.enhanced_sampling_parameters)

@@ -3,6 +3,14 @@
 MoREST_initialization          False # This parameter should always be False when MoREST is called by Fortran.
 MoREST_API_Fortran             True  # This API is used for MoREST called by Fortran code
 
+Molecular_dynamics           True
+MD_type                  NVE   # Choose the ensemble in MD, e.g. NVE 
+Time_step                 1.0   # unit in ps
+Traj_interval               1    # Record sampling every Traj_interval steps
+New_traj                  True   # Overwrite or append the trajectory in MoREST.traj file
+Clear_rotation              True
+Clear_translation            True
+
 Enhanced_sampling              True
 Enhanced_sampling_method       ITS
 ITS_initialization             False  # Set True for the first time running ITS. It will delete all relvent files such as TIS_nk.npy, ITS_pk.npy. This parameter should always be False when MoREST is called by Fortran.

@@ -1,8 +1,8 @@
 import os, sys
 import numpy as np
 from read_parameters import read_parameters
-from enhanced_sampling_ITS import its
-from wall_potential_Plane_wall import plane_opaque_wall, plane_translucent_wall
+from enhanced_sampling import its
+from wall_potential import plane_opaque_wall, plane_translucent_wall
 
 
 class morest:
