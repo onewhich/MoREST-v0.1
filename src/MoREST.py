@@ -33,6 +33,7 @@ class morest:
             else:
                 self.__log_morest.write('\n-----------MoREST continue to work--------\n\n')
 
+        #################### Enhanced sampling initialization #################################
         self.enhanced_sampling_parameters = MoREST_parameters.get_enhanced_sampling_parameters()
         #for key in self.enhanced_sampling_parameters:
         #    print(key+' : '+str(self.enhanced_sampling_parameters[key]))
@@ -51,6 +52,7 @@ class morest:
         #    for key in self.its_parameters:
         #        print(key+' : '+str(self.its_parameters[key]))
 
+        #################### Wall potential initialization ####################################
         self.wall_potential_parameters = MoREST_parameters.get_wall_potential_parameters()
         #for key in self.wall_potential_parameters:
         #    print(key+' : '+str(self.wall_potential_parameters[key]))
@@ -71,9 +73,7 @@ class morest:
         #        print(key+' : '+str(self.plane_wall_parameters[key]))
 
         
-    #def __md(self):
-        
-        
+    
     def bias_sampling(self, simulation_temperature, simulation_maxsteps, \
                    time_step, potential_energy, current_md_step, md_force, general_coordinate):
         '''

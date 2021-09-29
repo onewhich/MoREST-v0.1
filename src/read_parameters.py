@@ -39,7 +39,7 @@ class read_parameters:
         self.morest_parameters['morest_api_fortran'] = False
         self.sampling_parameters = {}
         self.sampling_parameters['phase_space_sampling'] = False
-        self.sampling_parameters['sampling_new_traj'] = True
+        self.sampling_parameters['sampling_restart'] = True
         self.sampling_parameters['sampling_clean_rotation'] = False
         self.sampling_parameters['sampling_clean_translation'] = False
         self.md_parameters = {}
@@ -75,7 +75,7 @@ class read_parameters:
                     __log_morest.close()
                     raise Exception('Will you use the MoREST API for Fortran code or not?')
 
-            ########################## Molecular dynamics #########################
+            ########################## Phase space sampling #######################
             elif i_parameter.split()[0].upper() == 'Phase_space_sampling'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():
                     self.sampling_parameters['phase_space_sampling'] = True
@@ -86,11 +86,11 @@ class read_parameters:
                     __log_morest.close()
                     raise Exception('Will you use sampling method or not?')
                     
-            elif i_parameter.split()[0].upper() == 'Sampling_new_traj'.upper():
+            elif i_parameter.split()[0].upper() == 'Sampling_restart'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():
-                    self.sampling_parameters['sampling_new_traj'] = True
+                    self.sampling_parameters['sampling_restart'] = True
                 elif i_parameter.split()[1].upper() == 'False'.upper():
-                    self.sampling_parameters['sampling_new_traj'] = False
+                    self.sampling_parameters['sampling_restart'] = False
                     
             elif i_parameter.split()[0].upper() == 'Sampling_traj_interval'.upper():
                 self.sampling_parameters['sampling_traj_interval'] = int(i_parameter.split()[1])

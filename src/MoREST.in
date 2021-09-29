@@ -1,10 +1,11 @@
-# MoREST.in unit: ps, AA, eV
+# MoREST.in
+# unit: time: ps, length: AA, energy: eV, force: eV/AA, mass: 
 
 MoREST_initialization          False # This parameter should always be False when MoREST is called by Fortran.
 MoREST_API_Fortran             True  # This API is used for MoREST called by Fortran code
 
 Phase_space_sampling           True
-Sampling_new_traj             True   # Overwrite or append the trajectory in MoREST.traj file
+Sampling_restart              False   # Overwrite or append the trajectory in MoREST.traj file, read structure from MoREST.str or MoREST.str_new
 Sampling_traj_interval          100    # Record sampling every Traj_interval steps
 Sampling_clean_rotation         True
 Sampling_clean_translation       True
