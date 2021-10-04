@@ -7,3 +7,6 @@ With enhanced sampling methods, the whole configurational space of the system wi
 
 ## Full dimensional *ab* *initio* reaction dynamics
 Calculate the initial velocity of an incident molecule with particular vibration modes. Calculate the initial velocity of an incident molecule with rotation model, collision energy, and angle. 
+
+## Units in MoREST
+time: ps, length: $\overset{\circ}{\mathbb{A}}$, energy: eV, force: eV/$\overset{\circ}{\mathbb{A}}$, velocity: $\overset{\circ}{\mathbb{A}}$/ps, acceleration: $\overset{\circ}{\mathbb{A}}$/ps^2, mass: eV/c^2 = eV * $\overset{\circ}{\mathbb{A}}$^-2 * ps^2 (1 atomic mass (Dalton) = 1.1531805312624011e-21 eV $\overset{\circ}{\mathbb{A}}$^-2 ps^2)

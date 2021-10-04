@@ -1,6 +1,4 @@
 # MoREST.in
-# unit: time: ps, length: AA, energy: eV, force: eV/AA, velocity: AA/ps, acceleration: AA/ps^2
-#     mass: eV/c^2 = eV * AA^-2 * ps^2 (1 atomic mass = )
 
 MoREST_initialization          False # This parameter should always be False when MoREST is called by Fortran.
 MoREST_API_Fortran             True  # This API is used for MoREST called by Fortran code
