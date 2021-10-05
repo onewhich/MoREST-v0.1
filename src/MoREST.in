@@ -8,12 +8,12 @@ Sampling_restart              False   # Overwrite or append the trajectory in Mo
 Sampling_traj_interval          100    # Record sampling every Traj_interval steps
 Sampling_clean_rotation         True
 Sampling_clean_translation       True
-Sampling_method                MD    # MD, MC, GLE
+Sampling_method                MD    # MD, MC, GLE, PIMD
 Sampling_ensemble             NVE   # Choose the ensemble in MD, e.g. NVE
-MD_time_step                 0.001   # unit in ps
-MD_simulation_time             10.0   # unit in ps
+MD_time_step                 0.01   # unit in ps
+MD_simulation_time             0.05   # unit in ps
 
-Enhanced_sampling              True
+Enhanced_sampling              False
 Enhanced_sampling_method       ITS
 ITS_initialization             False  # Set True for the first time running ITS. It will delete all relvent files such as TIS_nk.npy, ITS_pk.npy. This parameter should always be False when MoREST is called by Fortran.
 ITS_lower_bound_temperature    700
@@ -27,7 +27,7 @@ ITS_trial_MD_steps             5
 ITS_delta_pk                   1e-1
 ITS_energy_shift               0
 
-Wall_potential                 True
+Wall_potential                 False
 Collective_variable            False
 Wall_type                      plane_opaque_wall
 Plane_wall_point               0 0 3 # This point and normal vector determine the parameter b in the plane potential.
