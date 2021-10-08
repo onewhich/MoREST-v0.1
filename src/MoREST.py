@@ -1,6 +1,7 @@
 import os, sys
 import numpy as np
 from read_parameters import read_parameters
+from phase_space_sampling import velocity_Verlet
 from enhanced_sampling import its
 from wall_potential import plane_opaque_wall, plane_translucent_wall
 
@@ -33,6 +34,18 @@ class morest:
             else:
                 self.__log_morest.write('\n-----------MoREST continue to work--------\n\n')
 
+        #################### Phase space sampling initialization ##############################
+        self.sampling_parameters = MoREST_parameters.get_sampling_parameters()
+        self.md_parameters = MoREST_parameters.get_md_parameters(self.__log_morest)
+        if self.sampling_parameters['phase_space_sampling']:
+            if self.sampling_parameters['sampling_restart']:
+                self.__log_morest.write('Continue to sample the phase space\nMethod: '+str(self.sampling_parameters['sampling_method'])\
+                                       +'\nEnsemble: '+str(self.sampling_parameters['sampling_ensemble'])+'\n\n')
+            else:
+                self.__log_morest.write('Start to sample the phase space\nMethod: '+str(self.sampling_parameters['sampling_method'])\
+                                       +'\nEnsemble: '+str(self.sampling_parameters['sampling_ensemble'])+'\n\n')
+                
+        
         #################### Enhanced sampling initialization #################################
         self.enhanced_sampling_parameters = MoREST_parameters.get_enhanced_sampling_parameters()
         #for key in self.enhanced_sampling_parameters:
@@ -73,6 +86,18 @@ class morest:
         #        print(key+' : '+str(self.plane_wall_parameters[key]))
 
         
+    def phase_space_sampling(self):
+        '''
+        This function is called to excute phase space sampling method.
+        --------
+        '''
+        if self.sampling_parameters['sampling_method'].upper() in ['MD'] and self.sampling_parameters['sampling_ensemble'].upper() in ['NVE']:
+            sampling_job = velocity_Verlet(self.sampling_parameters, self.md_parameters)
+            current_structure = sampling_job.get_current_structure()
+            max_time_step = int(self.md_parameters['md_simulation_time']/self.md_parameters['md_time_step']) + 1
+            for i_step in range(current_structure['current_step']+1, max_time_step):
+                sampling_job.generate_new_step()
+            self.__log_morest.write('Phase space sampling with molecular dynamics method in microcanonical ensemble is finished!\n')
     
     def bias_sampling(self, simulation_temperature, simulation_maxsteps, \
                    time_step, potential_energy, current_md_step, md_force, general_coordinate):
@@ -118,7 +143,7 @@ class morest:
     def __enhanced_sampling(self, simulation_temperature, simulation_maxsteps, \
                    time_step, potential_energy, current_md_step, md_force):
         '''
-        This function is called to excute enhanced sampling by MD/MC module.
+        This function is called to excute enhanced sampling by phase space sampling module.
         --------
         INPUT:
             enhanced_sampling_method: Specify the method will be used, e.g., ITS, REMD...
@@ -192,27 +217,27 @@ class morest:
         if not self.wall_potential_parameters['collective_variable']:
             #self.__log_morest.write('Debug: In wall potential \n')
             if self.wall_potential_parameters['wall_type'].upper() in ['Plane_opaque_wall'.upper()]:
-                self.__log_morest.write('\n')
-                self.__log_morest.write('The plane opaque wall potential and force on atoms: XYZ coordinate, Potential, Forces\n')
+                #self.__log_morest.write('\n')
+                #self.__log_morest.write('The plane opaque wall potential and force on atoms: XYZ coordinate, Potential, Forces\n')
                 wall_force = []
                 for i_coordinate in general_coordinate:
                     i_wall_force, i_wall_potential = plane_opaque_wall().get_opaque_wall_force_potential(i_coordinate)
                     wall_force.append(i_wall_force)
-                    self.__log_morest.write(str(i_coordinate)+' , '+str(i_wall_potential)+' , '+str(i_wall_force))
-                    self.__log_morest.write('\n')
-                self.__log_morest.write('\n')
+                    #self.__log_morest.write(str(i_coordinate)+' , '+str(i_wall_potential)+' , '+str(i_wall_force))
+                    #self.__log_morest.write('\n')
+                #self.__log_morest.write('\n')
                 return np.array(wall_force)
 
             if self.wall_potential_parameters['wall_type'].upper() in ['Plane_translucent_wall'.upper()]:
-                self.__log_morest.write('\n')
-                self.__log_morest.write('The plane translucent wall potential and force on atoms: XYZ coordinate, Potential, Forces\n')
+                #self.__log_morest.write('\n')
+                #self.__log_morest.write('The plane translucent wall potential and force on atoms: XYZ coordinate, Potential, Forces\n')
                 wall_force = []
                 for i_coordinate in general_coordinate:
                     i_wall_force, i_wall_potential = plane_translucent_wall().get_translucent_wall_force_potential(i_coordinate)
                     wall_force.append(i_wall_force)
-                    self.__log_morest.write(str(i_coordinate)+' , '+str(i_wall_potential)+' , '+str(i_wall_force))
-                    self.__log_morest.write('\n')
-                self.__log_morest.write('\n')
+                    #self.__log_morest.write(str(i_coordinate)+' , '+str(i_wall_potential)+' , '+str(i_wall_force))
+                    #self.__log_morest.write('\n')
+                #self.__log_morest.write('\n')
                 return np.array(wall_force)
 
             else:

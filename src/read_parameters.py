@@ -26,7 +26,7 @@ class read_parameters:
     '''
     
     def __init__(self, log_morest, parameter_file='MoREST.in'):
-        __log_moresddt = log_morest
+        __log_morest = log_morest
         try:
             __parameters = open(parameter_file,'r').readlines()
         except FileNotFoundError:
@@ -55,7 +55,7 @@ class read_parameters:
             if len(i_parameter.split()) < 2:
                 continue
             ########################## MoREST            ##########################
-            if i_parameter.split()[0].upper() == 'MoREST_initialization'.upper():
+            elif i_parameter.split()[0].upper() == 'MoREST_initialization'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():
                     self.morest_parameters['morest_initialization'] = True
                 elif i_parameter.split()[1].upper() == 'False'.upper():
@@ -233,7 +233,11 @@ class read_parameters:
     def get_sampling_parameters(self):
         return self.sampling_parameters
     
-    def get_md_parameters(self):
+    def get_md_parameters(self, log_morest):
+        __log_morest = log_morest
+        for key in self.md_parameters:
+            __log_morest.write(key+' : '+str(self.md_parameters[key])+'\n')
+        __log_morest.write('\n')
         #np.save('MoREST_md_parameters.npy', self.md_parameters)
         return self.md_parameters
 
