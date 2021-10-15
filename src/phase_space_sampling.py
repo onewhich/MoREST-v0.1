@@ -34,8 +34,8 @@ class velocity_Verlet:
         
     def generate_new_step(self):
         time_step = self.md_parameters['md_time_step']
-        self.next_structure = {}
         
+        self.next_structure = {}
         self.next_structure['n_atoms'] = self.structure['n_atoms']
         self.next_structure['elements'] = self.structure['elements']
         self.next_structure['current_step'] = self.structure['current_step'] + 1

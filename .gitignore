@@ -172,5 +172,6 @@ Thumbs.db
 #######################
 *.str_new
 *.traj
+test/
 
 *.swp
