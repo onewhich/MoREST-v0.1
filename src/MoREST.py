@@ -96,7 +96,10 @@ class morest:
             current_structure = sampling_job.get_current_structure()
             max_time_step = int(self.md_parameters['md_simulation_time']/self.md_parameters['md_time_step']) + 1
             for i_step in range(current_structure['current_step']+1, max_time_step):
-                sampling_job.generate_new_step()
+                if self.wall_potential_parameters['wall_potential']:
+                    general_coordinate = current_structure['coordinates']
+                    bias_force_wall_potential = self.__wall_potential(general_coordinate)
+                current_structure = sampling_job.generate_new_step(bias_force_wall_potential)
             self.__log_morest.write('Phase space sampling with molecular dynamics method in microcanonical ensemble is finished!\n')
             self.mission_complete()
     

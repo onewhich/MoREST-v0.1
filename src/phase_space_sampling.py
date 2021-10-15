@@ -32,7 +32,7 @@ class velocity_Verlet:
             write_xyz_file(self.__log_traj, self.structure)
         
         
-    def generate_new_step(self):
+    def generate_new_step(self, bias_forces=None):
         time_step = self.md_parameters['md_time_step']
         
         self.next_structure = {}
@@ -45,6 +45,8 @@ class velocity_Verlet:
                                            + 0.5 * self.structure['accelerations'] * time_step**2
         self.next_structure['total_energy'], self.next_structure['forces'] = \
                                            ml_potential().read_potential_force(self.next_structure['coordinates'])
+        if bias_forces != None:
+            self.next_structure['forces'] = self.next_structure['forces'] + bias_forces        
         self.next_structure['accelerations'] = np.array([self.next_structure['forces'][i_atom]/self.next_structure['masses'][i_atom] \
                                               for i_atom in range(len(self.next_structure['forces']))])
         self.next_structure['velocities'] = self.structure['velocities'] \
@@ -56,7 +58,7 @@ class velocity_Verlet:
         if self.structure['current_step'] % self.sampling_parameters['sampling_traj_interval'] == 0:
             write_xyz_file(self.__log_traj, self.structure)
         
-        return None
+        return self.structure
     
         
     def get_current_structure(self):
