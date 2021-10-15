@@ -7,6 +7,8 @@ __pycache__/
 # C extensions
 *.so
 
+*.o
+
 # Distribution / packaging
 .Python
 build/
@@ -166,3 +168,7 @@ dmypy.json
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+#######################
+*.str_new
+*.traj
