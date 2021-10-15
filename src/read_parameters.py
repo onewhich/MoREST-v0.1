@@ -3,7 +3,6 @@ import numpy as np
 import scipy.constants
 import json
 from json import JSONEncoder
-import json
 
 class NumpyArrayEncoder(JSONEncoder):
     def default(self, obj):

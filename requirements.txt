@@ -1,0 +1,5 @@
+numpy
+scipy
+json
+periodictable
+ase
