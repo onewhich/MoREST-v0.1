@@ -89,6 +89,8 @@ class read_parameters:
             elif i_parameter.split()[0].upper() == 'Sampling_restart'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():
                     self.sampling_parameters['sampling_restart'] = True
+                    # change MoREST_initialization as False
+                    self.morest_parameters['morest_initialization'] = False
                 elif i_parameter.split()[1].upper() == 'False'.upper():
                     self.sampling_parameters['sampling_restart'] = False
                     

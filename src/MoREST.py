@@ -98,6 +98,7 @@ class morest:
             for i_step in range(current_structure['current_step']+1, max_time_step):
                 sampling_job.generate_new_step()
             self.__log_morest.write('Phase space sampling with molecular dynamics method in microcanonical ensemble is finished!\n')
+            self.mission_complete()
     
     def bias_sampling(self, simulation_temperature, simulation_maxsteps, \
                    time_step, potential_energy, current_md_step, md_force, general_coordinate):
@@ -248,3 +249,7 @@ class morest:
         else:
             general_coordinate = CV_to_xyz(general_coordinate) # TODO conversion function is not exist.
 
+
+    def mission_complete(self):
+        self.__log_morest.write('\nThe mission of MoREST is complete!\n')
+        self.__log_morest.close()
