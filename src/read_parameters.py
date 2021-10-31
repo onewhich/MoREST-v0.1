@@ -50,6 +50,7 @@ class read_parameters:
         self.wall_potential_parameters['wall_potential'] = False
         self.wall_potential_parameters['collective_variable'] = False
         self.plane_wall_parameters = {}
+        self.spherical_wall_parameters = {}
         for i_parameter in __parameters:
             if len(i_parameter.split()) < 2:
                 continue
@@ -206,6 +207,12 @@ class read_parameters:
             elif i_parameter.split()[0].upper() == 'Wall_type'.upper():
                 self.wall_potential_parameters['wall_type'] = str(i_parameter.split()[1])
                 
+            elif i_parameter.split()[0].upper() == 'Wall_scaling'.upper():
+                self.wall_potential_parameters['wall_scaling'] = float(i_parameter.split()[1])
+                
+            elif i_parameter.split()[0].upper() == 'Wall_scope'.upper():
+                self.wall_potential_parameters['wall_scope'] = float(i_parameter.split()[1])
+                
             ########################## Plane wall #################################
             elif i_parameter.split()[0].upper() == 'Plane_wall_point'.upper():
                 tmp_wall_point = []
@@ -220,11 +227,59 @@ class read_parameters:
                 tmp_wall_normal_vector = np.array(tmp_wall_normal_vector)
                 self.plane_wall_parameters['plane_wall_normal_vector'] = tmp_wall_normal_vector / np.linalg.norm(tmp_wall_normal_vector)
                 
-            elif i_parameter.split()[0].upper() == 'Plane_wall_scaling'.upper():
-                self.plane_wall_parameters['plane_wall_scaling'] = float(i_parameter.split()[1])
+            ########################## Spherical wall #############################
+            elif i_parameter.split()[0].upper() == 'Spherical_wall_center'.upper():
+                tmp_wall_center = []
+                for i in range(3):
+                    tmp_wall_center.append(float(i_parameter.split()[i+1]))
+                self.spherical_wall_parameters['spherical_wall_center'] = np.array(tmp_wall_center)
+            
+            elif i_parameter.split()[0].upper() == 'Spherical_wall_radius'.upper():
+                self.spherical_wall_parameters['spherical_wall_radius'] = float(i_parameter.split()[1])
                 
-            elif i_parameter.split()[0].upper() == 'Plane_wall_scope'.upper():
-                self.plane_wall_parameters['plane_wall_scope'] = float(i_parameter.split()[1])
+        __log_morest.write('\n')
+        try:
+            for key in self.morest_parameters:
+                __log_morest.write(key+' : '+str(self.self.morest_parameters[key])+'\n')
+        except:
+            pass
+        try:
+            for key in self.sampling_parameters:
+                __log_morest.write(key+' : '+str(self.self.sampling_parameters[key])+'\n')
+        except:
+            pass
+        try:
+            for key in self.md_parameters:
+                __log_morest.write(key+' : '+str(self.self.md_parameters[key])+'\n')
+        except:
+            pass
+        try:
+            for key in self.enhanced_sampling_parameters:
+                __log_morest.write(key+' : '+str(self.self.enhanced_sampling_parameters[key])+'\n')
+        except:
+            pass
+        try:
+            for key in self.its_parameters:
+                __log_morest.write(key+' : '+str(self.self.its_parameters[key])+'\n')
+        except:
+            pass
+        try:
+            for key in self.wall_potential_parameters:
+                __log_morest.write(key+' : '+str(self.self.wall_potential_parameters[key])+'\n')
+        except:
+            pass
+        try:
+            for key in self.plane_wall_parameters:
+                __log_morest.write(key+' : '+str(self.self.plane_wall_parameters[key])+'\n')
+        except:
+            pass
+        try:
+            for key in self.spherical_wall_parameters:
+                __log_morest.write(key+' : '+str(self.self.spherical_wall_parameters[key])+'\n')
+        except:
+            pass
+        __log_morest.write('\n')
+            
 
                 
     def get_morest_parameters(self):
@@ -234,11 +289,7 @@ class read_parameters:
     def get_sampling_parameters(self):
         return self.sampling_parameters
     
-    def get_md_parameters(self, log_morest):
-        __log_morest = log_morest
-        for key in self.md_parameters:
-            __log_morest.write(key+' : '+str(self.md_parameters[key])+'\n')
-        __log_morest.write('\n')
+    def get_md_parameters(self):
         #np.save('MoREST_md_parameters.npy', self.md_parameters)
         return self.md_parameters
 
@@ -276,7 +327,6 @@ class read_parameters:
         
         self.its_parameters['its_replica_beta'] = 1/(self.its_parameters['its_replica_temperature'] *\
                                                     scipy.constants.value('Boltzmann constant in eV/K'))
-            
         try:
             self.its_parameters['its_initial_nk'] = np.loadtxt('MoREST_ITS_nk.npy')
         except:
@@ -285,7 +335,6 @@ class read_parameters:
             self.its_parameters['its_initial_nk'] = np.exp(self.its_parameters['its_replica_beta'])
             self.its_parameters['its_initial_nk'] = self.its_parameters['its_initial_nk'] /\
                                                     np.max(self.its_parameters['its_initial_nk'])
-            
         try:
             self.its_parameters['its_pk0'] = np.loadtxt('MoREST_ITS_pk.npy')
         except:
@@ -293,42 +342,20 @@ class read_parameters:
         if not 'its_pk0' in self.its_parameters:
             self.its_parameters['its_pk0'] = np.ones((self.its_parameters['its_number_of_replica'])) /\
                                                    self.its_parameters['its_number_of_replica']
-            
         #with open('MoREST_ITS_parameters.json','w') as its_json:
         #    json.dump(self.its_parameters,its_json, cls=NumpyArrayEncoder)
         np.save('MoREST_ITS_parameters.npy',self.its_parameters)
-        for key in self.its_parameters:
-            __log_morest.write(key+' : '+str(self.its_parameters[key])+'\n')
-        __log_morest.write('\n')
-        
         return self.its_parameters
     
     def get_wall_potential_parameters(self):
-        #np.save('MoREST_wall_potential_parameters.npy', self.wall_potential_parameters)
+        np.save('MoREST_wall_potential_parameters.npy', self.wall_potential_parameters)
         return self.wall_potential_parameters
     
-    def get_plane_wall_parameters(self, log_morest):
-        __log_morest = log_morest
-        '''
-        if self.wall_potential_parameters['wall_type'] in ['Plane_opaque_wall', 'plane_opaque_wall']:
-            __log_morest.write('The defination of the plane opaque wall: Point in plane, Normal vector\n')
-            __log_morest.write(str(self.plane_wall_parameters['plane_wall_point']) + \
-                               ' '+str(self.plane_wall_parameters['plane_wall_normal_vector']))
-            __log_morest.write('\n')
-            __log_morest.write('Plane_wall_scaling : '+str(self.plane_wall_parameters['plane_wall_scaling'])+'\n')
-            __log_morest.write('Plane_wall_scope : '+str(self.plane_wall_parameters['plane_wall_scope'])+'\n')
-            __log_morest.write('\n')
-        if self.wall_potential_parameters['wall_type'] in ['Plane_translucent_wall', 'plane_translucent_wall']:
-            __log_morest.write('The defination of the plane translucent wall: Point in plane, Normal vector\n')
-            __log_morest.write(str(self.plane_wall_parameters['plane_wall_point']) + \
-                               ' ' + str(self.plane_wall_parameters['plane_wall_normal_vector']))
-            __log_morest.write('\n')
-            __log_morest.write('Plane_wall_scaling : '+str(self.plane_wall_parameters['plane_wall_scaling'])+'\n')
-            __log_morest.write('Plane_wall_scope : '+str(self.plane_wall_parameters['plane_wall_scope'])+'\n')
-            __log_morest.write('\n')
-        '''
-        for key in self.plane_wall_parameters:
-            __log_morest.write(key+' : '+str(self.plane_wall_parameters[key])+'\n')
-        __log_morest.write('\n')
+    def get_plane_wall_parameters(self):
         np.save('MoREST_plane_wall_parameters.npy', self.plane_wall_parameters)
         return self.plane_wall_parameters
+
+    def get_spherical_wall_parameters(self):
+        np.save('MoREST_spherical_wall_parameters.npy', self.spherical_wall_parameters)
+        return self.spherical_wall_parameters
+    

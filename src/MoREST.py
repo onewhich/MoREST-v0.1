@@ -3,7 +3,7 @@ import numpy as np
 from read_parameters import read_parameters
 from phase_space_sampling import velocity_Verlet
 from enhanced_sampling import its
-from wall_potential import plane_opaque_wall, plane_translucent_wall
+from wall_potential import opaque_wall, translucent_wall
 
 
 class morest:
@@ -36,7 +36,7 @@ class morest:
 
         #################### Phase space sampling initialization ##############################
         self.sampling_parameters = MoREST_parameters.get_sampling_parameters()
-        self.md_parameters = MoREST_parameters.get_md_parameters(self.__log_morest)
+        self.md_parameters = MoREST_parameters.get_md_parameters()
         if self.sampling_parameters['phase_space_sampling']:
             if self.sampling_parameters['sampling_restart']:
                 self.__log_morest.write('Continue to sample the phase space\nMethod: '+str(self.sampling_parameters['sampling_method'])\
@@ -74,14 +74,23 @@ class morest:
                 self.__log_morest.write('Wall potential \"'+\
                     str(self.wall_potential_parameters['wall_type'])+'\" is called:\n')
             if self.wall_potential_parameters['wall_type'].upper() in ['Plane_opaque_wall'.upper(),\
-                                                                  'Plane_translucent_wall'.upper()]:
+                                                    'Plane_translucent_wall'.upper()]:
                 if self.morest_parameters['morest_initialization']:
-                    self.plane_wall_parameters = MoREST_parameters.get_plane_wall_parameters(self.__log_morest)
+                    self.plane_wall_parameters = MoREST_parameters.get_plane_wall_parameters()
                 else:
                     try:
                         self.plane_wall_parameters = np.load('MoREST_plane_wall_parameters.npy',allow_pickle=True).item()
                     except:
-                        self.plane_wall_parameters = MoREST_parameters.get_plane_wall_parameters(self.__log_morest)
+                        self.plane_wall_parameters = MoREST_parameters.get_plane_wall_parameters()
+            if self.wall_potential_parameters['wall_type'].upper() in ['Spherical_opaque_wall'.upper(),\
+                                                    'Spherical_translucent_wall'.upper()]:
+                if self.morest_parameters['morest_initialization']:
+                    self.spherical_wall_parameters = MoREST_parameters.get_spherical_wall_parameters()
+                else:
+                    try:
+                        self.spherical_wall_parameters = np.load('MoREST_spherical_wall_parameters.npy',allow_pickle=True).item()
+                    except:
+                        self.spherical_wall_parameters = MoREST_parameters.get_spherical_wall_parameters()
         #    for key in self.plane_wall_parameters:
         #        print(key+' : '+str(self.plane_wall_parameters[key]))
 
@@ -91,7 +100,7 @@ class morest:
         This function is called to excute phase space sampling method.
         --------
         '''
-        if self.sampling_parameters['sampling_method'].upper() in ['MD'] and self.sampling_parameters['sampling_ensemble'].upper() in ['NVE']:
+        if self.sampling_parameters['sampling_method'].upper() in ['MD'] and self.sampling_parameters['sampling_ensemble'].upper() in ['NVE_VV']:
             sampling_job = velocity_Verlet(self.sampling_parameters, self.md_parameters)
             current_structure = sampling_job.get_current_structure()
             max_time_step = int(self.md_parameters['md_simulation_time']/self.md_parameters['md_time_step']) + 1
@@ -225,11 +234,18 @@ class morest:
                 #self.__log_morest.write('The plane opaque wall potential and force on atoms: XYZ coordinate, Potential, Forces\n')
                 wall_force = []
                 for i_coordinate in general_coordinate:
-                    i_wall_force, i_wall_potential = plane_opaque_wall().get_opaque_wall_force_potential(i_coordinate)
+                    i_wall_force, i_wall_potential = opaque_wall().get_plane_opaque_wall_force_potential(i_coordinate)
                     wall_force.append(i_wall_force)
                     #self.__log_morest.write(str(i_coordinate)+' , '+str(i_wall_potential)+' , '+str(i_wall_force))
                     #self.__log_morest.write('\n')
                 #self.__log_morest.write('\n')
+                return np.array(wall_force)
+            
+            if self.wall_potential_parameters['wall_type'].upper() in ['Spherical_opaque_wall'.upper()]:
+                wall_force = []
+                for i_coordinate in general_coordinate:
+                    i_wall_force, i_wall_potential = opaque_wall().get_spherical_opaque_wall_force_potential(i_coordinate)
+                    wall_force.append(i_wall_force)
                 return np.array(wall_force)
 
             if self.wall_potential_parameters['wall_type'].upper() in ['Plane_translucent_wall'.upper()]:
@@ -237,11 +253,18 @@ class morest:
                 #self.__log_morest.write('The plane translucent wall potential and force on atoms: XYZ coordinate, Potential, Forces\n')
                 wall_force = []
                 for i_coordinate in general_coordinate:
-                    i_wall_force, i_wall_potential = plane_translucent_wall().get_translucent_wall_force_potential(i_coordinate)
+                    i_wall_force, i_wall_potential = translucent_wall().get_plane_translucent_wall_force_potential(i_coordinate)
                     wall_force.append(i_wall_force)
                     #self.__log_morest.write(str(i_coordinate)+' , '+str(i_wall_potential)+' , '+str(i_wall_force))
                     #self.__log_morest.write('\n')
                 #self.__log_morest.write('\n')
+                return np.array(wall_force)
+            
+            if self.wall_potential_parameters['wall_type'].upper() in ['Spherical_translucent_wall'.upper()]:
+                wall_force = []
+                for i_coordinate in general_coordinate:
+                    i_wall_force, i_wall_potential = translucent_wall().get_spherical_translucent_wall_force_potential(i_coordinate)
+                    wall_force.append(i_wall_force)
                 return np.array(wall_force)
 
             else:

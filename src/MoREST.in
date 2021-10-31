@@ -9,7 +9,7 @@ Sampling_traj_interval          2    # Record sampling every Traj_interval steps
 Sampling_clean_rotation         True
 Sampling_clean_translation       True
 Sampling_method                MD    # MD, MC, GLE, PIMD
-Sampling_ensemble             NVE   # Choose the ensemble in MD, e.g. NVE
+Sampling_ensemble             NVE_VV   # Choose the ensemble, e.g. NVE_VV: velocity_Verlet
 MD_time_step                 0.01   # unit in ps
 MD_simulation_time             0.19   # unit in ps
 
@@ -29,8 +29,10 @@ ITS_energy_shift               0
 
 Wall_potential                 False
 Collective_variable            False
-Wall_type                      plane_opaque_wall
+Wall_type                      plane_opaque_wall # plane_translucent_wall, spherical_opaque_wall, spherical_translucent_wall
+Wall_scaling             1      # This is parameter a in the plane potential
+Wall_scope               3      # This is parameter c in the plane potential
 Plane_wall_point               0 0 3 # This point and normal vector determine the parameter b in the plane potential.
 Plane_wall_normal_vector       0 0 -5 # The normal vector does not have to be a unit vector. It will be normalized after reading.
-Plane_wall_scaling             1      # This is parameter a in the plane potential
-Plane_wall_scope               3      # This is parameter c in the plane potential
+Spherical_wall_center         0 0 0 # This point and radius determine the parameter b in the spherical potential.
+Spherical_wall_radius         10 # The radius and center point determine the parameter b in the spherical potential.
