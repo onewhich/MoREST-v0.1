@@ -3,3 +3,5 @@ scipy
 json
 periodictable
 ase
+tqdm
+dscribe (optional)
