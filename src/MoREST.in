@@ -10,8 +10,10 @@ Sampling_clean_rotation         True
 Sampling_clean_translation       True
 Sampling_method                MD    # MD, MC, GLE, PIMD
 Sampling_ensemble             NVE_VV   # Choose the ensemble, e.g. NVE_VV: velocity_Verlet
-MD_time_step                 0.01   # unit in ps
-MD_simulation_time             0.19   # unit in ps
+MD_time_step                 1   # unit in fs
+MD_simulation_time             190   # unit in fs
+#Many_body_potential            ML_FD  # ML_FD: machine learning potential with finite difference forces
+#FD_displacement               0.0025 # Parameter for finite difference forces calculation
 
 Enhanced_sampling              False
 Enhanced_sampling_method       ITS

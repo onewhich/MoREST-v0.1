@@ -1,19 +1,14 @@
 import numpy as np
 #import sys
 #sys.path.append('..')
-from structure import read_xyz_file, write_xyz_file
+from structure import read_xyz_file, write_xyz_file, read_xyz_traj, write_xyz_traj
 from many_body_potential import ml_potential
+from copy import deepcopy
 
 class velocity_Verlet:
     '''
     This class implements velocity Verlet algorithm to do microcanonical ensemble (NVE MD) sampling.
-    MoREST.traj records the trajectory in an extended xyz format:
-    ------------------------------------
-    n_atoms
-    current_step    total_energy
-    element1    x1    y1    z1    velocity_x1    velocity_y1    velocity_z1    force_x1    force_y1    force_z1
-    ...
-    ------------------------------------
+    MoREST.xyz_traj records the trajectory in an extended xyz format
     MoREST.str records the initial xyz structure of the system
     MoREST.str_new records the current xyz structure of the system
     '''
@@ -23,52 +18,55 @@ class velocity_Verlet:
         self.sampling_parameters = sampling_parameters
         self.md_parameters = md_parameters
         
-        self.structure = self.get_current_structure()
-        
         if self.sampling_parameters['sampling_restart']:
-            self.__log_traj = open('MoREST.traj','a')
+            self.current_traj = read_xyz_traj('MoREST.xyz_traj')
+            self.current_step = len(self.current_traj) - 1
         else:
-            self.__log_traj = open('MoREST.traj','w')
-            write_xyz_file(self.__log_traj, self.structure)
-        
+            self.current_traj = []
+            self.current_traj.append(current_system)
+            self.current_step = 0
+            
+        self.current_system = self.get_current_system()
         
     def generate_new_step(self, bias_forces=None):
         time_step = self.md_parameters['md_time_step']
         
-        self.next_structure = {}
-        self.next_structure['n_atoms'] = self.structure['n_atoms']
-        self.next_structure['elements'] = self.structure['elements']
-        self.next_structure['current_step'] = self.structure['current_step'] + 1
-        self.next_structure['masses'] = self.structure['masses']
-        self.next_structure['coordinates'] = self.structure['coordinates'] \
-                                           + self.structure['velocities'] * time_step \
-                                           + 0.5 * self.structure['accelerations'] * time_step**2
-        self.next_structure['total_energy'], self.next_structure['forces'] = \
-                                           ml_potential().read_potential_force(self.next_structure['coordinates'])
+        next_system = deepcopy(self.current_system)
+        
+        current_coordinates = self.current_system.get_positions()
+        current_velocities = self.current_system.get_velocities()
+        next_coordinates = current_coordinates + current_velocities * time_step + 0.5 * self.current_accelerations * time_step**2
+        next_system.set_positions(next_coordinates)
+        
+        next_potential_energy, next_forces = ml_potential().get_potential_FD_forces(next_system)
         if bias_forces != None:
-            self.next_structure['forces'] = self.next_structure['forces'] + bias_forces        
-        self.next_structure['accelerations'] = np.array([self.next_structure['forces'][i_atom]/self.next_structure['masses'][i_atom] \
-                                              for i_atom in range(len(self.next_structure['forces']))])
-        self.next_structure['velocities'] = self.structure['velocities'] \
-                                          + 0.5 * (self.structure['accelerations'] + self.next_structure['accelerations']) * time_step
+            next_forces = forces + bias_forces        
         
-        self.structure = self.next_structure
-        str_new = open('MoREST.str_new','w')
-        write_xyz_file(str_new, self.structure)
-        if self.structure['current_step'] % self.sampling_parameters['sampling_traj_interval'] == 0:
-            write_xyz_file(self.__log_traj, self.structure)
+        next_accelerations = np.array([next_forces[i_atom] / self.masses[i_atom] for i_atom in range(len(masses))])
+        next_velocities = current_velocities + 0.5 * (self.current_accelerations + next_accelerations) * time_step
+        next_system.set_velocities(next_velocities)
         
-        return self.structure
+        self.current_step = self.current_step + 1
+        
+        write_xyz_file('MoREST.str_new', self.next_system)
+        
+        if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
+            self.current_traj.append(self.next_system)
+            write_xyz_traj('MoREST.xyz_traj', self.current_traj)
+        
+        return self.next_system
     
         
     def get_current_structure(self):
         if self.sampling_parameters['sampling_restart']:
-            structure = read_xyz_file('MoREST.str_new')
+            system = read_xyz_file('MoREST.str_new')
+            self.current_potential_energy, self.current_forces = ml_potential().get_potential_FD_forces(system)
+            masses = system.get_masses()
+            self.current_accelerations = np.array([self.current_forces[i_atom] / masses[i_atom] for i_atom in range(len(masses))])   
         else:
-            structure = read_xyz_file('MoREST.str')
-            structure['current_step'] = 0
-            structure['total_energy'], structure['forces'] = ml_potential().read_potential_force(structure['coordinates'])
-            structure['accelerations'] = np.array([structure['forces'][i_atom] / structure['masses'][i_atom] \
-                                              for i_atom in range(len(structure['forces']))])            
-        return structure
+            system = read_xyz_file('MoREST.str')
+            self.current_potential_energy, self.current_forces = ml_potential().get_potential_FD_forces(system)
+            self.masses = system.get_masses()
+            self.current_accelerations = np.array([self.current_forces[i_atom] / self.masses[i_atom] for i_atom in range(len(masses))])
+        return self.current_step, system
     

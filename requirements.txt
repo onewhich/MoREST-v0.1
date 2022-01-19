@@ -1,7 +1,8 @@
 numpy
 scipy
-json
-periodictable
+json (optional)
+periodictable (optional)
 ase
 tqdm
+copy
 dscribe (optional)

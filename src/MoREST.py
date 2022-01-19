@@ -102,15 +102,21 @@ class morest:
         '''
         if self.sampling_parameters['sampling_method'].upper() in ['MD'] and self.sampling_parameters['sampling_ensemble'].upper() in ['NVE_VV']:
             sampling_job = velocity_Verlet(self.sampling_parameters, self.md_parameters)
-            current_structure = sampling_job.get_current_structure()
-            max_time_step = int(self.md_parameters['md_simulation_time']/self.md_parameters['md_time_step']) + 1
-            for i_step in range(current_structure['current_step']+1, max_time_step):
-                if self.wall_potential_parameters['wall_potential']:
-                    general_coordinate = current_structure['coordinates']
-                    bias_force_wall_potential = self.__wall_potential(general_coordinate)
-                current_structure = sampling_job.generate_new_step(bias_force_wall_potential)
-            self.__log_morest.write('Phase space sampling with molecular dynamics method in microcanonical ensemble is finished!\n')
-            self.mission_complete()
+        else:
+            __log_morest.write('It is not clear which sampling method and ensemble will be used.\n')
+            __log_morest.close()
+            raise Exception('Will you use the phase sampling method?')
+        current_step, current_system = sampling_job.get_current_structure()
+        max_time_step = int(self.md_parameters['md_simulation_time']/self.md_parameters['md_time_step']) + 1
+        for i_step in range(current_step, max_time_step):
+            if self.wall_potential_parameters['wall_potential']:
+                general_coordinate = current_system.get_positions()
+                bias_force_wall_potential = self.__wall_potential(general_coordinate)
+            else:
+                bias_force_wall_potential = None
+            current_system= sampling_job.generate_new_step(bias_force_wall_potential)
+        self.__log_morest.write('Phase space sampling with molecular dynamics method in microcanonical ensemble is finished!\n')
+        self.mission_complete()
     
     def bias_sampling(self, simulation_temperature, simulation_maxsteps, \
                    time_step, potential_energy, current_md_step, md_force, general_coordinate):
