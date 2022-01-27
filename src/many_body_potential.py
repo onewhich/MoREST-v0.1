@@ -68,7 +68,7 @@ class ml_potential:
     
     def get_potential_FD_forces(self, system, displacement=0.0025):
         system_list = [system]
-        n_atoms = system.get_number_of_atoms()
+        n_atoms = system.get_global_number_of_atoms()
         forces = []
         for i in range(n_atoms):
             for j in range(3):
