@@ -1,4 +1,4 @@
 from MoREST import morest
 
-morest_job = morest()
-morest_job.phase_space_sampling()
+Al2F2_10 = morest()
+Al2F2_10.phase_space_sampling()
