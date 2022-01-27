@@ -29,7 +29,8 @@ class velocity_Verlet:
         if self.sampling_parameters['sampling_initialization']:
             self.current_step = 0
             self.current_step, self.current_system = self.get_current_structure()
-            MaxwellBoltzmannDistribution(self.current_system, temperature_K = self.md_parameters['md_temperature'])
+            if self.md_parameters['md_temperature'] > 1e-6:
+                MaxwellBoltzmannDistribution(self.current_system, temperature_K = self.md_parameters['md_temperature'])
             self.current_traj = []
             self.current_traj.append(self.current_system)
             write_xyz_traj('MoREST_traj.xyz', self.current_system)
