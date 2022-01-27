@@ -86,4 +86,4 @@ class ml_potential:
         forces = np.array(forces)
         #print(forces)
         return energy_0, forces.reshape(n_atoms, 3)
-            
+
