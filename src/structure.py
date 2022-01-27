@@ -23,8 +23,8 @@ def read_xyz_traj(traj_file):
     
     return system_list
     
-def write_xyz_traj(traj_file, system_list):
+def write_xyz_traj(traj_file, system_new):
     '''
     Write the list of system (ase.Atoms object) to a extxyz format file, MoREST.xyz_traj
     '''
-    ase.io.write(traj_file, system_list, format='extxyz')
+    ase.io.write(traj_file, system_new, format='extxyz', append=True)

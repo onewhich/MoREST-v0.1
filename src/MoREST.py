@@ -38,11 +38,16 @@ class morest:
         self.sampling_parameters = MoREST_parameters.get_sampling_parameters()
         self.md_parameters = MoREST_parameters.get_md_parameters()
         if self.sampling_parameters['phase_space_sampling']:
-            if self.sampling_parameters['sampling_restart']:
-                self.__log_morest.write('Continue to sample the phase space\nMethod: '+str(self.sampling_parameters['sampling_method'])\
-                                       +'\nEnsemble: '+str(self.sampling_parameters['sampling_ensemble'])+'\n\n')
-            else:
+            if self.sampling_parameters['sampling_initialization']:
                 self.__log_morest.write('Start to sample the phase space\nMethod: '+str(self.sampling_parameters['sampling_method'])\
+                                       +'\nEnsemble: '+str(self.sampling_parameters['sampling_ensemble'])+'\n\n')
+                try:
+                    os.remove('MoREST.str_new')
+                    os.remove('MoREST_traj.xyz')
+                except:
+                    pass
+            else:
+                self.__log_morest.write('Continue to sample the phase space\nMethod: '+str(self.sampling_parameters['sampling_method'])\
                                        +'\nEnsemble: '+str(self.sampling_parameters['sampling_ensemble'])+'\n\n')
                 
         
@@ -91,6 +96,12 @@ class morest:
                         self.spherical_wall_parameters = np.load('MoREST_spherical_wall_parameters.npy',allow_pickle=True).item()
                     except:
                         self.spherical_wall_parameters = MoREST_parameters.get_spherical_wall_parameters()
+            if self.wall_potential_parameters['wall_type'].upper() in ['Plane_opaque_wall'.upper(),\
+                                                    'Spherical_opaque_wall'.upper()]:
+                self.wall = opaque_wall()
+            elif self.wall_potential_parameters['wall_type'].upper() in ['Plane_translucent_wall'.upper(),\
+                                                    'Spherical_translucent_wall'.upper()]:
+                self.wall = translucent_wall()
         #    for key in self.plane_wall_parameters:
         #        print(key+' : '+str(self.plane_wall_parameters[key]))
 
@@ -240,7 +251,7 @@ class morest:
                 #self.__log_morest.write('The plane opaque wall potential and force on atoms: XYZ coordinate, Potential, Forces\n')
                 wall_force = []
                 for i_coordinate in general_coordinate:
-                    i_wall_force, i_wall_potential = opaque_wall().get_plane_opaque_wall_force_potential(i_coordinate)
+                    i_wall_force, i_wall_potential = self.wall.get_plane_opaque_wall_force_potential(i_coordinate)
                     wall_force.append(i_wall_force)
                     #self.__log_morest.write(str(i_coordinate)+' , '+str(i_wall_potential)+' , '+str(i_wall_force))
                     #self.__log_morest.write('\n')
@@ -250,7 +261,7 @@ class morest:
             if self.wall_potential_parameters['wall_type'].upper() in ['Spherical_opaque_wall'.upper()]:
                 wall_force = []
                 for i_coordinate in general_coordinate:
-                    i_wall_force, i_wall_potential = opaque_wall().get_spherical_opaque_wall_force_potential(i_coordinate)
+                    i_wall_force, i_wall_potential = self.wall.get_spherical_opaque_wall_force_potential(i_coordinate)
                     wall_force.append(i_wall_force)
                 return np.array(wall_force)
 
@@ -259,7 +270,7 @@ class morest:
                 #self.__log_morest.write('The plane translucent wall potential and force on atoms: XYZ coordinate, Potential, Forces\n')
                 wall_force = []
                 for i_coordinate in general_coordinate:
-                    i_wall_force, i_wall_potential = translucent_wall().get_plane_translucent_wall_force_potential(i_coordinate)
+                    i_wall_force, i_wall_potential = self.wall.get_plane_translucent_wall_force_potential(i_coordinate)
                     wall_force.append(i_wall_force)
                     #self.__log_morest.write(str(i_coordinate)+' , '+str(i_wall_potential)+' , '+str(i_wall_force))
                     #self.__log_morest.write('\n')
@@ -269,7 +280,7 @@ class morest:
             if self.wall_potential_parameters['wall_type'].upper() in ['Spherical_translucent_wall'.upper()]:
                 wall_force = []
                 for i_coordinate in general_coordinate:
-                    i_wall_force, i_wall_potential = translucent_wall().get_spherical_translucent_wall_force_potential(i_coordinate)
+                    i_wall_force, i_wall_potential = self.wall.get_spherical_translucent_wall_force_potential(i_coordinate)
                     wall_force.append(i_wall_force)
                 return np.array(wall_force)
 

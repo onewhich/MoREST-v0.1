@@ -3,6 +3,7 @@ import numpy as np
 import scipy.constants
 import json
 from json import JSONEncoder
+from ase import units
 
 class NumpyArrayEncoder(JSONEncoder):
     def default(self, obj):
@@ -86,13 +87,13 @@ class read_parameters:
                     __log_morest.close()
                     raise Exception('Will you use sampling method or not?')
                     
-            elif i_parameter.split()[0].upper() == 'Sampling_restart'.upper():
+            elif i_parameter.split()[0].upper() == 'Sampling_initialization'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():
-                    self.sampling_parameters['sampling_restart'] = True
+                    self.sampling_parameters['sampling_initialization'] = True
                     # change MoREST_initialization as False
-                    self.morest_parameters['morest_initialization'] = False
+                    self.morest_parameters['morest_initialization'] = True
                 elif i_parameter.split()[1].upper() == 'False'.upper():
-                    self.sampling_parameters['sampling_restart'] = False
+                    self.sampling_parameters['sampling_initialization'] = False
                     
             elif i_parameter.split()[0].upper() == 'Sampling_traj_interval'.upper():
                 self.sampling_parameters['sampling_traj_interval'] = int(i_parameter.split()[1])
@@ -114,6 +115,15 @@ class read_parameters:
                     
             elif i_parameter.split()[0].upper() == 'Sampling_ensemble'.upper():
                 self.sampling_parameters['sampling_ensemble'] = str(i_parameter.split()[1])
+                    
+            elif i_parameter.split()[0].upper() == 'Many_body_potential'.upper():
+                self.sampling_parameters['many_body_potential'] = str(i_parameter.split()[1])
+                    
+            elif i_parameter.split()[0].upper() == 'ML_potential_model'.upper():
+                self.sampling_parameters['ml_potential_model'] = str(i_parameter.split()[1])
+                    
+            elif i_parameter.split()[0].upper() == 'FD_displacement'.upper():
+                self.sampling_parameters['fd_displacement'] = float(i_parameter.split()[1])
                 
             ########################## Molecular dynamics #########################
                 
@@ -122,6 +132,9 @@ class read_parameters:
             
             elif i_parameter.split()[0].upper() == 'MD_simulation_time'.upper():
                 self.md_parameters['md_simulation_time'] = float(i_parameter.split()[1])
+            
+            elif i_parameter.split()[0].upper() == 'MD_temperature'.upper():
+                self.md_parameters['md_temperature'] = float(i_parameter.split()[1])
                     
             ########################## Enhanced sampling ##########################
             elif i_parameter.split()[0].upper() == 'Enhanced_sampling'.upper():
@@ -291,6 +304,8 @@ class read_parameters:
     
     def get_md_parameters(self):
         #np.save('MoREST_md_parameters.npy', self.md_parameters)
+        self.md_parameters['md_time_step'] = self.md_parameters['md_time_step'] * units.fs
+        self.md_parameters['md_simulation_time'] = self.md_parameters['md_simulation_time'] * units.fs
         return self.md_parameters
 
     def get_enhanced_sampling_parameters(self):

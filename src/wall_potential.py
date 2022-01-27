@@ -11,6 +11,8 @@ def translucent__potential(a, c, vec_gc_b, norm_gc_b):
     wall_force = 6 * prefactor * (c**2 * norm_gc_b - c * norm_gc_b**2) * vec_gc_b/norm_gc_b
     wall_potential = prefactor * (2*c * norm_gc_b + c**2) * (norm_gc_b -c )**2
     return wall_force, wall_potential
+
+#def mirror_potential(a, c):
     
 class opaque_wall:
     '''
@@ -33,7 +35,7 @@ class opaque_wall:
                     * plane_wall_parameters['plane_wall_normal_vector']
         norm_gc_b = np.linalg.norm(vec_gc_b)
         #print(vec_gc_b,norm_gc_b)
-        if norm_gc_b > c:
+        if norm_gc_b > self.c:
             return np.zeros(np.shape(xyz_coordinate)), 0.
         else:
             return opaque_potential(self.a, self.c, vec_gc_b, norm_gc_b)
@@ -46,7 +48,7 @@ class opaque_wall:
         vec_gc_b = vec_direction / norm_direction * (spherical_wall_parameters['spherical_wall_radius'] - norm_direction)
         norm_gc_b = np.linalg.norm(vec_gc_b)
         #print(vec_gc_b,norm_gc_b)
-        if norm_gc_b > c:
+        if norm_gc_b > self.c:
             return np.zeros(np.shape(xyz_coordinate)), 0.
         else:
             return opaque_potential(self.a, self.c, vec_gc_b, norm_gc_b)
@@ -72,7 +74,7 @@ class translucent_wall:
         vec_gc_b = np.dot((xyz_coordinate - plane_wall_parameters['plane_wall_point']), plane_wall_parameters['plane_wall_normal_vector']) \
                     * plane_wall_parameters['plane_wall_normal_vector']
         norm_gc_b = np.linalg.norm(vec_gc_b)
-        if norm_gc_b > c:
+        if norm_gc_b > self.c:
             return np.zeros(np.shape(xyz_coordinate)), 0.
         else:
             return translucent__potential(self.a, self.c, vec_gc_b, norm_gc_b)
@@ -85,7 +87,7 @@ class translucent_wall:
         vec_gc_b = vec_direction / norm_direction * (spherical_wall_parameters['spherical_wall_radius'] - norm_direction)
         norm_gc_b = np.linalg.norm(vec_gc_b)
         #print(vec_gc_b,norm_gc_b)
-        if norm_gc_b > c:
+        if norm_gc_b > self.c:
             return np.zeros(np.shape(xyz_coordinate)), 0.
         else:
             return translucent_potential(self.a, self.c, vec_gc_b, norm_gc_b)

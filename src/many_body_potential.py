@@ -1,6 +1,7 @@
 import numpy as np
 import joblib
 from copy import deepcopy
+from ase import units
 
 class ml_potential:
     '''
@@ -18,11 +19,11 @@ class ml_potential:
         #self.ml_labels = np.load(model_labels, allow_pickle=True)
         
     def generate_Al2F2_representation(self, Al2F2):
-        representation = []
-        Al1 = Al2F2.get_positions()[0]
-        F2 = Al2F2.get_positions()[1]
-        Al3 = Al2F2.get_positions()[2]
-        F4 = Al2F2.get_positions()[3]
+        
+        Al1 = Al2F2.get_positions()[0] / units.Bohr # change length in AA to Bohr
+        F2 = Al2F2.get_positions()[1] / units.Bohr
+        Al3 = Al2F2.get_positions()[2] / units.Bohr
+        F4 = Al2F2.get_positions()[3] / units.Bohr
 
         r_Al1_F2 = np.linalg.norm(Al1 - F2)
         r_Al3_F4 = np.linalg.norm(Al3 - F4)
@@ -32,20 +33,30 @@ class ml_potential:
         r_F2_F4 = np.linalg.norm(F2 - F4)
         R = np.linalg.norm((Al1 + F2)/2 - (Al3 + F4)/2)
 
-        representation.append(1.0/r_Al1_F2)
-        representation.append(1.0/r_Al3_F4)
-        representation.append(1.0/r_Al1_F4)
-        representation.append(1.0/r_Al3_F2)
-        representation.append(1.0/r_Al1_Al3)
-        representation.append(1.0/r_F2_F4)
-        representation.append(1.0/R)
-        representation.append(np.exp(-r_Al1_F2))
-        representation.append(np.exp(-r_Al3_F4))
-        representation.append(np.exp(-r_Al1_F4))
-        representation.append(np.exp(-r_Al3_F2))
-        representation.append(np.exp(-r_Al1_Al3))
-        representation.append(np.exp(-r_F2_F4))
-        representation.append(np.exp(-R))
+        inverse_r_Al1_F2 = 1.0/r_Al1_F2
+        inverse_r_Al3_F4 = 1.0/r_Al3_F4
+        inverse_r_Al1_F4 = 1.0/r_Al1_F4
+        inverse_r_Al3_F2 = 1.0/r_Al3_F2
+        inverse_r_Al1_Al3 = 1.0/r_Al1_Al3
+        inverse_r_F2_F4 = 1.0/r_F2_F4
+        inverse_R = 1.0/R
+        exp_r_Al1_F2 = np.exp(-r_Al1_F2)
+        exp_r_Al3_F4 = np.exp(-r_Al3_F4)
+        exp_r_Al1_F4 = np.exp(-r_Al1_F4)
+        exp_r_Al3_F2 = np.exp(-r_Al3_F2)
+        exp_r_Al1_Al3 = np.exp(-r_Al1_Al3)
+        exp_r_F2_F4 = np.exp(-r_F2_F4)
+        exp_R = np.exp(-R)
+
+        features_invr_AlF = np.array([inverse_r_Al1_F2,inverse_r_Al3_F4, inverse_r_Al1_F4, inverse_r_Al3_F2])
+        features_invr_Al2_F2 = np.array([inverse_r_Al1_Al3, inverse_r_F2_F4, inverse_R])
+        features_expr_AlF = np.array([exp_r_Al1_F2,exp_r_Al3_F4, exp_r_Al1_F4, exp_r_Al3_F2])
+        features_expr_Al2_F2 = np.array([exp_r_Al1_Al3,exp_r_F2_F4, exp_R])
+
+        representation = np.concatenate((np.sort(features_invr_AlF),
+                                  features_invr_Al2_F2,
+                                  np.sort(features_expr_AlF),
+                                  features_expr_Al2_F2))
 
         return np.array(representation)
 
@@ -53,7 +64,7 @@ class ml_potential:
         if type(system_list) != list:
             raise ValueError
         representation_list = [self.generate_Al2F2_representation(i_system) for i_system in system_list]
-        return self.ml_potential.predict(representation)
+        return self.ml_potential.predict(representation_list) * units.Hartree # change energy in Hartree to eV
     
     def get_potential_FD_forces(self, system, displacement=0.0025):
         system_list = [system]
@@ -67,10 +78,12 @@ class ml_potential:
                 new_system.set_positions(coordinates)
                 system_list.append(new_system)
         energy_list = self.get_ml_potential(system_list)
+        #print(energy_list)
         energy_0 = energy_list[0]
         for i,i_energy in enumerate(energy_list[1:]):
-            force_value = (i_energy - energy_0)/displacement
+            force_value = -1*(i_energy - energy_0)/displacement
             forces.append(force_value)
         forces = np.array(forces)
+        #print(forces)
         return energy_0, forces.reshape(n_atoms, 3)
             

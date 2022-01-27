@@ -4,16 +4,18 @@ MoREST_initialization         True # This parameter should always be False when 
 MoREST_API_Fortran            False  # This API is used for MoREST called by Fortran code
 
 Phase_space_sampling           True
-Sampling_restart              True   # Overwrite or append the trajectory in MoREST.traj file, read structure from MoREST.str or MoREST.str_new
-Sampling_traj_interval          2    # Record sampling every Traj_interval steps
-Sampling_clean_rotation         True
+Sampling_initialization         True   # Overwrite or append the trajectory in MoREST.traj file, read structure from MoREST.str or MoREST.str_new
+Sampling_traj_interval          10    # Record sampling every Traj_interval steps
 Sampling_clean_translation       True
+Sampling_clean_rotation         False
 Sampling_method                MD    # MD, MC, GLE, PIMD
 Sampling_ensemble             NVE_VV   # Choose the ensemble, e.g. NVE_VV: velocity_Verlet
-MD_time_step                 1   # unit in fs
-MD_simulation_time             190   # unit in fs
-#Many_body_potential            ML_FD  # ML_FD: machine learning potential with finite difference forces
-#FD_displacement               0.0025 # Parameter for finite difference forces calculation
+Many_body_potential            ML_FD  # ML_FD: machine learning potential with finite difference forces
+ML_potential_model            gpr_AlF_dimer_potential_from_test11
+FD_displacement               0.0025 # Parameter for finite difference forces calculation
+MD_time_step                 5   # unit in fs
+MD_simulation_time             50000   # unit in fs
+MD_temperature               10
 
 Enhanced_sampling              False
 Enhanced_sampling_method       ITS
@@ -29,12 +31,12 @@ ITS_trial_MD_steps             5
 ITS_delta_pk                   1e-1
 ITS_energy_shift               0
 
-Wall_potential                 False
+Wall_potential                 True
 Collective_variable            False
-Wall_type                      plane_opaque_wall # plane_translucent_wall, spherical_opaque_wall, spherical_translucent_wall
+Wall_type                  spherical_opaque_wall  #  plane_opaque_wall, plane_translucent_wall, spherical_opaque_wall, spherical_translucent_wall
 Wall_scaling             1      # This is parameter a in the plane potential
-Wall_scope               3      # This is parameter c in the plane potential
+Wall_scope               5      # This is parameter c in the plane potential
 Plane_wall_point               0 0 3 # This point and normal vector determine the parameter b in the plane potential.
 Plane_wall_normal_vector       0 0 -5 # The normal vector does not have to be a unit vector. It will be normalized after reading.
 Spherical_wall_center         0 0 0 # This point and radius determine the parameter b in the spherical potential.
-Spherical_wall_radius         10 # The radius and center point determine the parameter b in the spherical potential.
+Spherical_wall_radius         15 # The radius and center point determine the parameter b in the spherical potential.
