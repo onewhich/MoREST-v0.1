@@ -1,8 +1,8 @@
 numpy
 scipy
-json (optional)
-periodictable (optional)
 ase
 tqdm
 copy
+json (optional)
+periodictable (optional)
 dscribe (optional)

@@ -34,9 +34,17 @@ class velocity_Verlet:
             self.current_traj = []
             self.current_traj.append(self.current_system)
             write_xyz_traj('MoREST_traj.xyz', self.current_system)
+            
+            self.MD_log = open('MoREST_MD.log', 'w')
+            self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')
+            self.write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_velocities(), self.masses)
+            
         else:
             self.current_traj = read_xyz_traj('MoREST_traj.xyz')
             self.current_step = len(self.current_traj) - 1
+            self.current_step, self.current_system = self.get_current_structure()
+            
+            self.MD_log = open('MoREST_MD.log', 'a')
         
     def generate_new_step(self, bias_forces=None):
         time_step = self.md_parameters['md_time_step']
@@ -73,6 +81,7 @@ class velocity_Verlet:
             #print(next_forces)    #DEBUG
             self.current_traj.append(next_system)
             write_xyz_traj('MoREST_traj.xyz', next_system)
+            self.write_MD_log(self.MD_log, self.current_step, next_potential_energy, next_velocities, self.masses)
         
         return next_system
     
@@ -113,3 +122,9 @@ class velocity_Verlet:
         
         return velocities
         
+    @staticmethod
+    def write_MD_log(MD_log, step, Ep, velocities, masses):
+        Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(len(masses))])
+        T = 2/3 * Ek/units.kB    # Ek = 1/2 m v^2 = 3/2 kB T
+        Et = Ek + Ep
+        MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'\n')
