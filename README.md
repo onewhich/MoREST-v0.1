@@ -1,4 +1,4 @@
-# MoREST: a molecular reaction simulation toolkit
+# MoREST: Molecular REaction Simulation Toolkit
 This is a package for chemical reaction simulation by using the statistical mechanics method. With API, this package can be used in combination with classical or *ab initio* molecular dynamics packages to simulate and analyze chemical reactions. The prepared potential energy surfaces can also be used with this package to study the dynamics of the system.
 
 ## *ab* *initio* statistical mechanics for reaction simulation
