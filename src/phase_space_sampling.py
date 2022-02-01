@@ -45,7 +45,7 @@ class velocity_Verlet:
             
         else:
             self.current_traj = read_xyz_traj('MoREST_traj.xyz')
-            self.current_step = len(self.current_traj) - 1
+            self.current_step = (len(self.current_traj) - 1) * self.sampling_parameters['sampling_traj_interval']
             self.current_step, self.current_system = self.get_current_structure()
             
             self.MD_log = open('MoREST_MD.log', 'a')
