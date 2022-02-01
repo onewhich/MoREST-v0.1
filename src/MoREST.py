@@ -106,13 +106,13 @@ class morest:
         #        print(key+' : '+str(self.plane_wall_parameters[key]))
 
         
-    def phase_space_sampling(self):
+    def phase_space_sampling(self, calculator=None):
         '''
         This function is called to excute phase space sampling method.
         --------
         '''
         if self.sampling_parameters['sampling_method'].upper() in ['MD'] and self.sampling_parameters['sampling_ensemble'].upper() in ['NVE_VV']:
-            sampling_job = velocity_Verlet(self.sampling_parameters, self.md_parameters)
+            sampling_job = velocity_Verlet(self.sampling_parameters, self.md_parameters, calculator)
         else:
             __log_morest.write('It is not clear which sampling method and ensemble will be used.\n')
             __log_morest.close()
@@ -122,7 +122,7 @@ class morest:
         for i_step in range(current_step, max_time_step):
             if self.wall_potential_parameters['wall_potential']:
                 general_coordinate = current_system.get_positions()
-                bias_force_wall_potential = self.__wall_potential(general_coordinate)
+                bias_force_wall_potential = self.wall_potential(general_coordinate)
             else:
                 bias_force_wall_potential = None
             current_system= sampling_job.generate_new_step(bias_force_wall_potential)
@@ -148,13 +148,13 @@ class morest:
 
         if self.enhanced_sampling_parameters['enhanced_sampling']:
             #self.__log_morest.write('Debug: calling enhanced sampling\n')
-            bias_force_enhanced_sampling = self.__enhanced_sampling(simulation_temperature, simulation_maxsteps, \
+            bias_force_enhanced_sampling = self.enhanced_sampling(simulation_temperature, simulation_maxsteps, \
                                  time_step, potential_energy, current_md_step, md_force)
             if_call_enhanced_sampling = True
             #print(bias_force_enhanced_sampling)
         if self.wall_potential_parameters['wall_potential']:
             #self.__log_morest.write('Debug: calling wall potential\n')
-            bias_force_wall_potential = self.__wall_potential(general_coordinate)
+            bias_force_wall_potential = self.wall_potential(general_coordinate)
             if_call_wall_potential = True
             #print(bias_force_wall_potential)
             
@@ -170,7 +170,7 @@ class morest:
             return np.array([0])
     
     
-    def __enhanced_sampling(self, simulation_temperature, simulation_maxsteps, \
+    def enhanced_sampling(self, simulation_temperature, simulation_maxsteps, \
                    time_step, potential_energy, current_md_step, md_force):
         '''
         This function is called to excute enhanced sampling by phase space sampling module.
@@ -234,7 +234,7 @@ class morest:
 
         
         
-    def __wall_potential(self, general_coordinate):
+    def wall_potential(self, general_coordinate):
         '''
         This function will read the positions of atoms and then add forces of the potential on the atoms.
         --------

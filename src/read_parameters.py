@@ -35,18 +35,19 @@ class read_parameters:
             sys.exit(0)
         
         self.morest_parameters = {}
-        self.morest_parameters['morest_initialization'] = False
+        self.morest_parameters['morest_initialization'] = True
         self.morest_parameters['morest_api_fortran'] = False
         self.sampling_parameters = {}
         self.sampling_parameters['phase_space_sampling'] = False
-        self.sampling_parameters['sampling_restart'] = True
-        self.sampling_parameters['sampling_clean_rotation'] = False
-        self.sampling_parameters['sampling_clean_translation'] = False
+        self.sampling_parameters['sampling_restart'] = False
+        self.sampling_parameters['sampling_clean_rotation'] = True
+        self.sampling_parameters['sampling_clean_translation'] = True
+        self.sampling_parameters['fd_displacement'] = 0.0025
         self.md_parameters = {}
         self.enhanced_sampling_parameters = {}
         self.enhanced_sampling_parameters['enhanced_sampling'] = False
         self.its_parameters = {}
-        self.its_parameters['its_initialization'] = False
+        self.its_parameters['its_initialization'] = True
         self.wall_potential_parameters = {}
         self.wall_potential_parameters['wall_potential'] = False
         self.wall_potential_parameters['collective_variable'] = False
@@ -119,6 +120,9 @@ class read_parameters:
             elif i_parameter.split()[0].upper() == 'Many_body_potential'.upper():
                 self.sampling_parameters['many_body_potential'] = str(i_parameter.split()[1])
                     
+            elif i_parameter.split()[0].upper() == 'Input_file'.upper():
+                self.sampling_parameters['input_file'] = str(i_parameter.split()[1])
+                
             elif i_parameter.split()[0].upper() == 'ML_potential_model'.upper():
                 self.sampling_parameters['ml_potential_model'] = str(i_parameter.split()[1])
                     

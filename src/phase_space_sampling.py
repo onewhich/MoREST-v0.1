@@ -2,9 +2,9 @@ import numpy as np
 #import sys
 #sys.path.append('..')
 from structure import read_xyz_file, write_xyz_file, read_xyz_traj, write_xyz_traj
-from many_body_potential import ml_potential
+from many_body_potential import ml_potential, on_the_fly
 from copy import deepcopy
-from ase.md.velocitydistribution import MaxwellBoltzmannDistribution
+from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary, ZeroRotation
 from ase import units
 
 class velocity_Verlet:
@@ -15,12 +15,16 @@ class velocity_Verlet:
     MoREST.str_new records the current xyz structure of the system
     '''
     
-    def __init__(self, sampling_parameters, md_parameters):
+    def __init__(self, sampling_parameters, md_parameters, calculator=None):
         #self.md_parameters = np.load('MoREST_md_parameters.npy',allow_pickle=True).item()
         self.sampling_parameters = sampling_parameters
         self.md_parameters = md_parameters
         
-        if self.sampling_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
+        if self.sampling_parameters['many_body_potential'].upper() in ['on_the_fly'.upper()]:
+            if type(calculator) == type(None):
+                raise Exception('Please specify the electronic structure method.')
+            self.many_body_potential = on_the_fly(calculator)
+        elif self.sampling_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
             trained_ml_potential = self.sampling_parameters['ml_potential_model']
             self.many_body_potential = ml_potential(trained_ml_potential)
         else:
@@ -56,20 +60,25 @@ class velocity_Verlet:
         next_coordinates = current_coordinates + current_velocities * time_step + 0.5 * self.current_accelerations * time_step**2
         next_system.set_positions(next_coordinates)
         
-        next_potential_energy, next_forces = self.many_body_potential.get_potential_FD_forces(next_system, \
-                                                                 self.sampling_parameters['fd_displacement'])
+        if self.sampling_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
+            next_potential_energy, next_forces = self.many_body_potential.get_potential_FD_forces(next_system, \
+                                                      self.sampling_parameters['fd_displacement'])
+        else:
+            next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(next_system)
+            
         if type(bias_forces) != type(None):
             next_forces = next_forces + bias_forces        
         
         next_accelerations = np.array([next_forces[i_atom] / self.masses[i_atom] for i_atom in range(len(self.masses))])
         next_velocities = current_velocities + 0.5 * (self.current_accelerations + next_accelerations) * time_step
+        next_system.set_velocities(next_velocities)
         
         if self.sampling_parameters['sampling_clean_translation']:
-            next_velocities = self.clean_translation(next_velocities)
+            #next_velocities = self.clean_translation(next_velocities)
+            Stationary(next_system)
         if self.sampling_parameters['sampling_clean_rotation']:
-            next_velocities = self.clean_rotation(next_velocities, next_coordinates, self.masses)
-        
-        next_system.set_velocities(next_velocities)
+            #next_velocities = self.clean_rotation(next_velocities, next_coordinates, self.masses)
+            ZeroRotation(next_system)
         
         self.current_step = self.current_step + 1
         self.current_system = next_system
@@ -89,14 +98,20 @@ class velocity_Verlet:
     def get_current_structure(self):
         if self.sampling_parameters['sampling_initialization']:
             system = read_xyz_file('MoREST.str')
-            self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_FD_forces(system, \
-                                                                 self.sampling_parameters['fd_displacement'])
+            if self.sampling_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
+                self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_FD_forces(system, \
+                                                      self.sampling_parameters['fd_displacement'])
+            else:
+                self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(system)
             self.masses = system.get_masses()
             self.current_accelerations = np.array([self.current_forces[i_atom] / self.masses[i_atom] for i_atom in range(len(self.masses))])
         else:
             system = read_xyz_file('MoREST.str_new')
-            self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_FD_forces(system, \
-                                                                 self.sampling_parameters['fd_displacement'])
+            if self.sampling_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
+                self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_FD_forces(system, \
+                                                      self.sampling_parameters['fd_displacement'])
+            else:
+                self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(system)
             self.masses = system.get_masses()
             self.current_accelerations = np.array([self.current_forces[i_atom] / self.masses[i_atom] for i_atom in range(len(self.masses))])
         return self.current_step, system

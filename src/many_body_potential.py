@@ -18,7 +18,8 @@ class ml_potential:
         #self.ml_features = np.load(model_features, allow_pickle=True)
         #self.ml_labels = np.load(model_labels, allow_pickle=True)
         
-    def generate_Al2F2_representation(self, Al2F2):
+    @staticmethod
+    def generate_Al2F2_representation(Al2F2):
         
         Al1 = Al2F2.get_positions()[0] / units.Bohr # change length in AA to Bohr
         F2 = Al2F2.get_positions()[1] / units.Bohr
@@ -87,3 +88,18 @@ class ml_potential:
         #print(forces)
         return energy_0, forces.reshape(n_atoms, 3)
 
+class on_the_fly:
+    '''
+    Using ase.calculators to calculates the potential energy and forces of the system during the simulation.
+    INPUT:
+    calculator: ase.calculators object that pass calculation parameters here
+    '''
+    def __init__(self, calculator):
+        self.calculator = calculator
+        
+    def get_potential_forces(self, system):
+        system.calc = self.calculator
+        self.potential_energy = system.get_potential_energy()
+        self.forces = system.get_forces()
+        
+        return self.potential_energy, self.forces

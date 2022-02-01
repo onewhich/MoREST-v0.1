@@ -10,7 +10,8 @@ Sampling_clean_translation       True
 Sampling_clean_rotation         True
 Sampling_method                MD    # MD, MC, GLE, PIMD
 Sampling_ensemble             NVE_VV   # Choose the ensemble, e.g. NVE_VV: velocity_Verlet
-Many_body_potential            ML_FD  # ML_FD: machine learning potential with finite difference forces
+Many_body_potential            on_the_fly  # ML_FD: machine learning potential with finite difference forces, on_the_fly: using QC, DFT package to calculate potential and forces
+###Input_file                 gjf.com #TODO: read QC,DFT parameters from input file
 ML_potential_model            ../../../fhicloud-wang/Al2F2/gpr_AlF_dimer_potential_from_test11
 FD_displacement               0.0025 # Parameter for finite difference forces calculation
 MD_time_step                 1   # unit in fs
