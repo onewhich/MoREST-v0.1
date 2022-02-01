@@ -99,7 +99,7 @@ class on_the_fly:
         
     def get_potential_forces(self, system):
         system.calc = self.calculator
-        self.potential_energy = system.get_potential_energy()
         self.forces = system.get_forces()
+        self.potential_energy = system.get_potential_energy()
         
         return self.potential_energy, self.forces
