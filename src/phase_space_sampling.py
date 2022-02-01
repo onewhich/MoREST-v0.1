@@ -39,7 +39,7 @@ class velocity_Verlet:
             self.current_traj.append(self.current_system)
             write_xyz_traj('MoREST_traj.xyz', self.current_system)
             
-            self.MD_log = open('MoREST_MD.log', 'w')
+            self.MD_log = open('MoREST_MD.log', 'w', buffering=1)
             self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')
             self.write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_velocities(), self.masses)
             
@@ -49,7 +49,7 @@ class velocity_Verlet:
             self.current_system = self.current_traj[-1]
             #self.current_step, self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
             
-            self.MD_log = open('MoREST_MD.log', 'a')
+            self.MD_log = open('MoREST_MD.log', 'a', buffering=1)
         
     def generate_new_step(self, bias_forces=None):
         time_step = self.md_parameters['md_time_step']
