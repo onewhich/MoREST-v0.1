@@ -15,10 +15,11 @@ class velocity_Verlet:
     MoREST.str_new records the current xyz structure of the system
     '''
     
-    def __init__(self, sampling_parameters, md_parameters, calculator=None):
+    def __init__(self, sampling_parameters, md_parameters, calculator=None, v_rescaling=False):
         #self.md_parameters = np.load('MoREST_md_parameters.npy',allow_pickle=True).item()
         self.sampling_parameters = sampling_parameters
         self.md_parameters = md_parameters
+        self.v_rescaling = v_rescaling
         
         if self.sampling_parameters['many_body_potential'].upper() in ['on_the_fly'.upper()]:
             if type(calculator) == type(None):
@@ -35,13 +36,15 @@ class velocity_Verlet:
             self.current_step, self.current_system = self.get_current_structure()
             if self.md_parameters['md_temperature'] > 1e-6:
                 MaxwellBoltzmannDistribution(self.current_system, temperature_K = self.md_parameters['md_temperature'])
+            if self.v_rescaling:
+                self.velocity_rescaling(self.current_system)
             self.current_traj = []
             self.current_traj.append(self.current_system)
             write_xyz_traj('MoREST_traj.xyz', self.current_system)
             
             self.MD_log = open('MoREST_MD.log', 'w', buffering=1)
             self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')
-            self.write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_velocities(), self.masses)
+            write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_velocities(), self.masses)
             
         else:
             self.current_traj = read_xyz_traj('MoREST_traj.xyz')
@@ -70,19 +73,22 @@ class velocity_Verlet:
         if type(bias_forces) != type(None):
             next_forces = next_forces + bias_forces        
         
-        next_accelerations = np.array([next_forces[i_atom] / self.masses[i_atom] for i_atom in range(len(self.masses))])
+        next_accelerations = np.array([next_forces[i_atom] / self.masses[i_atom] for i_atom in range(self.n_atom)])
         next_velocities = current_velocities + 0.5 * (self.current_accelerations + next_accelerations) * time_step
         next_system.set_velocities(next_velocities)
         
         if self.sampling_parameters['sampling_clean_translation']:
-            #next_velocities = self.clean_translation(next_velocities)
+            #next_velocities = clean_translation(next_velocities)
             Stationary(next_system)
         if self.sampling_parameters['sampling_clean_rotation']:
-            #next_velocities = self.clean_rotation(next_velocities, next_coordinates, self.masses)
+            #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
             ZeroRotation(next_system)
         
         self.current_step = self.current_step + 1
         self.current_system = next_system
+        
+        if self.v_rescaling:
+            self.velocity_rescaling(self.current_system)
         
         write_xyz_file('MoREST.str_new', next_system)
         
@@ -91,7 +97,7 @@ class velocity_Verlet:
             #print(next_forces)    #DEBUG
             self.current_traj.append(next_system)
             write_xyz_traj('MoREST_traj.xyz', next_system)
-            self.write_MD_log(self.MD_log, self.current_step, next_potential_energy, next_velocities, self.masses)
+            write_MD_log(self.MD_log, self.current_step, next_potential_energy, next_velocities, self.masses)
         
         return next_system
     
@@ -99,48 +105,49 @@ class velocity_Verlet:
     def get_current_structure(self):
         if self.sampling_parameters['sampling_initialization']:
             system = read_xyz_file('MoREST.str')
-            if self.sampling_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
-                self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_FD_forces(system, \
-                                                      self.sampling_parameters['fd_displacement'])
-            else:
-                self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(system)
-            self.masses = system.get_masses()
-            self.current_accelerations = np.array([self.current_forces[i_atom] / self.masses[i_atom] for i_atom in range(len(self.masses))])
         else:
             system = read_xyz_file('MoREST.str_new')
-            if self.sampling_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
-                self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_FD_forces(system, \
+        self.n_atom = system.get_global_number_of_atoms()
+        if self.sampling_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
+            self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_FD_forces(system, \
                                                       self.sampling_parameters['fd_displacement'])
-            else:
-                self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(system)
-            self.masses = system.get_masses()
-            self.current_accelerations = np.array([self.current_forces[i_atom] / self.masses[i_atom] for i_atom in range(len(self.masses))])
+        else:
+            self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(system)
+        self.masses = system.get_masses()
+        self.current_accelerations = np.array([self.current_forces[i_atom] / self.masses[i_atom] for i_atom in range(self.n_atom)])
+        
         return self.current_step, system
     
-    @staticmethod
-    def clean_translation(velocities):
-        total_velocity = np.sum(velocities, axis=0)/len(velocities)
-        velocities = velocities - total_velocity
-        return velocities
+    def velocity_rescaling(self, system):
+        velocities = system.get_velocities()
+        Ek = np.sum([0.5 * self.masses[i] * np.linalg.norm(velocities[i])**2 for i in range(self.n_atom)])
+        Ti = 2/3 * Ek/units.kB /self.n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+        factor = np.sqrt(self.md_parameters['md_temperature'] / Ti)
+        system.set_velocities(factor * velocities)
+
+def clean_translation(velocities):
+    total_velocity = np.sum(velocities, axis=0)/len(velocities)
+    velocities = velocities - total_velocity
+    return velocities
     
-    @staticmethod
-    def clean_rotation(velocities, coordinates, masses):
-        v_vector = velocities
-        center_of_mass = np.sum([masses[i]*coordinates[i] for i in range(len(masses))], axis=0)/np.sum(masses)
-        r_vector = coordinates - center_of_mass
+def clean_rotation(velocities, coordinates, masses):
+    v_vector = velocities
+    center_of_mass = np.sum([masses[i]*coordinates[i] for i in range(len(masses))], axis=0)/np.sum(masses)
+    r_vector = coordinates - center_of_mass
         
-        r_cross_v = np.cross(r_vector, v_vector)
-        r_2 = np.linalg.norm(r_vector, axis=1)**2
-        omega = np.array([r_cross_v[i]/r_2[i] for i in range(4)])
-        rotat_vector = np.sum(omega, axis=0)/len(masses)
-        v_tang = np.cross(rotat_vector, r_vector)
-        velocities = v_vector - v_tang
+    r_cross_v = np.cross(r_vector, v_vector)
+    r_2 = np.linalg.norm(r_vector, axis=1)**2
+    omega = np.array([r_cross_v[i]/r_2[i] for i in range(4)])
+    rotat_vector = np.sum(omega, axis=0)/len(masses)
+    v_tang = np.cross(rotat_vector, r_vector)
+    velocities = v_vector - v_tang
         
-        return velocities
+    return velocities
         
-    @staticmethod
-    def write_MD_log(MD_log, step, Ep, velocities, masses):
-        Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(len(masses))])
-        T = 2/3 * Ek/units.kB    # Ek = 1/2 m v^2 = 3/2 kB T
-        Et = Ek + Ep
-        MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'\n')
+def write_MD_log(MD_log, step, Ep, velocities, masses):
+    n_atom = len(masses)
+    Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(n_atom)])
+    T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+    Et = Ek + Ep
+    MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'\n')
+    

@@ -112,14 +112,17 @@ class morest:
         --------
         '''
         if self.sampling_parameters['sampling_method'].upper() in ['MD'] and self.sampling_parameters['sampling_ensemble'].upper() in ['NVE_VV']:
-            sampling_job = velocity_Verlet(self.sampling_parameters, self.md_parameters, calculator)
+            sampling_job = velocity_Verlet(self.sampling_parameters, self.md_parameters, calculator=calculator)
+        elif self.sampling_parameters['sampling_method'].upper() in ['MD'] and \
+            self.sampling_parameters['sampling_ensemble'].upper() in ['NVE_VV_VR']:
+            sampling_job = velocity_Verlet(self.sampling_parameters, self.md_parameters, calculator=calculator, v_rescaling=True)
         else:
             __log_morest.write('It is not clear which sampling method and ensemble will be used.\n')
             __log_morest.close()
             raise Exception('Will you use the phase sampling method?')
         current_step, current_system = sampling_job.get_current_structure()
         max_time_step = int(self.md_parameters['md_simulation_time']/self.md_parameters['md_time_step']) + 1
-        for i_step in range(current_step, max_time_step):
+        for i_step in range(current_step+1, max_time_step+1):
             if self.wall_potential_parameters['wall_potential']:
                 general_coordinate = current_system.get_positions()
                 bias_force_wall_potential = self.wall_potential(general_coordinate)
