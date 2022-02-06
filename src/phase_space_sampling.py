@@ -106,7 +106,8 @@ class velocity_Verlet:
         if self.sampling_parameters['sampling_initialization']:
             system = read_xyz_file('MoREST.str')
         else:
-            system = read_xyz_file('MoREST.str_new')
+            system = self.current_system 
+            #system = read_xyz_file('MoREST.str_new') #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
         self.n_atom = system.get_global_number_of_atoms()
         if self.sampling_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
             self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_FD_forces(system, \
