@@ -12,7 +12,7 @@ class morest:
     '''
 
     def __init__(self, __parameter_file='MoREST.in'):
-        self.__log_morest = open('MoREST.log','a')
+        self.__log_morest = open('MoREST.log','a', buffering=1)
         MoREST_parameters = read_parameters(log_morest=self.__log_morest, parameter_file=__parameter_file)
         self.morest_parameters = MoREST_parameters.get_morest_parameters()
         if self.morest_parameters['morest_api_fortran']:
@@ -20,7 +20,7 @@ class morest:
 
         if self.morest_parameters['morest_initialization']:
                 self.__log_morest.close()
-                self.__log_morest = open('MoREST.log','w')
+                self.__log_morest = open('MoREST.log','w', buffering=1)
                 self.__log_morest.write('-----------MoREST start to work-----------\n\n')
         else:
             if self.morest_parameters['morest_api_fortran']:
@@ -28,7 +28,7 @@ class morest:
                     if_restart = np.loadtxt('restart')
                 except:
                     self.__log_morest.close()
-                    self.__log_morest = open('MoREST.log','w')
+                    self.__log_morest = open('MoREST.log','w', buffering=1)
                     self.__log_morest.write('-----------MoREST start to work-----------\n\n')
                     np.savetxt('restart', [1])
             else:

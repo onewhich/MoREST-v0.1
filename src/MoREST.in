@@ -16,7 +16,7 @@ ML_potential_model            ../../../fhicloud-wang/Al2F2/gpr_AlF_dimer_potenti
 FD_displacement               0.0025 # Parameter for finite difference forces calculation
 MD_time_step                 1   # unit in fs
 MD_simulation_time             100000   # unit in fs
-MD_temperature               300
+MD_temperature               1000
 
 Enhanced_sampling              False
 Enhanced_sampling_method       ITS
