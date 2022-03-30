@@ -20,7 +20,7 @@ class ml_potential:
         
     @staticmethod
     def generate_Al2F2_representation(Al2F2):
-        
+    
         Al1 = Al2F2.get_positions()[0] / units.Bohr # change length in AA to Bohr
         F2 = Al2F2.get_positions()[1] / units.Bohr
         Al3 = Al2F2.get_positions()[2] / units.Bohr
@@ -32,7 +32,7 @@ class ml_potential:
         r_Al3_F2 = np.linalg.norm(Al3 - F2)
         r_Al1_Al3 = np.linalg.norm(Al1 - Al3)
         r_F2_F4 = np.linalg.norm(F2 - F4)
-#        R = np.linalg.norm((Al1 + F2)/2 - (Al3 + F4)/2)
+        #R = np.linalg.norm((Al1 + F2)/2 - (Al3 + F4)/2)
 
         inverse_r_Al1_F2 = 1.0/r_Al1_F2
         inverse_r_Al3_F4 = 1.0/r_Al3_F4
@@ -40,25 +40,25 @@ class ml_potential:
         inverse_r_Al3_F2 = 1.0/r_Al3_F2
         inverse_r_Al1_Al3 = 1.0/r_Al1_Al3
         inverse_r_F2_F4 = 1.0/r_F2_F4
-#        inverse_R = 1.0/R
+        #inverse_R = 1.0/R
         exp_r_Al1_F2 = np.exp(-r_Al1_F2)
         exp_r_Al3_F4 = np.exp(-r_Al3_F4)
         exp_r_Al1_F4 = np.exp(-r_Al1_F4)
         exp_r_Al3_F2 = np.exp(-r_Al3_F2)
         exp_r_Al1_Al3 = np.exp(-r_Al1_Al3)
         exp_r_F2_F4 = np.exp(-r_F2_F4)
-#        exp_R = np.exp(-R)
-'''
-        features_invr_AlF = np.array([inverse_r_Al1_F2,inverse_r_Al3_F4, inverse_r_Al1_F4, inverse_r_Al3_F2])
-        features_invr_Al2_F2 = np.array([inverse_r_Al1_Al3, inverse_r_F2_F4, inverse_R])
-        features_expr_AlF = np.array([exp_r_Al1_F2,exp_r_Al3_F4, exp_r_Al1_F4, exp_r_Al3_F2])
-        features_expr_Al2_F2 = np.array([exp_r_Al1_Al3,exp_r_F2_F4, exp_R])
+        #exp_R = np.exp(-R)
 
-        representation = np.concatenate((np.sort(features_invr_AlF),
-                                  features_invr_Al2_F2,
-                                  np.sort(features_expr_AlF),
-                                  features_expr_Al2_F2))
-'''
+        #features_invr_AlF = np.array([inverse_r_Al1_F2,inverse_r_Al3_F4, inverse_r_Al1_F4, inverse_r_Al3_F2])
+        #features_invr_Al2_F2 = np.array([inverse_r_Al1_Al3, inverse_r_F2_F4, inverse_R])
+        #features_expr_AlF = np.array([exp_r_Al1_F2,exp_r_Al3_F4, exp_r_Al1_F4, exp_r_Al3_F2])
+        #features_expr_Al2_F2 = np.array([exp_r_Al1_Al3,exp_r_F2_F4, exp_R])
+
+        #representation = np.concatenate((np.sort(features_invr_AlF),
+        #                          features_invr_Al2_F2,
+        #                          np.sort(features_expr_AlF),
+        #                          features_expr_Al2_F2))
+                                  
 
         E_Al = -241.93373718
         E_F = -99.65284502
