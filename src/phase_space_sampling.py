@@ -152,7 +152,7 @@ def clean_rotation(velocities, coordinates, masses):
 def write_MD_log(MD_log, step, Ep, velocities, masses):
     n_atom = len(masses)
     #Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(n_atom)])
-    Ek = np.sum(0.5 * self.masses * np.linalg.norm(velocities)**2)
+    Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)
     T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
     Et = Ek + Ep
     MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'\n')
