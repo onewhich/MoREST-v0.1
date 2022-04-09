@@ -92,6 +92,8 @@ class velocity_Verlet:
             #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
             ZeroRotation(next_system)
         
+        next_velocities = next_system.get_velocities()
+        
         self.current_step = self.current_step + 1
         self.current_system = next_system
         
