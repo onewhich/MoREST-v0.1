@@ -73,7 +73,7 @@ class velocity_Verlet:
         if type(bias_forces) != type(None):
             next_forces = next_forces + bias_forces        
         
-        next_accelerations = np.array([next_forces[i_atom] / self.masses[i_atom] for i_atom in range(self.n_atom)])
+        next_accelerations = self.current_forces / self.masses
         next_velocities = current_velocities + 0.5 * (self.current_accelerations + next_accelerations) * time_step
         next_system.set_velocities(next_velocities)
         
@@ -114,14 +114,17 @@ class velocity_Verlet:
                                                       self.sampling_parameters['fd_displacement'])
         else:
             self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(system)
-        self.masses = system.get_masses()
-        self.current_accelerations = np.array([self.current_forces[i_atom] / self.masses[i_atom] for i_atom in range(self.n_atom)])
+        #self.masses = system.get_masses()
+        #self.current_accelerations = np.array([self.current_forces[i_atom] / self.masses[i_atom] for i_atom in range(self.n_atom)])
+        self.masses = system.get_masses()[:,np.newaxis]
+        self.current_accelerations = self.current_forces / self.masses
         
         return self.current_step, system
     
     def velocity_rescaling(self, system):
         velocities = system.get_velocities()
-        Ek = np.sum([0.5 * self.masses[i] * np.linalg.norm(velocities[i])**2 for i in range(self.n_atom)])
+        #Ek = np.sum([0.5 * self.masses[i] * np.linalg.norm(velocities[i])**2 for i in range(self.n_atom)])
+        Ek = np.sum(0.5 * self.masses * np.linalg.norm(velocities)**2)
         Ti = 2/3 * Ek/units.kB /self.n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
         factor = np.sqrt(self.md_parameters['md_temperature'] / Ti)
         system.set_velocities(factor * velocities)
@@ -133,7 +136,8 @@ def clean_translation(velocities):
     
 def clean_rotation(velocities, coordinates, masses):
     v_vector = velocities
-    center_of_mass = np.sum([masses[i]*coordinates[i] for i in range(len(masses))], axis=0)/np.sum(masses)
+    #center_of_mass = np.sum([masses[i]*coordinates[i] for i in range(len(masses))], axis=0)/np.sum(masses)
+    center_of_mass = np.sum(masses*coordinates, axis=0)/np.sum(masses)
     r_vector = coordinates - center_of_mass
         
     r_cross_v = np.cross(r_vector, v_vector)
@@ -147,7 +151,8 @@ def clean_rotation(velocities, coordinates, masses):
         
 def write_MD_log(MD_log, step, Ep, velocities, masses):
     n_atom = len(masses)
-    Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(n_atom)])
+    #Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(n_atom)])
+    Ek = np.sum(0.5 * self.masses * np.linalg.norm(velocities)**2)
     T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
     Et = Ek + Ep
     MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'\n')
