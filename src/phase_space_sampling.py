@@ -60,9 +60,15 @@ class velocity_Verlet:
         next_system = deepcopy(self.current_system)
         
         current_coordinates = self.current_system.get_positions()
-        current_velocities = self.current_system.get_velocities()
-        next_coordinates = current_coordinates + current_velocities * time_step + 0.5 * self.current_accelerations * time_step**2
+        #current_velocities = self.current_system.get_velocities()
+        current_momenta = self.current_system.get_momenta()
+        current_momenta += 0.5 * time_step * self.current_forces
+        
+        #next_coordinates = current_coordinates + current_velocities * time_step + 0.5 * self.current_accelerations * time_step**2
+        next_coordinates = current_coordinates + time_step * current_momenta / self.masses
         next_system.set_positions(next_coordinates)
+        
+        next_system.set_momenta(current_momenta, apply_constraint=False)
         
         if self.sampling_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
             next_potential_energy, next_forces = self.many_body_potential.get_potential_FD_forces(next_system, \
@@ -73,9 +79,11 @@ class velocity_Verlet:
         if type(bias_forces) != type(None):
             next_forces = next_forces + bias_forces        
         
-        next_accelerations = self.current_forces / self.masses
-        next_velocities = current_velocities + 0.5 * (self.current_accelerations + next_accelerations) * time_step
-        next_system.set_velocities(next_velocities)
+        #next_accelerations = self.current_forces / self.masses
+        #next_velocities = current_velocities + 0.5 * (self.current_accelerations + next_accelerations) * time_step
+        #next_system.set_velocities(next_velocities)
+        
+        next_system.set_momenta(next_system.get_momenta() + 0.5 * time_step * next_forces)
         
         if self.sampling_parameters['sampling_clean_translation']:
             #next_velocities = clean_translation(next_velocities)
@@ -117,7 +125,7 @@ class velocity_Verlet:
         #self.masses = system.get_masses()
         #self.current_accelerations = np.array([self.current_forces[i_atom] / self.masses[i_atom] for i_atom in range(self.n_atom)])
         self.masses = system.get_masses()[:,np.newaxis]
-        self.current_accelerations = self.current_forces / self.masses
+        #self.current_accelerations = self.current_forces / self.masses
         
         return self.current_step, system
     
