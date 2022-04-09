@@ -68,7 +68,7 @@ class velocity_Verlet:
         next_coordinates = current_coordinates + time_step * current_momenta / self.masses
         next_system.set_positions(next_coordinates)
         
-        next_system.set_momenta(current_momenta, apply_constraint=False)
+        #next_system.set_momenta(current_momenta, apply_constraint=False)
         
         if self.sampling_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
             next_potential_energy, next_forces = self.many_body_potential.get_potential_FD_forces(next_system, \
@@ -83,7 +83,7 @@ class velocity_Verlet:
         #next_velocities = current_velocities + 0.5 * (self.current_accelerations + next_accelerations) * time_step
         #next_system.set_velocities(next_velocities)
         
-        next_system.set_momenta(next_system.get_momenta() + 0.5 * time_step * next_forces)
+        next_system.set_momenta(current_momenta + 0.5 * time_step * next_forces)
         
         if self.sampling_parameters['sampling_clean_translation']:
             #next_velocities = clean_translation(next_velocities)
