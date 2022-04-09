@@ -32,7 +32,7 @@ class ml_potential:
         r_Al3_F2 = np.linalg.norm(Al3 - F2)
         r_Al1_Al3 = np.linalg.norm(Al1 - Al3)
         r_F2_F4 = np.linalg.norm(F2 - F4)
-        #R = np.linalg.norm((Al1 + F2)/2 - (Al3 + F4)/2)
+        R = np.linalg.norm((Al1 + F2)/2 - (Al3 + F4)/2)
 
         inverse_r_Al1_F2 = 1.0/r_Al1_F2
         inverse_r_Al3_F4 = 1.0/r_Al3_F4
@@ -40,56 +40,56 @@ class ml_potential:
         inverse_r_Al3_F2 = 1.0/r_Al3_F2
         inverse_r_Al1_Al3 = 1.0/r_Al1_Al3
         inverse_r_F2_F4 = 1.0/r_F2_F4
-        #inverse_R = 1.0/R
+        inverse_R = 1.0/R
         exp_r_Al1_F2 = np.exp(-r_Al1_F2)
         exp_r_Al3_F4 = np.exp(-r_Al3_F4)
         exp_r_Al1_F4 = np.exp(-r_Al1_F4)
         exp_r_Al3_F2 = np.exp(-r_Al3_F2)
         exp_r_Al1_Al3 = np.exp(-r_Al1_Al3)
         exp_r_F2_F4 = np.exp(-r_F2_F4)
-        #exp_R = np.exp(-R)
+        exp_R = np.exp(-R)
 
-        #features_invr_AlF = np.array([inverse_r_Al1_F2,inverse_r_Al3_F4, inverse_r_Al1_F4, inverse_r_Al3_F2])
-        #features_invr_Al2_F2 = np.array([inverse_r_Al1_Al3, inverse_r_F2_F4, inverse_R])
-        #features_expr_AlF = np.array([exp_r_Al1_F2,exp_r_Al3_F4, exp_r_Al1_F4, exp_r_Al3_F2])
-        #features_expr_Al2_F2 = np.array([exp_r_Al1_Al3,exp_r_F2_F4, exp_R])
+        features_invr_AlF = np.array([inverse_r_Al1_F2,inverse_r_Al3_F4, inverse_r_Al1_F4, inverse_r_Al3_F2])
+        features_invr_Al2_F2 = np.array([inverse_r_Al1_Al3, inverse_r_F2_F4, inverse_R])
+        features_expr_AlF = np.array([exp_r_Al1_F2,exp_r_Al3_F4, exp_r_Al1_F4, exp_r_Al3_F2])
+        features_expr_Al2_F2 = np.array([exp_r_Al1_Al3,exp_r_F2_F4, exp_R])
 
-        #representation = np.concatenate((np.sort(features_invr_AlF),
-        #                          features_invr_Al2_F2,
-        #                          np.sort(features_expr_AlF),
-        #                          features_expr_Al2_F2))
+        representation = np.concatenate((np.sort(features_invr_AlF),
+                                  features_invr_Al2_F2,
+                                  np.sort(features_expr_AlF),
+                                  features_expr_Al2_F2))
                                   
 
-        E_Al = -241.93373718
-        E_F = -99.65284502
-        gpr_Al2 = joblib.load('GPR_Al2_inv_r_exp_r_Ebinding.joblib')
-        gpr_F2 = joblib.load('GPR_F2_inv_r_exp_r_Ebinding.joblib')
-        gpr_AlF = joblib.load('GPR_AlF_inv_r_exp_r_Ebinding.joblib')
-        gpr_AlF2 = joblib.load('GPR_AlF2_inv_r_exp_r_Ebinding.joblib')
-        gpr_Al2F = joblib.load('GPR_Al2F_inv_r_exp_r_Ebinding.joblib')
+        #E_Al = -241.93373718
+        #E_F = -99.65284502
+        #gpr_Al2 = joblib.load('GPR_Al2_inv_r_exp_r_Ebinding.joblib')
+        #gpr_F2 = joblib.load('GPR_F2_inv_r_exp_r_Ebinding.joblib')
+        #gpr_AlF = joblib.load('GPR_AlF_inv_r_exp_r_Ebinding.joblib')
+        #gpr_AlF2 = joblib.load('GPR_AlF2_inv_r_exp_r_Ebinding.joblib')
+        #gpr_Al2F = joblib.load('GPR_Al2F_inv_r_exp_r_Ebinding.joblib')
 
-        Eb_rAl2 = gpr_Al2.predict(np.array([[inverse_r_Al1_Al3,exp_r_Al1_Al3]],dtype=object))
-        Eb_rF2 = gpr_F2.predict(np.array([[inverse_r_F2_F4,exp_r_F2_F4]],dtype=object))
-        Eb_rAlF_1 = gpr_AlF.predict(np.array([[inverse_r_Al1_F2,exp_r_Al1_F2]],dtype=object))
-        Eb_rAlF_2 = gpr_AlF.predict(np.array([[inverse_r_Al3_F4,exp_r_Al3_F4]],dtype=object))
-        Eb_rAlF_3 = gpr_AlF.predict(np.array([[inverse_r_Al1_F4,exp_r_Al1_F4]],dtype=object))
-        Eb_rAlF_4 = gpr_AlF.predict(np.array([[inverse_r_Al3_F2,exp_r_Al3_F2]],dtype=object))
+        #Eb_rAl2 = gpr_Al2.predict(np.array([[inverse_r_Al1_Al3,exp_r_Al1_Al3]],dtype=object))
+        #Eb_rF2 = gpr_F2.predict(np.array([[inverse_r_F2_F4,exp_r_F2_F4]],dtype=object))
+        #Eb_rAlF_1 = gpr_AlF.predict(np.array([[inverse_r_Al1_F2,exp_r_Al1_F2]],dtype=object))
+        #Eb_rAlF_2 = gpr_AlF.predict(np.array([[inverse_r_Al3_F4,exp_r_Al3_F4]],dtype=object))
+        #Eb_rAlF_3 = gpr_AlF.predict(np.array([[inverse_r_Al1_F4,exp_r_Al1_F4]],dtype=object))
+        #Eb_rAlF_4 = gpr_AlF.predict(np.array([[inverse_r_Al3_F2,exp_r_Al3_F2]],dtype=object))
         
-        subfeature_AlF2_1 = np.array([[Eb_rAlF_1, inverse_r_Al1_F2, exp_r_Al1_F2, Eb_rAlF_3, inverse_r_Al1_F4, exp_r_Al1_F4, Eb_rF2, inverse_r_F2_F4, exp_r_F2_F4]],dtype=object)
-        subfeature_AlF2_2 = np.array([[Eb_rAlF_2, inverse_r_Al3_F4, exp_r_Al3_F4, Eb_rAlF_4, inverse_r_Al3_F2, exp_r_Al3_F2, Eb_rF2, inverse_r_F2_F4, exp_r_F2_F4]],dtype=object)
-        subfeature_Al2F_1 = np.array([[Eb_rAlF_1, inverse_r_Al1_F2, exp_r_Al1_F2, Eb_rAlF_4, inverse_r_Al3_F2, exp_r_Al3_F2, Eb_rAl2, inverse_r_Al1_Al3, exp_r_Al1_Al3]],dtype=object)
-        subfeature_Al2F_2 = np.array([[Eb_rAlF_2, inverse_r_Al3_F4, exp_r_Al3_F4, Eb_rAlF_3, inverse_r_Al1_F4, exp_r_Al1_F4, Eb_rAl2, inverse_r_Al1_Al3, exp_r_Al1_Al3]],dtype=object)
+        #subfeature_AlF2_1 = np.array([[Eb_rAlF_1, inverse_r_Al1_F2, exp_r_Al1_F2, Eb_rAlF_3, inverse_r_Al1_F4, exp_r_Al1_F4, Eb_rF2, inverse_r_F2_F4, exp_r_F2_F4]],dtype=object)
+        #subfeature_AlF2_2 = np.array([[Eb_rAlF_2, inverse_r_Al3_F4, exp_r_Al3_F4, Eb_rAlF_4, inverse_r_Al3_F2, exp_r_Al3_F2, Eb_rF2, inverse_r_F2_F4, exp_r_F2_F4]],dtype=object)
+        #subfeature_Al2F_1 = np.array([[Eb_rAlF_1, inverse_r_Al1_F2, exp_r_Al1_F2, Eb_rAlF_4, inverse_r_Al3_F2, exp_r_Al3_F2, Eb_rAl2, inverse_r_Al1_Al3, exp_r_Al1_Al3]],dtype=object)
+        #subfeature_Al2F_2 = np.array([[Eb_rAlF_2, inverse_r_Al3_F4, exp_r_Al3_F4, Eb_rAlF_3, inverse_r_Al1_F4, exp_r_Al1_F4, Eb_rAl2, inverse_r_Al1_Al3, exp_r_Al1_Al3]],dtype=object)
         
-        Eb_AlF2_1 = gpr_AlF2.predict(subfeature_AlF2_1)
-        Eb_AlF2_2 = gpr_AlF2.predict(subfeature_AlF2_2)
-        Eb_Al2F_1 = gpr_AlF2.predict(subfeature_Al2F_1)
-        Eb_Al2F_2 = gpr_AlF2.predict(subfeature_Al2F_2)
+        #Eb_AlF2_1 = gpr_AlF2.predict(subfeature_AlF2_1)
+        #Eb_AlF2_2 = gpr_AlF2.predict(subfeature_AlF2_2)
+        #Eb_Al2F_1 = gpr_AlF2.predict(subfeature_Al2F_1)
+        #Eb_Al2F_2 = gpr_AlF2.predict(subfeature_Al2F_2)
         
-        representation = np.array([E_Al, E_F,
-                          Eb_rAl2, inverse_r_Al1_Al3, exp_r_Al1_Al3, Eb_rF2, inverse_r_F2_F4, exp_r_F2_F4,
-                          Eb_rAlF_1, inverse_r_Al1_F2, exp_r_Al1_F2, Eb_rAlF_2, inverse_r_Al3_F4, exp_r_Al3_F4,
-                          Eb_rAlF_3, inverse_r_Al1_F4, exp_r_Al1_F4, Eb_rAlF_4, inverse_r_Al3_F2, exp_r_Al3_F2,
-                          Eb_AlF2_1, Eb_AlF2_2, Eb_Al2F_1, Eb_Al2F_2],dtype=object)
+        #representation = np.array([E_Al, E_F,
+        #                  Eb_rAl2, inverse_r_Al1_Al3, exp_r_Al1_Al3, Eb_rF2, inverse_r_F2_F4, exp_r_F2_F4,
+        #                  Eb_rAlF_1, inverse_r_Al1_F2, exp_r_Al1_F2, Eb_rAlF_2, inverse_r_Al3_F4, exp_r_Al3_F4,
+        #                  Eb_rAlF_3, inverse_r_Al1_F4, exp_r_Al1_F4, Eb_rAlF_4, inverse_r_Al3_F2, exp_r_Al3_F2,
+        #                  Eb_AlF2_1, Eb_AlF2_2, Eb_Al2F_1, Eb_Al2F_2],dtype=object)
     
         return np.array(representation)
 
