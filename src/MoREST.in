@@ -9,7 +9,7 @@ Sampling_traj_interval          10    # Record sampling every Traj_interval step
 Sampling_clean_translation       True
 Sampling_clean_rotation         True
 Sampling_method                MD    # MD, MC, GLE, PIMD
-Sampling_ensemble             NVE_VV_VR   # Choose the ensemble, e.g. NVE_VV: velocity Verlet; NVE_VV_VR: velocity Verlet with velocity rescaling
+Sampling_ensemble             NVT_VR   # Choose the ensemble, e.g. NVE_VV: velocity Verlet; NVT_VR: velocity Verlet with velocity rescaling
 Many_body_potential            ML_FD  # ML_FD: machine learning potential with finite difference forces, on_the_fly: using QC, DFT package to calculate potential and forces
 ###Input_file                 gjf.com #TODO: read QC,DFT parameters from input file
 ML_potential_model            GPR_Al2F2_Etotal.joblib
