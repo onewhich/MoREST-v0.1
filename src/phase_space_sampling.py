@@ -9,7 +9,7 @@ from ase import units
 
 class velocity_Verlet:
     '''
-    This class implements velocity Verlet algorithm to do microcanonical ensemble (NVE MD) sampling.
+    This class implements velocity Verlet algorithm to do microcanonical ensemble (NVE MD) sampling, and velocity rescaling method to constrain the kinetic energy in a NVT MD system.
     MoREST_traj.xyz records the trajectory in an extended xyz format
     MoREST.str records the initial xyz structure of the system
     MoREST.str_new records the current xyz structure of the system
@@ -59,17 +59,20 @@ class velocity_Verlet:
         
         next_system = deepcopy(self.current_system)
         
+        ### x(t), v(t) = p(t) / m
         current_coordinates = self.current_system.get_positions()
         #current_velocities = self.current_system.get_velocities()
         current_momenta = self.current_system.get_momenta()
-        current_momenta += 0.5 * time_step * self.current_forces
         
+        ### x(t+dt)
         #next_coordinates = current_coordinates + current_velocities * time_step + 0.5 * self.current_accelerations * time_step**2
-        next_coordinates = current_coordinates + time_step * current_momenta / self.masses
+        next_coordinates = current_coordinates + (time_step * current_momenta + 0.5 * self.current_forces * time_step**2) / self.masses
         next_system.set_positions(next_coordinates)
         
-        #next_system.set_momenta(current_momenta, apply_constraint=False)
+        ### v(t+0.5dt) = p(t+0.5dt) / m
+        momenta_half = current_momenta + 0.5 * self.current_forces * time_step
         
+        ### F(t+dt)
         if self.sampling_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
             next_potential_energy, next_forces = self.many_body_potential.get_potential_FD_forces(next_system, \
                                                       self.sampling_parameters['fd_displacement'])
@@ -79,11 +82,13 @@ class velocity_Verlet:
         if type(bias_forces) != type(None):
             next_forces = next_forces + bias_forces        
         
+        ### v(t+dt) = v(t+0.5dt) + 0.5 * F(t+dt) * dt / m
         #next_accelerations = self.current_forces / self.masses
         #next_velocities = current_velocities + 0.5 * (self.current_accelerations + next_accelerations) * time_step
         #next_system.set_velocities(next_velocities)
         
-        next_system.set_momenta(current_momenta + 0.5 * time_step * next_forces)
+        ### p(t+dt) = p(t+0.5dt) + 0.5 * F(t+dt) * dt
+        next_system.set_momenta(momenta_halft + 0.5 * time_step * next_forces)
         
         if self.sampling_parameters['sampling_clean_translation']:
             #next_velocities = clean_translation(next_velocities)
@@ -139,6 +144,19 @@ class velocity_Verlet:
         factor = np.sqrt(self.md_parameters['md_temperature'] / Ti)
         system.set_velocities(factor * velocities)
 
+class stochastic_velocity_rescaling:
+    '''
+    This class implements stochastic velocity rescaling algorithm (Bussi, Donadio and Parrinello, JCP (2007)) to do canonical ensenmble sampling (NVT MD).
+    MoREST_traj.xyz records the trajectory in an extended xyz format
+    MoREST.str records the initial xyz structure of the system
+    MoREST.str_new records the current xyz structure of the system
+    '''
+    
+    def __init__(self, sampling_parameters, md_parameters, calculator=None):
+        self.sampling_parameters = sampling_parameters
+        self.md_parameters = md_parameters
+        
+        
 def clean_translation(velocities):
     total_velocity = np.sum(velocities, axis=0)/len(velocities)
     velocities = velocities - total_velocity

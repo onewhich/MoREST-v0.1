@@ -1,7 +1,7 @@
 import os, sys
 import numpy as np
 from read_parameters import read_parameters
-from phase_space_sampling import velocity_Verlet
+from phase_space_sampling import velocity_Verlet, stochastic_velocity_rescaling
 from enhanced_sampling import its
 from wall_potential import opaque_wall, translucent_wall
 
@@ -116,6 +116,9 @@ class morest:
         elif self.sampling_parameters['sampling_method'].upper() in ['MD'] and \
             self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_VR']:
             sampling_job = velocity_Verlet(self.sampling_parameters, self.md_parameters, calculator=calculator, v_rescaling=True)
+        elif self.sampling_parameters['sampling_method'].upper() in ['MD'] and \
+            self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
+            sampling_job = stochastic_velocity_rescaling(self.sampling_parameters, self.md_parameters, calculator=calculator)
         else:
             __log_morest.write('It is not clear which sampling method and ensemble will be used.\n')
             __log_morest.close()
