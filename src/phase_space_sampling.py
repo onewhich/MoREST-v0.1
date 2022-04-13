@@ -88,7 +88,7 @@ class velocity_Verlet:
         #next_system.set_velocities(next_velocities)
         
         ### p(t+dt) = p(t+0.5dt) + 0.5 * F(t+dt) * dt
-        next_system.set_momenta(momenta_halft + 0.5 * time_step * next_forces)
+        next_system.set_momenta(momenta_half + 0.5 * time_step * next_forces)
         
         if self.sampling_parameters['sampling_clean_translation']:
             #next_velocities = clean_translation(next_velocities)
