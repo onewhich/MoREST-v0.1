@@ -7,19 +7,11 @@ from copy import deepcopy
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary, ZeroRotation
 from ase import units
 
-class velocity_Verlet:
-    '''
-    This class implements velocity Verlet algorithm to do microcanonical ensemble (NVE MD) sampling, and velocity rescaling method to constrain the kinetic energy in a NVT MD system.
-    MoREST_traj.xyz records the trajectory in an extended xyz format
-    MoREST.str records the initial xyz structure of the system
-    MoREST.str_new records the current xyz structure of the system
-    '''
-    
-    def __init__(self, sampling_parameters, md_parameters, calculator=None, v_rescaling=False):
+class initialize_sampling:
+        def __init__(self, sampling_parameters, md_parameters, calculator=None):
         #self.md_parameters = np.load('MoREST_md_parameters.npy',allow_pickle=True).item()
         self.sampling_parameters = sampling_parameters
         self.md_parameters = md_parameters
-        self.v_rescaling = v_rescaling
         
         if self.sampling_parameters['many_body_potential'].upper() in ['on_the_fly'.upper()]:
             if type(calculator) == type(None):
@@ -36,16 +28,12 @@ class velocity_Verlet:
             self.current_step, self.current_system = self.get_current_structure()
             if self.md_parameters['md_temperature'] > 1e-6:
                 MaxwellBoltzmannDistribution(self.current_system, temperature_K = self.md_parameters['md_temperature'])
-            if self.v_rescaling:
-                self.velocity_rescaling(self.current_system)
             self.current_traj = []
             self.current_traj.append(self.current_system)
             write_xyz_traj('MoREST_traj.xyz', self.current_system)
             
             self.MD_log = open('MoREST_MD.log', 'w', buffering=1)
-            self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')
-            write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_velocities(), self.masses)
-            
+            self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')           
         else:
             self.current_traj = read_xyz_traj('MoREST_traj.xyz')
             self.current_step = (len(self.current_traj) - 1) * self.sampling_parameters['sampling_traj_interval']
@@ -53,11 +41,53 @@ class velocity_Verlet:
             #self.current_step, self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
             
             self.MD_log = open('MoREST_MD.log', 'a', buffering=1)
+                    
+    def get_current_structure(self):
+        if self.sampling_parameters['sampling_initialization']:
+            system = read_xyz_file('MoREST.str')
+        else:
+            system = self.current_system 
+            #system = read_xyz_file('MoREST.str_new') #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
+        self.n_atom = system.get_global_number_of_atoms()
+        if self.sampling_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
+            self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_FD_forces(system, \
+                                                      self.sampling_parameters['fd_displacement'])
+        else:
+            self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(system)
+        #self.masses = system.get_masses()
+        #self.current_accelerations = np.array([self.current_forces[i_atom] / self.masses[i_atom] for i_atom in range(self.n_atom)])
+        self.masses = system.get_masses()[:,np.newaxis]
+        #self.current_accelerations = self.current_forces / self.masses
+        
+        return self.current_step, system
+    
+
+class velocity_Verlet(initialize_sampling):
+    '''
+    This class implements velocity Verlet algorithm to do microcanonical ensemble (NVE MD) sampling, and velocity rescaling method to constrain the kinetic energy in a NVT MD system.
+    MoREST_traj.xyz records the trajectory in an extended xyz format
+    MoREST.str records the initial xyz structure of the system
+    MoREST.str_new records the current xyz structure of the system
+    '''
+    
+    def __init__(self, sampling_parameters, md_parameters, calculator=None, v_rescaling=False):
+        super(velocity_Verlet, self).__init__(self, sampling_parameters, md_parameters, calculator)
+        self.v_rescaling = v_rescaling
+        
+        if self.v_rescaling:
+            self.velocity_rescaling(self.current_system)
+        
+        if self.sampling_parameters['sampling_initialization']:
+            write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_velocities(), self.masses)
         
     def generate_new_step(self, bias_forces=None):
         time_step = self.md_parameters['md_time_step']
         
         next_system = deepcopy(self.current_system)
+        
+        ### F(t) + bias
+        if type(bias_forces) != type(None):
+            self.current_forces = self.current_forces + bias_forces
         
         ### x(t), v(t) = p(t) / m
         current_coordinates = self.current_system.get_positions()
@@ -78,9 +108,6 @@ class velocity_Verlet:
                                                       self.sampling_parameters['fd_displacement'])
         else:
             next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(next_system)
-            
-        if type(bias_forces) != type(None):
-            next_forces = next_forces + bias_forces        
         
         ### v(t+dt) = v(t+0.5dt) + 0.5 * F(t+dt) * dt / m
         #next_accelerations = self.current_forces / self.masses
@@ -88,7 +115,7 @@ class velocity_Verlet:
         #next_system.set_velocities(next_velocities)
         
         ### p(t+dt) = p(t+0.5dt) + 0.5 * F(t+dt) * dt
-        next_system.set_momenta(momenta_half + 0.5 * time_step * next_forces)
+        next_system.set_momenta(momenta_halft + 0.5 * time_step * next_forces)
         
         if self.sampling_parameters['sampling_clean_translation']:
             #next_velocities = clean_translation(next_velocities)
@@ -116,26 +143,6 @@ class velocity_Verlet:
         
         return next_system
     
-        
-    def get_current_structure(self):
-        if self.sampling_parameters['sampling_initialization']:
-            system = read_xyz_file('MoREST.str')
-        else:
-            system = self.current_system 
-            #system = read_xyz_file('MoREST.str_new') #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
-        self.n_atom = system.get_global_number_of_atoms()
-        if self.sampling_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
-            self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_FD_forces(system, \
-                                                      self.sampling_parameters['fd_displacement'])
-        else:
-            self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(system)
-        #self.masses = system.get_masses()
-        #self.current_accelerations = np.array([self.current_forces[i_atom] / self.masses[i_atom] for i_atom in range(self.n_atom)])
-        self.masses = system.get_masses()[:,np.newaxis]
-        #self.current_accelerations = self.current_forces / self.masses
-        
-        return self.current_step, system
-    
     def velocity_rescaling(self, system):
         velocities = system.get_velocities()
         #Ek = np.sum([0.5 * self.masses[i] * np.linalg.norm(velocities[i])**2 for i in range(self.n_atom)])
@@ -144,7 +151,7 @@ class velocity_Verlet:
         factor = np.sqrt(self.md_parameters['md_temperature'] / Ti)
         system.set_velocities(factor * velocities)
 
-class stochastic_velocity_rescaling:
+class stochastic_velocity_rescaling(initialize_sampling):
     '''
     This class implements stochastic velocity rescaling algorithm (Bussi, Donadio and Parrinello, JCP (2007)) to do canonical ensenmble sampling (NVT MD).
     MoREST_traj.xyz records the trajectory in an extended xyz format
@@ -153,9 +160,12 @@ class stochastic_velocity_rescaling:
     '''
     
     def __init__(self, sampling_parameters, md_parameters, calculator=None):
-        self.sampling_parameters = sampling_parameters
-        self.md_parameters = md_parameters
+        super(stochastic_velocity_rescaling, self).__init__(self, sampling_parameters, md_parameters, calculator)
         
+        if self.sampling_parameters['sampling_initialization']:
+            write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_velocities(), self.masses)
+            
+            
         
 def clean_translation(velocities):
     total_velocity = np.sum(velocities, axis=0)/len(velocities)
