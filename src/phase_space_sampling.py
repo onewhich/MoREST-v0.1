@@ -128,6 +128,7 @@ class velocity_Verlet(initialize_sampling):
         
         self.current_step = self.current_step + 1
         self.current_system = next_system
+        self.current_forces = next_forces
         
         if self.v_rescaling:
             self.velocity_rescaling(self.current_system)
