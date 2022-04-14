@@ -41,7 +41,7 @@ class initialize_sampling:
             #self.current_step, self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
             
             self.MD_log = open('MoREST_MD.log', 'a', buffering=1)
-                    
+            
     def get_current_structure(self):
         if self.sampling_parameters['sampling_initialization']:
             system = read_xyz_file('MoREST.str')
@@ -71,7 +71,7 @@ class velocity_Verlet(initialize_sampling):
     '''
     
     def __init__(self, sampling_parameters, md_parameters, calculator=None, v_rescaling=False):
-        super(velocity_Verlet, self).__init__(self, sampling_parameters, md_parameters, calculator)
+        super(velocity_Verlet, self).__init__(sampling_parameters, md_parameters, calculator)
         self.v_rescaling = v_rescaling
         
         if self.v_rescaling:
