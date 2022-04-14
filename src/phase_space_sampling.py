@@ -8,7 +8,7 @@ from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary
 from ase import units
 
 class initialize_sampling:
-        def __init__(self, sampling_parameters, md_parameters, calculator=None):
+    def __init__(self, sampling_parameters, md_parameters, calculator=None):
         #self.md_parameters = np.load('MoREST_md_parameters.npy',allow_pickle=True).item()
         self.sampling_parameters = sampling_parameters
         self.md_parameters = md_parameters
