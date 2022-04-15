@@ -160,7 +160,7 @@ class velocity_Verlet(initialize_sampling):
         '''
         This function implements stochastic velocity rescaling algorithm (Bussi, Donadio and Parrinello, JCP (2007); Bussi, Parrinello, CPC (2008)) to do canonical ensenmble sampling (NVT MD).
         '''
-        tau = self.md_parameters['md_svr_tau']
+        tau = self.md_parameters['nvt_svr_tau']
         time_step = self.md_parameters['md_time_step']
         
         ### degree of freedom
