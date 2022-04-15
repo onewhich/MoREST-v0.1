@@ -26,12 +26,12 @@ class read_parameters:
     '''
     
     def __init__(self, log_morest, parameter_file='MoREST.in'):
-        __log_morest = log_morest
+        self.__log_morest = log_morest
         try:
             __parameters = open(parameter_file,'r').readlines()
         except FileNotFoundError:
-            __log_morest.write('Can not open parameter file: '+str(parameter_file)+'\n')
-            __log_morest.close()
+            self.__log_morest.write('Can not open parameter file: '+str(parameter_file)+'\n')
+            self.__log_morest.close()
             sys.exit(0)
         
         self.morest_parameters = {}
@@ -63,8 +63,8 @@ class read_parameters:
                 elif i_parameter.split()[1].upper() == 'False'.upper():
                     self.morest_parameters['morest_initialization'] = False
                 else:
-                    __log_morest.write('It is not clear whether the MoREST will be initialized.\n')
-                    __log_morest.close()
+                    self.__log_morest.write('It is not clear whether the MoREST will be initialized.\n')
+                    self.__log_morest.close()
                     raise Exception('Will you initialize the MoREST or not?')
 
             elif i_parameter.split()[0].upper() == 'MoREST_API_Fortran'.upper():
@@ -73,8 +73,8 @@ class read_parameters:
                 elif i_parameter.split()[1].upper() == 'False'.upper():
                     self.morest_parameters['morest_api_fortran'] = False
                 else:
-                    __log_morest.write('It is not clear whether the MoREST API for Fortran code will be used.\n')
-                    __log_morest.close()
+                    self.__log_morest.write('It is not clear whether the MoREST API for Fortran code will be used.\n')
+                    self.__log_morest.close()
                     raise Exception('Will you use the MoREST API for Fortran code or not?')
 
             ########################## Phase space sampling #######################
@@ -84,8 +84,8 @@ class read_parameters:
                 elif i_parameter.split()[1].upper() == 'False'.upper():
                     self.sampling_parameters['phase_space_sampling'] = False
                 else:
-                    __log_morest.write('It is not clear whether the sampling method will be used.\n')
-                    __log_morest.close()
+                    self.__log_morest.write('It is not clear whether the sampling method will be used.\n')
+                    self.__log_morest.close()
                     raise Exception('Will you use sampling method or not?')
                     
             elif i_parameter.split()[0].upper() == 'Sampling_initialization'.upper():
@@ -150,8 +150,8 @@ class read_parameters:
                 elif i_parameter.split()[1].upper() == 'False'.upper():
                     self.enhanced_sampling_parameters['enhanced_sampling'] = False
                 else:
-                    __log_morest.write('It is not clear whether the enhanced sampling will be used.\n')
-                    __log_morest.close()
+                    self.__log_morest.write('It is not clear whether the enhanced sampling will be used.\n')
+                    self.__log_morest.close()
                     raise Exception('Will you use enhanced sampling or not?')
                 
             elif i_parameter.split()[0].upper() == 'Enhanced_sampling_method'.upper():
@@ -210,8 +210,8 @@ class read_parameters:
                 elif i_parameter.split()[1].upper() == 'False'.upper():
                     self.wall_potential_parameters['wall_potential'] = False
                 else:
-                    __log_morest.write('It is not clear whether the wall potential will be used.\n')
-                    __log_morest.close()
+                    self.__log_morest.write('It is not clear whether the wall potential will be used.\n')
+                    self.__log_morest.close()
                     raise Exception('Will you use wall potential or not?')
                     
             elif i_parameter.split()[0].upper() == 'Collective_variable'.upper():
@@ -220,8 +220,8 @@ class read_parameters:
                 elif i_parameter.split()[1].upper() == 'False'.upper():
                     self.wall_potential_parameters['collective_variable'] = False
                 else:
-                    __log_morest.write('It is not clear whether the collective variable will be used.\n')
-                    __log_morest.close()
+                    self.__log_morest.write('It is not clear whether the collective variable will be used.\n')
+                    self.__log_morest.close()
                     raise Exception('Will you use collective variable or not?')
                 
             elif i_parameter.split()[0].upper() == 'Wall_type'.upper():
@@ -257,48 +257,49 @@ class read_parameters:
             elif i_parameter.split()[0].upper() == 'Spherical_wall_radius'.upper():
                 self.spherical_wall_parameters['spherical_wall_radius'] = float(i_parameter.split()[1])
                 
-        __log_morest.write('\n')
+    def write_parameters(self):
+        self.__log_morest.write('\n')
         try:
             for key in self.morest_parameters:
-                __log_morest.write(key+' : '+str(self.self.morest_parameters[key])+'\n')
+                self.__log_morest.write(key+' : '+str(self.self.morest_parameters[key])+'\n')
         except:
             pass
         try:
             for key in self.sampling_parameters:
-                __log_morest.write(key+' : '+str(self.self.sampling_parameters[key])+'\n')
+                self.__log_morest.write(key+' : '+str(self.self.sampling_parameters[key])+'\n')
         except:
             pass
         try:
             for key in self.md_parameters:
-                __log_morest.write(key+' : '+str(self.self.md_parameters[key])+'\n')
+                self.__log_morest.write(key+' : '+str(self.self.md_parameters[key])+'\n')
         except:
             pass
         try:
             for key in self.enhanced_sampling_parameters:
-                __log_morest.write(key+' : '+str(self.self.enhanced_sampling_parameters[key])+'\n')
+                self.__log_morest.write(key+' : '+str(self.self.enhanced_sampling_parameters[key])+'\n')
         except:
             pass
         try:
             for key in self.its_parameters:
-                __log_morest.write(key+' : '+str(self.self.its_parameters[key])+'\n')
+                self.__log_morest.write(key+' : '+str(self.self.its_parameters[key])+'\n')
         except:
             pass
         try:
             for key in self.wall_potential_parameters:
-                __log_morest.write(key+' : '+str(self.self.wall_potential_parameters[key])+'\n')
+                self.__log_morest.write(key+' : '+str(self.self.wall_potential_parameters[key])+'\n')
         except:
             pass
         try:
             for key in self.plane_wall_parameters:
-                __log_morest.write(key+' : '+str(self.self.plane_wall_parameters[key])+'\n')
+                self.__log_morest.write(key+' : '+str(self.self.plane_wall_parameters[key])+'\n')
         except:
             pass
         try:
             for key in self.spherical_wall_parameters:
-                __log_morest.write(key+' : '+str(self.self.spherical_wall_parameters[key])+'\n')
+                self.__log_morest.write(key+' : '+str(self.self.spherical_wall_parameters[key])+'\n')
         except:
             pass
-        __log_morest.write('\n')
+        self.__log_morest.write('\n')
             
 
                 
@@ -321,8 +322,7 @@ class read_parameters:
         #np.save('MoREST_enhanced_sampling_parameters.npy', self.enhanced_sampling_parameters)
         return self.enhanced_sampling_parameters
         
-    def get_its_parameters(self, log_morest):
-        __log_morest = log_morest
+    def get_its_parameters(self):
         if self.its_parameters['its_initialization']:
             try:
                 os.remove('MoREST_ITS_pk.npy')
@@ -330,7 +330,7 @@ class read_parameters:
                 os.remove('MoREST_ITS_potential_energy.npy')
             except:
                 pass
-            __log_morest.write('Integrated tempering sampling method is initialized.\n\n')
+            self.__log_morest.write('Integrated tempering sampling method is initialized.\n\n')
 
         if not 'its_replica_temperature' in self.its_parameters:
             if int(self.its_parameters['its_replica_arrange']) == -1:
@@ -344,8 +344,8 @@ class read_parameters:
                                                    num=self.its_parameters['its_number_of_replica'],\
                                                    endpoint=True)
             else:
-                __log_morest.write('No ITS_replica_arrange type was matched.\n')
-                __log_morest.close()
+                self.__log_morest.write('No ITS_replica_arrange type was matched.\n')
+                self.__log_morest.close()
                 raise Exception('No ITS_replica_arrange type was matched.')
             self.its_parameters['its_replica_temperature'] = replica_temperature
         
@@ -372,14 +372,14 @@ class read_parameters:
         return self.its_parameters
     
     def get_wall_potential_parameters(self):
-        np.save('MoREST_wall_potential_parameters.npy', self.wall_potential_parameters)
+        #np.save('MoREST_wall_potential_parameters.npy', self.wall_potential_parameters)
         return self.wall_potential_parameters
     
     def get_plane_wall_parameters(self):
-        np.save('MoREST_plane_wall_parameters.npy', self.plane_wall_parameters)
+        #np.save('MoREST_plane_wall_parameters.npy', self.plane_wall_parameters)
         return self.plane_wall_parameters
 
     def get_spherical_wall_parameters(self):
-        np.save('MoREST_spherical_wall_parameters.npy', self.spherical_wall_parameters)
+        #np.save('MoREST_spherical_wall_parameters.npy', self.spherical_wall_parameters)
         return self.spherical_wall_parameters
     
