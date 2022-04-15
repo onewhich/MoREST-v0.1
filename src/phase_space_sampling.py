@@ -149,9 +149,7 @@ class velocity_Verlet(initialize_sampling):
         return self.current_step, self.current_system
     
     def velocity_rescaling(self):
-        velocities = self.current_system.get_velocities()
-        #Ek = np.sum([0.5 * self.masses[i] * np.linalg.norm(velocities[i])**2 for i in range(self.n_atom)])
-        Ek = np.sum(0.5 * self.masses * np.linalg.norm(velocities)**2)
+        Ek = self.current_system.get_kinetic_energy()
         Ti = 2/3 * Ek/units.kB /self.n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
         factor = np.sqrt(self.md_parameters['md_temperature'] / Ti)
         self.current_system.set_velocities(factor * velocities)
@@ -179,9 +177,8 @@ class velocity_Verlet(initialize_sampling):
         c = np.exp(-1 * time_step / tau )
         
         ### kinetic energy K
-        K_simulation = 3/2 * units.kB * self.md_parameters['md_temperature'] * self.n_atom # Ek = 1/2 m v^2 = 3/2 kB T for each particle
-        velocities = self.current_system.get_velocities()
-        K_t = np.sum(0.5 * self.masses * np.linalg.norm(velocities)**2)
+        K_simulation = Nf/2 * units.kB * self.md_parameters['md_temperature'] # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+        K_t = self.current_system.get_kinetic_energy()
         factor = K_simulation / K_t / Nf
         
         ### alpha
@@ -189,6 +186,7 @@ class velocity_Verlet(initialize_sampling):
         sign = np.sign(R_t + np.sqrt(c/(1-c)/factor))
         alpha = alpha * sign
         
+        velocities = self.current_system.get_velocities()
         self.current_system.set_velocities(alpha * velocities)
     
         
