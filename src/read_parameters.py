@@ -139,6 +139,9 @@ class read_parameters:
             
             elif i_parameter.split()[0].upper() == 'MD_temperature'.upper():
                 self.md_parameters['md_temperature'] = float(i_parameter.split()[1])
+            
+            elif i_parameter.split()[0].upper() == 'NVT_SVR_tau'.upper():
+                self.md_parameters['nvt_svr_tau'] = float(i_parameter.split()[1])
                     
             ########################## Enhanced sampling ##########################
             elif i_parameter.split()[0].upper() == 'Enhanced_sampling'.upper():

@@ -70,7 +70,7 @@ class velocity_Verlet(initialize_sampling):
     MoREST.str_new records the current xyz structure of the system
     '''
     
-    def __init__(self, sampling_parameters, md_parameters, calculator=None, v_rescaling=False):
+    def __init__(self, sampling_parameters, md_parameters, calculator=None, v_rescaling=False, sv_rescaling=False):
         super(velocity_Verlet, self).__init__(sampling_parameters, md_parameters, calculator)
         self.v_rescaling = v_rescaling
         
@@ -131,7 +131,10 @@ class velocity_Verlet(initialize_sampling):
         self.current_forces = next_forces
         
         if self.v_rescaling:
-            self.velocity_rescaling(self.current_system)
+            self.velocity_rescaling()
+        
+        if self.sv_rescaling:
+            self.stochastic_velocity_rescaling()
         
         write_xyz_file('MoREST.str_new', next_system)
         
@@ -142,31 +145,51 @@ class velocity_Verlet(initialize_sampling):
             write_xyz_traj('MoREST_traj.xyz', next_system)
             write_MD_log(self.MD_log, self.current_step, next_potential_energy, next_velocities, self.masses)
         
-        return next_system
+        return self.current_step, next_system
     
-    def velocity_rescaling(self, system):
-        velocities = system.get_velocities()
+    def velocity_rescaling(self):
+        velocities = self.current_system.get_velocities()
         #Ek = np.sum([0.5 * self.masses[i] * np.linalg.norm(velocities[i])**2 for i in range(self.n_atom)])
         Ek = np.sum(0.5 * self.masses * np.linalg.norm(velocities)**2)
         Ti = 2/3 * Ek/units.kB /self.n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
         factor = np.sqrt(self.md_parameters['md_temperature'] / Ti)
-        system.set_velocities(factor * velocities)
-
-class stochastic_velocity_rescaling(initialize_sampling):
-    '''
-    This class implements stochastic velocity rescaling algorithm (Bussi, Donadio and Parrinello, JCP (2007)) to do canonical ensenmble sampling (NVT MD).
-    MoREST_traj.xyz records the trajectory in an extended xyz format
-    MoREST.str records the initial xyz structure of the system
-    MoREST.str_new records the current xyz structure of the system
-    '''
-    
-    def __init__(self, sampling_parameters, md_parameters, calculator=None):
-        super(stochastic_velocity_rescaling, self).__init__(self, sampling_parameters, md_parameters, calculator)
+        self.current_system.set_velocities(factor * velocities)
         
-        if self.sampling_parameters['sampling_initialization']:
-            write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_velocities(), self.masses)
+    def stochastic_velocity_rescaling(self):
+        '''
+        This function implements stochastic velocity rescaling algorithm (Bussi, Donadio and Parrinello, JCP (2007); Bussi, Parrinello, CPC (2008)) to do canonical ensenmble sampling (NVT MD).
+        '''
+        tau = self.md_parameters['md_svr_tau']
+        time_step = self.md_parameters['md_time_step']
+        
+        ### degree of freedom
+        Nf = 3 * self.n_atom
+        if self.sampling_parameters['sampling_clean_translation']:
+            Nf = Nf - 3
+        if self.sampling_parameters['sampling_clean_rotation']:
+            Nf = Nf - 3
             
-            
+        ### Gaussian random number R(t)
+        R = np.random.normal(size=Nf)
+        R_t = R[0]
+        S_Nf_1 = np.sum(R[1:]**2)
+        
+        ### c = exp(- time_step / tau)
+        c = np.exp(-1 * time_step / tau )
+        
+        ### kinetic energy K
+        K_simulation = 3/2 * units.kB * self.md_parameters['md_temperature'] * self.n_atom # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+        velocities = self.current_system.get_velocities()
+        K_t = np.sum(0.5 * self.masses * np.linalg.norm(velocities)**2)
+        factor = K_simulation / K_t / Nf
+        
+        ### alpha
+        alpha = np.sqrt(c + (1-c)*(S_Nf_1 + R_t**2)*factor + 2*R_t*sqrt(c*(1-c)*factor))
+        sign = np.sign(R_t + np.sqrt(c/(1-c)/factor))
+        alpha = alpha * sign
+        
+        self.current_system.set_velocities(alpha * velocities)
+    
         
 def clean_translation(velocities):
     total_velocity = np.sum(velocities, axis=0)/len(velocities)

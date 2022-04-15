@@ -17,6 +17,7 @@ FD_displacement               0.0025 # Parameter for finite difference forces ca
 MD_time_step                 1   # unit in fs
 MD_simulation_time             100000   # unit in fs
 MD_temperature               1000
+NVT_SVR_tau                 10
 
 Enhanced_sampling              False
 Enhanced_sampling_method       ITS

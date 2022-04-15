@@ -118,7 +118,7 @@ class morest:
             sampling_job = velocity_Verlet(self.sampling_parameters, self.md_parameters, calculator=calculator, v_rescaling=True)
         elif self.sampling_parameters['sampling_method'].upper() in ['MD'] and \
             self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
-            sampling_job = stochastic_velocity_rescaling(self.sampling_parameters, self.md_parameters, calculator=calculator)
+            sampling_job = velocity_Verlet(self.sampling_parameters, self.md_parameters, calculator=calculator, sv_rescaling=True)
         else:
             __log_morest.write('It is not clear which sampling method and ensemble will be used.\n')
             __log_morest.close()
@@ -131,7 +131,7 @@ class morest:
                 bias_force_wall_potential = self.wall_potential(general_coordinate)
             else:
                 bias_force_wall_potential = None
-            current_system= sampling_job.generate_new_step(bias_force_wall_potential)
+            current_step, current_system= sampling_job.generate_new_step(bias_force_wall_potential)
         self.__log_morest.write('Phase space sampling with molecular dynamics method in microcanonical ensemble is finished!\n')
         self.mission_complete()
     
