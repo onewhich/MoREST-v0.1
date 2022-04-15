@@ -101,7 +101,7 @@ class velocity_Verlet(initialize_sampling):
         next_system.set_positions(next_coordinates)
         
         ### v(t+0.5dt) = p(t+0.5dt) / m
-        momenta_half = current_momenta + 0.5 * self.current_forces * time_step
+        momenta_half = current_momenta + 0.5 * time_step * self.current_forces
         
         ### F(t+dt)
         if self.sampling_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
