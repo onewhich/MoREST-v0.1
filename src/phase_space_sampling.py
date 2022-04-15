@@ -118,13 +118,6 @@ class velocity_Verlet(initialize_sampling):
         ### p(t+dt) = p(t+0.5dt) + 0.5 * F(t+dt) * dt
         next_system.set_momenta(momenta_half + 0.5 * time_step * next_forces)
         
-        if self.sampling_parameters['sampling_clean_translation']:
-            #next_velocities = clean_translation(next_velocities)
-            Stationary(next_system)
-        if self.sampling_parameters['sampling_clean_rotation']:
-            #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
-            ZeroRotation(next_system)
-        
         next_velocities = next_system.get_velocities()
         
         self.current_step = self.current_step + 1
@@ -137,6 +130,13 @@ class velocity_Verlet(initialize_sampling):
         if self.sv_rescaling:
             self.stochastic_velocity_rescaling()
         
+        if self.sampling_parameters['sampling_clean_translation']:
+            #next_velocities = clean_translation(next_velocities)
+            Stationary(self.current_system)
+        if self.sampling_parameters['sampling_clean_rotation']:
+            #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
+            ZeroRotation(self.current_system)
+        
         write_xyz_file('MoREST.str_new', next_system)
         
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
@@ -146,7 +146,7 @@ class velocity_Verlet(initialize_sampling):
             write_xyz_traj('MoREST_traj.xyz', next_system)
             write_MD_log(self.MD_log, self.current_step, next_potential_energy, next_velocities, self.masses)
         
-        return self.current_step, next_system
+        return self.current_step, self.current_system
     
     def velocity_rescaling(self):
         velocities = self.current_system.get_velocities()
