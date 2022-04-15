@@ -113,6 +113,8 @@ class morest:
         '''
         This function is called to excute phase space sampling method.
         --------
+        INPUT:
+            calculator: The same as the calculator in ASE. It is required, when many body potential is specified as 'on_the_fly'.
         '''
         if self.sampling_parameters['sampling_method'].upper() in ['MD'] and self.sampling_parameters['sampling_ensemble'].upper() in ['NVE_VV']:
             sampling_job = velocity_Verlet(self.sampling_parameters, self.md_parameters, calculator=calculator)
@@ -128,14 +130,14 @@ class morest:
             raise Exception('Will you use the phase sampling method?')
         current_step, current_system = sampling_job.get_current_structure()
         max_time_step = int(self.md_parameters['md_simulation_time']/self.md_parameters['md_time_step']) + 1
-        for i_step in range(current_step+1, max_time_step+1):
+        while current_step <= max_time_step:
             if self.wall_potential_parameters['wall_potential']:
                 general_coordinate = current_system.get_positions()
                 bias_force_wall_potential = self.wall_potential(general_coordinate)
             else:
                 bias_force_wall_potential = None
             current_step, current_system= sampling_job.generate_new_step(bias_force_wall_potential)
-        self.__log_morest.write('Phase space sampling with molecular dynamics method in microcanonical ensemble is finished!\n')
+        self.__log_morest.write('Phase space sampling with molecular dynamics method is finished!\n')
         self.mission_complete()
     
     def bias_sampling(self, simulation_temperature, simulation_maxsteps, \
