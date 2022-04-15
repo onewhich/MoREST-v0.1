@@ -1,7 +1,7 @@
 import os, sys
 import numpy as np
 from read_parameters import read_parameters
-from phase_space_sampling import velocity_Verlet, stochastic_velocity_rescaling
+from phase_space_sampling import velocity_Verlet
 from enhanced_sampling import its
 from wall_potential import opaque_wall, translucent_wall
 
