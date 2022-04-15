@@ -73,6 +73,7 @@ class velocity_Verlet(initialize_sampling):
     def __init__(self, sampling_parameters, md_parameters, calculator=None, v_rescaling=False, sv_rescaling=False):
         super(velocity_Verlet, self).__init__(sampling_parameters, md_parameters, calculator)
         self.v_rescaling = v_rescaling
+        self.sv_rescaling = sv_rescaling
         
         if self.v_rescaling:
             self.velocity_rescaling(self.current_system)
