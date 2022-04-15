@@ -165,10 +165,10 @@ class velocity_Verlet(initialize_sampling):
         
         ### degree of freedom
         Nf = 3 * self.n_atom
-        if self.sampling_parameters['sampling_clean_translation']:
-            Nf = Nf - 3
-        if self.sampling_parameters['sampling_clean_rotation']:
-            Nf = Nf - 3
+        #if self.sampling_parameters['sampling_clean_translation']:
+        #    Nf = Nf - 3
+        #if self.sampling_parameters['sampling_clean_rotation']:
+        #Nf = Nf - 3
             
         ### Gaussian random number R(t)
         R = np.random.normal(size=Nf)
