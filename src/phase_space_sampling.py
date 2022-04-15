@@ -185,7 +185,7 @@ class velocity_Verlet(initialize_sampling):
         factor = K_simulation / K_t / Nf
         
         ### alpha
-        alpha = np.sqrt(c + (1-c)*(S_Nf_1 + R_t**2)*factor + 2*R_t*sqrt(c*(1-c)*factor))
+        alpha = np.sqrt(c + (1-c)*(S_Nf_1 + R_t**2)*factor + 2*R_t*np.sqrt(c*(1-c)*factor))
         sign = np.sign(R_t + np.sqrt(c/(1-c)/factor))
         alpha = alpha * sign
         
