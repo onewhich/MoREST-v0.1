@@ -311,10 +311,10 @@ class read_parameters:
     
     def get_md_parameters(self):
         #np.save('MoREST_md_parameters.npy', self.md_parameters)
-        self.md_parameters['md_time_step'] = self.md_parameters['md_time_step'] * units.fs
-        self.md_parameters['md_simulation_time'] = self.md_parameters['md_simulation_time'] * units.fs
-        if self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
-            self.md_parameters['nvt_svr_tau'] = self.md_parameters['nvt_svr_tau'] * units.fs
+        #self.md_parameters['md_time_step'] = self.md_parameters['md_time_step'] * units.fs
+        #self.md_parameters['md_simulation_time'] = self.md_parameters['md_simulation_time'] * units.fs
+        #if self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
+        #    self.md_parameters['nvt_svr_tau'] = self.md_parameters['nvt_svr_tau'] * units.fs
         return self.md_parameters
 
     def get_enhanced_sampling_parameters(self):
