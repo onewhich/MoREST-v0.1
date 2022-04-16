@@ -129,7 +129,7 @@ class velocity_Verlet(initialize_sampling):
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             #print(next_coordinates) #DEGUB
             #print(next_forces)    #DEBUG
-            self.current_traj.append(next_system)
+            self.current_traj.append(self.current_system)
             write_xyz_traj('MoREST_traj.xyz', self.current_system)
             write_MD_log(self.MD_log, self.current_step, next_potential_energy, v_half, self.masses)
         
