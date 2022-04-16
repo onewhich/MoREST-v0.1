@@ -84,7 +84,7 @@ class velocity_Verlet(initialize_sampling):
             write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_velocities(), self.masses)
         
     
-    def generate_new_step(self, bias_forces=None):
+    def generate_new_step_test_FHIaims(self, bias_forces=None):
         time_step = self.md_parameters['md_time_step']
         
         ### F(t) + bias
@@ -136,9 +136,7 @@ class velocity_Verlet(initialize_sampling):
         return self.current_step, self.current_system
         
         
-        
-    
-    def generate_new_step_std_VV(self, bias_forces=None):
+    def generate_new_step(self, bias_forces=None):
         time_step = self.md_parameters['md_time_step']
         
         next_system = deepcopy(self.current_system)
@@ -195,14 +193,15 @@ class velocity_Verlet(initialize_sampling):
             #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
             ZeroRotation(self.current_system)
         
-        write_xyz_file('MoREST.str_new', next_system)
+        write_xyz_file('MoREST.str_new', self.current_system)
         
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             #print(next_coordinates) #DEGUB
             #print(next_forces)    #DEBUG
-            self.current_traj.append(next_system)
-            write_xyz_traj('MoREST_traj.xyz', next_system)
-            write_MD_log(self.MD_log, self.current_step, next_potential_energy, next_velocities, self.masses)
+            self.current_traj.append(self.current_system)
+            write_xyz_traj('MoREST_traj.xyz', self.current_system)
+            kinetic_energy = self.current_system.get_kinetic_energy()
+            write_MD_log(self.MD_log, self.current_step, next_potential_energy, kinetic_energy, self.masses)
         
         return self.current_step, self.current_system
     
@@ -268,10 +267,10 @@ def clean_rotation(velocities, coordinates, masses):
         
     return velocities
         
-def write_MD_log(MD_log, step, Ep, velocities, masses):
+def write_MD_log(MD_log, step, Ep, Ek, masses):
     n_atom = len(masses)
     #Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(n_atom)])
-    Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)
+    #Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)
     T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
     Et = Ek + Ep
     MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'\n')
