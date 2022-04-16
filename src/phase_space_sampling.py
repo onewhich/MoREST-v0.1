@@ -83,7 +83,65 @@ class velocity_Verlet(initialize_sampling):
         if self.sampling_parameters['sampling_initialization']:
             write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_velocities(), self.masses)
         
+    
     def generate_new_step(self, bias_forces=None):
+        time_step = self.md_parameters['md_time_step']
+        
+        next_system = deepcopy(self.current_system)
+        
+        ### F(t) + bias
+        if type(bias_forces) != type(None):
+            self.current_forces = self.current_forces + bias_forces
+            
+        current_v = self.current_system.get_velocities()
+        current_r = self.current_system.get_positions()
+            
+        v_last = current_v + 0.5 * self.current_forces * time_step / self.masses
+        
+        if self.v_rescaling:
+            self.velocity_rescaling()
+        
+        if self.sv_rescaling:
+            self.stochastic_velocity_rescaling()
+        
+        if self.sampling_parameters['sampling_clean_translation']:
+            #next_velocities = clean_translation(next_velocities)
+            Stationary(self.current_system)
+        if self.sampling_parameters['sampling_clean_rotation']:
+            #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
+            ZeroRotation(self.current_system)
+        
+        v_half = v_last + 0.5 * self.current_forces * time_step / self.masses
+        self.current_system.set_velocities(v_half)
+        
+        next_r = current_r + v_half * time_step
+        self.current_system.set_positions(next_r)
+        
+        if self.sampling_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
+            next_potential_energy, next_forces = self.many_body_potential.get_potential_FD_forces(self.current_system, \
+                                                      self.sampling_parameters['fd_displacement'])
+        else:
+            next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(self.current_system)
+        
+        self.current_step += 1
+        self.current_system = next_system
+        self.current_forces = next_forces
+        
+        write_xyz_file('MoREST.str_new', next_system)
+        
+        if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
+            #print(next_coordinates) #DEGUB
+            #print(next_forces)    #DEBUG
+            self.current_traj.append(next_system)
+            write_xyz_traj('MoREST_traj.xyz', next_system)
+            write_MD_log(self.MD_log, self.current_step, next_potential_energy, v_half, self.masses)
+        
+        return self.current_step, self.current_system
+        
+        
+        
+    
+    def generate_new_step_std_VV(self, bias_forces=None):
         time_step = self.md_parameters['md_time_step']
         
         next_system = deepcopy(self.current_system)
