@@ -91,7 +91,6 @@ class velocity_Verlet(initialize_sampling):
         ### F(t) + bias
         if type(bias_forces) != type(None):
             self.current_forces = self.current_forces + bias_forces
-        print(self.current_forces)
         
         ### x(t), v(t) = p(t) / m
         current_coordinates = self.current_system.get_positions()
@@ -121,15 +120,12 @@ class velocity_Verlet(initialize_sampling):
         ### p(t+dt) = p(t+0.5dt) + 0.5 * F(t+dt) * dt
         next_momenta = momenta_half + 0.5 * next_forces * time_step
         next_system.set_momenta(next_momenta)
-        print(next_momenta)
         
         next_velocities = next_system.get_velocities()
-        print(next_velocities * self.masses)
         
         self.current_step += 1
         self.current_system = next_system
         self.current_forces = next_forces
-        print(self.current_forces)
         
         if self.v_rescaling:
             self.velocity_rescaling()
