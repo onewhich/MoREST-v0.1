@@ -23,13 +23,14 @@ class opaque_wall:
                                any collective variables. 
     '''
         
-    def __init__(self):
-        self.wall_potential_parameters = np.load('MoREST_wall_potential_parameters.npy',allow_pickle=True).item()
+    def __init__(self, wall_potential_parameters):
+        #self.wall_potential_parameters = np.load('MoREST_wall_potential_parameters.npy',allow_pickle=True).item()
+        self.wall_potential_parameters = wall_potential_parameters
         self.a = self.wall_potential_parameters['wall_scaling']
         self.c = self.wall_potential_parameters['wall_scope']
         
-    def get_plane_opaque_wall_force_potential(self, xyz_coordinate):
-        plane_wall_parameters = np.load('MoREST_plane_wall_parameters.npy',allow_pickle=True).item()
+    def get_plane_opaque_wall_force_potential(self, xyz_coordinate, plane_wall_parameters):
+        #plane_wall_parameters = np.load('MoREST_plane_wall_parameters.npy',allow_pickle=True).item()
         # calculate the force and potential on an atom with xyz_coordinate
         vec_gc_b = np.dot((xyz_coordinate - plane_wall_parameters['plane_wall_point']), plane_wall_parameters['plane_wall_normal_vector']) \
                     * plane_wall_parameters['plane_wall_normal_vector']
@@ -40,8 +41,8 @@ class opaque_wall:
         else:
             return opaque_potential(self.a, self.c, vec_gc_b, norm_gc_b)
         
-    def get_spherical_opaque_wall_force_potential(self, xyz_coordinate):
-        spherical_wall_parameters = np.load('MoREST_spherical_wall_parameters.npy',allow_pickle=True).item()
+    def get_spherical_opaque_wall_force_potential(self, xyz_coordinate, spherical_wall_parameters):
+        #spherical_wall_parameters = np.load('MoREST_spherical_wall_parameters.npy',allow_pickle=True).item()
         # calculate the force and potential on an atom with xyz_coordinate
         vec_direction = spherical_wall_parameters['spherical_wall_center'] - xyz_coordinate
         norm_direction = np.linalg.norm(vec_direction)
@@ -63,13 +64,14 @@ class translucent_wall:
                                any collective variables. 
     '''
         
-    def __init__(self):
-        wall_potential_parameters = np.load('MoREST_wall_potential_parameters.npy',allow_pickle=True).item()
+    def __init__(self, wall_potential_parameters):
+        #wall_potential_parameters = np.load('MoREST_wall_potential_parameters.npy',allow_pickle=True).item()
+        self.wall_potential_parameters = wall_potential_parameters
         self.a = wall_potential_parameters['wall_scaling']
         self.c = wall_potential_parameters['wall_scope']
         
-    def get_plane_translucent_wall_force_potential(self, xyz_coordinate):
-        plane_wall_parameters = np.load('MoREST_plane_wall_parameters.npy',allow_pickle=True).item()
+    def get_plane_translucent_wall_force_potential(self, xyz_coordinate, plane_wall_parameters):
+        #plane_wall_parameters = np.load('MoREST_plane_wall_parameters.npy',allow_pickle=True).item()
         # calculate the force and potential on an atom with xyz_coordinate
         vec_gc_b = np.dot((xyz_coordinate - plane_wall_parameters['plane_wall_point']), plane_wall_parameters['plane_wall_normal_vector']) \
                     * plane_wall_parameters['plane_wall_normal_vector']
@@ -79,8 +81,8 @@ class translucent_wall:
         else:
             return translucent__potential(self.a, self.c, vec_gc_b, norm_gc_b)
         
-    def get_spherical_translucent_wall_force_potential(self, xyz_coordinate):
-        spherical_wall_parameters = np.load('MoREST_spherical_wall_parameters.npy',allow_pickle=True).item()
+    def get_spherical_translucent_wall_force_potential(self, xyz_coordinate, spherical_wall_parameters):
+        #spherical_wall_parameters = np.load('MoREST_spherical_wall_parameters.npy',allow_pickle=True).item()
         # calculate the force and potential on an atom with xyz_coordinate
         vec_direction = spherical_wall_parameters['spherical_wall_center'] - xyz_coordinate
         norm_direction = np.linalg.norm(vec_direction)

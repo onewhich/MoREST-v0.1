@@ -101,10 +101,10 @@ class morest:
                         self.spherical_wall_parameters = MoREST_parameters.get_spherical_wall_parameters()
             if self.wall_potential_parameters['wall_type'].upper() in ['Plane_opaque_wall'.upper(),\
                                                     'Spherical_opaque_wall'.upper()]:
-                self.wall = opaque_wall()
+                self.wall = opaque_wall(self.wall_potential_parameters)
             elif self.wall_potential_parameters['wall_type'].upper() in ['Plane_translucent_wall'.upper(),\
                                                     'Spherical_translucent_wall'.upper()]:
-                self.wall = translucent_wall()
+                self.wall = translucent_wall(self.wall_potential_parameters)
         #    for key in self.plane_wall_parameters:
         #        print(key+' : '+str(self.plane_wall_parameters[key]))
 
@@ -262,7 +262,7 @@ class morest:
                 #self.__log_morest.write('The plane opaque wall potential and force on atoms: XYZ coordinate, Potential, Forces\n')
                 wall_force = []
                 for i_coordinate in general_coordinate:
-                    i_wall_force, i_wall_potential = self.wall.get_plane_opaque_wall_force_potential(i_coordinate)
+                    i_wall_force, i_wall_potential = self.wall.get_plane_opaque_wall_force_potential(i_coordinate, self.plane_wall_parameters)
                     wall_force.append(i_wall_force)
                     #self.__log_morest.write(str(i_coordinate)+' , '+str(i_wall_potential)+' , '+str(i_wall_force))
                     #self.__log_morest.write('\n')
@@ -272,7 +272,7 @@ class morest:
             if self.wall_potential_parameters['wall_type'].upper() in ['Spherical_opaque_wall'.upper()]:
                 wall_force = []
                 for i_coordinate in general_coordinate:
-                    i_wall_force, i_wall_potential = self.wall.get_spherical_opaque_wall_force_potential(i_coordinate)
+                    i_wall_force, i_wall_potential = self.wall.get_spherical_opaque_wall_force_potential(i_coordinate, self.spherical_wall_parameters)
                     wall_force.append(i_wall_force)
                 return np.array(wall_force)
 
@@ -281,7 +281,7 @@ class morest:
                 #self.__log_morest.write('The plane translucent wall potential and force on atoms: XYZ coordinate, Potential, Forces\n')
                 wall_force = []
                 for i_coordinate in general_coordinate:
-                    i_wall_force, i_wall_potential = self.wall.get_plane_translucent_wall_force_potential(i_coordinate)
+                    i_wall_force, i_wall_potential = self.wall.get_plane_translucent_wall_force_potential(i_coordinate, self.plane_wall_parameters)
                     wall_force.append(i_wall_force)
                     #self.__log_morest.write(str(i_coordinate)+' , '+str(i_wall_potential)+' , '+str(i_wall_force))
                     #self.__log_morest.write('\n')
@@ -291,7 +291,7 @@ class morest:
             if self.wall_potential_parameters['wall_type'].upper() in ['Spherical_translucent_wall'.upper()]:
                 wall_force = []
                 for i_coordinate in general_coordinate:
-                    i_wall_force, i_wall_potential = self.wall.get_spherical_translucent_wall_force_potential(i_coordinate)
+                    i_wall_force, i_wall_potential = self.wall.get_spherical_translucent_wall_force_potential(i_coordinate, self.spherical_wall_parameters)
                     wall_force.append(i_wall_force)
                 return np.array(wall_force)
 
