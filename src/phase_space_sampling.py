@@ -87,8 +87,6 @@ class velocity_Verlet(initialize_sampling):
     def generate_new_step(self, bias_forces=None):
         time_step = self.md_parameters['md_time_step']
         
-        next_system = deepcopy(self.current_system)
-        
         ### F(t) + bias
         if type(bias_forces) != type(None):
             self.current_forces = self.current_forces + bias_forces
@@ -124,7 +122,6 @@ class velocity_Verlet(initialize_sampling):
             next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(self.current_system)
         
         self.current_step += 1
-        self.current_system = next_system
         self.current_forces = next_forces
         
         write_xyz_file('MoREST.str_new', next_system)
