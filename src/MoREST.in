@@ -8,7 +8,7 @@ Sampling_initialization         True   # Overwrite or append the trajectory in M
 Sampling_traj_interval          10    # Record sampling every Traj_interval steps
 Sampling_clean_translation       True
 Sampling_clean_rotation         True
-Sampling_method                MD    # MD, MC, GLE, PIMD
+Sampling_method                MD    # MD, MC, LD, PIMD
 Sampling_ensemble             NVT_SVR   # Choose the ensemble, e.g. NVE_VV: velocity Verlet; NVT_VR: velocity Verlet with velocity rescaling; NVT_SVR: BDP stochastic velocity rescaling thermostat
 Many_body_potential            ML_FD  # ML_FD: machine learning potential with finite difference forces, on_the_fly: using QC, DFT package to calculate potential and forces
 ###Input_file                 gjf.com #TODO: read QC,DFT parameters from input file
