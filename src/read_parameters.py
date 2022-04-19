@@ -368,7 +368,7 @@ class read_parameters:
                                                    self.its_parameters['its_number_of_replica']
         #with open('MoREST_ITS_parameters.json','w') as its_json:
         #    json.dump(self.its_parameters,its_json, cls=NumpyArrayEncoder)
-        np.save('MoREST_ITS_parameters.npy',self.its_parameters)
+        #np.save('MoREST_ITS_parameters.npy',self.its_parameters)
         return self.its_parameters
     
     def get_wall_potential_parameters(self):

@@ -7,17 +7,17 @@ class its:
     The integrated tempering sampling module.
     '''
     
-    def __init__(self):
-        self.its_parameters = np.load('MoREST_ITS_parameters.npy',allow_pickle=True).item()
+    def __init__(self, its_parameters):
+        #self.its_parameters = np.load('MoREST_ITS_parameters.npy',allow_pickle=True).item()
         #self.log_its = open('MoREST_ITS.log','w')
+        self.its_parameters = its_parameters
         
-        
-    def its_optimization(self, simulation_temperature, potential_energy, current_md_step, md_force, log_morest):
-        #print(current_md_step)
-        if current_md_step % self.its_parameters['its_trial_MD_steps'] == 0 :
-            if current_md_step != 0 :
+    def its_optimization(self, simulation_temperature, potential_energy, current_step, md_force, log_morest):
+        #print(current_step)
+        if current_step % self.its_parameters['its_trial_MD_steps'] == 0 :
+            if current_step != 0 :
                 #print('opting')
-                #current_md_step = 0
+                #current_step = 0
                 p_k, n_k = self.__pk_nk()
             
                 log_morest.write('Current p_k:    ')
@@ -33,7 +33,9 @@ class its:
                 np.savetxt('MoREST_ITS_nk.npy',new_nk)
                 bias_force = self.__bias_force(simulation_temperature, potential_energy, md_force)
                 os.remove('MoREST_ITS_potential_energy.npy')
-                return bias_force#, current_md_step
+                return bias_force#, current_step
+            else:
+                return md_force
         else:
             #print('not opting')
             with open('MoREST_ITS_potential_energy.npy','a') as potential_energy_list:
@@ -63,7 +65,7 @@ class its:
             np.savetxt('MoREST_ITS_potential_energy.npy',potential_energy_list)
             '''
             bias_force = self.__bias_force(simulation_temperature, potential_energy, md_force)
-            return bias_force#, current_md_step
+            return bias_force#, current_step
             
        
     def its_if_converge(self):
@@ -108,7 +110,7 @@ class its:
             #print(np.exp(-1*i_beta*Epot))
             bias_numerator += n_k[i]*i_beta*np.exp(-1*i_beta*Epot)
             bias_denominator += n_k[i]*np.exp(-1*i_beta*Epot)
-        return md_force*bias_numerator/(simulation_beta*bias_denominator)
+        return md_force*(bias_numerator/(simulation_beta*bias_denominator)-1) # substract original forces and return the pure bias forces
     
     def __pk_nk(self):
         if abs(self.its_parameters['its_energy_shift'] - 0.) > 1e-5:
