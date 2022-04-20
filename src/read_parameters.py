@@ -40,10 +40,10 @@ class read_parameters:
         self.sampling_parameters = {}
         self.sampling_parameters['phase_space_sampling'] = False
         self.sampling_parameters['sampling_restart'] = False
-        self.sampling_parameters['sampling_clean_rotation'] = True
-        self.sampling_parameters['sampling_clean_translation'] = True
         self.sampling_parameters['fd_displacement'] = 0.0025
         self.md_parameters = {}
+        self.md_parameters['md_clean_rotation'] = True
+        self.md_parameters['md_clean_translation'] = True
         self.enhanced_sampling_parameters = {}
         self.enhanced_sampling_parameters['enhanced_sampling'] = False
         self.its_parameters = {}
@@ -98,24 +98,16 @@ class read_parameters:
                     
             elif i_parameter.split()[0].upper() == 'Sampling_traj_interval'.upper():
                 self.sampling_parameters['sampling_traj_interval'] = int(i_parameter.split()[1])
-            
-            elif i_parameter.split()[0].upper() == 'Sampling_clean_rotation'.upper():
-                if i_parameter.split()[1].upper() == 'True'.upper():
-                    self.sampling_parameters['sampling_clean_rotation'] = True
-                elif i_parameter.split()[1].upper() == 'False'.upper():
-                    self.sampling_parameters['sampling_clean_rotation'] = False
-                    
-            elif i_parameter.split()[0].upper() == 'Sampling_clean_translation'.upper():
-                if i_parameter.split()[1].upper() == 'True'.upper():
-                    self.sampling_parameters['sampling_clean_translation'] = True
-                elif i_parameter.split()[1].upper() == 'False'.upper():
-                    self.sampling_parameters['sampling_clean_translation'] = False
                     
             elif i_parameter.split()[0].upper() == 'Sampling_method'.upper():
                 self.sampling_parameters['sampling_method'] = str(i_parameter.split()[1])
                     
             elif i_parameter.split()[0].upper() == 'Sampling_ensemble'.upper():
                 self.sampling_parameters['sampling_ensemble'] = str(i_parameter.split()[1])
+                if self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_VR']:
+                    self.sampling_parameters['nvt_vr_dt'] = float(i_parameter.split()[2])
+                elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
+                    self.sampling_parameters['nvt_svr_tau'] = float(i_parameter.split()[2])
                     
             elif i_parameter.split()[0].upper() == 'Many_body_potential'.upper():
                 self.sampling_parameters['many_body_potential'] = str(i_parameter.split()[1])
@@ -140,8 +132,17 @@ class read_parameters:
             elif i_parameter.split()[0].upper() == 'MD_temperature'.upper():
                 self.md_parameters['md_temperature'] = float(i_parameter.split()[1])
             
-            elif i_parameter.split()[0].upper() == 'NVT_SVR_tau'.upper():
-                self.md_parameters['nvt_svr_tau'] = float(i_parameter.split()[1])
+            elif i_parameter.split()[0].upper() == 'MD_clean_rotation'.upper():
+                if i_parameter.split()[1].upper() == 'True'.upper():
+                    self.md_parameters['md_clean_rotation'] = True
+                elif i_parameter.split()[1].upper() == 'False'.upper():
+                    self.md_parameters['md_clean_rotation'] = False
+                    
+            elif i_parameter.split()[0].upper() == 'MD_clean_translation'.upper():
+                if i_parameter.split()[1].upper() == 'True'.upper():
+                    self.md_parameters['md_clean_translation'] = True
+                elif i_parameter.split()[1].upper() == 'False'.upper():
+                    self.md_parameters['md_clean_translation'] = False
                     
             ########################## Enhanced sampling ##########################
             elif i_parameter.split()[0].upper() == 'Enhanced_sampling'.upper():

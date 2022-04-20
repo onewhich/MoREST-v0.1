@@ -134,10 +134,10 @@ class velocity_Verlet(initialize_sampling):
         if self.sv_rescaling:
             self.stochastic_velocity_rescaling()
         
-        if self.sampling_parameters['sampling_clean_translation']:
+        if self.md_parameters['md_clean_translation']:
             #next_velocities = clean_translation(next_velocities)
             Stationary(self.current_system)
-        if self.sampling_parameters['sampling_clean_rotation']:
+        if self.md_parameters['md_clean_rotation']:
             #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
             ZeroRotation(self.current_system)
         
@@ -154,16 +154,20 @@ class velocity_Verlet(initialize_sampling):
         return self.current_step, self.current_system
     
     def velocity_rescaling(self):
+        dT = self.sampling_parameters['nvt_vr_dt']
+        lower_T = self.md_parameters['md_temperature'] - dT
+        upper_T = self.md_parameters['md_temperature'] + dT
         Ek = self.current_system.get_kinetic_energy()
         Ti = 2/3 * Ek/units.kB /self.n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
-        factor = np.sqrt(self.md_parameters['md_temperature'] / Ti)
-        self.current_system.set_velocities(factor * velocities)
+        if Ti > upper_T or Ti < lower_T:
+            factor = np.sqrt(self.md_parameters['md_temperature'] / Ti)
+            self.current_system.set_velocities(factor * velocities)
         
     def stochastic_velocity_rescaling(self):
         '''
         This function implements stochastic velocity rescaling algorithm (Bussi, Donadio and Parrinello, JCP (2007); Bussi, Parrinello, CPC (2008)) to do canonical ensenmble sampling (NVT MD).
         '''
-        tau = self.md_parameters['nvt_svr_tau']
+        tau = self.sampling_parameters['nvt_svr_tau']
         time_step = self.md_parameters['md_time_step']
         
         ### degree of freedom
