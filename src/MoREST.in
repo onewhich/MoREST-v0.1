@@ -25,13 +25,19 @@ ITS_lower_bound_temperature    1000
 ITS_upper_bound_temperature    2000
 ITS_number_of_replica          100
 ITS_replica_arrange            0     # -1: arithmetic progression   0:  geometric progression
-#ITS_replica_temperature        290 310 330 350 370   # specify or default
+#ITS_replica_temperatures        290 310 330 350 370   # specify or default
 #ITS_initial_nk                 1 0.1 0.01 0.001 0.0001   # specify or default
 #ITS_pk0                        0.2 0.2 0.2 0.2 0.2   # specify or default
 ITS_trial_MD_steps             10
 ITS_delta_pk                   1e-4
 ITS_energy_shift               -18600
-
+RE_initialization              True   #TODO: replica exchange
+RE_lower_bound_temperature
+RE_upper_bound_temperature
+RE_number_of_replica
+RE_replica_arrange
+RE_replica_temperatures
+RE_energy_shift
 
 Wall_potential                 True
 Collective_variable            False

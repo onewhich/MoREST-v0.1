@@ -177,11 +177,11 @@ class read_parameters:
             elif i_parameter.split()[0].upper() == 'ITS_replica_arrange'.upper():
                 self.its_parameters['its_replica_arrange'] = float(i_parameter.split()[1])
                 
-            elif i_parameter.split()[0].upper() == 'ITS_replica_temperature'.upper():
-                tmp_temperature = []
+            elif i_parameter.split()[0].upper() == 'ITS_replica_temperatures'.upper():
+                tmp_temperatures = []
                 for i in range(self.its_parameters['its_number_of_replica']):
-                    tmp_temperature.append(float(i_parameter.split()[i+1]))
-                self.its_parameters['its_replica_temperature'] = np.array(tmp_temperature)
+                    tmp_temperatures.append(float(i_parameter.split()[i+1]))
+                self.its_parameters['its_replica_temperatures'] = np.array(tmp_temperatures)
                 
             elif i_parameter.split()[0].upper() == 'ITS_initial_nk'.upper():
                 tmp_nk = []
@@ -333,14 +333,14 @@ class read_parameters:
                 pass
             self.__log_morest.write('Integrated tempering sampling method is initialized.\n\n')
 
-        if not 'its_replica_temperature' in self.its_parameters:
+        if not 'its_replica_temperatures' in self.its_parameters:
             if int(self.its_parameters['its_replica_arrange']) == -1:
-                replica_temperature = np.linspace(self.its_parameters['its_lower_bound_temperature'],\
+                replica_temperatures = np.linspace(self.its_parameters['its_lower_bound_temperature'],\
                                                   self.its_parameters['its_upper_bound_temperature'],\
                                                   num=self.its_parameters['its_number_of_replica'],\
                                                   endpoint=True)
             elif int(self.its_parameters['its_replica_arrange']) == 0:
-                replica_temperature = np.geomspace(self.its_parameters['its_lower_bound_temperature'],\
+                replica_temperatures = np.geomspace(self.its_parameters['its_lower_bound_temperature'],\
                                                    self.its_parameters['its_upper_bound_temperature'],\
                                                    num=self.its_parameters['its_number_of_replica'],\
                                                    endpoint=True)
@@ -348,9 +348,9 @@ class read_parameters:
                 self.__log_morest.write('No ITS_replica_arrange type was matched.\n')
                 self.__log_morest.close()
                 raise Exception('No ITS_replica_arrange type was matched.')
-            self.its_parameters['its_replica_temperature'] = replica_temperature
+            self.its_parameters['its_replica_temperatures'] = replica_temperatures
         
-        self.its_parameters['its_replica_beta'] = 1/(self.its_parameters['its_replica_temperature'] *\
+        self.its_parameters['its_replica_beta'] = 1/(self.its_parameters['its_replica_temperatures'] *\
                                                     scipy.constants.value('Boltzmann constant in eV/K'))
         try:
             self.its_parameters['its_initial_nk'] = np.loadtxt('MoREST_ITS_nk.npy')
