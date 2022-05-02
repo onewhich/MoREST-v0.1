@@ -31,16 +31,13 @@ class initialize_sampling:
             self.current_traj = []
             self.current_traj.append(self.current_system)
             write_xyz_traj('MoREST_traj.xyz', self.current_system)
-            
-            self.MD_log = open('MoREST_MD.log', 'w', buffering=1)
-            self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')           
+                    
         else:
             self.current_traj = read_xyz_traj('MoREST_traj.xyz')
             self.current_step = (len(self.current_traj) - 1) * self.sampling_parameters['sampling_traj_interval']
             self.current_system = self.current_traj[-1]
             #self.current_step, self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
             
-            self.MD_log = open('MoREST_MD.log', 'a', buffering=1)
             
     def get_current_structure(self):
         if self.sampling_parameters['sampling_initialization']:
@@ -77,11 +74,25 @@ class velocity_Verlet(initialize_sampling):
         self.v_rescaling = v_rescaling
         self.sv_rescaling = sv_rescaling
         
+        ### kinetic energy at simulation temperature
+        self.K_simulation = Nf/2 * units.kB * self.md_parameters['md_temperature'] # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+        
         if self.v_rescaling:
             self.velocity_rescaling(self.current_system)
         
         if self.sampling_parameters['sampling_initialization']:
-            write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
+            self.MD_log = open('MoREST_MD.log', 'w', buffering=1)
+            if sv_rescaling:
+                self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), Effective energy (eV)\n')   
+                self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses, self.K_simulation, self.sampling_parameters['nvt_svr_tau'], 0, 0)
+            else:
+                self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
+                write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
+        else:
+            if sv_rescaling:
+                self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses, self.K_simulation, self.sampling_parameters['nvt_svr_tau'], 0, 0)
+            else:
+                self.MD_log = open('MoREST_MD.log', 'a', buffering=1)
         
     def generate_new_step(self, bias_forces=None):
         time_step = self.md_parameters['md_time_step']
@@ -132,7 +143,7 @@ class velocity_Verlet(initialize_sampling):
             self.velocity_rescaling()
         
         if self.sv_rescaling:
-            self.stochastic_velocity_rescaling()
+            R_t = self.stochastic_velocity_rescaling()
         
         if self.md_parameters['md_clean_translation']:
             #next_velocities = clean_translation(next_velocities)
@@ -149,7 +160,10 @@ class velocity_Verlet(initialize_sampling):
             self.current_traj.append(self.current_system)
             write_xyz_traj('MoREST_traj.xyz', self.current_system)
             kinetic_energy = self.current_system.get_kinetic_energy()
-            write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses)
+            if sv_rescaling:
+                self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses, self.K_simulation, self.sampling_parameters['nvt_svr_tau'], self.d_Ee, self.Wt+R_t)
+            else:
+                write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses)
         
         return self.current_step, self.current_system
     
@@ -186,9 +200,8 @@ class velocity_Verlet(initialize_sampling):
         c = np.exp(-1 * time_step / tau )
         
         ### kinetic energy K
-        K_simulation = Nf/2 * units.kB * self.md_parameters['md_temperature'] # Ek = 1/2 m v^2 = 3/2 kB T for each particle
         K_t = self.current_system.get_kinetic_energy()
-        factor = K_simulation / K_t / Nf
+        factor = self.K_simulation / K_t / Nf
         
         ### alpha
         alpha = np.sqrt(c + (1-c)*(S_Nf_1 + R_t**2)*factor + 2*R_t*np.sqrt(c*(1-c)*factor))
@@ -197,6 +210,8 @@ class velocity_Verlet(initialize_sampling):
         
         velocities = self.current_system.get_velocities()
         self.current_system.set_velocities(alpha * velocities)
+        
+        return R_t
     
         
 def clean_translation(velocities):
@@ -226,4 +241,16 @@ def write_MD_log(MD_log, step, Ep, Ek, masses):
     T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
     Et = Ek + Ep
     MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'\n')
+    
+def write_SVR_MD_log(MD_log, step, Ep, Ek, masses, K_simulation, tau, d_Ee, Wt):
+    n_atom = len(masses)
+    Nf = 3 * self.n_atom
+    #Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(n_atom)])
+    #Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)
+    T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+    Et = Ek + Ep
+    d_Ee = d_Ee -1*((K_simulation - Ek)/tau + 2*np.sqrt(Ek*K_simulation/Nf/tau)*Wt)
+    Ee = Et + d_Ee
+    MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'    '+str(Ee)+'\n')
+    return d_Ee, Wt
     
