@@ -83,14 +83,14 @@ class velocity_Verlet(initialize_sampling):
         
         if self.sampling_parameters['sampling_initialization']:
             self.MD_log = open('MoREST_MD.log', 'w', buffering=1)
-            if sv_rescaling:
+            if self.sv_rescaling:
                 self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), Effective energy (eV)\n')   
                 self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses, self.K_simulation, self.sampling_parameters['nvt_svr_tau'], 0, 0)
             else:
                 self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
                 write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
         else:
-            if sv_rescaling:
+            if self.sv_rescaling:
                 self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses, self.K_simulation, self.sampling_parameters['nvt_svr_tau'], 0, 0)
             else:
                 self.MD_log = open('MoREST_MD.log', 'a', buffering=1)
@@ -161,7 +161,7 @@ class velocity_Verlet(initialize_sampling):
             self.current_traj.append(self.current_system)
             write_xyz_traj('MoREST_traj.xyz', self.current_system)
             kinetic_energy = self.current_system.get_kinetic_energy()
-            if sv_rescaling:
+            if self.sv_rescaling:
                 self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses, self.K_simulation, self.sampling_parameters['nvt_svr_tau'], self.d_Ee, self.Wt+R_t)
             else:
                 write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses)
