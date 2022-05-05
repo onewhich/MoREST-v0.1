@@ -75,6 +75,7 @@ class velocity_Verlet(initialize_sampling):
         self.sv_rescaling = sv_rescaling
         
         ### kinetic energy at simulation temperature
+        Nf = 3 * self.n_atom
         self.K_simulation = Nf/2 * units.kB * self.md_parameters['md_temperature'] # Ek = 1/2 m v^2 = 3/2 kB T for each particle
         
         if self.v_rescaling:
@@ -244,7 +245,7 @@ def write_MD_log(MD_log, step, Ep, Ek, masses):
     
 def write_SVR_MD_log(MD_log, step, Ep, Ek, masses, K_simulation, tau, d_Ee, Wt):
     n_atom = len(masses)
-    Nf = 3 * self.n_atom
+    Nf = 3 * n_atom
     #Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(n_atom)])
     #Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)
     T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
