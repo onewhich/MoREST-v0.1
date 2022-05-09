@@ -47,6 +47,7 @@ class morest:
                 try:
                     os.remove('MoREST.str_new')
                     os.remove('MoREST_traj.xyz')
+                    os.remove('MoREST_MD.log')
                 except:
                     pass
             else:

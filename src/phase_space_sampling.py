@@ -35,15 +35,14 @@ class initialize_sampling:
         else:
             self.current_traj = read_xyz_traj('MoREST_traj.xyz')
             self.current_step = (len(self.current_traj) - 1) * self.sampling_parameters['sampling_traj_interval']
-            self.current_system = self.current_traj[-1]
-            #self.current_step, self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
+            self.current_step, self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
             
             
     def get_current_structure(self):
         if self.sampling_parameters['sampling_initialization']:
             system = read_xyz_file('MoREST.str')
         else:
-            system = self.current_system 
+            system = self.current_traj[-1]
             #system = read_xyz_file('MoREST.str_new') #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
             
         self.n_atom = system.get_global_number_of_atoms()
@@ -90,10 +89,12 @@ class velocity_Verlet(initialize_sampling):
                 self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
                 write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
         else:
+            self.MD_log = open('MoREST_MD.log', 'a', buffering=1)
             if self.sv_rescaling:
-                self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses, self.K_simulation, self.sampling_parameters['nvt_svr_tau'], 0, 0)
-            else:
-                self.MD_log = open('MoREST_MD.log', 'a', buffering=1)
+                self.d_Ee = 0
+                self.Wt =  0
+            #else:
+            #    self.MD_log = open('MoREST_MD.log', 'a', buffering=1)
         
     def generate_new_step(self, bias_forces=None):
         time_step = self.md_parameters['md_time_step']
