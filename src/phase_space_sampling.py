@@ -163,7 +163,8 @@ class velocity_Verlet(initialize_sampling):
             write_xyz_traj('MoREST_traj.xyz', self.current_system)
             kinetic_energy = self.current_system.get_kinetic_energy()
             if self.sv_rescaling:
-                self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses, self.K_simulation, self.sampling_parameters['nvt_svr_tau'], self.d_Ee, self.Wt+R_t)
+                #self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses, self.K_simulation, self.sampling_parameters['nvt_svr_tau'], self.d_Ee, self.Wt+R_t)
+                self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses, self.K_simulation, self.sampling_parameters['nvt_svr_tau'], self.d_Ee, R_t)
             else:
                 write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses)
         
