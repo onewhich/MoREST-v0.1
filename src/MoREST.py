@@ -15,35 +15,34 @@ class morest:
         self.__log_morest = open('MoREST.log','a', buffering=1)
         MoREST_parameters = read_parameters(log_morest=self.__log_morest, parameter_file=__parameter_file)
         self.morest_parameters = MoREST_parameters.get_morest_parameters()
-        if self.morest_parameters['morest_api_fortran']:
-            self.morest_parameters['morest_initialization'] = False
 
         if self.morest_parameters['morest_initialization']:
-                self.__log_morest.close()
-                self.__log_morest = open('MoREST.log','w', buffering=1)
-                self.__log_morest.write('-----------MoREST start to work-----------\n\n')
+            self.__log_morest.close()
+            self.__log_morest = open('MoREST.log','w', buffering=1)
+            self.__log_morest.write('-----------MoREST start to work-----------\n\n')
         else:
-            if self.morest_parameters['morest_api_fortran']:
-                try:
-                    if_restart = np.loadtxt('restart')
-                except:
-                    self.__log_morest.close()
-                    self.__log_morest = open('MoREST.log','w', buffering=1)
-                    self.__log_morest.write('-----------MoREST start to work-----------\n\n')
-                    np.savetxt('restart', [1])
-            else:
-                self.__log_morest.write('\n-----------MoREST continue to work--------\n\n')
-                
-        MoREST_parameters = read_parameters(log_morest=self.__log_morest, parameter_file=__parameter_file)
+            self.__log_morest.write('\n-----------MoREST continue to work--------\n\n')
+    
         MoREST_parameters.write_parameters()
+        self.__log_morest.write('\n')
 
         #################### Phase space sampling initialization ##############################
-        self.sampling_parameters = MoREST_parameters.get_sampling_parameters()
-        self.md_parameters = MoREST_parameters.get_md_parameters()
+        if not self.morest_parameters['morest_load_parameters_file']:
+            self.sampling_parameters = MoREST_parameters.get_sampling_parameters()
+            self.md_parameters = MoREST_parameters.get_md_parameters()
+        else:
+            try:
+                self.sampling_parameters = np.load('MoREST_sampling_parameters.npy',allow_pickle=True).item()
+                self.md_parameters = np.load('MoREST_MD_parameters.npy',allow_pickle=True).item()
+            except:
+                self.__log_morest.write('Can not find parameters files: MoREST_sampling_parameters.npy, MoREST_MD_parameters.npy\n Read parameters from input file.\n\n')
+                self.sampling_parameters = MoREST_parameters.get_sampling_parameters()
+                self.md_parameters = MoREST_parameters.get_md_parameters()
+
         if self.sampling_parameters['phase_space_sampling']:
             if self.sampling_parameters['sampling_initialization']:
-                self.__log_morest.write('Start to sample the phase space\nMethod: '+str(self.sampling_parameters['sampling_method'])\
-                                       +'\nEnsemble: '+str(self.sampling_parameters['sampling_ensemble'])+'\n\n')
+                self.__log_morest.write('Start to sample the phase space\n')
+                #Method: '+str(self.sampling_parameters['sampling_method'])+'\nEnsemble: '+str(self.sampling_parameters['sampling_ensemble'])+'\n\n')
                 try:
                     os.remove('MoREST.str_new')
                     os.remove('MoREST_traj.xyz')
@@ -51,54 +50,75 @@ class morest:
                 except:
                     pass
             else:
-                self.__log_morest.write('Continue to sample the phase space\nMethod: '+str(self.sampling_parameters['sampling_method'])\
-                                       +'\nEnsemble: '+str(self.sampling_parameters['sampling_ensemble'])+'\n\n')
-                
-        
+                self.__log_morest.write('Continue to sample the phase space\n')
+                #Method: '+str(self.sampling_parameters['sampling_method'])+'\nEnsemble: '+str(self.sampling_parameters['sampling_ensemble'])+'\n\n')
+    
+    
         #################### Enhanced sampling initialization #################################
-        self.enhanced_sampling_parameters = MoREST_parameters.get_enhanced_sampling_parameters()
+        if not self.morest_parameters['morest_load_parameters_file']:
+            self.enhanced_sampling_parameters = MoREST_parameters.get_enhanced_sampling_parameters()
+        else:
+            try:
+                self.enhanced_sampling_parameters = np.load('MoREST_enhanced_sampling_parameters.npy',allow_pickle=True).item()
+            except:
+                self.__log_morest.write('Can not find parameters files: MoREST_enhanced_sampling_parameters.npy\n Read parameters from input file.\n\n')
+                self.enhanced_sampling_parameters = MoREST_parameters.get_enhanced_sampling_parameters()
         #for key in self.enhanced_sampling_parameters:
         #    print(key+' : '+str(self.enhanced_sampling_parameters[key]))
         if self.enhanced_sampling_parameters['enhanced_sampling']:
-            if not self.morest_parameters['morest_api_fortran']:
-                self.__log_morest.write('Enahanced sampling method \"'+\
-                    str(self.enhanced_sampling_parameters['enhanced_sampling_method'])+'\" is called:\n')
+            self.__log_morest.write('Enahanced sampling method \"'+str(self.enhanced_sampling_parameters['enhanced_sampling_method'])+'\" is called:\n')
             if self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['its'.upper()]:
-                if self.morest_parameters['morest_initialization']:
+                if not self.morest_parameters['morest_load_parameters_file']:
                     self.its_parameters = MoREST_parameters.get_its_parameters()
                 else:
                     try:
                         self.its_parameters = np.load('MoREST_ITS_parameters.npy',allow_pickle=True).item()
                     except:
+                        self.__log_morest.write('Can not find parameters files: MoREST_ITS_parameters.npy\n Read parameters from input file.\n\n')
                         self.its_parameters = MoREST_parameters.get_its_parameters()
+                if self.its_parameters['its_initialization']:
+                    try:
+                        os.remove('MoREST_ITS_pk.npy')
+                        os.remove('MoREST_ITS_nk.npy')
+                        os.remove('MoREST_ITS_potential_energy.npy')
+                    except:
+                        pass
+                    self.__log_morest.write('Integrated tempering sampling method is initialized.\n\n')
         #    for key in self.its_parameters:
         #        print(key+' : '+str(self.its_parameters[key]))
 
         #################### Wall potential initialization ####################################
-        self.wall_potential_parameters = MoREST_parameters.get_wall_potential_parameters()
+        if not self.morest_parameters['morest_load_parameters_file']:
+            self.wall_potential_parameters = MoREST_parameters.get_wall_potential_parameters()
+        else:
+            try:
+                self.wall_potential_parameters = np.load('MoREST_wall_potential_parameters.npy',allow_pickle=True).item()
+            except:
+                self.__log_morest.write('Can not find parameters files: MoREST_wall_potential_parameters.npy\n Read parameters from input file.\n\n')
+                self.wall_potential_parameters = MoREST_parameters.get_wall_potential_parameters()
         #for key in self.wall_potential_parameters:
         #    print(key+' : '+str(self.wall_potential_parameters[key]))
         if self.wall_potential_parameters['wall_potential']:
-            if not self.morest_parameters['morest_api_fortran']:
-                self.__log_morest.write('Wall potential \"'+\
-                    str(self.wall_potential_parameters['wall_type'])+'\" is called:\n')
+            self.__log_morest.write('Wall potential \"'+str(self.wall_potential_parameters['wall_type'])+'\" is called:\n')
             if self.wall_potential_parameters['wall_type'].upper() in ['Plane_opaque_wall'.upper(),\
-                                                    'Plane_translucent_wall'.upper()]:
-                if self.morest_parameters['morest_initialization']:
+                                                                'Plane_translucent_wall'.upper()]:
+                if not self.morest_parameters['morest_load_parameters_file']:
                     self.plane_wall_parameters = MoREST_parameters.get_plane_wall_parameters()
                 else:
                     try:
                         self.plane_wall_parameters = np.load('MoREST_plane_wall_parameters.npy',allow_pickle=True).item()
                     except:
+                        self.__log_morest.write('Can not find parameters files: MoREST_plane_wall_parameters.npy\n Read parameters from input file.\n\n')
                         self.plane_wall_parameters = MoREST_parameters.get_plane_wall_parameters()
             if self.wall_potential_parameters['wall_type'].upper() in ['Spherical_opaque_wall'.upper(),\
-                                                    'Spherical_translucent_wall'.upper()]:
-                if self.morest_parameters['morest_initialization']:
+                                                                'Spherical_translucent_wall'.upper()]:
+                if not self.morest_parameters['morest_load_parameters_file']:
                     self.spherical_wall_parameters = MoREST_parameters.get_spherical_wall_parameters()
                 else:
                     try:
                         self.spherical_wall_parameters = np.load('MoREST_spherical_wall_parameters.npy',allow_pickle=True).item()
                     except:
+                        self.__log_morest.write('Can not find parameters files: MoREST_spherical_wall_parameters.npy\n Read parameters from input file.\n\n')
                         self.spherical_wall_parameters = MoREST_parameters.get_spherical_wall_parameters()
             if self.wall_potential_parameters['wall_type'].upper() in ['Plane_opaque_wall'.upper(),\
                                                     'Spherical_opaque_wall'.upper()]:
@@ -117,16 +137,19 @@ class morest:
         INPUT:
             calculator: The same as the calculator in ASE. It is required, when many body potential is specified as 'on_the_fly'.
         '''
-        if self.sampling_parameters['sampling_method'].upper() in ['MD'] and self.sampling_parameters['sampling_ensemble'].upper() in ['NVE_VV']:
-            sampling_job = velocity_Verlet(self.sampling_parameters, self.md_parameters, calculator=calculator)
-        elif self.sampling_parameters['sampling_method'].upper() in ['MD'] and \
-            self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_VR']:
-            sampling_job = velocity_Verlet(self.sampling_parameters, self.md_parameters, calculator=calculator, v_rescaling=True)
-        elif self.sampling_parameters['sampling_method'].upper() in ['MD'] and \
-            self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
-            sampling_job = velocity_Verlet(self.sampling_parameters, self.md_parameters, calculator=calculator, sv_rescaling=True)
+        if self.sampling_parameters['sampling_method'].upper() in ['MD']:
+            if self.sampling_parameters['sampling_ensemble'].upper() in ['NVE_VV']:
+                sampling_job = velocity_Verlet(self.sampling_parameters, self.md_parameters, calculator=calculator)
+            elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_VR']:
+                sampling_job = velocity_Verlet(self.sampling_parameters, self.md_parameters, calculator=calculator, v_rescaling=True)
+            elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
+                sampling_job = velocity_Verlet(self.sampling_parameters, self.md_parameters, calculator=calculator, sv_rescaling=True)
+            else:
+                __log_morest.write('It is not clear which ensemble will be used.\n')
+                __log_morest.close()
+                raise Exception('Which ensemble will you use?')
         else:
-            __log_morest.write('It is not clear which sampling method and ensemble will be used.\n')
+            __log_morest.write('It is not clear which sampling method will be used.\n')
             __log_morest.close()
             raise Exception('Will you use the phase sampling method?')
         current_step, current_system = sampling_job.get_current_structure()

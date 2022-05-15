@@ -36,10 +36,11 @@ class read_parameters:
         
         self.morest_parameters = {}
         self.morest_parameters['morest_initialization'] = True
-        self.morest_parameters['morest_api_fortran'] = False
+        self.morest_parameters['morest_save_parameters_file'] = False
+        self.morest_parameters['morest_load_parameters_file'] = False
         self.sampling_parameters = {}
         self.sampling_parameters['phase_space_sampling'] = False
-        self.sampling_parameters['sampling_restart'] = False
+        self.sampling_parameters['sampling_initialization'] = True
         self.sampling_parameters['fd_displacement'] = 0.0025
         self.md_parameters = {}
         self.md_parameters['md_clean_rotation'] = True
@@ -48,6 +49,8 @@ class read_parameters:
         self.enhanced_sampling_parameters['enhanced_sampling'] = False
         self.its_parameters = {}
         self.its_parameters['its_initialization'] = True
+        self.re_parameters = {}
+        self.re_parameters['re_initialization'] = True
         self.wall_potential_parameters = {}
         self.wall_potential_parameters['wall_potential'] = False
         self.wall_potential_parameters['collective_variable'] = False
@@ -66,16 +69,18 @@ class read_parameters:
                     self.__log_morest.write('It is not clear whether the MoREST will be initialized.\n')
                     self.__log_morest.close()
                     raise Exception('Will you initialize the MoREST or not?')
-
-            elif i_parameter.split()[0].upper() == 'MoREST_API_Fortran'.upper():
+                    
+            elif i_parameter.split()[0].upper() == 'MoREST_save_parameters_file'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():
-                    self.morest_parameters['morest_api_fortran'] = True
+                    self.morest_parameters['morest_save_parameters_file'] = True
                 elif i_parameter.split()[1].upper() == 'False'.upper():
-                    self.morest_parameters['morest_api_fortran'] = False
-                else:
-                    self.__log_morest.write('It is not clear whether the MoREST API for Fortran code will be used.\n')
-                    self.__log_morest.close()
-                    raise Exception('Will you use the MoREST API for Fortran code or not?')
+                    self.morest_parameters['morest_save_parameters_file'] = False
+                    
+            elif i_parameter.split()[0].upper() == 'MoREST_load_parameters_file'.upper():
+                if i_parameter.split()[1].upper() == 'True'.upper():
+                    self.morest_parameters['morest_load_parameters_file'] = True
+                elif i_parameter.split()[1].upper() == 'False'.upper():
+                    self.morest_parameters['morest_load_parameters_file'] = False
 
             ########################## Phase space sampling #######################
             elif i_parameter.split()[0].upper() == 'Phase_space_sampling'.upper():
@@ -91,7 +96,7 @@ class read_parameters:
             elif i_parameter.split()[0].upper() == 'Sampling_initialization'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():
                     self.sampling_parameters['sampling_initialization'] = True
-                    # change MoREST_initialization as False
+                    # change MoREST_initialization as True
                     self.morest_parameters['morest_initialization'] = True
                 elif i_parameter.split()[1].upper() == 'False'.upper():
                     self.sampling_parameters['sampling_initialization'] = False
@@ -163,7 +168,7 @@ class read_parameters:
                 if i_parameter.split()[1].upper() == 'True'.upper():
                     self.its_parameters['its_initialization'] = True
                 elif i_parameter.split()[1].upper() == 'False'.upper():
-                    self.its_parameters['its_initialization'] = False                    
+                    self.its_parameters['its_initialization'] = False
                 
             elif i_parameter.split()[0].upper() == 'ITS_lower_bound_temperature'.upper():
                 self.its_parameters['its_lower_bound_temperature'] = float(i_parameter.split()[1])
@@ -203,7 +208,35 @@ class read_parameters:
                 
             elif i_parameter.split()[0].upper() == 'ITS_energy_shift'.upper():
                 self.its_parameters['its_energy_shift'] = float(i_parameter.split()[1])
+            
+            ########################## RE parameters  #############################
+            elif i_parameter.split()[0].upper() == 'RE_initialization'.upper():
+                if i_parameter.split()[1].upper() == 'True'.upper():
+                    self.re_parameters['re_initialization'] = True
+                elif i_parameter.split()[1].upper() == 'False'.upper():
+                    self.re_parameters['re_initialization'] = False
                 
+            elif i_parameter.split()[0].upper() == 'RE_lower_bound_temperature'.upper():
+                self.re_parameters['re_lower_bound_temperature'] = float(i_parameter.split()[1])
+                
+            elif i_parameter.split()[0].upper() == 'RE_upper_bound_temperature'.upper():
+                self.re_parameters['re_upper_bound_temperature'] = float(i_parameter.split()[1])
+                
+            elif i_parameter.split()[0].upper() == 'RE_number_of_replica'.upper():
+                self.re_parameters['re_number_of_replica'] = int(i_parameter.split()[1])
+                
+            elif i_parameter.split()[0].upper() == 'RE_replica_arrange'.upper():
+                self.re_parameters['re_replica_arrange'] = float(i_parameter.split()[1])
+                
+            elif i_parameter.split()[0].upper() == 'RE_replica_temperatures'.upper():
+                tmp_temperatures = []
+                for i in range(self.re_parameters['re_number_of_replica']):
+                    tmp_temperatures.append(float(i_parameter.split()[i+1]))
+                self.re_parameters['re_replica_temperatures'] = np.array(tmp_temperatures)
+                
+            elif i_parameter.split()[0].upper() == 'RE_energy_shift'.upper():
+                self.re_parameters['re_energy_shift'] = float(i_parameter.split()[1])
+
             ########################## Wall potential #############################
             elif i_parameter.split()[0].upper() == 'Wall_potential'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():
@@ -262,42 +295,55 @@ class read_parameters:
         self.__log_morest.write('\n')
         try:
             for key in self.morest_parameters:
-                self.__log_morest.write(key+' : '+str(self.self.morest_parameters[key])+'\n')
+                self.__log_morest.write(key+' : '+str(self.morest_parameters[key])+'\n')
         except:
             pass
         try:
-            for key in self.sampling_parameters:
-                self.__log_morest.write(key+' : '+str(self.self.sampling_parameters[key])+'\n')
+            if self.sampling_parameters['phase_space_sampling']:
+                for key in self.sampling_parameters:
+                    self.__log_morest.write(key+' : '+str(self.sampling_parameters[key])+'\n')
         except:
             pass
         try:
-            for key in self.md_parameters:
-                self.__log_morest.write(key+' : '+str(self.self.md_parameters[key])+'\n')
+            if self.sampling_parameters['phase_space_sampling']:
+                for key in self.md_parameters:
+                    self.__log_morest.write(key+' : '+str(self.md_parameters[key])+'\n')
         except:
             pass
         try:
-            for key in self.enhanced_sampling_parameters:
-                self.__log_morest.write(key+' : '+str(self.self.enhanced_sampling_parameters[key])+'\n')
+            if self.enhanced_sampling_parameters['enhanced_sampling']:
+                for key in self.enhanced_sampling_parameters:
+                    self.__log_morest.write(key+' : '+str(self.enhanced_sampling_parameters[key])+'\n')
         except:
             pass
         try:
-            for key in self.its_parameters:
-                self.__log_morest.write(key+' : '+str(self.self.its_parameters[key])+'\n')
+            if self.enhanced_sampling_parameters['enhanced_sampling']:
+                for key in self.its_parameters:
+                    self.__log_morest.write(key+' : '+str(self.its_parameters[key])+'\n')
         except:
             pass
         try:
-            for key in self.wall_potential_parameters:
-                self.__log_morest.write(key+' : '+str(self.self.wall_potential_parameters[key])+'\n')
+            if self.enhanced_sampling_parameters['enhanced_sampling']:
+                for key in self.re_parameters:
+                    self.__log_morest.write(key+' : '+str(self.re_parameters[key])+'\n')
         except:
             pass
         try:
-            for key in self.plane_wall_parameters:
-                self.__log_morest.write(key+' : '+str(self.self.plane_wall_parameters[key])+'\n')
+            if self.wall_potential_parameters['wall_potential']:
+                for key in self.wall_potential_parameters:
+                    self.__log_morest.write(key+' : '+str(self.wall_potential_parameters[key])+'\n')
         except:
             pass
         try:
-            for key in self.spherical_wall_parameters:
-                self.__log_morest.write(key+' : '+str(self.self.spherical_wall_parameters[key])+'\n')
+            if self.wall_potential_parameters['wall_potential']:
+                for key in self.plane_wall_parameters:
+                    self.__log_morest.write(key+' : '+str(self.plane_wall_parameters[key])+'\n')
+        except:
+            pass
+        try:
+            if self.wall_potential_parameters['wall_potential']:
+                for key in self.spherical_wall_parameters:
+                    self.__log_morest.write(key+' : '+str(self.spherical_wall_parameters[key])+'\n')
         except:
             pass
         self.__log_morest.write('\n')
@@ -305,34 +351,30 @@ class read_parameters:
 
                 
     def get_morest_parameters(self):
-        #np.save('MoREST_morest_parameters.npy', self.morest_parameters)
+        #if self.morest_parameters['morest_save_parameters_file']:
+        #    np.save('MoREST_morest_parameters.npy', self.morest_parameters)
         return self.morest_parameters
 
     def get_sampling_parameters(self):
+        if self.morest_parameters['morest_save_parameters_file']:
+            np.save('MoREST_sampling_parameters.npy', self.sampling_parameters)
         return self.sampling_parameters
     
     def get_md_parameters(self):
-        #np.save('MoREST_md_parameters.npy', self.md_parameters)
         self.md_parameters['md_time_step'] = self.md_parameters['md_time_step'] * units.fs
         self.md_parameters['md_simulation_time'] = self.md_parameters['md_simulation_time'] * units.fs
         if self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
             self.sampling_parameters['nvt_svr_tau'] = self.sampling_parameters['nvt_svr_tau'] * units.fs
+        if self.morest_parameters['morest_save_parameters_file']:
+            np.save('MoREST_MD_parameters.npy', self.md_parameters)
         return self.md_parameters
 
     def get_enhanced_sampling_parameters(self):
-        #np.save('MoREST_enhanced_sampling_parameters.npy', self.enhanced_sampling_parameters)
+        if self.morest_parameters['morest_save_parameters_file']:
+            np.save('MoREST_enhanced_sampling_parameters.npy', self.enhanced_sampling_parameters)
         return self.enhanced_sampling_parameters
         
     def get_its_parameters(self):
-        if self.its_parameters['its_initialization']:
-            try:
-                os.remove('MoREST_ITS_pk.npy')
-                os.remove('MoREST_ITS_nk.npy')
-                os.remove('MoREST_ITS_potential_energy.npy')
-            except:
-                pass
-            self.__log_morest.write('Integrated tempering sampling method is initialized.\n\n')
-
         if not 'its_replica_temperatures' in self.its_parameters:
             if int(self.its_parameters['its_replica_arrange']) == -1:
                 replica_temperatures = np.linspace(self.its_parameters['its_lower_bound_temperature'],\
@@ -369,18 +411,46 @@ class read_parameters:
                                                    self.its_parameters['its_number_of_replica']
         #with open('MoREST_ITS_parameters.json','w') as its_json:
         #    json.dump(self.its_parameters,its_json, cls=NumpyArrayEncoder)
-        #np.save('MoREST_ITS_parameters.npy',self.its_parameters)
+        if self.morest_parameters['morest_save_parameters_file']:
+            np.save('MoREST_ITS_parameters.npy',self.its_parameters)
         return self.its_parameters
+            
+    def get_re_parameters(self):
+        if not 're_replica_temperatures' in self.re_parameters:
+            if int(self.re_parameters['re_replica_arrange']) == -1:
+                replica_temperatures = np.linspace(self.re_parameters['re_lower_bound_temperature'],\
+                                                  self.re_parameters['re_upper_bound_temperature'],\
+                                                  num=self.re_parameters['re_number_of_replica'],\
+                                                  endpoint=True)
+            elif int(self.re_parameters['re_replica_arrange']) == 0:
+                replica_temperatures = np.geomspace(self.re_parameters['re_lower_bound_temperature'],\
+                                                   self.re_parameters['re_upper_bound_temperature'],\
+                                                   num=self.re_parameters['re_number_of_replica'],\
+                                                   endpoint=True)
+            else:
+                self.__log_morest.write('No RE_replica_arrange type was matched.\n')
+                self.__log_morest.close()
+                raise Exception('No RE_replica_arrange type was matched.')
+            self.re_parameters['re_replica_temperatures'] = replica_temperatures
+        
+        self.re_parameters['re_replica_beta'] = 1/(self.re_parameters['re_replica_temperatures'] *\
+                                                    scipy.constants.value('Boltzmann constant in eV/K'))
+        if self.morest_parameters['morest_save_parameters_file']:
+            np.save('MoREST_RE_parameters.npy',self.re_parameters)
+        return self.re_parameters
     
     def get_wall_potential_parameters(self):
-        #np.save('MoREST_wall_potential_parameters.npy', self.wall_potential_parameters)
+        if self.morest_parameters['morest_save_parameters_file']:
+            np.save('MoREST_wall_potential_parameters.npy', self.wall_potential_parameters)
         return self.wall_potential_parameters
     
     def get_plane_wall_parameters(self):
-        #np.save('MoREST_plane_wall_parameters.npy', self.plane_wall_parameters)
+        if self.morest_parameters['morest_save_parameters_file']:
+            np.save('MoREST_plane_wall_parameters.npy', self.plane_wall_parameters)
         return self.plane_wall_parameters
 
     def get_spherical_wall_parameters(self):
-        #np.save('MoREST_spherical_wall_parameters.npy', self.spherical_wall_parameters)
+        if self.morest_parameters['morest_save_parameters_file']:
+            np.save('MoREST_spherical_wall_parameters.npy', self.spherical_wall_parameters)
         return self.spherical_wall_parameters
     
