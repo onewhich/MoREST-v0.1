@@ -23,10 +23,10 @@ MD_temperature                    1000
 Trajectory_scattering             True
 Scattering_initialization         True
 Scattering_pre_thermolized        False # If true, the thermolization trajectories of the target and incident molecules are required. Otherwise, the initial structures are required.
-Scattering_method                 VV # VV: velocity Verlet; RK4: Runge Kuta 4th order; LD: Langevin dynamics
+Scattering_method                 VV # VV: velocity Verlet; RK4: Runge Kutta 4th order; LD: Langevin dynamics
 Scattering_traj_number            2000 # The number of trajectories for scattering.
 Scattering_stops_number           2 # The number of stop conditions whcih will be checked.
-Scattering_traj_stop              distance 1 2 6 7 angle -1 2 6 7 10  # distance: check the distance between 2 and 6 atoms, it will stop when the distance is larger (1)/ shorter (-1) than 7. angle: check the angle of 2-6-7, it will stop when the angle is smaller (-1) than 10 degree. None: do not check the stop condition.
+Scattering_traj_stop              central_R_one 1 10 all distance 1 2 6 7 angle -1 2 6 7 10  # distance: check the distance between 2 and 6 atoms, it will stop when the distance is larger (1)/ shorter (-1) than 7. angle: check the angle of 2-6-7, it will stop when the angle is smaller (-1) than 10 degree. None: do not check the stop condition.
 Scattering_traj_length            1000 # It will stop when the number of steps is larger than the length. None: do not check the number of steps.
 Scattering_target_molecule        MoREST.str_target # structure or trajectory of the target molecule.
 Scattering_incident_molecule      MoREST.str_incident # structure or trajectory of the incident molecule.
