@@ -187,12 +187,18 @@ class read_parameters:
                     self.scattering_parameters['scattering_pre_thermolized'] = True
                 elif i_parameter.split()[1].upper() == 'False'.upper():
                     self.scattering_parameters['scattering_pre_thermolized'] = False
+
+            elif i_parameter.split()[0].upper() == 'Scattering_traj_number'.upper():
+                self.scattering_parameters['scattering_traj_number'] = int(i_parameter.split()[1])
                     
             elif i_parameter.split()[0].upper() == 'Scattering_method'.upper():
                 self.scattering_parameters['scattering_method'] = str(i_parameter.split()[1])
 
-            elif i_parameter.split()[0].upper() == 'Scattering_traj_number'.upper():
-                self.scattering_parameters['scattering_number'] = int(i_parameter.split()[1])
+            elif i_parameter.split()[0].upper() == 'Scattering_temperature'.upper():
+                self.scattering_parameters['scattering_temperature'] = float(i_parameter.split()[1])
+
+            elif i_parameter.split()[0].upper() == 'Scattering_time_step'.upper():
+                self.scattering_parameters['scattering_time_step'] = float(i_parameter.split()[1])
 
             elif i_parameter.split()[0].upper() == 'Scattering_stops_number'.upper():
                 self.scattering_parameters['scattering_stops_number'] = int(i_parameter.split()[1])
@@ -208,9 +214,6 @@ class read_parameters:
 
             elif i_parameter.split()[0].upper() == 'Scattering_incident_molecule'.upper():
                 self.scattering_parameters['scattering_incident_molecule'] = str(i_parameter.split()[1])
-
-            elif i_parameter.split()[0].upper() == 'Scattering_temperature'.upper():
-                self.scattering_parameters['scattering_temperature'] = float(i_parameter.split()[1])
 
             elif i_parameter.split()[0].upper() == 'Scattering_R_target'.upper():
                 self.scattering_parameters['scattering_R_target'] = float(i_parameter.split()[1])
