@@ -1,7 +1,9 @@
+from faulthandler import cancel_dump_traceback_later
 import os, sys
 import numpy as np
 from read_parameters import read_parameters
 from phase_space_sampling import velocity_Verlet
+from trajectory_scattering import scattering_velocity_Verlet
 from enhanced_sampling import its
 from wall_potential import opaque_wall, translucent_wall
 
@@ -52,6 +54,28 @@ class morest:
             else:
                 self.__log_morest.write('Continue to sample the phase space\n')
                 #Method: '+str(self.sampling_parameters['sampling_method'])+'\nEnsemble: '+str(self.sampling_parameters['sampling_ensemble'])+'\n\n')
+    
+        #################### Trajectory scattering initialization #############################
+        if not self.morest_parameters['morest_load_parameters_file']:
+            self.scattering_parameters = MoREST_parameters.get_scattering_parameters()
+        else:
+            try:
+                self.scattering_parameters = np.load('MoREST_scattering_parameters.npy',allow_pickle=True).item()
+            except:
+                self.__log_morest.write('Can not find parameters files: MoREST_scattering_parameters.npy\n Read parameters from input file.\n\n')
+                self.scattering_parameters = MoREST_parameters.get_scattering_parameters()
+
+        if self.scattering_parameters['trajectory_scattering']:
+            if self.scattering_parameters['scattering_initialization']:
+                self.__log_morest.write('Start to sample the trajectories\n')
+                try:
+                    os.remove('MoREST.str_scattering')
+                    os.remove('MoREST_traj.xyz')
+                    os.remove('MoREST_MD.log')
+                except:
+                    pass
+            else:
+                self.__log_morest.write('Continue to sample the trajectories\n')
     
     
         #################### Enhanced sampling initialization #################################
@@ -167,6 +191,14 @@ class morest:
             current_step, current_system= sampling_job.generate_new_step(bias_forces)
         self.__log_morest.write('Phase space sampling with molecular dynamics method is finished!\n')
         self.mission_complete()
+
+    def trajectory_scattering(self, calculator=None):
+        if self.scattering_parameters['scattering_method'].upper() in ['VV']:
+            scattering_job = scattering_velocity_Verlet(self.morest_parameters, self.scattering_parameters, calculator=calculator)
+        else:
+                __log_morest.write('It is not clear which method will be used.\n')
+                __log_morest.close()
+                raise Exception('Which method will you use?')
     
     def bias_sampling(self, simulation_temperature, simulation_maxsteps, \
                    time_step, potential_energy, current_step, md_forces, general_coordinate):

@@ -1,6 +1,5 @@
+from asyncore import write
 import numpy as np
-#import sys
-#sys.path.append('..')
 from structure import read_xyz_file, write_xyz_file, read_xyz_traj, write_xyz_traj
 from many_body_potential import ml_potential, on_the_fly
 from copy import deepcopy
@@ -22,9 +21,35 @@ class initialize_scattering:
         else:
             raise Exception('Which many body potential will you use?')
 
-    def generate_scattering_structure(self):
+    def generate_scattering_system(self):
         target_molecule = read_xyz_file(self.scattering_parameters['scattering_target_molecule'])
+        MaxwellBoltzmannDistribution(target_molecule, temperature_K = self.scattering_parameters['scattering_temperature'])
+        Stationary(target_molecule)
+        reset_mass_center(target_molecule)
+
         incident_molecule = read_xyz_file(self.scattering_parameters['scattering_incident_molecule'])
+        MaxwellBoltzmannDistribution(incident_molecule, temperature_K = self.scattering_parameters['scattering_temperature'])
+        reset_mass_center(incident_molecule)
+        # redirect translational movement
+        scalar_translational_momentum = np.linalg.norm(get_translational_momentum(incident_molecule))
+        target_point = np.random.uniform(-1,1,3)
+        target_point = self.scattering_parameters['scattering_R_target'] * target_point / np.linalg.norm(target_point)
+        incident_point = np.random.uniform(-1,1,3)
+        incident_point = self.scattering_parameters['scattering_R_incident'] * incident_point / np.linalg.norm(incident_point)
+        collision_vector = target_point - incident_point
+        collision_momentum = collision_vector / np.linalg.norm(collision_vector) * scalar_translational_momentum
+        Stationary(incident_molecule)
+        incident_momenta = incident_molecule.get_momenta()
+        incident_molecule.set_momenta(incident_momenta + collision_momentum)
+        # move the mass center of incident molecule to the incident_point
+        incident_molecule.set_positions(incident_molecule.get_positions() + incident_point)
+
+        # combine target molecule and incident molecule
+        self.current_step = 0
+        self.current_system = target_molecule + incident_molecule
+        write_xyz_file('MoREST.str', self.current_system)
+
+        return self.current_step, self.current_system
             
     def get_current_structure(self):
         if self.sampling_parameters['sampling_initialization']:
@@ -48,7 +73,7 @@ class initialize_scattering:
         return self.current_step, system
     
 
-class velocity_Verlet(initialize_scattering):
+class scattering_velocity_Verlet(initialize_scattering):
     '''
     This class implements velocity Verlet algorithm to do microcanonical ensemble (NVE MD) dynamics.
     '''
@@ -167,6 +192,27 @@ class velocity_Verlet(initialize_scattering):
         
         return self.current_step, self.current_system
 
+def reset_geometric_center(system):
+    '''
+    set the geometric center to [0,0,0]
+    '''
+    coordinates = system.get_positions()
+    n_atom = system.get_global_number_of_atoms()
+    geometric_center = np.sum(coordinates, axis=0)/n_atom
+    system.set_positions(coordinates - geometric_center)
+
+def reset_mass_center(system):
+    '''
+    set the mass center to [0,0,0]
+    '''
+    coordinates = system.get_positions()
+    masses = system.get_masses()[:,np.newaxis]
+    mass_center = np.sum(masses*coordinates, axis=0)/np.sum(masses)
+    system.set_positions(coordinates - mass_center)
+
+def get_translational_momentum(system):
+    n_atom = system.get_global_number_of_atoms()
+    return np.sum(system.get_momenta(), axis=0)/n_atom
 
 def write_MD_log(MD_log, step, Ep, Ek, masses):
     n_atom = len(masses)
