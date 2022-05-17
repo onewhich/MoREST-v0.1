@@ -452,25 +452,26 @@ class read_parameters:
         return self.md_parameters
 
     def get_scattering_parameters(self):
-        self.traj_stop_CVs = []
-        tmp_stop = []
         if self.scattering_parameters['scattering_stops_number'] == 0:
-            self.scattering_parameters['scattering_traj_stop'] == None
+            self.scattering_parameters['scattering_traj_stop'] = None
         else:
+            traj_stop_CVs = []
             i_loc = 0 # used to locate the index of the CVs parameters
             for i_stop in range(self.scattering_parameters['scattering_stops_number']):
                 if self.traj_stop_parameter[0+i_loc].upper() == 'None'.upper():
-                    self.scattering_parameters['scattering_traj_stop'] == None
+                    self.scattering_parameters['scattering_traj_stop'] = None
                     break
                 elif self.traj_stop_parameter[0+i_loc].upper() == 'distance'.upper():
+                    tmp_stop = []
                     tmp_stop.append('distance')
                     tmp_stop.append(int(self.traj_stop_parameter[1+i_loc]))
                     tmp_stop.append(float(self.traj_stop_parameter[2+i_loc]))
                     tmp_stop.append(int(self.traj_stop_parameter[3+i_loc]))
                     tmp_stop.append(int(self.traj_stop_parameter[4+i_loc]))
                     i_loc += 5
-                    self.traj_stop_CVs.append(tmp_stop)
+                    traj_stop_CVs.append(tmp_stop)
                 elif self.traj_stop_parameter[0+i_loc].upper() == 'angle'.upper():
+                    tmp_stop = []
                     tmp_stop.append('angle')
                     tmp_stop.append(int(self.traj_stop_parameter[1+i_loc]))
                     tmp_stop.append(float(self.traj_stop_parameter[2+i_loc]))
@@ -478,8 +479,9 @@ class read_parameters:
                     tmp_stop.append(int(self.traj_stop_parameter[4+i_loc]))
                     tmp_stop.append(int(self.traj_stop_parameter[5+i_loc]))
                     i_loc += 6
-                    self.traj_stop_CVs.append(tmp_stop)
+                    traj_stop_CVs.append(tmp_stop)
                 elif self.traj_stop_parameter[0+i_loc].upper() == 'dihedral'.upper():
+                    tmp_stop = []
                     tmp_stop.append('dihedral')
                     tmp_stop.append(int(self.traj_stop_parameter[1+i_loc]))
                     tmp_stop.append(float(self.traj_stop_parameter[2+i_loc]))
@@ -487,8 +489,9 @@ class read_parameters:
                     tmp_stop.append(int(self.traj_stop_parameter[4+i_loc]))
                     tmp_stop.append(int(self.traj_stop_parameter[6+i_loc]))
                     i_loc += 7
-                    self.traj_stop_CVs.append(tmp_stop)
+                    traj_stop_CVs.append(tmp_stop)
                 elif self.traj_stop_parameter[0+i_loc].upper() == 'central_R_one'.upper():
+                    tmp_stop = []
                     tmp_stop.append('central_R_one')
                     tmp_stop.append(int(self.traj_stop_parameter[1+i_loc]))
                     tmp_stop.append(float(self.traj_stop_parameter[2+i_loc]))
@@ -496,7 +499,7 @@ class read_parameters:
                     if N_check.upper() == 'all'.upper():
                         tmp_stop.append(N_check)
                         i_loc += 4
-                        self.traj_stop_CVs.append(tmp_stop)
+                        traj_stop_CVs.append(tmp_stop)
                     else:
                         N_check = int(N_check)
                         tmp_stop.append(N_check)
@@ -505,9 +508,9 @@ class read_parameters:
                             atom_list.append(int(self.traj_stop_parameter[4+i_loc+i_atom]))
                         tmp_stop.append(atom_list)
                         i_loc += 4+N_check
-                        self.traj_stop_CVs.append(tmp_stop)
-                    
+                        traj_stop_CVs.append(tmp_stop)
                 elif self.traj_stop_parameter[0+i_loc].upper() == 'central_R_all'.upper():
+                    tmp_stop = []
                     tmp_stop.append('central_R_all')
                     tmp_stop.append(int(self.traj_stop_parameter[1+i_loc]))
                     tmp_stop.append(float(self.traj_stop_parameter[2+i_loc]))
@@ -515,7 +518,7 @@ class read_parameters:
                     if N_check.upper() == 'all'.upper():
                         tmp_stop.append(N_check)
                         i_loc += 4
-                        self.traj_stop_CVs.append(tmp_stop)
+                        traj_stop_CVs.append(tmp_stop)
                     else:
                         N_check = int(N_check)
                         tmp_stop.append(N_check)
@@ -524,11 +527,12 @@ class read_parameters:
                             atom_list.append(int(self.traj_stop_parameter[4+i_loc+i_atom]))
                         tmp_stop.append(atom_list)
                         i_loc += 4+N_check
-                        self.traj_stop_CVs.append(tmp_stop)
+                        traj_stop_CVs.append(tmp_stop)
                 else:
                     self.__log_morest.write('It is not clear which stop condition will be used.\n')
                     self.__log_morest.close()
                     raise Exception('Will you use stop condition or not?')
+            self.scattering_parameters['scattering_traj_stop'] = traj_stop_CVs
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_scattering_parameters.npy', self.scattering_parameters)
         return self.scattering_parameters
