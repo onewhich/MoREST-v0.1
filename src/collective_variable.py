@@ -29,6 +29,8 @@ class collective_variables:
         if N_check == 'all':
             central_R = np.linalg.norm(coordinates, axis=1)
         else:
+            atom_list = np.array(atom_list)
+            atom_list -= 1
             central_R = np.linalg.norm(coordinates[atom_list], axis=1)
         if checker == -1:
             check_result = np.where(central_R < cutoff, 1, 0)
