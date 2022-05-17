@@ -139,11 +139,11 @@ class morest:
         '''
         if self.sampling_parameters['sampling_method'].upper() in ['MD']:
             if self.sampling_parameters['sampling_ensemble'].upper() in ['NVE_VV']:
-                sampling_job = velocity_Verlet(self.sampling_parameters, self.md_parameters, calculator=calculator)
+                sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator)
             elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_VR']:
-                sampling_job = velocity_Verlet(self.sampling_parameters, self.md_parameters, calculator=calculator, v_rescaling=True)
+                sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator, v_rescaling=True)
             elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
-                sampling_job = velocity_Verlet(self.sampling_parameters, self.md_parameters, calculator=calculator, sv_rescaling=True)
+                sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator, sv_rescaling=True)
             else:
                 __log_morest.write('It is not clear which ensemble will be used.\n')
                 __log_morest.close()

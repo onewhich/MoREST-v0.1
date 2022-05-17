@@ -8,39 +8,23 @@ from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary
 from ase import units
 
 class initialize_sampling:
-    def __init__(self, sampling_parameters, md_parameters, calculator=None):
-        #self.md_parameters = np.load('MoREST_md_parameters.npy',allow_pickle=True).item()
+    def __init__(self, morest_parameters, sampling_parameters, calculator=None):
+        self.morest_parameters = morest_parameters
         self.sampling_parameters = sampling_parameters
-        self.md_parameters = md_parameters
         
-        if self.sampling_parameters['many_body_potential'].upper() in ['on_the_fly'.upper()]:
+        if self.morest_parameters['many_body_potential'].upper() in ['on_the_fly'.upper()]:
             if type(calculator) == type(None):
                 raise Exception('Please specify the electronic structure method.')
             self.many_body_potential = on_the_fly(calculator)
-        elif self.sampling_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
-            trained_ml_potential = self.sampling_parameters['ml_potential_model']
+        elif self.morest_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
+            trained_ml_potential = self.morest_parameters['ml_potential_model']
             self.many_body_potential = ml_potential(trained_ml_potential)
         else:
             raise Exception('Which many body potential will you use?')
-        
-        if self.sampling_parameters['sampling_initialization']:
-            self.current_step = 0
-            self.current_step, self.current_system = self.get_current_structure()
-            if self.md_parameters['md_temperature'] > 1e-6:
-                MaxwellBoltzmannDistribution(self.current_system, temperature_K = self.md_parameters['md_temperature'])
-            self.current_traj = []
-            self.current_traj.append(self.current_system)
-            write_xyz_traj('MoREST_traj.xyz', self.current_system)
-                    
-        else:
-            self.current_traj = read_xyz_traj('MoREST_traj.xyz')
-            self.current_step = (len(self.current_traj) - 1) * self.sampling_parameters['sampling_traj_interval']
-            self.current_step, self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
-            
             
     def get_current_structure(self):
         if self.sampling_parameters['sampling_initialization']:
-            system = read_xyz_file('MoREST.str')
+            system = read_xyz_file(self.sampling_parameters['sampling_molecule'])
         else:
             system = self.current_traj[-1]
             #system = read_xyz_file('MoREST.str_new') #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
@@ -49,9 +33,9 @@ class initialize_sampling:
         self.masses = system.get_masses()[:,np.newaxis]
         #self.current_accelerations = self.current_forces / self.masses
         
-        if self.sampling_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
+        if self.morest_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
             self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_FD_forces(system, \
-                                                      self.sampling_parameters['fd_displacement'])
+                                                      self.morest_parameters['fd_displacement'])
         else:
             self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(system)
         #self.masses = system.get_masses()
@@ -62,16 +46,30 @@ class initialize_sampling:
 
 class velocity_Verlet(initialize_sampling):
     '''
-    This class implements velocity Verlet algorithm to do microcanonical ensemble (NVE MD) sampling, and velocity rescaling method to constrain the kinetic energy in a NVT MD system.
+    This class implements velocity Verlet algorithm to do microcanonical ensemble (NVE MD) sampling, and (stochestic) velocity rescaling method to constrain the kinetic energy in a NVT MD system.
     MoREST_traj.xyz records the trajectory in an extended xyz format
-    MoREST.str records the initial xyz structure of the system
-    MoREST.str_new records the current xyz structure of the system
+    MoREST.str (default name) records the initial xyz structure of the system
+    MoREST.str_new (default name) records the current xyz structure of the system
     '''
     
-    def __init__(self, sampling_parameters, md_parameters, calculator=None, v_rescaling=False, sv_rescaling=False):
-        super(velocity_Verlet, self).__init__(sampling_parameters, md_parameters, calculator)
+    def __init__(self, morest_parameters, sampling_parameters, md_parameters, calculator=None, v_rescaling=False, sv_rescaling=False):
+        super(velocity_Verlet, self).__init__(morest_parameters, sampling_parameters, calculator)
+        self.md_parameters = md_parameters
         self.v_rescaling = v_rescaling
         self.sv_rescaling = sv_rescaling
+        
+        if self.sampling_parameters['sampling_initialization']:
+            self.current_step = 0
+            self.current_step, self.current_system = self.get_current_structure()
+            if self.md_parameters['md_temperature'] > 1e-6:
+                MaxwellBoltzmannDistribution(self.current_system, temperature_K = self.md_parameters['md_temperature'])
+            self.current_traj = []
+            self.current_traj.append(self.current_system)
+            write_xyz_traj('MoREST_traj.xyz', self.current_system)
+        else:
+            self.current_traj = read_xyz_traj('MoREST_traj.xyz')
+            self.current_step = (len(self.current_traj) - 1) * self.sampling_parameters['sampling_traj_interval']
+            self.current_step, self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
         
         ### kinetic energy at simulation temperature
         Nf = 3 * self.n_atom
@@ -93,8 +91,6 @@ class velocity_Verlet(initialize_sampling):
             if self.sv_rescaling:
                 self.d_Ee = 0
                 self.Wt =  0
-            #else:
-            #    self.MD_log = open('MoREST_MD.log', 'a', buffering=1)
         
     def generate_new_step(self, bias_forces=None):
         time_step = self.md_parameters['md_time_step']
@@ -119,9 +115,9 @@ class velocity_Verlet(initialize_sampling):
         momenta_half = current_momenta + 0.5 * self.current_forces * time_step
         
         ### F(t+dt)
-        if self.sampling_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
+        if self.morest_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
             next_potential_energy, next_forces = self.many_body_potential.get_potential_FD_forces(next_system, \
-                                                      self.sampling_parameters['fd_displacement'])
+                                                      self.morest_parameters['fd_displacement'])
         else:
             next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(next_system)
         
@@ -134,7 +130,7 @@ class velocity_Verlet(initialize_sampling):
         next_momenta = momenta_half + 0.5 * next_forces * time_step
         next_system.set_momenta(next_momenta)
         
-        next_velocities = next_system.get_velocities()
+        #next_velocities = next_system.get_velocities()
         
         self.current_step += 1
         self.current_system = next_system
@@ -154,7 +150,7 @@ class velocity_Verlet(initialize_sampling):
             #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
             ZeroRotation(self.current_system)
         
-        write_xyz_file('MoREST.str_new', self.current_system)
+        write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
         
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             #print(next_coordinates) #DEGUB
