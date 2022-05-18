@@ -71,7 +71,7 @@ class morest:
             if self.scattering_parameters['scattering_initialization']:
                 self.__log_morest.write('Start to sample the trajectories\n')
                 try:
-                    os.remove('MoREST.str_scattering')
+                    os.remove('MoREST.str')
                     os.remove('MoREST_traj.xyz')
                     os.remove('MoREST_MD.log')
                 except:
