@@ -202,9 +202,9 @@ class morest:
                 __log_morest.write('It is not clear which method will be used.\n')
                 __log_morest.close()
                 raise Exception('Which method will you use?')
-        current_steps, current_system = scattering_job.get_current_structure()
+        current_step, current_system = scattering_job.get_current_structure()
         simulation_maxsteps = self.scattering_parameters['scattering_traj_length']
-        while current_steps <= simulation_maxsteps:
+        while current_step <= simulation_maxsteps:
             simulation_temperature = self.scattering_parameters['scattering_temperature']
             time_step = self.scattering_parameters['scattering_time_step']
             potential_energy = scattering_job.current_potential_energy
