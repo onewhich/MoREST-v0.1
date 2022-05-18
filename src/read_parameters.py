@@ -472,6 +472,7 @@ class read_parameters:
 
     def get_scattering_parameters(self):
         self.scattering_parameters['scattering_time_step'] *= units.fs
+        self.scattering_parameters['scattering_V_collision'] /= units.fs
         if self.scattering_parameters['scattering_stops_number'] == 0:
             self.scattering_parameters['scattering_traj_stop'] = None
         else:
