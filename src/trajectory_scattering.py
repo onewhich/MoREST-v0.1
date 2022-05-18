@@ -94,7 +94,7 @@ class scattering_velocity_Verlet(initialize_scattering):
         
         ### kinetic energy at simulation temperature
         Nf = 3 * self.n_atom
-        self.K_simulation = Nf/2 * units.kB * self.self.scattering_parameters['scattering_temperature'] # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+        self.K_simulation = Nf/2 * units.kB * self.scattering_parameters['scattering_temperature'] # Ek = 1/2 m v^2 = 3/2 kB T for each particle
         
         if self.v_rescaling:
             self.velocity_rescaling(self.current_system)
