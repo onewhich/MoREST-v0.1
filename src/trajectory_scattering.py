@@ -96,9 +96,6 @@ class scattering_velocity_Verlet(initialize_scattering):
         Nf = 3 * self.n_atom
         self.K_simulation = Nf/2 * units.kB * self.scattering_parameters['scattering_temperature'] # Ek = 1/2 m v^2 = 3/2 kB T for each particle
         
-        if self.v_rescaling:
-            self.velocity_rescaling(self.current_system)
-        
         if self.scattering_parameters['scattering_initialization']:
             self.MD_log = open('MoREST_MD.log', 'w', buffering=1)
             self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
