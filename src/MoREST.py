@@ -178,7 +178,7 @@ class morest:
             __log_morest.write('It is not clear which sampling method will be used.\n')
             __log_morest.close()
             raise Exception('Will you use the phase sampling method?')
-        current_step, current_system = sampling_job.get_current_structure()
+        current_step, current_system = sampling_job.current_step, sampling_job.current_system
         simulation_maxsteps = int(self.md_parameters['md_simulation_time']/self.md_parameters['md_time_step']) + 1
         while current_step <= simulation_maxsteps:
             simulation_temperature = self.md_parameters['md_temperature']
@@ -202,7 +202,7 @@ class morest:
                 __log_morest.write('It is not clear which method will be used.\n')
                 __log_morest.close()
                 raise Exception('Which method will you use?')
-        current_step, current_system = scattering_job.get_current_structure()
+        current_step, current_system = scattering_job.current_step, scattering_job.current_system
         simulation_maxsteps = self.scattering_parameters['scattering_traj_length']
         while current_step <= simulation_maxsteps:
             simulation_temperature = self.scattering_parameters['scattering_temperature']

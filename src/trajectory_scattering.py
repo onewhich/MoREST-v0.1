@@ -50,14 +50,12 @@ class initialize_scattering:
         incident_molecule.set_positions(incident_molecule.get_positions() + incident_point)
 
         # combine target molecule and incident molecule
-        self.current_system = target_molecule + incident_molecule
-        write_xyz_file('MoREST.str', self.current_system)
-
-        return self.current_system
+        scattering_system = target_molecule + incident_molecule
+        write_xyz_file('MoREST.str', scattering_system)
             
     def get_current_structure(self):
         if self.scattering_parameters['scattering_initialization']:
-            system = self.generate_scattering_system()
+            system = read_xyz_file('MoREST.str')
         else:
             system = self.current_traj[-1]
             
@@ -82,6 +80,7 @@ class scattering_velocity_Verlet(initialize_scattering):
         super(scattering_velocity_Verlet, self).__init__(morest_parameters, scattering_parameters, calculator)
         
         if self.scattering_parameters['scattering_initialization']:
+            self.generate_scattering_system()
             self.current_step = 0
             self.current_step, self.current_system = self.get_current_structure()
             self.current_traj = []
