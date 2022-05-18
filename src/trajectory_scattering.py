@@ -1,9 +1,8 @@
-from asyncore import write
 import numpy as np
 from structure import read_xyz_file, write_xyz_file, read_xyz_traj, write_xyz_traj
 from many_body_potential import ml_potential, on_the_fly
 from copy import deepcopy
-from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary, ZeroRotation
+from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary
 from ase import units
 
 class initialize_scattering:

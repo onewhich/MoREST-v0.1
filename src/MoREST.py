@@ -1,11 +1,11 @@
-from faulthandler import cancel_dump_traceback_later
-import os, sys
+import os
 import numpy as np
 from read_parameters import read_parameters
 from phase_space_sampling import velocity_Verlet
 from trajectory_scattering import scattering_velocity_Verlet
 from enhanced_sampling import its
 from wall_potential import opaque_wall, translucent_wall
+from collective_variable import collective_variable
 
 
 class morest:
@@ -193,12 +193,28 @@ class morest:
         self.mission_complete()
 
     def trajectory_scattering(self, calculator=None):
+        stop_condition = collective_variable(from_CVs_file=False, CVs_list=self.scattering_parameters['scattering_traj_stop'])
         if self.scattering_parameters['scattering_method'].upper() in ['VV']:
             scattering_job = scattering_velocity_Verlet(self.morest_parameters, self.scattering_parameters, calculator=calculator)
         else:
                 __log_morest.write('It is not clear which method will be used.\n')
                 __log_morest.close()
                 raise Exception('Which method will you use?')
+        current_steps, current_system = scattering_job.get_current_structure()
+        simulation_maxsteps = self.scattering_parameters['scattering_traj_length']
+        while current_steps <= simulation_maxsteps:
+            simulation_temperature = self.scattering_parameters['scattering_temperature']
+            time_step = self.scattering_parameters['scattering_time_step']
+            potential_energy = scattering_job.current_potential_energy
+            md_forces = scattering_job.current_forces
+            general_coordinate = current_system.get_positions()
+            bias_forces = self.bias_sampling(simulation_temperature, simulation_maxsteps, \
+                   time_step, potential_energy, current_step, md_forces, general_coordinate)
+            current_step, current_system= scattering_job.generate_new_step(bias_forces)
+            if stop_condition.check_CVs_one(current_system):
+                break
+        self.__log_morest.write('Trajectory scattering with molecular dynamics method is finished!\n')
+        self.mission_complete()
     
     def bias_sampling(self, simulation_temperature, simulation_maxsteps, \
                    time_step, potential_energy, current_step, md_forces, general_coordinate):

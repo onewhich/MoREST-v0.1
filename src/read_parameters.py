@@ -1,7 +1,6 @@
-import os,sys
+import sys
 import numpy as np
 import scipy.constants
-import json
 from json import JSONEncoder
 from ase import units
 
