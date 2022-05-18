@@ -89,12 +89,12 @@ class scattering_velocity_Verlet(initialize_scattering):
             write_xyz_traj('MoREST_traj.xyz', self.current_system)
         else:
             self.current_traj = read_xyz_traj('MoREST_traj.xyz')
-            self.current_step = (len(self.current_traj) - 1) * self.sampling_parameters['sampling_traj_interval']
+            self.current_step = len(self.current_traj) - 1
             self.current_step, self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
         
         ### kinetic energy at simulation temperature
         Nf = 3 * self.n_atom
-        self.K_simulation = Nf/2 * units.kB * self.md_parameters['md_temperature'] # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+        self.K_simulation = Nf/2 * units.kB * self.self.scattering_parameters['scattering_temperature'] # Ek = 1/2 m v^2 = 3/2 kB T for each particle
         
         if self.v_rescaling:
             self.velocity_rescaling(self.current_system)
