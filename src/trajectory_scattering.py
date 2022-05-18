@@ -10,6 +10,7 @@ class initialize_scattering:
     The mass center of target molecule locates at original point [0,0,0].
     The mass center of incident molecule locates on the spherical surface with a specified radius and centered at original point.
     The incident momenta directs from the mass center of incident molecule to the point on a spherical surface closely covering the target molecule and centered at original point.
+    The target molecule is in the front of the incident molecule in the combined scattering system.
     '''
     def __init__(self, morest_parameters, scattering_parameters, calculator=None):
         self.morest_parameters = morest_parameters
