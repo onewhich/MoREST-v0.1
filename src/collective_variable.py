@@ -8,9 +8,9 @@ class collective_variable:
                 self.CVs_list[i] = i_line.split()
         else:
             self.CVs_list = CVs_list
-            print(type(self.CVs_list))   # DEBUG
-            print(self.CVs_list)         # DEBUG
-            if type(self.CVs_list) != type(list):
+            #print(type(self.CVs_list))   # DEBUG
+            #print(self.CVs_list)         # DEBUG
+            if type(self.CVs_list) != type([]): # type(list) returns type
                 raise Exception('Please specify the CVs in a list (CVs_list).')
 
     def check_CVs_one(self, system, output=False):

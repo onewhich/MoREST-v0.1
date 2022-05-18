@@ -535,8 +535,8 @@ class read_parameters:
                     self.__log_morest.close()
                     raise Exception('Will you use stop condition or not?')
             self.scattering_parameters['scattering_traj_stop'] = traj_stop_CVs
-            print(type(self.scattering_parameters['scattering_traj_stop'])) # DEBUG
-            print(self.scattering_parameters['scattering_traj_stop'])       # DEBUG
+            #print(type(self.scattering_parameters['scattering_traj_stop'])) # DEBUG
+            #print(self.scattering_parameters['scattering_traj_stop'])       # DEBUG
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_scattering_parameters.npy', self.scattering_parameters)
         return self.scattering_parameters
