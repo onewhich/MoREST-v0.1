@@ -437,11 +437,16 @@ class read_parameters:
     def get_morest_parameters(self):
         #if self.morest_parameters['morest_save_parameters_file']:
         #    np.save('MoREST_morest_parameters.npy', self.morest_parameters)
+        for key in self.morest_parameters:
+            self.__log_morest.write(key+' : '+str(self.morest_parameters[key])+'\n')
         return self.morest_parameters
 
     def get_sampling_parameters(self):
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_sampling_parameters.npy', self.sampling_parameters)
+        if self.sampling_parameters['phase_space_sampling']:
+            for key in self.sampling_parameters:
+                self.__log_morest.write(key+' : '+str(self.sampling_parameters[key])+'\n')
         return self.sampling_parameters
     
     def get_md_parameters(self):
@@ -451,6 +456,9 @@ class read_parameters:
             self.sampling_parameters['nvt_svr_tau'] = self.sampling_parameters['nvt_svr_tau'] * units.fs
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_MD_parameters.npy', self.md_parameters)
+        if self.sampling_parameters['phase_space_sampling']:
+            for key in self.md_parameters:
+                self.__log_morest.write(key+' : '+str(self.md_parameters[key])+'\n')
         return self.md_parameters
 
     def get_scattering_parameters(self):
@@ -539,11 +547,17 @@ class read_parameters:
             #print(self.scattering_parameters['scattering_traj_stop'])       # DEBUG
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_scattering_parameters.npy', self.scattering_parameters)
+        if self.scattering_parameters['trajectory_scattering']:
+            for key in self.scattering_parameters:
+                self.__log_morest.write(key+' : '+str(self.scattering_parameters[key])+'\n')
         return self.scattering_parameters
 
     def get_enhanced_sampling_parameters(self):
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_enhanced_sampling_parameters.npy', self.enhanced_sampling_parameters)
+        if self.enhanced_sampling_parameters['enhanced_sampling']:
+            for key in self.enhanced_sampling_parameters:
+                self.__log_morest.write(key+' : '+str(self.enhanced_sampling_parameters[key])+'\n')
         return self.enhanced_sampling_parameters
         
     def get_its_parameters(self):
@@ -585,6 +599,9 @@ class read_parameters:
         #    json.dump(self.its_parameters,its_json, cls=NumpyArrayEncoder)
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_ITS_parameters.npy',self.its_parameters)
+        if self.enhanced_sampling_parameters['enhanced_sampling']:
+            for key in self.its_parameters:
+                self.__log_morest.write(key+' : '+str(self.its_parameters[key])+'\n')
         return self.its_parameters
             
     def get_re_parameters(self):
@@ -609,20 +626,32 @@ class read_parameters:
                                                     scipy.constants.value('Boltzmann constant in eV/K'))
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_RE_parameters.npy',self.re_parameters)
+        if self.enhanced_sampling_parameters['enhanced_sampling']:
+            for key in self.re_parameters:
+                self.__log_morest.write(key+' : '+str(self.re_parameters[key])+'\n')
         return self.re_parameters
     
     def get_wall_potential_parameters(self):
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_wall_potential_parameters.npy', self.wall_potential_parameters)
+        if self.wall_potential_parameters['wall_potential']:
+            for key in self.wall_potential_parameters:
+                self.__log_morest.write(key+' : '+str(self.wall_potential_parameters[key])+'\n')
         return self.wall_potential_parameters
     
     def get_plane_wall_parameters(self):
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_plane_wall_parameters.npy', self.plane_wall_parameters)
+        if self.wall_potential_parameters['wall_potential']:
+            for key in self.plane_wall_parameters:
+                self.__log_morest.write(key+' : '+str(self.plane_wall_parameters[key])+'\n')
         return self.plane_wall_parameters
 
     def get_spherical_wall_parameters(self):
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_spherical_wall_parameters.npy', self.spherical_wall_parameters)
+        if self.wall_potential_parameters['wall_potential']:
+            for key in self.spherical_wall_parameters:
+                self.__log_morest.write(key+' : '+str(self.spherical_wall_parameters[key])+'\n')
         return self.spherical_wall_parameters
     
