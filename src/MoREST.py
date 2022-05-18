@@ -27,8 +27,7 @@ class morest:
             self.__log_morest.write('\n-----------MoREST continue to work--------\n\n')
             MoREST_parameters = read_parameters(log_morest=self.__log_morest, parameter_file=__parameter_file)
     
-        self.morest_parameters = MoREST_parameters.get_morest_parameters()
-        self.morest_parameters.write_parameters()
+        MoREST_parameters.write_parameters()
         self.__log_morest.write('\n')
 
         #################### Phase space sampling initialization ##############################
