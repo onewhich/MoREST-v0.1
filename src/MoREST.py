@@ -19,8 +19,7 @@ class morest:
         self.morest_parameters = MoREST_parameters.get_morest_parameters()
 
         if self.morest_parameters['morest_initialization']:
-            self.__log_morest.close()
-            self.__log_morest = open('MoREST.log','w', buffering=1)
+            os.remove('MoREST.log')
             self.__log_morest.write('-----------MoREST start to work-----------\n\n')
         else:
             self.__log_morest.write('\n-----------MoREST continue to work--------\n\n')
