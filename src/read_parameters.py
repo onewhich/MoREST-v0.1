@@ -452,10 +452,10 @@ class read_parameters:
         return self.sampling_parameters
     
     def get_md_parameters(self):
-        self.md_parameters['md_time_step'] = self.md_parameters['md_time_step'] * units.fs
-        self.md_parameters['md_simulation_time'] = self.md_parameters['md_simulation_time'] * units.fs
+        self.md_parameters['md_time_step'] *= units.fs
+        self.md_parameters['md_simulation_time'] *= units.fs
         if self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
-            self.sampling_parameters['nvt_svr_tau'] = self.sampling_parameters['nvt_svr_tau'] * units.fs
+            self.sampling_parameters['nvt_svr_tau'] *= units.fs
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_MD_parameters.npy', self.md_parameters)
         if self.sampling_parameters['phase_space_sampling']:
@@ -465,6 +465,7 @@ class read_parameters:
         return self.md_parameters
 
     def get_scattering_parameters(self):
+        self.scattering_parameters['scattering_time_step'] *= units.fs
         if self.scattering_parameters['scattering_stops_number'] == 0:
             self.scattering_parameters['scattering_traj_stop'] = None
         else:
