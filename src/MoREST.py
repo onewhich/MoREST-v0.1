@@ -19,12 +19,16 @@ class morest:
         self.morest_parameters = MoREST_parameters.get_morest_parameters()
 
         if self.morest_parameters['morest_initialization']:
-            os.remove('MoREST.log')
+            self.__log_morest = open('MoREST.log','w', buffering=1)
             self.__log_morest.write('-----------MoREST start to work-----------\n\n')
+            MoREST_parameters = read_parameters(log_morest=self.__log_morest, parameter_file=__parameter_file)
         else:
+            self.__log_morest = open('MoREST.log','a', buffering=1)
             self.__log_morest.write('\n-----------MoREST continue to work--------\n\n')
+            MoREST_parameters = read_parameters(log_morest=self.__log_morest, parameter_file=__parameter_file)
     
-        MoREST_parameters.write_parameters()
+        self.morest_parameters = MoREST_parameters.get_morest_parameters()
+        self.morest_parameters.write_parameters()
         self.__log_morest.write('\n')
 
         #################### Phase space sampling initialization ##############################
