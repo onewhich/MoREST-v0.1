@@ -26,7 +26,9 @@ Scattering_pre_thermolized        False # If true, the thermolization trajectori
 Scattering_traj_number            2000 # The number of trajectories for scattering.
 Scattering_method                 VV # VV: velocity Verlet; RK4: Runge Kutta 4th order; LD: Langevin dynamics
 Scattering_time_step              0.5 # fs
-Scattering_temperature            400 # in K. This temperature defines the translational energy of incident molecule, while the target molecule is static, if Thermolized_molecules is True. Otherwise, the whole system will be initialized with Maxwell-Boltzmann distribution at this temperature, and the direction of movement will be re-directed to the collision direction.
+Scattering_V_collision            1e-2 # Initial collision velocity in AA/fs ( 1 AA/fs = 1e5 m/s ). This velocity defines the translational energy of incident molecule, while the target molecule is static.
+Scattering_T_target               400 # in K. When Scattering_pre_thermolized is False. The initial temperature of the target molecule will be initialized by Maxwell-Boltzmann distribution, and remove translational movement.
+Scattering_T_incident             400 # in K. When Scattering_pre_thermolized is False. The initial temperature of the incident moelcule will be initialized by Maxwell-Boltzmann distribution, and remove translational movement.
 Scattering_stops_number           2 # The number of stop conditions whcih will be checked.
 Scattering_traj_stop              central_R_one 1 10 all distance 1 2 6 7 angle -1 2 6 7 10  # distance: check the distance between 2 and 6 atoms, it will stop when the distance is larger (1)/ shorter (-1) than 7. angle: check the angle of 2-6-7, it will stop when the angle is smaller (-1) than 10 degree. None: do not check the stop condition.
 Scattering_traj_length            1000 # It will stop when the number of steps is larger than the length. None: do not check the number of steps.

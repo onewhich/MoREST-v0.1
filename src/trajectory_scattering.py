@@ -27,25 +27,27 @@ class initialize_scattering:
             raise Exception('Which many body potential will you use?')
 
     def generate_scattering_system(self):
-        target_molecule = read_xyz_file(self.scattering_parameters['scattering_target_molecule'])
-        MaxwellBoltzmannDistribution(target_molecule, temperature_K = self.scattering_parameters['scattering_temperature'])
-        Stationary(target_molecule)
-        reset_mass_center(target_molecule)
+        if self.scattering_parameters['scattering_pre_thermolized']:
+            pass
+        else:
+            target_molecule = read_xyz_file(self.scattering_parameters['scattering_target_molecule'])
+            MaxwellBoltzmannDistribution(target_molecule, temperature_K = self.scattering_parameters['scattering_T_target'])
+            Stationary(target_molecule)
+            reset_mass_center(target_molecule)
 
-        incident_molecule = read_xyz_file(self.scattering_parameters['scattering_incident_molecule'])
-        MaxwellBoltzmannDistribution(incident_molecule, temperature_K = self.scattering_parameters['scattering_temperature'])
-        reset_mass_center(incident_molecule)
-        # redirect translational movement
-        scalar_translational_momentum = np.linalg.norm(get_translational_momentum(incident_molecule))
+            incident_molecule = read_xyz_file(self.scattering_parameters['scattering_incident_molecule'])
+            MaxwellBoltzmannDistribution(incident_molecule, temperature_K = self.scattering_parameters['scattering_T_incident'])
+            Stationary(incident_molecule)
+            reset_mass_center(incident_molecule)
+        # set collision momentum
+        #scalar_translational_momentum = np.linalg.norm(get_translational_momentum(incident_molecule))
         target_point = np.random.uniform(-1,1,3)
         target_point = self.scattering_parameters['scattering_R_target'] * target_point / np.linalg.norm(target_point)
         incident_point = np.random.uniform(-1,1,3)
         incident_point = self.scattering_parameters['scattering_R_incident'] * incident_point / np.linalg.norm(incident_point)
         collision_vector = target_point - incident_point
-        collision_momentum = collision_vector / np.linalg.norm(collision_vector) * scalar_translational_momentum
-        Stationary(incident_molecule)
-        incident_momenta = incident_molecule.get_momenta()
-        incident_molecule.set_momenta(incident_momenta + collision_momentum)
+        collision_velocity = collision_vector / np.linalg.norm(collision_vector) * self.scattering_parameters['scattering_V_collision']
+        incident_molecule.set_velocities(incident_molecule.get_velocities() + collision_velocity)
         # move the mass center of incident molecule to the incident_point
         incident_molecule.set_positions(incident_molecule.get_positions() + incident_point)
 
