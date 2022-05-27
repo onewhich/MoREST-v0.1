@@ -480,7 +480,10 @@ class read_parameters:
                 np.save('MoREST_MD_parameters.npy', self.md_parameters)
             if type(log_morest) != type(None):
                 for key in self.md_parameters:
-                    log_morest.write(key+' : '+str(self.md_parameters[key])+'\n')
+                    if key in ['md_time_step','md_simulation_time','nvt_svr_tau']:
+                        log_morest.write(key+' : '+str(self.md_parameters[key]/units.fs)+'\n')
+                    else:
+                        log_morest.write(key+' : '+str(self.md_parameters[key])+'\n')
                 log_morest.write('\n')
         return self.md_parameters
 
@@ -573,7 +576,12 @@ class read_parameters:
                 np.save('MoREST_scattering_parameters.npy', self.scattering_parameters)
             if type(log_morest) != type(None):
                 for key in self.scattering_parameters:
-                    log_morest.write(key+' : '+str(self.scattering_parameters[key])+'\n')
+                    if key in ['scattering_time_step']:
+                        log_morest.write(key+' : '+str(self.scattering_parameters[key]/units.fs)+'\n')
+                    elif key in ['scattering_V_collision']:
+                        log_morest.write(key+' : '+str(self.scattering_parameters[key]*units.fs)+'\n')
+                    else:
+                        log_morest.write(key+' : '+str(self.scattering_parameters[key])+'\n')
                 log_morest.write('\n')
         return self.scattering_parameters
 
