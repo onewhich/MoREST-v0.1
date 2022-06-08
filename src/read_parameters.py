@@ -460,7 +460,7 @@ class read_parameters:
             log_morest.write('\n')
         return self.morest_parameters
 
-    def get_sampling_parameters(self, log_morest):
+    def get_sampling_parameters(self, log_morest=None):
         if self.sampling_parameters['phase_space_sampling']:
             if self.morest_parameters['morest_save_parameters_file']:
                 np.save('MoREST_sampling_parameters.npy', self.sampling_parameters)
@@ -470,7 +470,7 @@ class read_parameters:
                 log_morest.write('\n')
         return self.sampling_parameters
     
-    def get_md_parameters(self, log_morest):
+    def get_md_parameters(self, log_morest=None):
         self.md_parameters['md_time_step'] *= units.fs
         self.md_parameters['md_simulation_time'] *= units.fs
         if self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
@@ -487,7 +487,7 @@ class read_parameters:
                 log_morest.write('\n')
         return self.md_parameters
 
-    def get_scattering_parameters(self, log_morest):
+    def get_scattering_parameters(self, log_morest=None):
         self.scattering_parameters['scattering_time_step'] *= units.fs
         self.scattering_parameters['scattering_V_collision'] /= units.fs
         if self.scattering_parameters['scattering_stops_number'] == 0:
@@ -585,7 +585,7 @@ class read_parameters:
                 log_morest.write('\n')
         return self.scattering_parameters
 
-    def get_enhanced_sampling_parameters(self, log_morest):
+    def get_enhanced_sampling_parameters(self, log_morest=None):
         if self.enhanced_sampling_parameters['enhanced_sampling']:
             if self.morest_parameters['morest_save_parameters_file']:
                 np.save('MoREST_enhanced_sampling_parameters.npy', self.enhanced_sampling_parameters)
@@ -595,7 +595,7 @@ class read_parameters:
                 log_morest.write('\n')
         return self.enhanced_sampling_parameters
         
-    def get_its_parameters(self, log_morest):
+    def get_its_parameters(self, log_morest=None):
         if not 'its_replica_temperatures' in self.its_parameters:
             if int(self.its_parameters['its_replica_arrange']) == -1:
                 replica_temperatures = np.linspace(self.its_parameters['its_lower_bound_temperature'],\
@@ -639,7 +639,7 @@ class read_parameters:
                 log_morest.write('\n')
         return self.its_parameters
             
-    def get_re_parameters(self, log_morest):
+    def get_re_parameters(self, log_morest=None):
         if not 're_replica_temperatures' in self.re_parameters:
             if int(self.re_parameters['re_replica_arrange']) == -1:
                 replica_temperatures = np.linspace(self.re_parameters['re_lower_bound_temperature'],\
@@ -666,7 +666,7 @@ class read_parameters:
                 log_morest.write('\n')
         return self.re_parameters
     
-    def get_wall_potential_parameters(self, log_morest):
+    def get_wall_potential_parameters(self, log_morest=None):
         if self.wall_potential_parameters['wall_potential']:
             if self.morest_parameters['morest_save_parameters_file']:
                 np.save('MoREST_wall_potential_parameters.npy', self.wall_potential_parameters)
@@ -676,7 +676,7 @@ class read_parameters:
                 log_morest.write('\n')
         return self.wall_potential_parameters
     
-    def get_plane_wall_parameters(self, log_morest):
+    def get_plane_wall_parameters(self, log_morest=None):
         if self.wall_potential_parameters['wall_potential']:
             if self.morest_parameters['morest_save_parameters_file']:
                 np.save('MoREST_plane_wall_parameters.npy', self.plane_wall_parameters)
@@ -686,7 +686,7 @@ class read_parameters:
                 log_morest.write('\n')
         return self.plane_wall_parameters
 
-    def get_spherical_wall_parameters(self, log_morest):
+    def get_spherical_wall_parameters(self, log_morest=None):
         if self.wall_potential_parameters['wall_potential']:
             if self.morest_parameters['morest_save_parameters_file']:
                 np.save('MoREST_spherical_wall_parameters.npy', self.spherical_wall_parameters)
