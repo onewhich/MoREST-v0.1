@@ -45,7 +45,7 @@ class morest:
                 self.log_morest.write('Start to sample the phase space\n\n')
                 #Method: '+str(self.sampling_parameters['sampling_method'])+'\nEnsemble: '+str(self.sampling_parameters['sampling_ensemble'])+'\n\n')
                 try:
-                    os.remove('MoREST.str_new')
+                    #os.remove('MoREST.str_new')
                     os.remove('MoREST_traj.xyz')
                     os.remove('MoREST_MD.log')
                 except:
@@ -68,7 +68,7 @@ class morest:
             if self.scattering_parameters['scattering_initialization']:
                 self.log_morest.write('Start to sample the trajectories\n\n')
                 try:
-                    os.remove('MoREST.str')
+                    #os.remove('MoREST.str')
                     os.remove('MoREST_traj.xyz')
                     os.remove('MoREST_MD.log')
                 except:
