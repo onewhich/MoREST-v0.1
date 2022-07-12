@@ -5,7 +5,7 @@ from phase_space_sampling import velocity_Verlet
 from trajectory_scattering import scattering_velocity_Verlet
 from enhanced_sampling import its
 from wall_potential import opaque_wall, translucent_wall
-from collective_variable import collective_variable
+from collective_variable import collective_variables
 
 
 class morest:
@@ -13,7 +13,7 @@ class morest:
     The Molecular Reaction Simulation Toolkits module.
     '''
 
-    def __init__(self, parameter_file='MoREST.in'):
+    def __init__(self, parameter_file='MoREST.in', calculator=None):
         MoREST_parameters = read_parameters(parameter_file=parameter_file)
         self.morest_parameters = MoREST_parameters.get_morest_parameters()
 
@@ -53,6 +53,22 @@ class morest:
             else:
                 self.log_morest.write('Continue to sample the phase space\n\n')
                 #Method: '+str(self.sampling_parameters['sampling_method'])+'\nEnsemble: '+str(self.sampling_parameters['sampling_ensemble'])+'\n\n')
+
+        if self.sampling_parameters['sampling_method'].upper() in ['MD']:
+            if self.sampling_parameters['sampling_ensemble'].upper() in ['NVE_VV']:
+                self.sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator)
+            elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_VR']:
+                self.sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator, v_rescaling=True)
+            elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
+                self.sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator, sv_rescaling=True)
+            else:
+                self.log_morest.write('It is not clear which ensemble will be used.\n')
+                self.log_morest.close()
+                raise Exception('Which ensemble will you use?')
+        else:
+            self.log_morest.write('It is not clear which sampling method will be used.\n')
+            self.log_morest.close()
+            raise Exception('Will you use the phase sampling method?')
     
         #################### Trajectory scattering initialization #############################
         if not self.morest_parameters['morest_load_parameters_file']:
@@ -75,7 +91,14 @@ class morest:
                     pass
             else:
                 self.log_morest.write('Continue to sample the trajectories\n\n')
-    
+                
+        self.stop_condition = collective_variables(from_CVs_file=False, CVs_list=self.scattering_parameters['scattering_traj_stop'])
+        if self.scattering_parameters['scattering_method'].upper() in ['VV']:
+            self.scattering_job = scattering_velocity_Verlet(self.morest_parameters, self.scattering_parameters, calculator=calculator)
+        else:
+                self.log_morest.write('It is not clear which method will be used.\n')
+                self.log_morest.close()
+                raise Exception('Which method will you use?')
     
         #################### Enhanced sampling initialization #################################
         if not self.morest_parameters['morest_load_parameters_file']:
@@ -107,6 +130,7 @@ class morest:
                     except:
                         pass
                     self.log_morest.write('Integrated tempering sampling method is initialized.\n\n')
+                self.its_sampling = its(self.its_parameters)
         #    for key in self.its_parameters:
         #        print(key+' : '+str(self.its_parameters[key]))
 
@@ -153,64 +177,42 @@ class morest:
         #        print(key+' : '+str(self.plane_wall_parameters[key]))
 
         
-    def phase_space_sampling(self, calculator=None):
+    def phase_space_sampling(self):
         '''
         This function is called to excute phase space sampling method.
         --------
         INPUT:
             calculator: The same as the calculator in ASE. It is required, when many body potential is specified as 'on_the_fly'.
         '''
-        if self.sampling_parameters['sampling_method'].upper() in ['MD']:
-            if self.sampling_parameters['sampling_ensemble'].upper() in ['NVE_VV']:
-                sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator)
-            elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_VR']:
-                sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator, v_rescaling=True)
-            elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
-                sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator, sv_rescaling=True)
-            else:
-                self.log_morest.write('It is not clear which ensemble will be used.\n')
-                self.log_morest.close()
-                raise Exception('Which ensemble will you use?')
-        else:
-            self.log_morest.write('It is not clear which sampling method will be used.\n')
-            self.log_morest.close()
-            raise Exception('Will you use the phase sampling method?')
-        current_step, current_system = sampling_job.current_step, sampling_job.current_system
+        current_step, current_system = self.sampling_job.current_step, self.sampling_job.current_system
         simulation_maxsteps = int(self.md_parameters['md_simulation_time']/self.md_parameters['md_time_step']) + 1
         while current_step <= simulation_maxsteps:
             simulation_temperature = self.md_parameters['md_temperature']
             time_step = self.md_parameters['md_time_step']
-            potential_energy = sampling_job.current_potential_energy
-            md_forces = sampling_job.current_forces
+            potential_energy = self.sampling_job.current_potential_energy
+            md_forces = self.sampling_job.current_forces
             #print(md_forces)
             general_coordinate = current_system.get_positions()
             bias_forces = self.bias_sampling(simulation_temperature, simulation_maxsteps, \
                    time_step, potential_energy, current_step, md_forces, general_coordinate)
             #print(bias_forces)
-            current_step, current_system= sampling_job.generate_new_step(bias_forces)
+            current_step, current_system= self.sampling_job.generate_new_step(bias_forces)
         self.log_morest.write('Phase space sampling with molecular dynamics method is finished!\n')
         self.mission_complete()
 
-    def trajectory_scattering(self, calculator=None):
-        stop_condition = collective_variable(from_CVs_file=False, CVs_list=self.scattering_parameters['scattering_traj_stop'])
-        if self.scattering_parameters['scattering_method'].upper() in ['VV']:
-            scattering_job = scattering_velocity_Verlet(self.morest_parameters, self.scattering_parameters, calculator=calculator)
-        else:
-                self.log_morest.write('It is not clear which method will be used.\n')
-                self.log_morest.close()
-                raise Exception('Which method will you use?')
-        current_step, current_system = scattering_job.current_step, scattering_job.current_system
+    def trajectory_scattering(self):
+        current_step, current_system = self.scattering_job.current_step, self.scattering_job.current_system
         simulation_maxsteps = self.scattering_parameters['scattering_traj_length']
         while current_step <= simulation_maxsteps:
             simulation_temperature = self.scattering_parameters['scattering_temperature']
             time_step = self.scattering_parameters['scattering_time_step']
-            potential_energy = scattering_job.current_potential_energy
-            md_forces = scattering_job.current_forces
+            potential_energy = self.scattering_job.current_potential_energy
+            md_forces = self.scattering_job.current_forces
             general_coordinate = current_system.get_positions()
             bias_forces = self.bias_sampling(simulation_temperature, simulation_maxsteps, \
                    time_step, potential_energy, current_step, md_forces, general_coordinate)
-            current_step, current_system= scattering_job.generate_new_step(bias_forces)
-            if stop_condition.check_CVs_one(current_system):
+            current_step, current_system= self.scattering_job.generate_new_step(bias_forces)
+            if self.stop_condition.check_CVs_one(current_system):
                 break
         self.log_morest.write('Trajectory scattering with molecular dynamics method is finished!\n')
         self.mission_complete()
@@ -278,7 +280,6 @@ class morest:
         if self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['its'.upper()]:
             #self.log_morest.write('Debug: In ITS sampling\n')
             #self.log_morest.write('Debug: ITS MD step: '+str(current_step)+'\n')
-            its_sampling = its(self.its_parameters)
             '''
             if if_initial or ( if_initial == 1 ):
                 #if os.path.isfile('MoREST_ITS_pk.npy'):
@@ -307,11 +308,12 @@ class morest:
                                             current_step, md_forces, self.log_morest)
                     return bias_forces
             '''
-            if its_sampling.its_if_converge():
-                bias_forces = its_sampling.its_sampling(simulation_temperature, potential_energy, md_forces) 
+            if self.its_sampling.its_if_converge():
+                bias_forces = self.its_sampling.its_sampling(simulation_temperature, potential_energy, md_forces) 
                 return bias_forces
             else:
-                bias_forces = its_sampling.its_optimization(simulation_temperature, potential_energy, \
+                self.log_morest.write('ITS optimization in '+str(current_step)+' steps.\n\n')
+                bias_forces = self.its_sampling.its_optimization(simulation_temperature, potential_energy, \
                                         current_step, md_forces, self.log_morest)
                 return bias_forces
         else:

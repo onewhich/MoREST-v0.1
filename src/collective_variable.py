@@ -1,7 +1,7 @@
-from tabnanny import check
+#from tabnanny import check
 import numpy as np
 
-class collective_variable:
+class collective_variables:
     def __init__(self, from_CVs_file=False, CVs_list=None, CVs_file='MoREST.CVs'):
         if from_CVs_file:
             self.CVs_list = open(CVs_file,'r').readlines()
