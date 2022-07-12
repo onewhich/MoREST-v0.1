@@ -34,13 +34,17 @@ class its:
                 #new_nk = n_k * np.sqrt(self.its_parameters['its_pk0'] / p_k)  # test
                 new_nk /= np.sum(new_nk)
                 np.savetxt('MoREST_ITS_nk.npy',new_nk)
-                bias_force = self.__bias_force(simulation_temperature, potential_energy, md_force)
                 os.remove('MoREST_ITS_potential_energy.npy')
-                return bias_force#, current_step
+                return md_force-md_force # No bias forces return
+                #bias_force = self.__bias_force(simulation_temperature, potential_energy, md_force)
+                #return bias_force#, current_step
             else:
-                return md_force
+                return md_force-md_force # No bias forces return
         else:
             #print('not opting')
+            with open('MoREST_ITS_potential_energy.npy','a') as potential_energy_list:
+                potential_energy_list.write(str(potential_energy)+'\n')
+            return md_force-md_force # No bias forces return
             '''
             try:
                 potential_energy_list = []
@@ -65,11 +69,8 @@ class its:
             print('list exist: ',potential_energy_list)
             np.savetxt('MoREST_ITS_potential_energy.npy',potential_energy_list)
             '''
-            #with open('MoREST_ITS_potential_energy.npy','a') as potential_energy_list:
-            #    potential_energy_list.write(str(potential_energy)+'\n')
             #bias_force = self.__bias_force(simulation_temperature, potential_energy, md_force)
             #return bias_force#, current_step
-            return md_force
             
        
     def its_if_converge(self):
