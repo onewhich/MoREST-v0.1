@@ -54,21 +54,21 @@ class morest:
                 self.log_morest.write('Continue to sample the phase space\n\n')
                 #Method: '+str(self.sampling_parameters['sampling_method'])+'\nEnsemble: '+str(self.sampling_parameters['sampling_ensemble'])+'\n\n')
 
-        if self.sampling_parameters['sampling_method'].upper() in ['MD']:
-            if self.sampling_parameters['sampling_ensemble'].upper() in ['NVE_VV']:
-                self.sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator)
-            elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_VR']:
-                self.sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator, v_rescaling=True)
-            elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
-                self.sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator, sv_rescaling=True)
+            if self.sampling_parameters['sampling_method'].upper() in ['MD']:
+                if self.sampling_parameters['sampling_ensemble'].upper() in ['NVE_VV']:
+                    self.sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator)
+                elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_VR']:
+                    self.sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator, v_rescaling=True)
+                elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
+                    self.sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator, sv_rescaling=True)
+                else:
+                    self.log_morest.write('It is not clear which ensemble will be used.\n')
+                    self.log_morest.close()
+                    raise Exception('Which ensemble will you use?')
             else:
-                self.log_morest.write('It is not clear which ensemble will be used.\n')
+                self.log_morest.write('It is not clear which sampling method will be used.\n')
                 self.log_morest.close()
-                raise Exception('Which ensemble will you use?')
-        else:
-            self.log_morest.write('It is not clear which sampling method will be used.\n')
-            self.log_morest.close()
-            raise Exception('Will you use the phase sampling method?')
+                raise Exception('Will you use the phase sampling method?')
     
         #################### Trajectory scattering initialization #############################
         if not self.morest_parameters['morest_load_parameters_file']:
@@ -92,13 +92,13 @@ class morest:
             else:
                 self.log_morest.write('Continue to sample the trajectories\n\n')
                 
-        self.stop_condition = collective_variables(from_CVs_file=False, CVs_list=self.scattering_parameters['scattering_traj_stop'])
-        if self.scattering_parameters['scattering_method'].upper() in ['VV']:
-            self.scattering_job = scattering_velocity_Verlet(self.morest_parameters, self.scattering_parameters, calculator=calculator)
-        else:
-                self.log_morest.write('It is not clear which method will be used.\n')
-                self.log_morest.close()
-                raise Exception('Which method will you use?')
+            self.stop_condition = collective_variables(from_CVs_file=False, CVs_list=self.scattering_parameters['scattering_traj_stop'])
+            if self.scattering_parameters['scattering_method'].upper() in ['VV']:
+                self.scattering_job = scattering_velocity_Verlet(self.morest_parameters, self.scattering_parameters, calculator=calculator)
+            else:
+                    self.log_morest.write('It is not clear which method will be used.\n')
+                    self.log_morest.close()
+                    raise Exception('Which method will you use?')
     
         #################### Enhanced sampling initialization #################################
         if not self.morest_parameters['morest_load_parameters_file']:
