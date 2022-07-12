@@ -115,11 +115,7 @@ class its:
         return md_force*(bias_numerator/(simulation_beta*bias_denominator)-1) # substract original forces and return the pure bias forces
     
     def __pk_nk(self):
-        if abs(self.its_parameters['its_energy_shift'] - 0.) > 1e-3:
-            potential_energy_list = np.loadtxt('MoREST_ITS_potential_energy.npy') - self.its_parameters['its_energy_shift']
-        else:
-            tmp_potential_energy_list = np.loadtxt('MoREST_ITS_potential_energy.npy')
-            potential_energy_list = tmp_potential_energy_list - np.min(tmp_potential_energy_list)
+        potential_energy_list = np.loadtxt('MoREST_ITS_potential_energy.npy') - self.its_parameters['its_energy_shift']
         #if os.path.isfile('MoREST_ITS_nk.npy'):
         try:
             n_k = np.loadtxt('MoREST_ITS_nk.npy')
