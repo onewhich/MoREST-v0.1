@@ -24,21 +24,21 @@ class morest:
             self.log_morest = open('MoREST.log','a', buffering=1)
             self.log_morest.write('\n-----------MoREST continue to work--------\n\n')
     
-        MoREST_parameters.write_parameters(self.log_morest)
+        #MoREST_parameters.write_parameters(self.log_morest)
         self.log_morest.write('\n')
 
         #################### Phase space sampling initialization ##############################
         if not self.morest_parameters['morest_load_parameters_file']:
-            self.sampling_parameters = MoREST_parameters.get_sampling_parameters()
-            self.md_parameters = MoREST_parameters.get_md_parameters()
+            self.sampling_parameters = MoREST_parameters.get_sampling_parameters(self.log_morest)
+            self.md_parameters = MoREST_parameters.get_md_parameters(self.log_morest)
         else:
             try:
                 self.sampling_parameters = np.load('MoREST_sampling_parameters.npy',allow_pickle=True).item()
                 self.md_parameters = np.load('MoREST_MD_parameters.npy',allow_pickle=True).item()
             except:
                 self.log_morest.write('Can not find parameters files: MoREST_sampling_parameters.npy, MoREST_MD_parameters.npy\n Read parameters from input file.\n\n')
-                self.sampling_parameters = MoREST_parameters.get_sampling_parameters()
-                self.md_parameters = MoREST_parameters.get_md_parameters()
+                self.sampling_parameters = MoREST_parameters.get_sampling_parameters(self.log_morest)
+                self.md_parameters = MoREST_parameters.get_md_parameters(self.log_morest)
 
         if self.sampling_parameters['phase_space_sampling']:
             if self.sampling_parameters['sampling_initialization']:
@@ -72,13 +72,13 @@ class morest:
     
         #################### Trajectory scattering initialization #############################
         if not self.morest_parameters['morest_load_parameters_file']:
-            self.scattering_parameters = MoREST_parameters.get_scattering_parameters()
+            self.scattering_parameters = MoREST_parameters.get_scattering_parameters(self.log_morest)
         else:
             try:
                 self.scattering_parameters = np.load('MoREST_scattering_parameters.npy',allow_pickle=True).item()
             except:
                 self.log_morest.write('Can not find parameters files: MoREST_scattering_parameters.npy\n Read parameters from input file.\n\n')
-                self.scattering_parameters = MoREST_parameters.get_scattering_parameters()
+                self.scattering_parameters = MoREST_parameters.get_scattering_parameters(self.log_morest)
 
         if self.scattering_parameters['trajectory_scattering']:
             if self.scattering_parameters['scattering_initialization']:
@@ -102,26 +102,26 @@ class morest:
     
         #################### Enhanced sampling initialization #################################
         if not self.morest_parameters['morest_load_parameters_file']:
-            self.enhanced_sampling_parameters = MoREST_parameters.get_enhanced_sampling_parameters()
+            self.enhanced_sampling_parameters = MoREST_parameters.get_enhanced_sampling_parameters(self.log_morest)
         else:
             try:
                 self.enhanced_sampling_parameters = np.load('MoREST_enhanced_sampling_parameters.npy',allow_pickle=True).item()
             except:
                 self.log_morest.write('Can not find parameters files: MoREST_enhanced_sampling_parameters.npy\n Read parameters from input file.\n\n')
-                self.enhanced_sampling_parameters = MoREST_parameters.get_enhanced_sampling_parameters()
+                self.enhanced_sampling_parameters = MoREST_parameters.get_enhanced_sampling_parameters(self.log_morest)
         #for key in self.enhanced_sampling_parameters:
         #    print(key+' : '+str(self.enhanced_sampling_parameters[key]))
         if self.enhanced_sampling_parameters['enhanced_sampling']:
             self.log_morest.write('Enahanced sampling method \"'+str(self.enhanced_sampling_parameters['enhanced_sampling_method'])+'\" is called.\n\n')
             if self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['its'.upper()]:
                 if not self.morest_parameters['morest_load_parameters_file']:
-                    self.its_parameters = MoREST_parameters.get_its_parameters()
+                    self.its_parameters = MoREST_parameters.get_its_parameters(self.log_morest)
                 else:
                     try:
                         self.its_parameters = np.load('MoREST_ITS_parameters.npy',allow_pickle=True).item()
                     except:
                         self.log_morest.write('Can not find parameters files: MoREST_ITS_parameters.npy\n Read parameters from input file.\n\n')
-                        self.its_parameters = MoREST_parameters.get_its_parameters()
+                        self.its_parameters = MoREST_parameters.get_its_parameters(self.log_morest)
                 if self.its_parameters['its_initialization']:
                     try:
                         os.remove('MoREST_ITS_pk.npy')
@@ -136,13 +136,13 @@ class morest:
 
         #################### Wall potential initialization ####################################
         if not self.morest_parameters['morest_load_parameters_file']:
-            self.wall_potential_parameters = MoREST_parameters.get_wall_potential_parameters()
+            self.wall_potential_parameters = MoREST_parameters.get_wall_potential_parameters(self.log_morest)
         else:
             try:
                 self.wall_potential_parameters = np.load('MoREST_wall_potential_parameters.npy',allow_pickle=True).item()
             except:
                 self.log_morest.write('Can not find parameters files: MoREST_wall_potential_parameters.npy\n Read parameters from input file.\n\n')
-                self.wall_potential_parameters = MoREST_parameters.get_wall_potential_parameters()
+                self.wall_potential_parameters = MoREST_parameters.get_wall_potential_parameters(self.log_morest)
         #for key in self.wall_potential_parameters:
         #    print(key+' : '+str(self.wall_potential_parameters[key]))
         if self.wall_potential_parameters['wall_potential']:
@@ -150,23 +150,23 @@ class morest:
             if self.wall_potential_parameters['wall_type'].upper() in ['Plane_opaque_wall'.upper(),\
                                                                 'Plane_translucent_wall'.upper()]:
                 if not self.morest_parameters['morest_load_parameters_file']:
-                    self.plane_wall_parameters = MoREST_parameters.get_plane_wall_parameters()
+                    self.plane_wall_parameters = MoREST_parameters.get_plane_wall_parameters(self.log_morest)
                 else:
                     try:
                         self.plane_wall_parameters = np.load('MoREST_plane_wall_parameters.npy',allow_pickle=True).item()
                     except:
                         self.log_morest.write('Can not find parameters files: MoREST_plane_wall_parameters.npy\n Read parameters from input file.\n\n')
-                        self.plane_wall_parameters = MoREST_parameters.get_plane_wall_parameters()
+                        self.plane_wall_parameters = MoREST_parameters.get_plane_wall_parameters(self.log_morest)
             if self.wall_potential_parameters['wall_type'].upper() in ['Spherical_opaque_wall'.upper(),\
                                                                 'Spherical_translucent_wall'.upper()]:
                 if not self.morest_parameters['morest_load_parameters_file']:
-                    self.spherical_wall_parameters = MoREST_parameters.get_spherical_wall_parameters()
+                    self.spherical_wall_parameters = MoREST_parameters.get_spherical_wall_parameters(self.log_morest)
                 else:
                     try:
                         self.spherical_wall_parameters = np.load('MoREST_spherical_wall_parameters.npy',allow_pickle=True).item()
                     except:
                         self.log_morest.write('Can not find parameters files: MoREST_spherical_wall_parameters.npy\n Read parameters from input file.\n\n')
-                        self.spherical_wall_parameters = MoREST_parameters.get_spherical_wall_parameters()
+                        self.spherical_wall_parameters = MoREST_parameters.get_spherical_wall_parameters(self.log_morest)
             if self.wall_potential_parameters['wall_type'].upper() in ['Plane_opaque_wall'.upper(),\
                                                     'Spherical_opaque_wall'.upper()]:
                 self.wall = opaque_wall(self.wall_potential_parameters)
