@@ -112,7 +112,7 @@ class morest:
         #for key in self.enhanced_sampling_parameters:
         #    print(key+' : '+str(self.enhanced_sampling_parameters[key]))
         if self.enhanced_sampling_parameters['enhanced_sampling']:
-            self.log_morest.write('Enahanced sampling method \"'+str(self.enhanced_sampling_parameters['enhanced_sampling_method'])+'\" is called:\n')
+            self.log_morest.write('Enahanced sampling method \"'+str(self.enhanced_sampling_parameters['enhanced_sampling_method'])+'\" is called.\n\n')
             if self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['its'.upper()]:
                 if not self.morest_parameters['morest_load_parameters_file']:
                     self.its_parameters = MoREST_parameters.get_its_parameters()
@@ -146,7 +146,7 @@ class morest:
         #for key in self.wall_potential_parameters:
         #    print(key+' : '+str(self.wall_potential_parameters[key]))
         if self.wall_potential_parameters['wall_potential']:
-            self.log_morest.write('Wall potential \"'+str(self.wall_potential_parameters['wall_type'])+'\" is called:\n')
+            self.log_morest.write('Wall potential \"'+str(self.wall_potential_parameters['wall_type'])+'\" is called.\n\n')
             if self.wall_potential_parameters['wall_type'].upper() in ['Plane_opaque_wall'.upper(),\
                                                                 'Plane_translucent_wall'.upper()]:
                 if not self.morest_parameters['morest_load_parameters_file']:
