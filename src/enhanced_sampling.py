@@ -41,8 +41,6 @@ class its:
                 return md_force
         else:
             #print('not opting')
-            with open('MoREST_ITS_potential_energy.npy','a') as potential_energy_list:
-                potential_energy_list.write(str(potential_energy)+'\n')
             '''
             try:
                 potential_energy_list = []
@@ -67,8 +65,11 @@ class its:
             print('list exist: ',potential_energy_list)
             np.savetxt('MoREST_ITS_potential_energy.npy',potential_energy_list)
             '''
-            bias_force = self.__bias_force(simulation_temperature, potential_energy, md_force)
-            return bias_force#, current_step
+            #with open('MoREST_ITS_potential_energy.npy','a') as potential_energy_list:
+            #    potential_energy_list.write(str(potential_energy)+'\n')
+            #bias_force = self.__bias_force(simulation_temperature, potential_energy, md_force)
+            #return bias_force#, current_step
+            return md_force
             
        
     def its_if_converge(self):
@@ -116,7 +117,11 @@ class its:
         return md_force*(bias_numerator/(simulation_beta*bias_denominator)-1) # substract original forces and return the pure bias forces
     
     def __pk_nk(self):
-        potential_energy_list = np.loadtxt('MoREST_ITS_potential_energy.npy') - self.its_parameters['its_energy_shift']
+        if abs(self.its_parameters['its_energy_shift'] - 0.) > 1e-5:
+            potential_energy_list = np.loadtxt('MoREST_ITS_potential_energy.npy') - self.its_parameters['its_energy_shift']
+        else:
+            tmp_potential_energy_list = np.loadtxt('MoREST_ITS_potential_energy.npy')
+            potential_energy_list = tmp_potential_energy_list - np.min(tmp_potential_energy_list)
         #if os.path.isfile('MoREST_ITS_nk.npy'):
         try:
             n_k = np.loadtxt('MoREST_ITS_nk.npy')
