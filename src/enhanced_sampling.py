@@ -19,7 +19,8 @@ class its:
                 #print('opting')
                 #current_step = 0
                 p_k, n_k = self.__pk_nk()
-            
+                
+                log_morest.write('ITS optimization in '+str(current_step)+' steps.\n\n')
                 log_morest.write('Current p_k:    ')
                 for i_p in p_k:
                     log_morest.write(str(i_p)+'    ')

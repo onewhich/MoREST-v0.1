@@ -312,7 +312,6 @@ class morest:
                 bias_forces = self.its_sampling.its_sampling(simulation_temperature, potential_energy, md_forces) 
                 return bias_forces
             else:
-                self.log_morest.write('ITS optimization in '+str(current_step)+' steps.\n\n')
                 bias_forces = self.its_sampling.its_optimization(simulation_temperature, potential_energy, \
                                         current_step, md_forces, self.log_morest)
                 return bias_forces
