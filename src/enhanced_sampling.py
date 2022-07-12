@@ -32,6 +32,7 @@ class its:
             
                 new_nk = n_k * self.its_parameters['its_pk0'] / p_k
                 #new_nk = n_k * np.sqrt(self.its_parameters['its_pk0'] / p_k)  # test
+                new_nk /= np.sum(new_nk)
                 np.savetxt('MoREST_ITS_nk.npy',new_nk)
                 bias_force = self.__bias_force(simulation_temperature, potential_energy, md_force)
                 os.remove('MoREST_ITS_potential_energy.npy')
