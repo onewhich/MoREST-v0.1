@@ -619,9 +619,9 @@ class read_parameters:
             pass
         if not 'its_initial_nk' in self.its_parameters:
             #self.its_parameters['its_initial_nk'] = np.exp(self.its_parameters['its_replica_beta'])
-            self.its_parameters['its_initial_nk'] = np.exp(-1*self.its_parameters['its_replica_temperatures'])
-            self.its_parameters['its_initial_nk'] = self.its_parameters['its_initial_nk'] /\
-                                                    np.sum(self.its_parameters['its_initial_nk'])
+            #self.its_parameters['its_initial_nk'] = np.exp(-1*self.its_parameters['its_replica_temperatures'])
+            self.its_parameters['its_initial_nk'] = self.its_parameters['its_replica_beta'] /\
+                                                    np.sum(self.its_parameters['its_replica_beta'])
         if not 'its_pk0' in self.its_parameters:
             self.its_parameters['its_pk0'] = np.ones((self.its_parameters['its_number_of_replica'])) /\
                                                    self.its_parameters['its_number_of_replica']
