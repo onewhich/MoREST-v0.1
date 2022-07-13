@@ -52,8 +52,12 @@ class read_parameters:
         self.enhanced_sampling_parameters['enhanced_sampling'] = False
         self.its_parameters = {}
         self.its_parameters['its_initialization'] = True
+        self.its_parameters['its_energy_shift'] = 0
+        self.its_parameters['its_replica_arrange'] = 0
         self.re_parameters = {}
         self.re_parameters['re_initialization'] = True
+        self.re_parameters['re_energy_shift'] = 0
+        self.re_parameters['re_replica_arrange'] = 0
         self.wall_potential_parameters = {}
         self.wall_potential_parameters['wall_potential'] = False
         self.wall_potential_parameters['collective_variable'] = False
