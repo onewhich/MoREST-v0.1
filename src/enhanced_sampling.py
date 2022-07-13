@@ -19,7 +19,13 @@ class its:
                 #print('opting')
                 #current_step = 0
                 p_k, n_k = self.__pk_nk()
-                
+                            
+                new_nk = n_k * self.its_parameters['its_pk0'] / p_k
+                #new_nk = n_k * np.sqrt(self.its_parameters['its_pk0'] / p_k)  # test
+                new_nk /= np.sum(new_nk)
+                np.savetxt('MoREST_ITS_nk.npy',new_nk)
+                os.remove('MoREST_ITS_potential_energy.npy')
+
                 log_morest.write('ITS optimization in '+str(current_step)+' steps.\n\n')
                 log_morest.write('Current p_k:    ')
                 for i_p in p_k:
@@ -29,16 +35,20 @@ class its:
                 for i_n in n_k:
                     log_morest.write(str(i_n)+'    ')
                 log_morest.write('\n\n')
-            
-                new_nk = n_k * self.its_parameters['its_pk0'] / p_k
-                #new_nk = n_k * np.sqrt(self.its_parameters['its_pk0'] / p_k)  # test
-                new_nk /= np.sum(new_nk)
-                np.savetxt('MoREST_ITS_nk.npy',new_nk)
-                os.remove('MoREST_ITS_potential_energy.npy')
+
                 return md_force - md_force # No bias forces return
                 #bias_force = self.__bias_force(simulation_temperature, potential_energy, md_force)
                 #return bias_force#, current_step
             else:
+                log_morest.write('ITS in '+str(current_step)+' steps.\n\n')
+                log_morest.write('Initial p_k:    ')
+                for i_p in p_k:
+                    log_morest.write(str(i_p)+'    ')
+                log_morest.write('\n\n')
+                log_morest.write('Initial n_k:    ')
+                for i_n in n_k:
+                    log_morest.write(str(i_n)+'    ')
+                log_morest.write('\n\n')
                 return md_force - md_force # No bias forces return
         else:
             #print('not opting')
