@@ -40,6 +40,7 @@ class its:
                 #bias_force = self.__bias_force(simulation_temperature, potential_energy, md_force)
                 #return bias_force#, current_step
             else:
+                p_k, n_k = self.__pk_nk()
                 log_morest.write('ITS in '+str(current_step)+' steps.\n\n')
                 log_morest.write('Initial p_k:    ')
                 for i_p in p_k:
