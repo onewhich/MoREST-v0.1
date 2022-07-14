@@ -21,7 +21,7 @@ class its:
                 p_k, n_k = self.__pk_nk()
                             
                 #new_nk = n_k * self.its_parameters['its_pk0'] / p_k  # can lead to p_k n_k SCF oscillation
-                new_nk = n_k * np.sqrt(self.its_parameters['its_pk0'] / p_k)  # test for p_k n_k SCF convergence
+                new_nk = self.its_parameters['its_weight_pk'] * n_k * np.sqrt(self.its_parameters['its_pk0'] / p_k)  # test for p_k n_k SCF convergence
                 new_nk /= np.sum(new_nk)
                 np.savetxt('MoREST_ITS_nk.npy',new_nk)
                 os.remove('MoREST_ITS_potential_energy.npy')
@@ -83,7 +83,7 @@ class its:
         except:
             #print('Debug: enhanced_sampling_ITS/its_if_converge: MoREST_ITS_pk does not exist.')
             return False
-        if abs(np.max(p_k - self.its_parameters['its_pk0'])) < self.its_parameters['its_delta_pk']:
+        if abs(np.max(p_k - self.its_parameters['its_pk0'])) < self.its_parameters['its_criteria_pk']:
             #if os.path.isfile('MoREST_ITS_potential_energy.npy'):
             try:
                 os.remove('MoREST_ITS_potential_energy.npy')

@@ -49,8 +49,9 @@ ITS_replica_arrange               0     # -1: arithmetic progression   0:  geome
 #ITS_initial_nk                   1 0.1 0.01 0.001 0.0001   # specify or default
 #ITS_pk0                          0.2 0.2 0.2 0.2 0.2   # specify or default
 ITS_trial_MD_steps                10
-ITS_delta_pk                      1e-4
-ITS_energy_shift                  -18600
+ITS_delta_pk                      1e-2   # The criteria of p_k SCF convergence
+ITS_weight_pk                     0.1   # The weight of p^0/p_k or sqrt(p^0/p_k) in SCF iteration
+ITS_energy_shift                  0
 RE_initialization                 True   #TODO: replica exchange
 RE_lower_bound_temperature
 RE_upper_bound_temperature

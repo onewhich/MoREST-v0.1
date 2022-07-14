@@ -52,8 +52,9 @@ class read_parameters:
         self.enhanced_sampling_parameters['enhanced_sampling'] = False
         self.its_parameters = {}
         self.its_parameters['its_initialization'] = True
-        self.its_parameters['its_energy_shift'] = 0
         self.its_parameters['its_replica_arrange'] = 0
+        self.its_parameters['its_weight_pk'] = 0.1
+        self.its_parameters['its_energy_shift'] = 0
         self.re_parameters = {}
         self.re_parameters['re_initialization'] = True
         self.re_parameters['re_energy_shift'] = 0
@@ -292,6 +293,9 @@ class read_parameters:
                 
             elif i_parameter.split()[0].upper() == 'ITS_delta_pk'.upper():
                 self.its_parameters['its_delta_pk'] = float(i_parameter.split()[1])
+                
+            elif i_parameter.split()[0].upper() == 'ITS_weight_pk'.upper():
+                self.its_parameters['its_weight_pk'] = float(i_parameter.split()[1])
                 
             elif i_parameter.split()[0].upper() == 'ITS_energy_shift'.upper():
                 self.its_parameters['its_energy_shift'] = float(i_parameter.split()[1])
@@ -600,6 +604,8 @@ class read_parameters:
         return self.enhanced_sampling_parameters
         
     def get_its_parameters(self, log_morest=None):
+        self.its_parameters['its_criteria_pk'] = self.its_parameters['its_delta_pk'] / \
+                                                self.its_parameters['its_number_of_replica']
         if not 'its_replica_temperatures' in self.its_parameters:
             if int(self.its_parameters['its_replica_arrange']) == -1:
                 replica_temperatures = np.linspace(self.its_parameters['its_lower_bound_temperature'],\
