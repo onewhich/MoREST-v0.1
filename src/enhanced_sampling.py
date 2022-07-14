@@ -20,8 +20,8 @@ class its:
                 #current_step = 0
                 p_k, n_k = self.__pk_nk()
                             
-                new_nk = n_k * self.its_parameters['its_pk0'] / p_k
-                #new_nk = n_k * np.sqrt(self.its_parameters['its_pk0'] / p_k)  # test
+                #new_nk = n_k * self.its_parameters['its_pk0'] / p_k  # can lead to p_k n_k SCF oscillation
+                new_nk = n_k * np.sqrt(self.its_parameters['its_pk0'] / p_k)  # test for p_k n_k SCF convergence
                 new_nk /= np.sum(new_nk)
                 np.savetxt('MoREST_ITS_nk.npy',new_nk)
                 os.remove('MoREST_ITS_potential_energy.npy')
