@@ -1,10 +1,12 @@
 import os
 import numpy as np
-import scipy.constants
+#import scipy.constants
+from ase import units
 
 class its:
     '''
     The integrated tempering sampling module.
+    Yi Qin Gao The Journal of Chemical Physics 128, 064105 (2008);
     '''
     
     def __init__(self, its_parameters):
@@ -100,7 +102,8 @@ class its:
             
     def __bias_force(self, simulation_temperature, potential_energy, md_force):
         Epot = potential_energy - self.its_parameters['its_energy_shift']
-        simulation_beta = 1/(simulation_temperature*scipy.constants.value('Boltzmann constant in eV/K'))
+        #simulation_beta = 1/(simulation_temperature*scipy.constants.value('Boltzmann constant in eV/K'))
+        simulation_beta = 1/(simulation_temperature*units.kB)
         #if os.path.isfile('MoREST_ITS_nk.npy'):
         try:
             n_k = np.loadtxt('MoREST_ITS_nk.npy')
@@ -142,3 +145,19 @@ class its:
         np.savetxt('MoREST_ITS_pk.npy',p_k)
         #print(p_k)
         return p_k,n_k
+
+class re:
+    '''
+    The replica exchange molecular dynamics / Monte Carlo module
+    Y. Sugita, Y. Okamotor Chemical Physics Letters 314 (1999) 141–151
+    '''
+    
+    def __init__(self, re_parameters):
+        self.re_parameters = re_parameters
+        self.replica_name_tile = 'MoREST_RE_replica_'
+        self.replica_file_list = []
+        for i_T, T in enumerate(self.re_parameters['re_replica_temperatures']):
+            
+
+    def replica_exchange(self):
+        return 0

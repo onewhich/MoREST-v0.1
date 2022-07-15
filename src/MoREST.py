@@ -3,7 +3,7 @@ import numpy as np
 from read_parameters import read_parameters
 from phase_space_sampling import velocity_Verlet
 from trajectory_scattering import scattering_velocity_Verlet
-from enhanced_sampling import its
+from enhanced_sampling import its, re
 from wall_potential import opaque_wall, translucent_wall
 from collective_variable import collective_variables
 
@@ -96,9 +96,9 @@ class morest:
             if self.scattering_parameters['scattering_method'].upper() in ['VV']:
                 self.scattering_job = scattering_velocity_Verlet(self.morest_parameters, self.scattering_parameters, calculator=calculator)
             else:
-                    self.log_morest.write('It is not clear which method will be used.\n')
+                    self.log_morest.write('It is not clear which scattering method will be used.\n')
                     self.log_morest.close()
-                    raise Exception('Which method will you use?')
+                    raise Exception('Which scattering method will you use?')
     
         #################### Enhanced sampling initialization #################################
         if not self.morest_parameters['morest_load_parameters_file']:
@@ -131,6 +131,10 @@ class morest:
                         pass
                     self.log_morest.write('Integrated tempering sampling method is initialized.\n\n')
                 self.its_sampling = its(self.its_parameters)
+            else:
+                self.log_morest.write('It is not clear which enhanced sampling method will be used.\n')
+                self.log_morest.close()
+                raise Exception('Which enhanced sampling method will you use?')
         #    for key in self.its_parameters:
         #        print(key+' : '+str(self.its_parameters[key]))
 
@@ -187,16 +191,25 @@ class morest:
         current_step, current_system = self.sampling_job.current_step, self.sampling_job.current_system
         simulation_maxsteps = int(self.md_parameters['md_simulation_time']/self.md_parameters['md_time_step']) + 1
         while current_step <= simulation_maxsteps:
-            simulation_temperature = self.md_parameters['md_temperature']
-            time_step = self.md_parameters['md_time_step']
-            potential_energy = self.sampling_job.current_potential_energy
-            md_forces = self.sampling_job.current_forces
-            #print(md_forces)
-            general_coordinate = current_system.get_positions()
-            bias_forces = self.bias_sampling(simulation_temperature, simulation_maxsteps, \
-                   time_step, potential_energy, current_step, md_forces, general_coordinate)
-            #print(bias_forces)
-            current_step, current_system= self.sampling_job.generate_new_step(bias_forces)
+            if self.enhanced_sampling_parameters['enhanced_sampling']:
+                if self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['re'.upper()]:
+                    return 0
+                elif self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['its'.upper()]:
+                    bias_its_forces = self.enhanced_sampling_its(current_step)
+                    if self.wall_potential_parameters['wall_potential']:
+                        general_coordinate = current_system.get_positions()
+                        bias_forces_wall_potential = self.wall_potential(general_coordinate)
+                        bias_forces = bias_its_forces + bias_forces_wall_potential
+                    else:
+                        bias_forces = bias_its_forces
+                    current_step, current_system= self.sampling_job.generate_new_step(bias_forces)
+            else:
+                if self.wall_potential_parameters['wall_potential']:
+                    general_coordinate = current_system.get_positions()
+                    bias_forces = self.wall_potential(general_coordinate)
+                    current_step, current_system= self.sampling_job.generate_new_step(bias_forces)
+                else:
+                    current_step, current_system= self.sampling_job.generate_new_step()
         self.log_morest.write('Phase space sampling with molecular dynamics method is finished!\n')
         self.mission_complete()
 
@@ -204,62 +217,21 @@ class morest:
         current_step, current_system = self.scattering_job.current_step, self.scattering_job.current_system
         simulation_maxsteps = self.scattering_parameters['scattering_traj_length']
         while current_step <= simulation_maxsteps:
-            simulation_temperature = self.scattering_parameters['scattering_temperature']
-            time_step = self.scattering_parameters['scattering_time_step']
-            potential_energy = self.scattering_job.current_potential_energy
-            md_forces = self.scattering_job.current_forces
-            general_coordinate = current_system.get_positions()
-            bias_forces = self.bias_sampling(simulation_temperature, simulation_maxsteps, \
-                   time_step, potential_energy, current_step, md_forces, general_coordinate)
-            current_step, current_system= self.scattering_job.generate_new_step(bias_forces)
+            if self.enhanced_sampling_parameters['enhanced_sampling']:
+                self.enhanced_sampling_parameters['enhanced_sampling'] = False # TODO: enhanced sampling method for trajectory scattering
+            else:
+                if self.wall_potential_parameters['wall_potential']:
+                    general_coordinate = current_system.get_positions()
+                    bias_forces = self.wall_potential(general_coordinate)
+                    current_step, current_system= self.scattering_job.generate_new_step(bias_forces)
+                else:
+                    current_step, current_system= self.scattering_job.generate_new_step()
             if self.stop_condition.check_CVs_one(current_system):
                 break
         self.log_morest.write('Trajectory scattering with molecular dynamics method is finished!\n')
         self.mission_complete()
     
-    def bias_sampling(self, simulation_temperature, simulation_maxsteps, \
-                   time_step, potential_energy, current_step, md_forces, general_coordinate):
-        '''
-        This function combines enhanced_sampling and wall_potential together to be used by MD/MC module.
-        --------
-        INPUT:
-            The same as the enhanced_sampling function and the wall_potential function
-        OUTPUT:
-            bias_forces: The bias forces are combined from enhanced sampling and wall potential.
-        '''
-        
-        if_call_enhanced_sampling = False
-        if_call_wall_potential = False
-
-        #self.log_morest.write('Debug: calling bias sampling\n')
-        #self.log_morest.write('Debug: MD step: '+str(current_step)+'\n')
-
-        if self.enhanced_sampling_parameters['enhanced_sampling']:
-            #self.log_morest.write('Debug: calling enhanced sampling\n')
-            bias_force_enhanced_sampling = self.enhanced_sampling(simulation_temperature, simulation_maxsteps, \
-                                 time_step, potential_energy, current_step, md_forces)
-            if_call_enhanced_sampling = True
-            #print(bias_force_enhanced_sampling)
-        if self.wall_potential_parameters['wall_potential']:
-            #self.log_morest.write('Debug: calling wall potential\n')
-            bias_force_wall_potential = self.wall_potential(general_coordinate)
-            if_call_wall_potential = True
-            #print(bias_force_wall_potential)
-            
-        if if_call_enhanced_sampling and if_call_wall_potential:
-            return bias_force_enhanced_sampling + bias_force_wall_potential
-        elif if_call_enhanced_sampling:
-            return bias_force_enhanced_sampling
-        elif if_call_wall_potential:
-            return bias_force_wall_potential
-        else:
-            #self.log_morest.write('Both enhanced sampling and wall potential do not work.\n')
-            #self.log_morest.close()
-            return None
-    
-    
-    def enhanced_sampling(self, simulation_temperature, simulation_maxsteps, \
-                   time_step, potential_energy, current_step, md_forces):
+    def enhanced_sampling_its(self, current_step):
         '''
         This function is called to excute enhanced sampling by phase space sampling module.
         --------
@@ -276,52 +248,17 @@ class morest:
             bias_forces:           The bias forces vector generated by ITS and returned to MD/MC module. 
             #current_step:          The current MD step is returned to identify the number of opt and sampling steps in ITS
         '''
-
-        if self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['its'.upper()]:
-            #self.log_morest.write('Debug: In ITS sampling\n')
-            #self.log_morest.write('Debug: ITS MD step: '+str(current_step)+'\n')
-            '''
-            if if_initial or ( if_initial == 1 ):
-                #if os.path.isfile('MoREST_ITS_pk.npy'):
-                os.remove('MoREST_ITS_pk.npy')
-                #if os.path.isfile('MoREST_ITS_nk.npy'):
-                os.remove('MoREST_ITS_nk.npy')
-                #if os.path.isfile('MoREST_ITS_potential_energy.npy'):
-                os.remove('MoREST_ITS_potential_energy.npy')
-
-                self.log_morest.write('Start to initialize integrated tempering sampling method.\n')
-                #for key in self.its_parameters:
-                #    self.log_morest.write(key+' : '+str(self.its_parameters[key])+'\n')
-                #self.log_morest.write('\n')
-
-                bias_forces = its().its_optimization(simulation_temperature,\
-                                        potential_energy, current_step,\
-                                        md_forces, self.log_morest)
-                return bias_forces
-
-            elif ( not if_initial ) or ( if_initial == 0 ):
-                if its().its_if_converge():
-                    bias_forces = its().its_sampling(simulation_temperature, potential_energy, md_forces) 
-                    return bias_forces
-                else:
-                    bias_forces = its().its_optimization(simulation_temperature, potential_energy, \
-                                            current_step, md_forces, self.log_morest)
-                    return bias_forces
-            '''
-            if self.its_sampling.its_if_converge():
-                bias_forces = self.its_sampling.its_sampling(simulation_temperature, potential_energy, md_forces) 
-                return bias_forces
-            else:
-                bias_forces = self.its_sampling.its_optimization(simulation_temperature, potential_energy, \
-                                        current_step, md_forces, self.log_morest)
-                return bias_forces
+        simulation_temperature = self.md_parameters['md_temperature']
+        potential_energy = self.sampling_job.current_potential_energy
+        md_forces = self.sampling_job.current_forces
+        if self.its_sampling.its_if_converge():
+            bias_forces = self.its_sampling.its_sampling(simulation_temperature, potential_energy, md_forces) 
+            return bias_forces
         else:
-            self.log_morest.write('No enhanced sampling method was matched.\n')
-            self.log_morest.close()
-            return np.array([0])
+            bias_forces = self.its_sampling.its_optimization(simulation_temperature, potential_energy, \
+                                    current_step, md_forces, self.log_morest)
+            return bias_forces
 
-        
-        
     def wall_potential(self, general_coordinate):
         '''
         This function will read the positions of atoms and then add forces of the potential on the atoms.

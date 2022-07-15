@@ -40,7 +40,7 @@ Scattering_R_incident             9 # the initial point of the incident directio
 
 Enhanced_sampling                 False
 Enhanced_sampling_method          ITS   # ITS, RE, pRE: parrallel running version of replica exchange, TPS: for scattering, TIS
-ITS_initialization                True  # Set True for the first time running ITS. It will delete all relvent files such as TIS_nk.npy, ITS_pk.npy.
+ITS_initialization                True  # Set True for the first time running ITS. It will delete all relvent files such as MoREST_TIS_nk.npy, MoREST_ITS_pk.npy.
 ITS_lower_bound_temperature       1000
 ITS_upper_bound_temperature       2000
 ITS_number_of_replica             100
@@ -56,7 +56,7 @@ RE_initialization                 True   #TODO: replica exchange
 RE_lower_bound_temperature
 RE_upper_bound_temperature
 RE_number_of_replica
-RE_replica_arrange
+RE_replica_arrange                0
 #RE_replica_temperatures          290 310 330 350 370   # specify or default
 RE_energy_shift
 

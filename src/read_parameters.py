@@ -1,5 +1,5 @@
 import numpy as np
-import scipy.constants
+#import scipy.constants
 from json import JSONEncoder
 from ase import units
 
@@ -53,7 +53,7 @@ class read_parameters:
         self.its_parameters = {}
         self.its_parameters['its_initialization'] = True
         self.its_parameters['its_replica_arrange'] = 0
-        self.its_parameters['its_weight_pk'] = 0.1
+        self.its_parameters['its_weight_pk'] = 1e-4
         self.its_parameters['its_energy_shift'] = 0
         self.re_parameters = {}
         self.re_parameters['re_initialization'] = True
@@ -621,8 +621,8 @@ class read_parameters:
                 raise Exception('No ITS_replica_arrange type was matched.')
             self.its_parameters['its_replica_temperatures'] = replica_temperatures
         
-        self.its_parameters['its_replica_beta'] = 1/(self.its_parameters['its_replica_temperatures'] *\
-                                                    scipy.constants.value('Boltzmann constant in eV/K'))
+        self.its_parameters['its_replica_beta'] = 1/(self.its_parameters['its_replica_temperatures'] * units.kB)
+        #                                            scipy.constants.value('Boltzmann constant in eV/K')
         if not 'its_initial_nk' in self.its_parameters:
             #self.its_parameters['its_initial_nk'] = np.exp(self.its_parameters['its_replica_beta'])
             #self.its_parameters['its_initial_nk'] = np.exp(-1*self.its_parameters['its_replica_temperatures'])
@@ -658,8 +658,8 @@ class read_parameters:
                 raise Exception('No RE_replica_arrange type was matched.')
             self.re_parameters['re_replica_temperatures'] = replica_temperatures
         
-        self.re_parameters['re_replica_beta'] = 1/(self.re_parameters['re_replica_temperatures'] *\
-                                                    scipy.constants.value('Boltzmann constant in eV/K'))
+        self.re_parameters['re_replica_beta'] = 1/(self.re_parameters['re_replica_temperatures'] * units.kB)
+        #                                            scipy.constants.value('Boltzmann constant in eV/K'))
         if self.enhanced_sampling_parameters['enhanced_sampling']:
             if self.morest_parameters['morest_save_parameters_file']:
                 np.save('MoREST_RE_parameters.npy',self.re_parameters)
