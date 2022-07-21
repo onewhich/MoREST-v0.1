@@ -154,10 +154,35 @@ class re:
     
     def __init__(self, re_parameters):
         self.re_parameters = re_parameters
-        self.replica_name_tile = 'MoREST_RE_replica_'
-        self.replica_file_list = []
-        for i_T, T in enumerate(self.re_parameters['re_replica_temperatures']):
-            
+        self.file_name_title = 'MoREST_RE_'
+        try:
+            self.re_parameters['re_replica_temperatures'] = np.loadtxt(self.file_name_title+'current_temperature.log')
+        except:
+            pass
+        self.temperature_log_file_list = []
+        self.temperature_traj_file_list = []
+        self.replica_log_file_list = []
+        self.replica_traj_file_list = []
+        for i,T in enumerate(self.re_parameters['re_replica_temperatures']):
+            tmp_temperature_log_file = open(self.file_name_title+str(T)+'K.log','a')
+            tmp_temperature_traj_file = open(self.file_name_title+str(T)+'K_traj.xyz','a')
+            self.temperature_log_file_list.append(tmp_temperature_log_file)
+            self.temperature_traj_file_list.append(tmp_temperature_traj_file)
+            tmp_replica_log_file = open(self.file_name_title+'replica_'+str(i)+'log','a')
+            tmp_replica_traj_file = open(self.file_name_title+'replica_'+str(i)+'_traj.xyz','a')
+            self.replica_log_file_list.append(tmp_replica_log_file)
+            self.replica_traj_file_list.append(tmp_replica_traj_file)
+
+    def get_init_molecules():
+        return molecules
+
+    def get_traj_files():
+        return traj_files
 
     def replica_exchange(self):
         return 0
+
+    def write_current_swap_step_replica(self):
+        self.current_swap_step_replica = open(self.file_name_title+'current_step_replica.log','w')
+        self.current_swap_step_replica.write(str(self.re_parameters['re_current_swap_step'])+'    '+str(self.re_parameters['re_current_replica']))
+        self.current_swap_step_replica.close()

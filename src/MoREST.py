@@ -28,19 +28,19 @@ class morest:
         self.log_morest.write('\n')
 
         #################### Phase space sampling initialization ##############################
-        if not self.morest_parameters['morest_load_parameters_file']:
-            self.sampling_parameters = MoREST_parameters.get_sampling_parameters(self.log_morest)
-            self.md_parameters = MoREST_parameters.get_md_parameters(self.log_morest)
-        else:
-            try:
-                self.sampling_parameters = np.load('MoREST_sampling_parameters.npy',allow_pickle=True).item()
-                self.md_parameters = np.load('MoREST_MD_parameters.npy',allow_pickle=True).item()
-            except:
-                self.log_morest.write('Can not find parameters files: MoREST_sampling_parameters.npy, MoREST_MD_parameters.npy\n Read parameters from input file.\n\n')
+        if self.morest_parameters['phase_space_sampling']:
+            if not self.morest_parameters['morest_load_parameters_file']:
                 self.sampling_parameters = MoREST_parameters.get_sampling_parameters(self.log_morest)
                 self.md_parameters = MoREST_parameters.get_md_parameters(self.log_morest)
+            else:
+                try:
+                    self.sampling_parameters = np.load('MoREST_sampling_parameters.npy',allow_pickle=True).item()
+                    self.md_parameters = np.load('MoREST_MD_parameters.npy',allow_pickle=True).item()
+                except:
+                    self.log_morest.write('Can not find parameters files: MoREST_sampling_parameters.npy, MoREST_MD_parameters.npy\n Read parameters from input file.\n\n')
+                    self.sampling_parameters = MoREST_parameters.get_sampling_parameters(self.log_morest)
+                    self.md_parameters = MoREST_parameters.get_md_parameters(self.log_morest)
 
-        if self.sampling_parameters['phase_space_sampling']:
             if self.sampling_parameters['sampling_initialization']:
                 self.log_morest.write('Start to sample the phase space\n\n')
                 #Method: '+str(self.sampling_parameters['sampling_method'])+'\nEnsemble: '+str(self.sampling_parameters['sampling_ensemble'])+'\n\n')
@@ -53,7 +53,6 @@ class morest:
             else:
                 self.log_morest.write('Continue to sample the phase space\n\n')
                 #Method: '+str(self.sampling_parameters['sampling_method'])+'\nEnsemble: '+str(self.sampling_parameters['sampling_ensemble'])+'\n\n')
-
             if self.sampling_parameters['sampling_method'].upper() in ['MD']:
                 if self.sampling_parameters['sampling_ensemble'].upper() in ['NVE_VV']:
                     self.sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator)
@@ -71,16 +70,16 @@ class morest:
                 raise Exception('Will you use the phase sampling method?')
     
         #################### Trajectory scattering initialization #############################
-        if not self.morest_parameters['morest_load_parameters_file']:
-            self.scattering_parameters = MoREST_parameters.get_scattering_parameters(self.log_morest)
-        else:
-            try:
-                self.scattering_parameters = np.load('MoREST_scattering_parameters.npy',allow_pickle=True).item()
-            except:
-                self.log_morest.write('Can not find parameters files: MoREST_scattering_parameters.npy\n Read parameters from input file.\n\n')
+        if self.morest_parameters['trajectory_scattering']:
+            if not self.morest_parameters['morest_load_parameters_file']:
                 self.scattering_parameters = MoREST_parameters.get_scattering_parameters(self.log_morest)
+            else:
+                try:
+                    self.scattering_parameters = np.load('MoREST_scattering_parameters.npy',allow_pickle=True).item()
+                except:
+                    self.log_morest.write('Can not find parameters files: MoREST_scattering_parameters.npy\n Read parameters from input file.\n\n')
+                    self.scattering_parameters = MoREST_parameters.get_scattering_parameters(self.log_morest)
 
-        if self.scattering_parameters['trajectory_scattering']:
             if self.scattering_parameters['scattering_initialization']:
                 self.log_morest.write('Start to sample the trajectories\n\n')
                 try:
@@ -101,19 +100,62 @@ class morest:
                     raise Exception('Which scattering method will you use?')
     
         #################### Enhanced sampling initialization #################################
-        if not self.morest_parameters['morest_load_parameters_file']:
-            self.enhanced_sampling_parameters = MoREST_parameters.get_enhanced_sampling_parameters(self.log_morest)
-        else:
-            try:
-                self.enhanced_sampling_parameters = np.load('MoREST_enhanced_sampling_parameters.npy',allow_pickle=True).item()
-            except:
-                self.log_morest.write('Can not find parameters files: MoREST_enhanced_sampling_parameters.npy\n Read parameters from input file.\n\n')
+        if self.morest_parameters['enhanced_sampling']:
+            if not self.morest_parameters['morest_load_parameters_file']:
                 self.enhanced_sampling_parameters = MoREST_parameters.get_enhanced_sampling_parameters(self.log_morest)
-        #for key in self.enhanced_sampling_parameters:
-        #    print(key+' : '+str(self.enhanced_sampling_parameters[key]))
-        if self.enhanced_sampling_parameters['enhanced_sampling']:
+            else:
+                try:
+                    self.enhanced_sampling_parameters = np.load('MoREST_enhanced_sampling_parameters.npy',allow_pickle=True).item()
+                except:
+                    self.log_morest.write('Can not find parameters files: MoREST_enhanced_sampling_parameters.npy\n Read parameters from input file.\n\n')
+                    self.enhanced_sampling_parameters = MoREST_parameters.get_enhanced_sampling_parameters(self.log_morest)
+            #for key in self.enhanced_sampling_parameters:
+            #    print(key+' : '+str(self.enhanced_sampling_parameters[key]))
+        
             self.log_morest.write('Enahanced sampling method \"'+str(self.enhanced_sampling_parameters['enhanced_sampling_method'])+'\" is called.\n\n')
-            if self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['its'.upper()]:
+            if self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['re'.upper()]:
+                if not self.morest_parameters['morest_load_parameters_file']:
+                    self.re_parameters = MoREST_parameters.get_re_parameters(self.log_morest)
+                else:
+                    try:
+                        self.re_parameters = np.load('MoREST_RE_parameters.npy',allow_pickle=True).item()
+                    except:
+                        self.log_morest.write('Can not find parameters files: MoREST_RE_parameters.npy\n Read parameters from input file.\n\n')
+                        self.re_parameters = MoREST_parameters.get_re_parameters(self.log_morest)
+
+                file_name_title = 'MoREST_RE_'
+                if self.re_parameters['re_initialization']:
+                    try:
+                        os.remove(file_name_title+'current_step_replica.log')
+                        os.remove(file_name_title+'current_temperature.log')
+                        for i,T in enumerate(self.re_parameters['re_replica_temperatures']):
+                            os.remove(file_name_title+str(T)+'K.log')
+                            os.remove(file_name_title+str(T)+'K_traj.xyz')
+                            os.rempve(file_name_title+'replica_'+str(i)+'.log')
+                            os.rempve(file_name_title+'replica_'+str(i)+'_traj.xyz')
+                    except:
+                        pass
+                    self.log_morest.write('Replica exchange method is initialized.\n\n')
+                self.re_sampling = re(self.re_parameters)
+                molecules = self.re_sampling.get_init_molecules()
+                traj_files = self.re_sampling.get_traj_files()
+                self.sampling_job = []
+                for i,T in enumerate(self.re_parameters['re_replica_temperatures']):
+                    if self.sampling_parameters['sampling_method'].upper() in ['MD']:
+                        if self.sampling_parameters['sampling_ensemble'].upper() in ['NVE_VV']:
+                            tmp_sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, \
+                                                                molecules[i], traj_files[i], T, calculator=calculator)
+                        elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_VR']:
+                            tmp_sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, \
+                                                                molecules[i], traj_files[i], T, calculator=calculator, v_rescaling=True)
+                        elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
+                            tmp_sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, \
+                                                                molecules[i], traj_files[i], T, calculator=calculator, sv_rescaling=True)
+                    self.sampling_job.append(tmp_sampling_job)
+                    self.log_morest.write('Replica '+str(i)+' at '+str(T)+' K is ready.\n')
+                self.log_morest.write('\n')
+                    
+            elif self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['its'.upper()]:
                 if not self.morest_parameters['morest_load_parameters_file']:
                     self.its_parameters = MoREST_parameters.get_its_parameters(self.log_morest)
                 else:
@@ -139,17 +181,18 @@ class morest:
         #        print(key+' : '+str(self.its_parameters[key]))
 
         #################### Wall potential initialization ####################################
-        if not self.morest_parameters['morest_load_parameters_file']:
-            self.wall_potential_parameters = MoREST_parameters.get_wall_potential_parameters(self.log_morest)
-        else:
-            try:
-                self.wall_potential_parameters = np.load('MoREST_wall_potential_parameters.npy',allow_pickle=True).item()
-            except:
-                self.log_morest.write('Can not find parameters files: MoREST_wall_potential_parameters.npy\n Read parameters from input file.\n\n')
+        if self.morest_parameters['wall_potential']:
+            if not self.morest_parameters['morest_load_parameters_file']:
                 self.wall_potential_parameters = MoREST_parameters.get_wall_potential_parameters(self.log_morest)
-        #for key in self.wall_potential_parameters:
-        #    print(key+' : '+str(self.wall_potential_parameters[key]))
-        if self.wall_potential_parameters['wall_potential']:
+            else:
+                try:
+                    self.wall_potential_parameters = np.load('MoREST_wall_potential_parameters.npy',allow_pickle=True).item()
+                except:
+                    self.log_morest.write('Can not find parameters files: MoREST_wall_potential_parameters.npy\n Read parameters from input file.\n\n')
+                    self.wall_potential_parameters = MoREST_parameters.get_wall_potential_parameters(self.log_morest)
+            #for key in self.wall_potential_parameters:
+            #    print(key+' : '+str(self.wall_potential_parameters[key]))
+            
             self.log_morest.write('Wall potential \"'+str(self.wall_potential_parameters['wall_type'])+'\" is called.\n\n')
             if self.wall_potential_parameters['wall_type'].upper() in ['Plane_opaque_wall'.upper(),\
                                                                 'Plane_translucent_wall'.upper()]:
@@ -177,8 +220,8 @@ class morest:
             elif self.wall_potential_parameters['wall_type'].upper() in ['Plane_translucent_wall'.upper(),\
                                                     'Spherical_translucent_wall'.upper()]:
                 self.wall = translucent_wall(self.wall_potential_parameters)
-        #    for key in self.plane_wall_parameters:
-        #        print(key+' : '+str(self.plane_wall_parameters[key]))
+            #    for key in self.plane_wall_parameters:
+            #        print(key+' : '+str(self.plane_wall_parameters[key]))
 
         
     def phase_space_sampling(self):
@@ -188,13 +231,26 @@ class morest:
         INPUT:
             calculator: The same as the calculator in ASE. It is required, when many body potential is specified as 'on_the_fly'.
         '''
-        current_step, current_system = self.sampling_job.current_step, self.sampling_job.current_system
         simulation_maxsteps = int(self.md_parameters['md_simulation_time']/self.md_parameters['md_time_step']) + 1
-        while current_step <= simulation_maxsteps:
-            if self.enhanced_sampling_parameters['enhanced_sampling']:
-                if self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['re'.upper()]:
-                    return 0
-                elif self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['its'.upper()]:
+        if self.enhanced_sampling_parameters['enhanced_sampling']:
+            if self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['re'.upper()]:
+                current_step = []
+                current_system = []
+                for i_sampling_job in self.sampling_job:
+                    current_step.append(i_sampling_job.current_step)
+                    current_system.append(i_sampling_job.current_system)
+                while current_step <= simulation_maxsteps:
+                    for i,i_sampling_job in enumerate(self.sampling_job):
+                        if self.wall_potential_parameters['wall_potential']:
+                            general_coordinate = current_system[i].get_positions()
+                            bias_forces = self.wall_potential(general_coordinate)
+                            current_step[i], current_system[i] = i_sampling_job.generate_new_step(bias_forces)
+                        else:
+                            current_step[i], current_system[i] = i_sampling_job.generate_new_step()
+
+            elif self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['its'.upper()]:
+                current_step, current_system = self.sampling_job.current_step, self.sampling_job.current_system
+                while current_step <= simulation_maxsteps:
                     bias_its_forces = self.enhanced_sampling_its(current_step)
                     if self.wall_potential_parameters['wall_potential']:
                         general_coordinate = current_system.get_positions()
@@ -203,12 +259,16 @@ class morest:
                     else:
                         bias_forces = bias_its_forces
                     current_step, current_system= self.sampling_job.generate_new_step(bias_forces)
-            else:
-                if self.wall_potential_parameters['wall_potential']:
+
+        else:
+            current_step, current_system = self.sampling_job.current_step, self.sampling_job.current_system
+            if self.wall_potential_parameters['wall_potential']:
+                while current_step <= simulation_maxsteps:
                     general_coordinate = current_system.get_positions()
                     bias_forces = self.wall_potential(general_coordinate)
                     current_step, current_system= self.sampling_job.generate_new_step(bias_forces)
-                else:
+            else:
+                while current_step <= simulation_maxsteps:
                     current_step, current_system= self.sampling_job.generate_new_step()
         self.log_morest.write('Phase space sampling with molecular dynamics method is finished!\n')
         self.mission_complete()

@@ -13,7 +13,7 @@ Sampling_initialization           True   # Overwrite or append the trajectory in
 Sampling_molecule                 MoREST.str # The input of the structure.
 Sampling_traj_interval            10    # Record sampling every Traj_interval steps
 Sampling_method                   MD    # MD, MC, LD, PIMD
-Sampling_ensemble                 NVT_SVR  10   # Choose the ensemble, e.g. NVE_VV: velocity Verlet; NVT_VR 10: velocity Verlet with velocity rescaling, with parameter NVT_VR_dT=10; NVT_SVR 10: BDP stochastic velocity rescaling thermostat, with parameter NVT_SVR_tau=10
+Sampling_ensemble                 NVT_SVR  10   # Choose the ensemble, e.g. NVE_VV: velocity Verlet; NVT_VR 10: velocity Verlet with velocity rescaling, with parameter NVT_VR_dT=10; NVT_Berendsen ; NVT_SVR 10: BDP stochastic velocity rescaling thermostat, with parameter NVT_SVR_tau=10
 MD_clean_translation              True
 MD_clean_rotation                 True
 MD_time_step                      1   # unit in fs
@@ -39,7 +39,16 @@ Scattering_R_target               1 # the final point of the incident direction 
 Scattering_R_incident             9 # the initial point of the incident direction vector locates on the surface of the sphere with 9 AA radius. The central point of the sphere locates at the geometric center of the target molecule.
 
 Enhanced_sampling                 False
-Enhanced_sampling_method          ITS   # ITS, RE, pRE: parrallel running version of replica exchange, TPS: for scattering, TIS
+Enhanced_sampling_method          RE   # RE; ITS; pRE: parrallel running version of replica exchange; SA: simulated annealing; ST: simulated tempering; aMD: accelerated MD; Wang-Landau; NS: nested sampling; TPS: for scattering; TIS
+RE_initialization                 True
+RE_lower_bound_temperature        400
+RE_upper_bound_temperature        100000
+RE_number_of_replica              10
+RE_replica_arrange                0     # -1: arithmetic progression   0:  geometric progression
+#RE_replica_temperatures          290 310 330 350 370   # specify or default
+RE_swap_interval                  10    # replica will swap the temperature after every interval steps.
+RE_init_structures_list           MoREST.str_re # Includes a series initial/updated structures for each temperature replica, respectively. The number of structures should equal to the number of replica. Default in extxyz format.
+RE_energy_shift                   0
 ITS_initialization                True  # Set True for the first time running ITS. It will delete all relvent files such as MoREST_TIS_nk.npy, MoREST_ITS_pk.npy.
 ITS_lower_bound_temperature       1000
 ITS_upper_bound_temperature       2000
@@ -52,13 +61,6 @@ ITS_trial_MD_steps                10
 ITS_delta_pk                      1e-2   # The criteria of p_k SCF convergence
 ITS_weight_pk                     0.1   # The weight of p^0/p_k or sqrt(p^0/p_k) in SCF iteration
 ITS_energy_shift                  0
-RE_initialization                 True   #TODO: replica exchange
-RE_lower_bound_temperature
-RE_upper_bound_temperature
-RE_number_of_replica
-RE_replica_arrange                0
-#RE_replica_temperatures          290 310 330 350 370   # specify or default
-RE_energy_shift
 
 Wall_potential                    False
 Collective_variable               False

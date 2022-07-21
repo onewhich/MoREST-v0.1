@@ -58,6 +58,7 @@ class read_parameters:
         self.re_parameters = {}
         self.re_parameters['re_initialization'] = True
         self.re_parameters['re_replica_arrange'] = 0
+        self.re_parameters['re_init_structures_list'] = None
         self.re_parameters['re_energy_shift'] = 0
         self.wall_potential_parameters = {}
         self.wall_potential_parameters['wall_potential'] = False
@@ -126,7 +127,7 @@ class read_parameters:
                     raise Exception('It is not clear whether the sampling method will be initialized.')
                     
             elif i_parameter.split()[0].upper() == 'Sampling_molecule'.upper():
-                self.sampling_parameters['sampling_molecule'] = i_parameter.split()[1]
+                self.sampling_parameters['sampling_molecule'] = str(i_parameter.split()[1])
                     
             elif i_parameter.split()[0].upper() == 'Sampling_traj_interval'.upper():
                 self.sampling_parameters['sampling_traj_interval'] = int(i_parameter.split()[1])
@@ -248,6 +249,43 @@ class read_parameters:
             elif i_parameter.split()[0].upper() == 'Enhanced_sampling_method'.upper():
                 self.enhanced_sampling_parameters['enhanced_sampling_method'] = str(i_parameter.split()[1])
             
+            ########################## RE parameters  #############################
+
+            elif i_parameter.split()[0].upper() == 'RE_initialization'.upper():
+                if i_parameter.split()[1].upper() == 'True'.upper():
+                    self.re_parameters['re_initialization'] = True
+                elif i_parameter.split()[1].upper() == 'False'.upper():
+                    self.re_parameters['re_initialization'] = False
+                else:
+                    raise Exception('It is not clear whether the replica exchange sampling will be initialized.')
+                
+            elif i_parameter.split()[0].upper() == 'RE_lower_bound_temperature'.upper():
+                self.re_parameters['re_lower_bound_temperature'] = float(i_parameter.split()[1])
+                
+            elif i_parameter.split()[0].upper() == 'RE_upper_bound_temperature'.upper():
+                self.re_parameters['re_upper_bound_temperature'] = float(i_parameter.split()[1])
+                
+            elif i_parameter.split()[0].upper() == 'RE_number_of_replica'.upper():
+                self.re_parameters['re_number_of_replica'] = int(i_parameter.split()[1])
+                
+            elif i_parameter.split()[0].upper() == 'RE_replica_arrange'.upper():
+                self.re_parameters['re_replica_arrange'] = float(i_parameter.split()[1])
+                
+            elif i_parameter.split()[0].upper() == 'RE_replica_temperatures'.upper():
+                tmp_temperatures = []
+                for i in range(self.re_parameters['re_number_of_replica']):
+                    tmp_temperatures.append(float(i_parameter.split()[i+1]))
+                self.re_parameters['re_replica_temperatures'] = np.array(tmp_temperatures)
+                
+            elif i_parameter.split()[0].upper() == 'RE_swap_interval'.upper():
+                self.re_parameters['re_swap_interval'] = int(i_parameter.split()[1])
+                
+            elif i_parameter.split()[0].upper() == 'RE_init_structures_list'.upper():
+                self.re_parameters['re_init_structures_list'] = str(i_parameter.split()[1])
+                
+            elif i_parameter.split()[0].upper() == 'RE_energy_shift'.upper():
+                self.re_parameters['re_energy_shift'] = float(i_parameter.split()[1])
+
             ########################## ITS parameters    ##########################
 
             elif i_parameter.split()[0].upper() == 'ITS_initialization'.upper():
@@ -300,37 +338,6 @@ class read_parameters:
             elif i_parameter.split()[0].upper() == 'ITS_energy_shift'.upper():
                 self.its_parameters['its_energy_shift'] = float(i_parameter.split()[1])
             
-            ########################## RE parameters  #############################
-
-            elif i_parameter.split()[0].upper() == 'RE_initialization'.upper():
-                if i_parameter.split()[1].upper() == 'True'.upper():
-                    self.re_parameters['re_initialization'] = True
-                elif i_parameter.split()[1].upper() == 'False'.upper():
-                    self.re_parameters['re_initialization'] = False
-                else:
-                    raise Exception('It is not clear whether the replica exchange sampling will be initialized.')
-                
-            elif i_parameter.split()[0].upper() == 'RE_lower_bound_temperature'.upper():
-                self.re_parameters['re_lower_bound_temperature'] = float(i_parameter.split()[1])
-                
-            elif i_parameter.split()[0].upper() == 'RE_upper_bound_temperature'.upper():
-                self.re_parameters['re_upper_bound_temperature'] = float(i_parameter.split()[1])
-                
-            elif i_parameter.split()[0].upper() == 'RE_number_of_replica'.upper():
-                self.re_parameters['re_number_of_replica'] = int(i_parameter.split()[1])
-                
-            elif i_parameter.split()[0].upper() == 'RE_replica_arrange'.upper():
-                self.re_parameters['re_replica_arrange'] = float(i_parameter.split()[1])
-                
-            elif i_parameter.split()[0].upper() == 'RE_replica_temperatures'.upper():
-                tmp_temperatures = []
-                for i in range(self.re_parameters['re_number_of_replica']):
-                    tmp_temperatures.append(float(i_parameter.split()[i+1]))
-                self.re_parameters['re_replica_temperatures'] = np.array(tmp_temperatures)
-                
-            elif i_parameter.split()[0].upper() == 'RE_energy_shift'.upper():
-                self.re_parameters['re_energy_shift'] = float(i_parameter.split()[1])
-
             ########################## Wall potential #############################
 
             elif i_parameter.split()[0].upper() == 'Wall_potential'.upper():
@@ -462,6 +469,10 @@ class read_parameters:
     def get_morest_parameters(self, log_morest=None):
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_morest_parameters.npy', self.morest_parameters)
+        self.morest_parameters['phase_space_sampling'] = self.sampling_parameters['phase_space_sampling']
+        self.morest_parameters['trajectory_scattering'] = self.scattering_parameters['trajectory_scattering']
+        self.morest_parameters['enhanced_sampling'] = self.enhanced_sampling_parameters['enhanced_sampling']
+        self.morest_parameters['wall_potential'] = self.wall_potential_parameters['wall_potential']
         if type(log_morest) != type(None):
             for key in self.morest_parameters:
                 log_morest.write(key+' : '+str(self.morest_parameters[key])+'\n')
@@ -469,13 +480,12 @@ class read_parameters:
         return self.morest_parameters
 
     def get_sampling_parameters(self, log_morest=None):
-        if self.sampling_parameters['phase_space_sampling']:
-            if self.morest_parameters['morest_save_parameters_file']:
-                np.save('MoREST_sampling_parameters.npy', self.sampling_parameters)
-            if type(log_morest) != type(None):
-                for key in self.sampling_parameters:
-                    log_morest.write(key+' : '+str(self.sampling_parameters[key])+'\n')
-                log_morest.write('\n')
+        if self.morest_parameters['morest_save_parameters_file']:
+            np.save('MoREST_sampling_parameters.npy', self.sampling_parameters)
+        if type(log_morest) != type(None):
+            for key in self.sampling_parameters:
+                log_morest.write(key+' : '+str(self.sampling_parameters[key])+'\n')
+            log_morest.write('\n')
         return self.sampling_parameters
     
     def get_md_parameters(self, log_morest=None):
@@ -579,18 +589,17 @@ class read_parameters:
             self.scattering_parameters['scattering_traj_stop'] = traj_stop_CVs
             #print(type(self.scattering_parameters['scattering_traj_stop'])) # DEBUG
             #print(self.scattering_parameters['scattering_traj_stop'])       # DEBUG
-        if self.scattering_parameters['trajectory_scattering']:
-            if self.morest_parameters['morest_save_parameters_file']:
-                np.save('MoREST_scattering_parameters.npy', self.scattering_parameters)
-            if type(log_morest) != type(None):
-                for key in self.scattering_parameters:
-                    if key in ['scattering_time_step']:
-                        log_morest.write(key+' : '+str(self.scattering_parameters[key]/units.fs)+'\n')
-                    elif key in ['scattering_V_collision']:
-                        log_morest.write(key+' : '+str(self.scattering_parameters[key]*units.fs)+'\n')
-                    else:
-                        log_morest.write(key+' : '+str(self.scattering_parameters[key])+'\n')
-                log_morest.write('\n')
+        if self.morest_parameters['morest_save_parameters_file']:
+            np.save('MoREST_scattering_parameters.npy', self.scattering_parameters)
+        if type(log_morest) != type(None):
+            for key in self.scattering_parameters:
+                if key in ['scattering_time_step']:
+                    log_morest.write(key+' : '+str(self.scattering_parameters[key]/units.fs)+'\n')
+                elif key in ['scattering_V_collision']:
+                    log_morest.write(key+' : '+str(self.scattering_parameters[key]*units.fs)+'\n')
+                else:
+                    log_morest.write(key+' : '+str(self.scattering_parameters[key])+'\n')
+            log_morest.write('\n')
         return self.scattering_parameters
 
     def get_enhanced_sampling_parameters(self, log_morest=None):
@@ -603,6 +612,44 @@ class read_parameters:
                 log_morest.write('\n')
         return self.enhanced_sampling_parameters
         
+    def get_re_parameters(self, log_morest=None):
+        if not 're_replica_temperatures' in self.re_parameters:
+            if int(self.re_parameters['re_replica_arrange']) == -1:
+                replica_temperatures = np.linspace(self.re_parameters['re_lower_bound_temperature'],\
+                                                  self.re_parameters['re_upper_bound_temperature'],\
+                                                  num=self.re_parameters['re_number_of_replica'],\
+                                                  endpoint=True)
+            elif int(self.re_parameters['re_replica_arrange']) == 0:
+                replica_temperatures = np.geomspace(self.re_parameters['re_lower_bound_temperature'],\
+                                                   self.re_parameters['re_upper_bound_temperature'],\
+                                                   num=self.re_parameters['re_number_of_replica'],\
+                                                   endpoint=True)
+            else:
+                raise Exception('No RE_replica_arrange type was matched.')
+            self.re_parameters['re_replica_temperatures'] = replica_temperatures
+        
+        self.re_parameters['re_replica_beta'] = 1/(self.re_parameters['re_replica_temperatures'] * units.kB)
+        #                                            scipy.constants.value('Boltzmann constant in eV/K'))
+        if not 're_init_structures_list' in self.re_parameters:
+            self.re_parameters['re_multiple_initi_structures'] = False
+        else:
+            self.re_parameters['re_multiple_initi_structures'] = True
+        if self.re_parameters['re_initialization']:
+            self.re_parameters['re_current_swap_step'] = 0
+            self.re_parameters['re_current_replica'] = 0
+        else:
+            step_replica = np.loadtxt('MoREST_RE_current_step_replica.log')
+            self.re_parameters['re_current_swap_step'] = step_replica[0]
+            self.re_parameters['re_current_replica'] = step_replica[1]
+        if self.enhanced_sampling_parameters['enhanced_sampling']:
+            if self.morest_parameters['morest_save_parameters_file']:
+                np.save('MoREST_RE_parameters.npy',self.re_parameters)
+            if type(log_morest) != type(None):
+                for key in self.re_parameters:
+                    log_morest.write(key+' : '+str(self.re_parameters[key])+'\n')
+                log_morest.write('\n')
+        return self.re_parameters
+    
     def get_its_parameters(self, log_morest=None):
         self.its_parameters['its_criteria_pk'] = self.its_parameters['its_delta_pk'] / \
                                                 self.its_parameters['its_number_of_replica']
@@ -642,33 +689,6 @@ class read_parameters:
                 log_morest.write('\n')
         return self.its_parameters
             
-    def get_re_parameters(self, log_morest=None):
-        if not 're_replica_temperatures' in self.re_parameters:
-            if int(self.re_parameters['re_replica_arrange']) == -1:
-                replica_temperatures = np.linspace(self.re_parameters['re_lower_bound_temperature'],\
-                                                  self.re_parameters['re_upper_bound_temperature'],\
-                                                  num=self.re_parameters['re_number_of_replica'],\
-                                                  endpoint=True)
-            elif int(self.re_parameters['re_replica_arrange']) == 0:
-                replica_temperatures = np.geomspace(self.re_parameters['re_lower_bound_temperature'],\
-                                                   self.re_parameters['re_upper_bound_temperature'],\
-                                                   num=self.re_parameters['re_number_of_replica'],\
-                                                   endpoint=True)
-            else:
-                raise Exception('No RE_replica_arrange type was matched.')
-            self.re_parameters['re_replica_temperatures'] = replica_temperatures
-        
-        self.re_parameters['re_replica_beta'] = 1/(self.re_parameters['re_replica_temperatures'] * units.kB)
-        #                                            scipy.constants.value('Boltzmann constant in eV/K'))
-        if self.enhanced_sampling_parameters['enhanced_sampling']:
-            if self.morest_parameters['morest_save_parameters_file']:
-                np.save('MoREST_RE_parameters.npy',self.re_parameters)
-            if type(log_morest) != type(None):
-                for key in self.re_parameters:
-                    log_morest.write(key+' : '+str(self.re_parameters[key])+'\n')
-                log_morest.write('\n')
-        return self.re_parameters
-    
     def get_wall_potential_parameters(self, log_morest=None):
         if self.wall_potential_parameters['wall_potential']:
             if self.morest_parameters['morest_save_parameters_file']:
