@@ -55,22 +55,22 @@ class velocity_Verlet(initialize_sampling):
     MoREST.str_new (default name) records the current xyz structure of the system
     '''
     
-    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, traj_file=None, work_T=None, calculator=None, v_rescaling=False, sv_rescaling=False):
+    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, traj_file=None, T_simulation=None, calculator=None, v_rescaling=False, sv_rescaling=False):
         super(velocity_Verlet, self).__init__(morest_parameters, sampling_parameters, calculator)
         self.md_parameters = md_parameters
         self.traj_file = traj_file
         self.v_rescaling = v_rescaling
         self.sv_rescaling = sv_rescaling
-        if type(work_T) == type(None):
-            self.work_T = self.md_parameters['md_temperature']
+        if type(T_simulation) == type(None):
+            self.T_simulation = self.md_parameters['md_temperature']
         else:
-            self.work_T = work_T
+            self.T_simulation = T_simulation
         
         if self.sampling_parameters['sampling_initialization']:
             self.current_step = 0
             self.current_step, self.current_system = self.get_current_structure(molecule)
-            if self.work_T > 1e-6:
-                MaxwellBoltzmannDistribution(self.current_system, temperature_K = self.work_T)
+            if self.T_simulation > 1e-6:
+                MaxwellBoltzmannDistribution(self.current_system, temperature_K = self.T_simulation)
             self.current_traj = []
             self.current_traj.append(self.current_system)
             if type(self.traj_file) == type(None):
@@ -87,7 +87,7 @@ class velocity_Verlet(initialize_sampling):
         
         ### kinetic energy at simulation temperature
         Nf = 3 * self.n_atom
-        self.K_simulation = Nf/2 * units.kB * self.work_T # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+        self.K_simulation = Nf/2 * units.kB * self.T_simulation # Ek = 1/2 m v^2 = 3/2 kB T for each particle
         
         if self.v_rescaling:
             self.velocity_rescaling(self.current_system)
@@ -185,13 +185,13 @@ class velocity_Verlet(initialize_sampling):
     
     def velocity_rescaling(self):
         dT = self.sampling_parameters['nvt_vr_dt']
-        lower_T = self.work_T - dT
-        upper_T = self.work_T + dT
+        lower_T = self.T_simulation - dT
+        upper_T = self.T_simulation + dT
         Ek = self.current_system.get_kinetic_energy()
         Ti = 2/3 * Ek/units.kB /self.n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
         velocities = self.current_system.get_velocities()
         if Ti > upper_T or Ti < lower_T:
-            factor = np.sqrt(self.work_T / Ti)
+            factor = np.sqrt(self.T_simulation / Ti)
             self.current_system.set_velocities(factor * velocities)
         
     def stochastic_velocity_rescaling(self):

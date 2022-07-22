@@ -173,10 +173,10 @@ class re:
             self.replica_log_file_list.append(tmp_replica_log_file)
             self.replica_traj_file_list.append(tmp_replica_traj_file)
 
-    def get_init_molecules():
+    def get_current_molecules(self):
         return molecules
 
-    def get_traj_files():
+    def get_traj_files(self):
         return traj_files
 
     def replica_exchange(self):

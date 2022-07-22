@@ -10,10 +10,13 @@ from collective_variable import collective_variables
 
 class morest:
     '''
-    The Molecular Reaction Simulation Toolkits module.
+    The Molecular Reaction Simulation Toolkits module. 
     '''
 
     def __init__(self, parameter_file='MoREST.in', calculator=None):
+        '''
+        Calculator is required, when many body potential is specified as 'on_the_fly'.
+        '''
         MoREST_parameters = read_parameters(parameter_file=parameter_file)
         self.morest_parameters = MoREST_parameters.get_morest_parameters()
 
@@ -127,17 +130,16 @@ class morest:
                 if self.re_parameters['re_initialization']:
                     try:
                         os.remove(file_name_title+'current_step_replica.log')
-                        os.remove(file_name_title+'current_temperature.log')
                         for i,T in enumerate(self.re_parameters['re_replica_temperatures']):
                             os.remove(file_name_title+str(T)+'K.log')
                             os.remove(file_name_title+str(T)+'K_traj.xyz')
-                            os.rempve(file_name_title+'replica_'+str(i)+'.log')
-                            os.rempve(file_name_title+'replica_'+str(i)+'_traj.xyz')
+                            os.remove(file_name_title+'replica_'+str(i)+'.log')
+                            os.remove(file_name_title+'replica_'+str(i)+'_traj.xyz')
                     except:
                         pass
                     self.log_morest.write('Replica exchange method is initialized.\n\n')
                 self.re_sampling = re(self.re_parameters)
-                molecules = self.re_sampling.get_init_molecules()
+                molecules = self.re_sampling.get_current_molecules()
                 traj_files = self.re_sampling.get_traj_files()
                 self.sampling_job = []
                 for i,T in enumerate(self.re_parameters['re_replica_temperatures']):
@@ -239,7 +241,7 @@ class morest:
                 for i_sampling_job in self.sampling_job:
                     current_step.append(i_sampling_job.current_step)
                     current_system.append(i_sampling_job.current_system)
-                while current_step <= simulation_maxsteps:
+                while current_step[-1] <= simulation_maxsteps:
                     for i,i_sampling_job in enumerate(self.sampling_job):
                         if self.wall_potential_parameters['wall_potential']:
                             general_coordinate = current_system[i].get_positions()
@@ -247,6 +249,7 @@ class morest:
                             current_step[i], current_system[i] = i_sampling_job.generate_new_step(bias_forces)
                         else:
                             current_step[i], current_system[i] = i_sampling_job.generate_new_step()
+                    current_step, current_system = self.enhanced_sampling_re(self, current_step, current_system)
 
             elif self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['its'.upper()]:
                 current_step, current_system = self.sampling_job.current_step, self.sampling_job.current_system
@@ -258,7 +261,7 @@ class morest:
                         bias_forces = bias_its_forces + bias_forces_wall_potential
                     else:
                         bias_forces = bias_its_forces
-                    current_step, current_system= self.sampling_job.generate_new_step(bias_forces)
+                    current_step, current_system = self.sampling_job.generate_new_step(bias_forces)
 
         else:
             current_step, current_system = self.sampling_job.current_step, self.sampling_job.current_system
@@ -274,6 +277,12 @@ class morest:
         self.mission_complete()
 
     def trajectory_scattering(self):
+        '''
+        This function is called to excute trajectory scattering method.
+        --------
+        INPUT:
+            calculator: The same as the calculator in ASE. It is required, when many body potential is specified as 'on_the_fly'.
+        '''
         current_step, current_system = self.scattering_job.current_step, self.scattering_job.current_system
         simulation_maxsteps = self.scattering_parameters['scattering_traj_length']
         while current_step <= simulation_maxsteps:
@@ -291,6 +300,9 @@ class morest:
         self.log_morest.write('Trajectory scattering with molecular dynamics method is finished!\n')
         self.mission_complete()
     
+    def enhanced_sampling_re(self, current_step, current_system):
+        return current_step, current_system
+
     def enhanced_sampling_its(self, current_step):
         '''
         This function is called to excute enhanced sampling by phase space sampling module.
