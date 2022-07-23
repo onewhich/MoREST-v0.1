@@ -47,7 +47,7 @@ RE_number_of_replica              10
 RE_replica_arrange                0     # -1: arithmetic progression   0:  geometric progression
 #RE_replica_temperatures          290 310 330 350 370   # specify or default
 RE_swap_interval                  10    # replica will swap the temperature after every interval steps.
-RE_init_structures_list           MoREST.str_re # Includes a series initial/updated structures for each temperature replica, respectively. The number of structures should equal to the number of replica. Default in extxyz format.
+#RE_init_structures_list           MoREST.str_re # Includes a series initial/updated structures for each temperature replica, respectively. The number of structures should equal to the number of replica. Default in extxyz format.
 RE_energy_shift                   0
 ITS_initialization                True  # Set True for the first time running ITS. It will delete all relvent files such as MoREST_TIS_nk.npy, MoREST_ITS_pk.npy.
 ITS_lower_bound_temperature       1000
