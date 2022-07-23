@@ -57,6 +57,16 @@ class re:
             self.replica_index_file.write('    '+self.replica_index[i])
         self.replica_index_file.write('\n')
 
+    def remd_swap(self, i, current_step, current_system):
+        T_replica = self.re_parameters['re_replica_temperatures']
+        current_system[i].set_momenta(np.sqrt(T_replica[i+1]/T_replica[i] * current_system[i].get_momenta()))
+        current_system[i+1].set_momenta(np.sqrt(T_replica[i]/T_replica[i+1] * current_system[i+1].get_momenta()))
+
+        current_step[i], current_step[i+1] = current_step[i+1], current_step[i]
+        current_system[i], current_system[i+1] = current_system[i+1], current_system[i]
+        self.replica_index[i], self.replica_index[i+1] = self.replica_index[i+1], self.replica_index[i]
+        return current_step, current_system
+
     def remd(self, current_step, current_potential_energy, current_system):
         replica_beta = self.re_parameters['re_replica_beta']
         self.re_parameters['re_current_swap_step'] = int(current_step/self.re_parameters['re_swap_interval'])
@@ -67,15 +77,11 @@ class re:
                 delta = (replica_beta[i+1] - replica_beta[i]) * (current_potential_energy[i] - current_potential_energy[i+1])
                 if delta <= 0:
                     #p_swap = 1
-                    current_step[i], current_step[i+1] = current_step[i+1], current_step[i]
-                    current_system[i], current_system[i+1] = current_system[i+1], current_system[i]
-                    self.replica_index[i], self.replica_index[i+1] = self.replica_index[i+1], self.replica_index[i]
+                    current_step, current_system = self.remd_swap(i, current_step, current_system)
                 else:
                     p_swap = np.exp(-delta)
                     if p_swap >= np.random.random():
-                        current_step[i], current_step[i+1] = current_step[i+1], current_step[i]
-                        current_system[i], current_system[i+1] = current_system[i+1], current_system[i]
-                        self.replica_index[i], self.replica_index[i+1] = self.replica_index[i+1], self.replica_index[i]
+                        current_step, current_system = self.remd_swap(i, current_step, current_system)
             self.write_replica_index()
         return current_step, current_system
 
