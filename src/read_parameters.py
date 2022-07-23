@@ -53,7 +53,6 @@ class read_parameters:
         self.re_parameters = {}
         self.re_parameters['re_initialization'] = True
         self.re_parameters['re_replica_arrange'] = 0
-        self.re_parameters['re_init_structures_list'] = None
         self.re_parameters['re_energy_shift'] = 0
         self.its_parameters = {}
         self.its_parameters['its_initialization'] = True
@@ -603,13 +602,12 @@ class read_parameters:
         return self.scattering_parameters
 
     def get_enhanced_sampling_parameters(self, log_morest=None):
-        if self.enhanced_sampling_parameters['enhanced_sampling']:
-            if self.morest_parameters['morest_save_parameters_file']:
-                np.save('MoREST_enhanced_sampling_parameters.npy', self.enhanced_sampling_parameters)
-            if type(log_morest) != type(None):
-                for key in self.enhanced_sampling_parameters:
-                    log_morest.write(key+' : '+str(self.enhanced_sampling_parameters[key])+'\n')
-                log_morest.write('\n')
+        if self.morest_parameters['morest_save_parameters_file']:
+            np.save('MoREST_enhanced_sampling_parameters.npy', self.enhanced_sampling_parameters)
+        if type(log_morest) != type(None):
+            for key in self.enhanced_sampling_parameters:
+                log_morest.write(key+' : '+str(self.enhanced_sampling_parameters[key])+'\n')
+            log_morest.write('\n')
         return self.enhanced_sampling_parameters
         
     def get_re_parameters(self, log_morest=None):
@@ -634,20 +632,19 @@ class read_parameters:
             self.re_parameters['re_multiple_initi_structures'] = False
         else:
             self.re_parameters['re_multiple_initi_structures'] = True
-        if self.re_parameters['re_initialization']:
-            self.re_parameters['re_current_swap_step'] = 0
-            self.re_parameters['re_current_replica'] = 0
-        else:
-            step_replica = np.loadtxt('MoREST_RE_current_step_replica.log')
-            self.re_parameters['re_current_swap_step'] = step_replica[0]
-            self.re_parameters['re_current_replica'] = step_replica[1]
-        if self.enhanced_sampling_parameters['enhanced_sampling']:
-            if self.morest_parameters['morest_save_parameters_file']:
-                np.save('MoREST_RE_parameters.npy',self.re_parameters)
-            if type(log_morest) != type(None):
-                for key in self.re_parameters:
-                    log_morest.write(key+' : '+str(self.re_parameters[key])+'\n')
-                log_morest.write('\n')
+        #if self.re_parameters['re_initialization']:
+        #    self.re_parameters['re_current_swap_step'] = 0
+        #    self.re_parameters['re_current_replica'] = 0
+        #else:
+        #    step_replica = np.loadtxt('MoREST_RE_current_step_replica.log')
+        #    self.re_parameters['re_current_swap_step'] = step_replica[0]
+        #    self.re_parameters['re_current_replica'] = step_replica[1]
+        if self.morest_parameters['morest_save_parameters_file']:
+            np.save('MoREST_RE_parameters.npy',self.re_parameters)
+        if type(log_morest) != type(None):
+            for key in self.re_parameters:
+                log_morest.write(key+' : '+str(self.re_parameters[key])+'\n')
+            log_morest.write('\n')
         return self.re_parameters
     
     def get_its_parameters(self, log_morest=None):
@@ -680,42 +677,38 @@ class read_parameters:
                                                    self.its_parameters['its_number_of_replica']
         #with open('MoREST_ITS_parameters.json','w') as its_json:
         #    json.dump(self.its_parameters,its_json, cls=NumpyArrayEncoder)
-        if self.enhanced_sampling_parameters['enhanced_sampling']:
-            if self.morest_parameters['morest_save_parameters_file']:
-                np.save('MoREST_ITS_parameters.npy',self.its_parameters)
-            if type(log_morest) != type(None):
-                for key in self.its_parameters:
-                    log_morest.write(key+' : '+str(self.its_parameters[key])+'\n')
-                log_morest.write('\n')
+        if self.morest_parameters['morest_save_parameters_file']:
+            np.save('MoREST_ITS_parameters.npy',self.its_parameters)
+        if type(log_morest) != type(None):
+            for key in self.its_parameters:
+                log_morest.write(key+' : '+str(self.its_parameters[key])+'\n')
+            log_morest.write('\n')
         return self.its_parameters
             
     def get_wall_potential_parameters(self, log_morest=None):
-        if self.wall_potential_parameters['wall_potential']:
-            if self.morest_parameters['morest_save_parameters_file']:
-                np.save('MoREST_wall_potential_parameters.npy', self.wall_potential_parameters)
-            if type(log_morest) != type(None):
-                for key in self.wall_potential_parameters:
-                    log_morest.write(key+' : '+str(self.wall_potential_parameters[key])+'\n')
-                log_morest.write('\n')
+        if self.morest_parameters['morest_save_parameters_file']:
+            np.save('MoREST_wall_potential_parameters.npy', self.wall_potential_parameters)
+        if type(log_morest) != type(None):
+            for key in self.wall_potential_parameters:
+                log_morest.write(key+' : '+str(self.wall_potential_parameters[key])+'\n')
+            log_morest.write('\n')
         return self.wall_potential_parameters
     
     def get_plane_wall_parameters(self, log_morest=None):
-        if self.wall_potential_parameters['wall_potential']:
-            if self.morest_parameters['morest_save_parameters_file']:
-                np.save('MoREST_plane_wall_parameters.npy', self.plane_wall_parameters)
-            if type(log_morest) != type(None):
-                for key in self.plane_wall_parameters:
-                    log_morest.write(key+' : '+str(self.plane_wall_parameters[key])+'\n')
-                log_morest.write('\n')
+        if self.morest_parameters['morest_save_parameters_file']:
+            np.save('MoREST_plane_wall_parameters.npy', self.plane_wall_parameters)
+        if type(log_morest) != type(None):
+            for key in self.plane_wall_parameters:
+                log_morest.write(key+' : '+str(self.plane_wall_parameters[key])+'\n')
+            log_morest.write('\n')
         return self.plane_wall_parameters
 
     def get_spherical_wall_parameters(self, log_morest=None):
-        if self.wall_potential_parameters['wall_potential']:
-            if self.morest_parameters['morest_save_parameters_file']:
-                np.save('MoREST_spherical_wall_parameters.npy', self.spherical_wall_parameters)
-            if type(log_morest) != type(None):
-                for key in self.spherical_wall_parameters:
-                    log_morest.write(key+' : '+str(self.spherical_wall_parameters[key])+'\n')
-                log_morest.write('\n')
+        if self.morest_parameters['morest_save_parameters_file']:
+            np.save('MoREST_spherical_wall_parameters.npy', self.spherical_wall_parameters)
+        if type(log_morest) != type(None):
+            for key in self.spherical_wall_parameters:
+                log_morest.write(key+' : '+str(self.spherical_wall_parameters[key])+'\n')
+            log_morest.write('\n')
         return self.spherical_wall_parameters
     

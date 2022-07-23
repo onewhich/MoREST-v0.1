@@ -55,10 +55,11 @@ class velocity_Verlet(initialize_sampling):
     MoREST.str_new (default name) records the current xyz structure of the system
     '''
     
-    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, traj_file=None, T_simulation=None, calculator=None, v_rescaling=False, sv_rescaling=False):
+    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, v_rescaling=False, sv_rescaling=False):
         super(velocity_Verlet, self).__init__(morest_parameters, sampling_parameters, calculator)
         self.md_parameters = md_parameters
-        self.traj_file = traj_file
+        self.traj_file_name = traj_file_name
+        self.log_file_name = log_file_name
         self.v_rescaling = v_rescaling
         self.sv_rescaling = sv_rescaling
         if type(T_simulation) == type(None):
@@ -73,15 +74,15 @@ class velocity_Verlet(initialize_sampling):
                 MaxwellBoltzmannDistribution(self.current_system, temperature_K = self.T_simulation)
             self.current_traj = []
             self.current_traj.append(self.current_system)
-            if type(self.traj_file) == type(None):
+            if type(self.traj_file_name) == type(None):
                 write_xyz_traj('MoREST_traj.xyz', self.current_system)
             else:
-                write_xyz_traj(self.traj_file, self.current_system)
+                write_xyz_traj(self.traj_file_name, self.current_system)
         else:
-            if type(self.traj_file) == type(None):
+            if type(self.traj_file_name) == type(None):
                 self.current_traj = read_xyz_traj('MoREST_traj.xyz')
             else:
-                self.current_traj = read_xyz_traj(self.traj_file)
+                self.current_traj = read_xyz_traj(self.traj_file_name)
             self.current_step = (len(self.current_traj) - 1) * self.sampling_parameters['sampling_traj_interval']
             self.current_step, self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
         
@@ -93,7 +94,10 @@ class velocity_Verlet(initialize_sampling):
             self.velocity_rescaling(self.current_system)
         
         if self.sampling_parameters['sampling_initialization']:
-            self.MD_log = open('MoREST_MD.log', 'w', buffering=1)
+            if type(self.log_file_name) == type(None):
+                self.MD_log = open('MoREST_MD.log', 'w', buffering=1)
+            else:
+                self.MD_log = open(self.log_file_name, 'w', buffering=1)
             if self.sv_rescaling:
                 self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), Effective energy (eV)\n')   
                 self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses, self.K_simulation, self.sampling_parameters['nvt_svr_tau'], 0, 0)
@@ -101,7 +105,10 @@ class velocity_Verlet(initialize_sampling):
                 self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
                 write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
         else:
-            self.MD_log = open('MoREST_MD.log', 'a', buffering=1)
+            if type(self.log_file_name) == type(None):
+                self.MD_log = open('MoREST_MD.log', 'a', buffering=1)
+            else:
+                self.MD_log = open(self.log_file_name, 'a', buffering=1)
             if self.sv_rescaling:
                 self.d_Ee = 0
                 self.Wt =  0
@@ -164,22 +171,25 @@ class velocity_Verlet(initialize_sampling):
             #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
             ZeroRotation(self.current_system)
         
-        write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
+        if type(self.T_simulation) == type(None):
+            write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
+        else:
+            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'.str_new', self.current_system)
         
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             #print(next_coordinates) #DEGUB
             #print(next_forces)    #DEBUG
             self.current_traj.append(self.current_system)
-            if type(self.traj_file) == type(None):
+            if type(self.traj_file_name) == type(None):
                 write_xyz_traj('MoREST_traj.xyz', self.current_system)
             else:
-                write_xyz_traj(self.traj_file, self.current_system)
-            kinetic_energy = self.current_system.get_kinetic_energy()
+                write_xyz_traj(self.traj_file_name, self.current_system)
+            self.kinetic_energy = self.current_system.get_kinetic_energy()
             if self.sv_rescaling:
                 #self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses, self.K_simulation, self.sampling_parameters['nvt_svr_tau'], self.d_Ee, self.Wt+R_t)
-                self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses, self.K_simulation, self.sampling_parameters['nvt_svr_tau'], self.d_Ee, R_t)
+                self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses, self.K_simulation, self.sampling_parameters['nvt_svr_tau'], self.d_Ee, R_t)
             else:
-                write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses)
+                write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses)
         
         return self.current_step, self.current_system
     

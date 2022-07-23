@@ -2,6 +2,82 @@ import os
 import numpy as np
 #import scipy.constants
 from ase import units
+from structure import read_xyz_file, read_xyz_traj
+
+class re:
+    '''
+    The replica exchange molecular dynamics / Monte Carlo module
+    Y. Sugita, Y. Okamotor Chemical Physics Letters 314 (1999) 141–151
+    '''
+    
+    def __init__(self, re_parameters):
+        self.re_parameters = re_parameters
+        self.file_name_title = 'MoREST_RE_'
+
+        self.replica_index_file = open(self.file_name_title+'replica_index.log','a',buffering=1)
+        if self.re_parameters['re_initialization']:
+            self.replica_index = np.arange(self.re_parameters['re_number_of_replica'])
+            self.write_replica_index()
+        else:
+            self.replica_index = np.loadtxt(self.file_name_title+'replica_index.log',dtype='int')[-1]
+        
+        self.temperature_log_file_list = []
+        self.temperature_traj_file_name_list = []
+        #self.replica_log_file_list = []
+        #self.replica_traj_file_name_list = []
+        for i,T in enumerate(self.re_parameters['re_replica_temperatures']):
+            self.temperature_log_file_list.append(self.file_name_title+str(T)+'K.log')
+            self.temperature_traj_file_name_list.append(self.file_name_title+str(T)+'K_traj.xyz')
+            #self.replica_log_file_list.append(self.file_name_title+'replica_'+str(i)+'log')
+            #self.replica_traj_file_name_list.append(self.file_name_title+'replica_'+str(i)+'_traj.xyz')
+
+    def get_current_molecules(self):
+        if self.re_parameters['re_initialization']:
+            if self.re_parameters['re_multiple_initi_structures']:
+                current_molecules = read_xyz_traj(self.re_parameters['re_init_structures_list'])
+            else:
+                current_molecules = []
+                for i in range(self.re_parameters['re_number_of_replica']):
+                    current_molecules.append(None)
+        else:
+            current_molecules = []
+            for i in range(self.re_parameters['re_number_of_replica']):
+                current_molecules.append(read_xyz_file(self.temperature_traj_file_name_list[i]))
+        return current_molecules
+
+    def get_log_file_name(self):
+        return self.temperature_log_file_list
+
+    def get_traj_file_name(self):
+        return self.temperature_traj_file_name_list
+
+    def write_replica_index(self):
+        self.replica_index_file.write(self.replica_index[0])
+        for i in range(1, self.re_parameters['re_number_of_replica']):
+            self.replica_index_file.write('    '+self.replica_index[i])
+        self.replica_index_file.write('\n')
+
+    def remd(self, current_step, current_potential_energy, current_system):
+        replica_beta = self.re_parameters['re_replica_beta']
+        self.re_parameters['re_current_swap_step'] = int(current_step/self.re_parameters['re_swap_interval'])
+
+        if current_step[-1] % self.re_parameters['re_swap_interval'] == 0:
+            starting_index = self.re_parameters['re_current_swap_step'] % 2
+            for i in range(starting_index, self.re_parameters['re_number_of_replica']-1, 2):
+                delta = (replica_beta[i+1] - replica_beta[i]) * (current_potential_energy[i] - current_potential_energy[i+1])
+                if delta <= 0:
+                    #p_swap = 1
+                    current_step[i], current_step[i+1] = current_step[i+1], current_step[i]
+                    current_system[i], current_system[i+1] = current_system[i+1], current_system[i]
+                    self.replica_index[i], self.replica_index[i+1] = self.replica_index[i+1], self.replica_index[i]
+                else:
+                    p_swap = np.exp(-delta)
+                    if p_swap >= np.random.random():
+                        current_step[i], current_step[i+1] = current_step[i+1], current_step[i]
+                        current_system[i], current_system[i+1] = current_system[i+1], current_system[i]
+                        self.replica_index[i], self.replica_index[i+1] = self.replica_index[i+1], self.replica_index[i]
+            self.write_replica_index()
+        return current_step, current_system
 
 class its:
     '''
@@ -145,44 +221,3 @@ class its:
         np.savetxt('MoREST_ITS_pk.npy',p_k)
         #print(p_k)
         return p_k,n_k
-
-class re:
-    '''
-    The replica exchange molecular dynamics / Monte Carlo module
-    Y. Sugita, Y. Okamotor Chemical Physics Letters 314 (1999) 141–151
-    '''
-    
-    def __init__(self, re_parameters):
-        self.re_parameters = re_parameters
-        self.file_name_title = 'MoREST_RE_'
-        try:
-            self.re_parameters['re_replica_temperatures'] = np.loadtxt(self.file_name_title+'current_temperature.log')
-        except:
-            pass
-        self.temperature_log_file_list = []
-        self.temperature_traj_file_list = []
-        self.replica_log_file_list = []
-        self.replica_traj_file_list = []
-        for i,T in enumerate(self.re_parameters['re_replica_temperatures']):
-            tmp_temperature_log_file = open(self.file_name_title+str(T)+'K.log','a')
-            tmp_temperature_traj_file = open(self.file_name_title+str(T)+'K_traj.xyz','a')
-            self.temperature_log_file_list.append(tmp_temperature_log_file)
-            self.temperature_traj_file_list.append(tmp_temperature_traj_file)
-            tmp_replica_log_file = open(self.file_name_title+'replica_'+str(i)+'log','a')
-            tmp_replica_traj_file = open(self.file_name_title+'replica_'+str(i)+'_traj.xyz','a')
-            self.replica_log_file_list.append(tmp_replica_log_file)
-            self.replica_traj_file_list.append(tmp_replica_traj_file)
-
-    def get_current_molecules(self):
-        return molecules
-
-    def get_traj_files(self):
-        return traj_files
-
-    def replica_exchange(self):
-        return 0
-
-    def write_current_swap_step_replica(self):
-        self.current_swap_step_replica = open(self.file_name_title+'current_step_replica.log','w')
-        self.current_swap_step_replica.write(str(self.re_parameters['re_current_swap_step'])+'    '+str(self.re_parameters['re_current_replica']))
-        self.current_swap_step_replica.close()

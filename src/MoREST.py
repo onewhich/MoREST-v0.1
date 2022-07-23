@@ -126,33 +126,37 @@ class morest:
                         self.log_morest.write('Can not find parameters files: MoREST_RE_parameters.npy\n Read parameters from input file.\n\n')
                         self.re_parameters = MoREST_parameters.get_re_parameters(self.log_morest)
 
-                file_name_title = 'MoREST_RE_'
+                re_file_name_title = 'MoREST_RE_'
                 if self.re_parameters['re_initialization']:
                     try:
-                        os.remove(file_name_title+'current_step_replica.log')
+                        os.remove(re_file_name_title+'replica_index.log')
                         for i,T in enumerate(self.re_parameters['re_replica_temperatures']):
-                            os.remove(file_name_title+str(T)+'K.log')
-                            os.remove(file_name_title+str(T)+'K_traj.xyz')
-                            os.remove(file_name_title+'replica_'+str(i)+'.log')
-                            os.remove(file_name_title+'replica_'+str(i)+'_traj.xyz')
+                            os.remove(re_file_name_title+str(T)+'K.log')
+                            os.remove(re_file_name_title+str(T)+'K_traj.xyz')
+                            os.remove(re_file_name_title+'replica_'+str(i)+'.log')
+                            os.remove(re_file_name_title+'replica_'+str(i)+'_traj.xyz')
                     except:
                         pass
                     self.log_morest.write('Replica exchange method is initialized.\n\n')
                 self.re_sampling = re(self.re_parameters)
                 molecules = self.re_sampling.get_current_molecules()
-                traj_files = self.re_sampling.get_traj_files()
+                if len(molecules) != len(self.re_parameters['re_replica_temperatures']):
+                    self.log_morest.write('The number of structures do not fit the number of temperatures.\n\n')
+                    raise Exception('The number of structures do not fit the number of temperatures.')
+                log_file_name = self.re_sampling.get_log_file_name()
+                traj_file_name = self.re_sampling.get_traj_file_name()
                 self.sampling_job = []
                 for i,T in enumerate(self.re_parameters['re_replica_temperatures']):
                     if self.sampling_parameters['sampling_method'].upper() in ['MD']:
                         if self.sampling_parameters['sampling_ensemble'].upper() in ['NVE_VV']:
                             tmp_sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, \
-                                                                molecules[i], traj_files[i], T, calculator=calculator)
+                                                                molecules[i], log_file_name[i], traj_file_name[i], T, calculator=calculator)
                         elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_VR']:
                             tmp_sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, \
-                                                                molecules[i], traj_files[i], T, calculator=calculator, v_rescaling=True)
+                                                                molecules[i], log_file_name[i], traj_file_name[i], T, calculator=calculator, v_rescaling=True)
                         elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
                             tmp_sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, \
-                                                                molecules[i], traj_files[i], T, calculator=calculator, sv_rescaling=True)
+                                                                molecules[i], log_file_name[i], traj_file_name[i], T, calculator=calculator, sv_rescaling=True)
                     self.sampling_job.append(tmp_sampling_job)
                     self.log_morest.write('Replica '+str(i)+' at '+str(T)+' K is ready.\n')
                 self.log_morest.write('\n')
@@ -238,18 +242,35 @@ class morest:
             if self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['re'.upper()]:
                 current_step = []
                 current_system = []
+                current_potential_energy = []
                 for i_sampling_job in self.sampling_job:
                     current_step.append(i_sampling_job.current_step)
                     current_system.append(i_sampling_job.current_system)
+                    current_potential_energy.append(i_sampling_job.current_potential_energy)
+                current_max_step = np.max(current_step)
+                # --------------- (REMD) syncrhronize all replica to the same MD steps ----------------------
+                for i,i_sampling_job in enumerate(self.sampling_job):
+                    while current_step[i] < current_max_step:
+                        if self.wall_potential_parameters['wall_potential']:
+                            general_coordinate = current_system[i].get_positions()
+                            bias_forces = self.wall_potential(general_coordinate)
+                            current_step[i], current_system[i] = i_sampling_job.generate_new_step(bias_forces)
+                            current_potential_energy[i] = i_sampling_job.current_potential_energy
+                        else:
+                            current_step[i], current_system[i] = i_sampling_job.generate_new_step()
+                            current_potential_energy[i] = i_sampling_job.current_potential_energy
+                # --------------- (REMD) run ----------------------------------------------------------------
                 while current_step[-1] <= simulation_maxsteps:
                     for i,i_sampling_job in enumerate(self.sampling_job):
                         if self.wall_potential_parameters['wall_potential']:
                             general_coordinate = current_system[i].get_positions()
                             bias_forces = self.wall_potential(general_coordinate)
                             current_step[i], current_system[i] = i_sampling_job.generate_new_step(bias_forces)
+                            current_potential_energy[i] = i_sampling_job.current_potential_energy
                         else:
                             current_step[i], current_system[i] = i_sampling_job.generate_new_step()
-                    current_step, current_system = self.enhanced_sampling_re(self, current_step, current_system)
+                            current_potential_energy[i] = i_sampling_job.current_potential_energy
+                    current_step, current_system = self.re_sampling.remd(current_step, current_potential_energy, current_system)
 
             elif self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['its'.upper()]:
                 current_step, current_system = self.sampling_job.current_step, self.sampling_job.current_system
@@ -299,9 +320,6 @@ class morest:
                 break
         self.log_morest.write('Trajectory scattering with molecular dynamics method is finished!\n')
         self.mission_complete()
-    
-    def enhanced_sampling_re(self, current_step, current_system):
-        return current_step, current_system
 
     def enhanced_sampling_its(self, current_step):
         '''
