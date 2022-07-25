@@ -52,7 +52,7 @@ class re:
         return self.temperature_traj_file_name_list
 
     def write_replica_index(self):
-        self.replica_index_file.write(self.replica_index[0])
+        self.replica_index_file.write(str(self.replica_index[0]))
         for i in range(1, self.re_parameters['re_number_of_replica']):
             self.replica_index_file.write('    '+self.replica_index[i])
         self.replica_index_file.write('\n')
