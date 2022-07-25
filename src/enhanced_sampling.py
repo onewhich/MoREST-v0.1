@@ -69,6 +69,7 @@ class re:
 
     def remd(self, current_step, current_potential_energy, current_system):
         current_step = np.array(current_step)
+        current_potential_energy = np.array(current_potential_energy)
         replica_beta = self.re_parameters['re_replica_beta']
         self.re_parameters['re_current_swap_step'] = int(current_step/self.re_parameters['re_swap_interval'])
 
