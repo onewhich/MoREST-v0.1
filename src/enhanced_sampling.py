@@ -74,7 +74,7 @@ class re:
         self.re_parameters['re_current_swap_step'] = (current_step/self.re_parameters['re_swap_interval']).astype(int)
 
         if current_step[-1] % self.re_parameters['re_swap_interval'] == 0:
-            starting_index = self.re_parameters['re_current_swap_step'] % 2
+            starting_index = self.re_parameters['re_current_swap_step'][-1] % 2
             for i in range(starting_index, self.re_parameters['re_number_of_replica']-1, 2):
                 delta = (replica_beta[i+1] - replica_beta[i]) * (current_potential_energy[i] - current_potential_energy[i+1])
                 if delta <= 0:
