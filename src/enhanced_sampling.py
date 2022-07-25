@@ -71,7 +71,7 @@ class re:
         current_step = np.array(current_step)
         current_potential_energy = np.array(current_potential_energy)
         replica_beta = self.re_parameters['re_replica_beta']
-        self.re_parameters['re_current_swap_step'] = int(current_step/self.re_parameters['re_swap_interval'])
+        self.re_parameters['re_current_swap_step'] = (current_step/self.re_parameters['re_swap_interval']).astype(int)
 
         if current_step[-1] % self.re_parameters['re_swap_interval'] == 0:
             starting_index = self.re_parameters['re_current_swap_step'] % 2
