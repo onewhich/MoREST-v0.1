@@ -174,7 +174,7 @@ class velocity_Verlet(initialize_sampling):
         if type(self.T_simulation) == type(None):
             write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
         else:
-            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'.str_new', self.current_system)
+            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.str_new', self.current_system)
         
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             #print(next_coordinates) #DEGUB
