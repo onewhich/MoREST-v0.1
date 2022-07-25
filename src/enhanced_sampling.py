@@ -54,7 +54,7 @@ class re:
     def write_replica_index(self):
         self.replica_index_file.write(str(self.replica_index[0]))
         for i in range(1, self.re_parameters['re_number_of_replica']):
-            self.replica_index_file.write('    '+self.replica_index[i])
+            self.replica_index_file.write('    '+str(self.replica_index[i]))
         self.replica_index_file.write('\n')
 
     def remd_swap(self, i, current_step, current_system):
