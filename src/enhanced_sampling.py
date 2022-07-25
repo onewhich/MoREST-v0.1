@@ -59,8 +59,8 @@ class re:
 
     def remd_swap(self, i, current_step, current_system):
         T_replica = self.re_parameters['re_replica_temperatures']
-        current_system[i].set_momenta(np.sqrt(T_replica[i+1]/T_replica[i] * current_system[i].get_momenta()))
-        current_system[i+1].set_momenta(np.sqrt(T_replica[i]/T_replica[i+1] * current_system[i+1].get_momenta()))
+        current_system[i].set_momenta(np.sqrt(T_replica[i+1]/T_replica[i]) * current_system[i].get_momenta())
+        current_system[i+1].set_momenta(np.sqrt(T_replica[i]/T_replica[i+1]) * current_system[i+1].get_momenta())
 
         current_step[i], current_step[i+1] = current_step[i+1], current_step[i]
         current_system[i], current_system[i+1] = current_system[i+1], current_system[i]
