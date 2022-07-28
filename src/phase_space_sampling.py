@@ -63,8 +63,10 @@ class velocity_Verlet(initialize_sampling):
         self.v_rescaling = v_rescaling
         self.sv_rescaling = sv_rescaling
         if type(T_simulation) == type(None):
+            self.re_simulation = False
             self.T_simulation = self.md_parameters['md_temperature']
         else:
+            self.re_simulation = True
             self.T_simulation = T_simulation
         
         if self.sampling_parameters['sampling_initialization']:
@@ -171,7 +173,7 @@ class velocity_Verlet(initialize_sampling):
             #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
             ZeroRotation(self.current_system)
         
-        if type(self.T_simulation) == type(None):
+        if not self.re_simulation:
             write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
         else:
             write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.str_new', self.current_system)
