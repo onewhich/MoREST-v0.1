@@ -29,7 +29,7 @@ class read_parameters:
             raise Exception('Can not find the parameter file: '+parameter_file)
         
         self.morest_parameters = {}
-        # self.morest_parameters['morest_initialization'] = True
+        self.morest_parameters['morest_initialization'] = True
         self.morest_parameters['morest_save_parameters_file'] = False
         self.morest_parameters['morest_load_parameters_file'] = False
         self.morest_parameters['fd_displacement'] = 0.0025
@@ -114,12 +114,12 @@ class read_parameters:
                     self.sampling_parameters['phase_space_sampling'] = False
                 else:
                     raise Exception('It is not clear whether the sampling method will be used.')
-                    
+
             elif i_parameter.split()[0].upper() == 'Sampling_initialization'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():
                     self.sampling_parameters['sampling_initialization'] = True
                     # change MoREST_initialization as True
-                    # self.morest_parameters['morest_initialization'] = True
+                    self.morest_parameters['morest_initialization'] = True
                 elif i_parameter.split()[1].upper() == 'False'.upper():
                     self.sampling_parameters['sampling_initialization'] = False
                 else:
@@ -181,7 +181,7 @@ class read_parameters:
             elif i_parameter.split()[0].upper() == 'Scattering_initialization'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():
                     self.scattering_parameters['scattering_initialization'] = True
-                    # self.morest_parameters['morest_initialization'] = True
+                    self.morest_parameters['morest_initialization'] = True
                 elif i_parameter.split()[1].upper() == 'False'.upper():
                     self.scattering_parameters['scattering_initialization'] = False
                 else:
