@@ -119,7 +119,7 @@ class read_parameters:
                 if i_parameter.split()[1].upper() == 'True'.upper():
                     self.sampling_parameters['sampling_initialization'] = True
                     # change MoREST_initialization as True
-                    self.morest_parameters['morest_initialization'] = True
+                    # self.morest_parameters['morest_initialization'] = True
                 elif i_parameter.split()[1].upper() == 'False'.upper():
                     self.sampling_parameters['sampling_initialization'] = False
                 else:
@@ -181,7 +181,7 @@ class read_parameters:
             elif i_parameter.split()[0].upper() == 'Scattering_initialization'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():
                     self.scattering_parameters['scattering_initialization'] = True
-                    self.morest_parameters['morest_initialization'] = True
+                    # self.morest_parameters['morest_initialization'] = True
                 elif i_parameter.split()[1].upper() == 'False'.upper():
                     self.scattering_parameters['scattering_initialization'] = False
                 else:
