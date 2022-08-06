@@ -40,7 +40,7 @@ Scattering_R_incident             9 # the initial point of the incident directio
 
 Enhanced_sampling                 False
 Enhanced_sampling_method          RE   # RE; ITS; pRE: parrallel running version of replica exchange; SA: simulated annealing; ST: simulated tempering; aMD: accelerated MD; Wang-Landau; NS: nested sampling; TPS: for scattering; TIS
-RE_initialization                 True
+RE_initialization                 True  # True will remove files with the title of 'MoREST_RE_'
 RE_lower_bound_temperature        400
 RE_upper_bound_temperature        100000
 RE_number_of_replica              10

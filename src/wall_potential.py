@@ -6,10 +6,23 @@ def opaque_potential(a, c, vec_gc_b, norm_gc_b):
     wall_potential = prefactor * (1/norm_gc_b) * (norm_gc_b - c)**2
     return wall_force, wall_potential
 
-def translucent__potential(a, c, vec_gc_b, norm_gc_b):
+def translucent_potential(a, c, vec_gc_b, norm_gc_b):
     prefactor = a/(c**4)
     wall_force = 6 * prefactor * (c**2 * norm_gc_b - c * norm_gc_b**2) * vec_gc_b/norm_gc_b
     wall_potential = prefactor * (2*c * norm_gc_b + c**2) * (norm_gc_b -c )**2
+    return wall_force, wall_potential
+
+def power_potential(a, c, vec_gc_b, norm_gc_b):
+    # c should be larger than 1
+    #TODO move the follow checking to read_parameters
+    try:
+        c >= 1
+    except:
+        self.log_morest.write('Parameter wall_scope should be >= 1 for power potential.\n')
+        self.log_morest.close()
+        raise Exception('Parameter wall_scope should be >= 1 for power potential.')
+    wall_force = -1 * a * c * norm_gc_b**(c-1) * vec_gc_b/norm_gc_b
+    wall_potential = a * norm_gc_b**c
     return wall_force, wall_potential
 
 #def mirror_potential(a, c):
@@ -79,7 +92,7 @@ class translucent_wall:
         if norm_gc_b > self.c:
             return np.zeros(np.shape(xyz_coordinate)), 0.
         else:
-            return translucent__potential(self.a, self.c, vec_gc_b, norm_gc_b)
+            return translucent_potential(self.a, self.c, vec_gc_b, norm_gc_b)
         
     def get_spherical_translucent_wall_force_potential(self, xyz_coordinate, spherical_wall_parameters):
         #spherical_wall_parameters = np.load('MoREST_spherical_wall_parameters.npy',allow_pickle=True).item()
