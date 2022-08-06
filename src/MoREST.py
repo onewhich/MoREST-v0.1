@@ -1,5 +1,6 @@
 import os
 import numpy as np
+from glob import glob
 from read_parameters import read_parameters
 from phase_space_sampling import velocity_Verlet
 from trajectory_scattering import scattering_velocity_Verlet
@@ -129,7 +130,7 @@ class morest:
                 re_file_name_title = 'MoREST_RE_'
                 if self.re_parameters['re_initialization']:
                     try:
-                        os.remove(re_file_name_title+'*')
+                        os.remove(glob('./'+re_file_name_title+'*'))
                         #os.remove(re_file_name_title+'replica_index.log')
                         #for i,T in enumerate(self.re_parameters['re_replica_temperatures']):
                         #    os.remove(re_file_name_title+str(T)+'K.log')
