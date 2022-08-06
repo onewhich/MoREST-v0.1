@@ -129,12 +129,13 @@ class morest:
                 re_file_name_title = 'MoREST_RE_'
                 if self.re_parameters['re_initialization']:
                     try:
-                        os.remove(re_file_name_title+'replica_index.log')
-                        for i,T in enumerate(self.re_parameters['re_replica_temperatures']):
-                            os.remove(re_file_name_title+str(T)+'K.log')
-                            os.remove(re_file_name_title+str(T)+'K_traj.xyz')
-                            os.remove(re_file_name_title+'replica_'+str(i)+'.log')
-                            os.remove(re_file_name_title+'replica_'+str(i)+'_traj.xyz')
+                        os.remove(re_file_name_title+'*')
+                        #os.remove(re_file_name_title+'replica_index.log')
+                        #for i,T in enumerate(self.re_parameters['re_replica_temperatures']):
+                        #    os.remove(re_file_name_title+str(T)+'K.log')
+                        #    os.remove(re_file_name_title+str(T)+'K_traj.xyz')
+                        3    #os.remove(re_file_name_title+'replica_'+str(i)+'.log')
+                        #    #os.remove(re_file_name_title+'replica_'+str(i)+'_traj.xyz')
                     except:
                         pass
                     self.log_morest.write('Replica exchange method is initialized.\n\n')
