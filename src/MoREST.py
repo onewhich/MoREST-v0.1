@@ -131,6 +131,7 @@ class morest:
                 if self.re_parameters['re_initialization']:
                     try:
                         for re_file in glob('./'+re_file_name_title+'*'):
+                            print(re_file)
                             os.remove(re_file)
                         #os.remove(re_file_name_title+'replica_index.log')
                         #for i,T in enumerate(self.re_parameters['re_replica_temperatures']):
