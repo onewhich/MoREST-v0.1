@@ -201,17 +201,20 @@ class read_parameters:
             elif i_parameter.split()[0].upper() == 'Scattering_method'.upper():
                 self.scattering_parameters['scattering_method'] = str(i_parameter.split()[1])
 
+            elif i_parameter.split()[0].upper() == 'Scattering_time_step'.upper():
+                self.scattering_parameters['scattering_time_step'] = float(i_parameter.split()[1])
+
             elif i_parameter.split()[0].upper() == 'Scattering_V_collision'.upper():
                 self.scattering_parameters['scattering_V_collision'] = float(i_parameter.split()[1])
+
+            elif i_parameter.split()[0].upper() == 'Scattering_E_collision'.upper():
+                self.scattering_parameters['scattering_E_collision'] = float(i_parameter.split()[1])
 
             elif i_parameter.split()[0].upper() == 'Scattering_T_target'.upper():
                 self.scattering_parameters['scattering_T_target'] = float(i_parameter.split()[1])
 
             elif i_parameter.split()[0].upper() == 'Scattering_T_incident'.upper():
                 self.scattering_parameters['scattering_T_incident'] = float(i_parameter.split()[1])
-
-            elif i_parameter.split()[0].upper() == 'Scattering_time_step'.upper():
-                self.scattering_parameters['scattering_time_step'] = float(i_parameter.split()[1])
 
             elif i_parameter.split()[0].upper() == 'Scattering_stops_number'.upper():
                 self.scattering_parameters['scattering_stops_number'] = int(i_parameter.split()[1])

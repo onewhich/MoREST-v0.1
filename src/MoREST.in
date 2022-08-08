@@ -20,14 +20,14 @@ MD_time_step                      1   # unit in fs
 MD_simulation_time                100000   # unit in fs
 MD_temperature                    1000
 
-Trajectory_scattering             True
+Trajectory_scattering             False
 Scattering_initialization         True
 Scattering_pre_thermolized        False # If true, the thermolization trajectories of the target and incident molecules are required. Otherwise, the initial structures are required.
 Scattering_traj_number            2000 # The number of trajectories for scattering.
 Scattering_method                 VV # VV: velocity Verlet; RK4: Runge Kutta 4th order; LD: Langevin dynamics
 Scattering_time_step              0.5 # fs
 Scattering_V_collision            1e-2 # Initial collision velocity in AA/fs ( 1 AA/fs = 1e5 m/s ). This velocity defines the translational energy of incident molecule, while the target molecule is static.
-Scattering_E_collision            1  # TODO: Initial collision energy in eV. This energy is the translational kinetic energy of incident molecule. 'Scattering_V_collision' will be ignored, if 'Scattering_E_collision' is defined.
+Scattering_E_collision            1  # Initial collision energy in eV. This energy is the translational kinetic energy of incident molecule. 'Scattering_V_collision' will be ignored, if 'Scattering_E_collision' is defined.
 Scattering_T_target               400 # in K. When Scattering_pre_thermolized is False. The initial temperature of the target molecule will be initialized by Maxwell-Boltzmann distribution, and remove translational movement.
 Scattering_T_incident             400 # in K. When Scattering_pre_thermolized is False. The initial temperature of the incident moelcule will be initialized by Maxwell-Boltzmann distribution, and remove translational movement.
 Scattering_stops_number           2 # The number of stop conditions whcih will be checked.
@@ -47,7 +47,7 @@ RE_number_of_replica              10
 RE_replica_arrange                0     # -1: arithmetic progression   0:  geometric progression
 #RE_replica_temperatures          290 310 330 350 370   # specify or default
 RE_swap_interval                  10    # replica will swap the temperature after every interval steps.
-#RE_init_structures_list           MoREST.str_re # Includes a series initial/updated structures for each temperature replica, respectively. The number of structures should equal to the number of replica. Default in extxyz format.
+#RE_init_structures_list           MoREST_RE.str # Includes a series initial/updated structures for each temperature replica, respectively. The number of structures should equal to the number of replica. Default in extxyz format.
 RE_energy_shift                   0
 ITS_initialization                True  # Set True for the first time running ITS. It will delete all relvent files such as MoREST_TIS_nk.npy, MoREST_ITS_pk.npy.
 ITS_lower_bound_temperature       1000
@@ -59,15 +59,38 @@ ITS_replica_arrange               0     # -1: arithmetic progression   0:  geome
 #ITS_pk0                          0.2 0.2 0.2 0.2 0.2   # specify or default
 ITS_trial_MD_steps                10
 ITS_delta_pk                      1e-2   # The criteria of p_k SCF convergence
-ITS_weight_pk                     0.1   # The weight of p^0/p_k or sqrt(p^0/p_k) in SCF iteration
+ITS_weight_pk                     0.1   # The weight of p^0/p_k or sqrt(p^0/p_k) in ITS-SCF iteration
 ITS_energy_shift                  0
 
 Wall_potential                    False
-Collective_variable               False
-Wall_type                         spherical_opaque_wall  #  plane_opaque_wall, plane_translucent_wall, spherical_opaque_wall, spherical_translucent_wall
-Wall_scaling                      0.1      # This is parameter a in the plane potential
-Wall_scope                        10      # This is parameter c in the plane potential
-Plane_wall_point                  0 0 3 # This point and normal vector determine the parameter b in the plane potential.
-Plane_wall_normal_vector          0 0 -5 # The normal vector does not have to be a unit vector. It will be normalized after reading.
+Wall_number                       1    # the number of walls added in the simulation
+Wall_collective_variable          False
+Wall_shape                        spherical    # spherical, plane
+Wall_type                         power_wall    # opaque_wall, translucent_wall, power_wall
+Wall_scaling                      0.1      # This is parameter a in the potential
+Wall_scope                        10      # This is parameter c in the potential
+Wall_action_atoms                 all    #TODO all, 1 , 0 2 4 7.  Indicating the atoms acffected by the wall potential.
 Spherical_wall_center             0 0 0 # This point and radius determine the parameter b in the spherical potential.
 Spherical_wall_radius             20 # The radius and center point determine the parameter b in the spherical potential.
+Plane_wall_point                  0 0 3 # This point and normal vector determine the parameter b in the plane potential.
+Plane_wall_normal_vector          0 0 -5 # The normal vector does not have to be a unit vector. It will be normalized after reading.
+
+#### example for setting multiple wall potential ####
+#Wall_number                       2
+#Wall_collective_variable_0        False
+#Wall_shape_0                      spherical
+#Wall_type_0                       power_wall
+#Wall_scaling_0                    1
+#Wall_scope_0                      2
+#Wall_action_atoms_0               all
+#Spherical_wall_center_0           0 0 0
+#Spherical_wall_radius_0           20
+#Wall_collective_variable_1        False
+#Wall_shape_1                      plane
+#Wall_type_1                       translucent_wall
+#Wall_scaling_1                    0.1
+#Wall_scope_1                      10
+#Wall_action_atoms_1               all
+#Plane_wall_point_1                0 0 3
+#Plane_wall_normal_vector_1        0 0 -5
+

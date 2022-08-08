@@ -45,8 +45,13 @@ class initialize_scattering:
         target_point = self.scattering_parameters['scattering_R_target'] * target_point / np.linalg.norm(target_point)
         incident_point = np.random.uniform(-1,1,3)
         incident_point = self.scattering_parameters['scattering_R_incident'] * incident_point / np.linalg.norm(incident_point)
-        collision_vector = target_point - incident_point
-        collision_velocity = collision_vector / np.linalg.norm(collision_vector) * self.scattering_parameters['scattering_V_collision']
+        # normalized collision_vector
+        collision_vector = (target_point - incident_point) / np.linalg.norm(target_point - incident_point)
+        # if Scattering_E_collision is given, Scattering_V_collision will be ignored.
+        if 'scattering_E_collision' in self.scattering_parameters:
+            collision_velocity = collision_vector * np.sqrt( 2*self.scattering_parameters['scattering_E_collision'] / np.sum(incident_molecule.get_masses()) )
+        else:
+            collision_velocity = collision_vector * self.scattering_parameters['scattering_V_collision']
         incident_molecule.set_velocities(incident_molecule.get_velocities() + collision_velocity)
         # move the mass center of incident molecule to the incident_point
         incident_molecule.set_positions(incident_molecule.get_positions() + incident_point)
