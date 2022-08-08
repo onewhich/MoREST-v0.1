@@ -65,8 +65,8 @@ ITS_energy_shift                  0
 Wall_potential                    False
 Wall_number                       1    # the number of walls added in the simulation
 Wall_collective_variable          False
-Wall_shape                        spherical    # spherical, plane
-Wall_type                         power_wall    # opaque_wall, translucent_wall, power_wall
+Wall_shape                        spherical    # spherical, plane, dotted, linear, circular
+Wall_type                         power_wall    # opaque_wall, translucent_wall, power_wall 1: power_wall acts on b > 0, -1: power_wall acts on b < 0.
 Wall_scaling                      0.1      # This is parameter a in the potential
 Wall_scope                        10      # This is parameter c in the potential
 Wall_action_atoms                 all    #TODO all, 1 , 0 2 4 7.  Indicating the atoms acffected by the wall potential.
@@ -76,21 +76,22 @@ Plane_wall_point                  0 0 3 # This point and normal vector determine
 Plane_wall_normal_vector          0 0 -5 # The normal vector does not have to be a unit vector. It will be normalized after reading.
 
 #### example for setting multiple wall potential ####
+#### wall parameters are given in multiple times according to the number of walls. Each parameter name is a list storing the parameters of walls. 
 #Wall_number                       2
-#Wall_collective_variable_0        False
-#Wall_shape_0                      spherical
-#Wall_type_0                       power_wall
-#Wall_scaling_0                    1
-#Wall_scope_0                      2
-#Wall_action_atoms_0               all
-#Spherical_wall_center_0           0 0 0
-#Spherical_wall_radius_0           20
-#Wall_collective_variable_1        False
-#Wall_shape_1                      plane
-#Wall_type_1                       translucent_wall
-#Wall_scaling_1                    0.1
-#Wall_scope_1                      10
-#Wall_action_atoms_1               all
-#Plane_wall_point_1                0 0 3
-#Plane_wall_normal_vector_1        0 0 -5
+#Wall_collective_variable          False
+#Wall_shape                        spherical
+#Wall_type                         power_wall
+#Wall_scaling                      1
+#Wall_scope                        2
+#Wall_action_atoms                 all
+#Spherical_wall_center             0 0 0
+#Spherical_wall_radius             20
+#Wall_collective_variable          False
+#Wall_shape                        plane
+#Wall_type                         translucent_wall
+#Wall_scaling                      0.1
+#Wall_scope                        10
+#Wall_action_atoms                 all
+#Plane_wall_point                  0 0 3
+#Plane_wall_normal_vector          0 0 -5
 

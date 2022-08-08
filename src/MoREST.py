@@ -362,7 +362,7 @@ class morest:
             wall_forces:            The forces of the wall potential on the atoms
         '''
 
-        if not self.wall_potential_parameters['collective_variable']:
+        if not self.wall_potential_parameters['wall_collective_variable']:
             #self.log_morest.write('Debug: In wall potential \n')
             if self.wall_potential_parameters['wall_type'].upper() in ['Plane_opaque_wall'.upper()]:
                 #self.log_morest.write('\n')

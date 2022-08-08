@@ -61,9 +61,19 @@ class read_parameters:
         self.its_parameters['its_energy_shift'] = 0
         self.wall_potential_parameters = {}
         self.wall_potential_parameters['wall_potential'] = False
-        self.wall_potential_parameters['collective_variable'] = False
+        self.wall_potential_parameters['wall_number'] = 1
+        self.wall_potential_parameters['wall_collective_variable'] = []
+        self.wall_potential_parameters['wall_shape'] = []
+        self.wall_potential_parameters['wall_type'] = []
+        self.wall_potential_parameters['wall_scaling'] = []
+        self.wall_potential_parameters['wall_scope'] = []
+        self.wall_potential_parameters['wall_action_atoms'] = []
         self.plane_wall_parameters = {}
+        self.plane_wall_parameters['plane_wall_point'] = []
+        self.plane_wall_parameters['plane_wall_normal_vector'] = []
         self.spherical_wall_parameters = {}
+        self.spherical_wall_parameters['spherical_wall_center'] = []
+        self.spherical_wall_parameters['spherical_wall_radius'] = []
         for i_parameter in __parameters:
             if len(i_parameter.split()) < 2:
                 continue
@@ -118,8 +128,6 @@ class read_parameters:
             elif i_parameter.split()[0].upper() == 'Sampling_initialization'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():
                     self.sampling_parameters['sampling_initialization'] = True
-                    # change MoREST_initialization as True
-                    # self.morest_parameters['morest_initialization'] = True
                 elif i_parameter.split()[1].upper() == 'False'.upper():
                     self.sampling_parameters['sampling_initialization'] = False
                 else:
@@ -181,7 +189,6 @@ class read_parameters:
             elif i_parameter.split()[0].upper() == 'Scattering_initialization'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():
                     self.scattering_parameters['scattering_initialization'] = True
-                    # self.morest_parameters['morest_initialization'] = True
                 elif i_parameter.split()[1].upper() == 'False'.upper():
                     self.scattering_parameters['scattering_initialization'] = False
                 else:
@@ -349,23 +356,32 @@ class read_parameters:
                     self.wall_potential_parameters['wall_potential'] = False
                 else:
                     raise Exception('It is not clear whether the wall potential will be used.')
-                    
-            elif i_parameter.split()[0].upper() == 'Collective_variable'.upper():
+                
+            elif i_parameter.split()[0].upper() == 'Wall_number'.upper():
+                self.wall_potential_parameters['wall_number'] = int(i_parameter.split()[1])
+   
+            elif i_parameter.split()[0].upper() == 'Wall_collective_variable'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():
-                    self.wall_potential_parameters['collective_variable'] = True
+                    self.wall_potential_parameters['wall_collective_variable'].append(True)
                 elif i_parameter.split()[1].upper() == 'False'.upper():
-                    self.wall_potential_parameters['collective_variable'] = False
+                    self.wall_potential_parameters['wall_collective_variable'].append(False)
                 else:
                     raise Exception('It is not clear whether the collective variable will be used.')
                 
+            elif i_parameter.split()[0].upper() == 'Wall_shape'.upper():
+                self.wall_potential_parameters['wall_shape'].append(str(i_parameter.split()[1]))
+                
             elif i_parameter.split()[0].upper() == 'Wall_type'.upper():
-                self.wall_potential_parameters['wall_type'] = str(i_parameter.split()[1])
+                self.wall_potential_parameters['wall_type'].append(str(i_parameter.split()[1]))
                 
             elif i_parameter.split()[0].upper() == 'Wall_scaling'.upper():
-                self.wall_potential_parameters['wall_scaling'] = float(i_parameter.split()[1])
+                self.wall_potential_parameters['wall_scaling'].append(float(i_parameter.split()[1]))
                 
             elif i_parameter.split()[0].upper() == 'Wall_scope'.upper():
-                self.wall_potential_parameters['wall_scope'] = float(i_parameter.split()[1])
+                self.wall_potential_parameters['wall_scope'].append(float(i_parameter.split()[1]))
+                
+            elif i_parameter.split()[0].upper() == 'Wall_action_atoms'.upper():
+                self.wall_potential_parameters['wall_action_atoms'].append(i_parameter.split()[1:])
                 
             ########################## Plane wall #################################
 
@@ -373,14 +389,14 @@ class read_parameters:
                 tmp_wall_point = []
                 for i in range(3):
                     tmp_wall_point.append(float(i_parameter.split()[i+1]))
-                self.plane_wall_parameters['plane_wall_point'] = np.array(tmp_wall_point)
+                self.plane_wall_parameters['plane_wall_point'].append(np.array(tmp_wall_point))
             
             elif i_parameter.split()[0].upper() == 'Plane_wall_normal_vector'.upper():
                 tmp_wall_normal_vector = []
                 for i in range(3):
                     tmp_wall_normal_vector.append(float(i_parameter.split()[i+1]))
                 tmp_wall_normal_vector = np.array(tmp_wall_normal_vector)
-                self.plane_wall_parameters['plane_wall_normal_vector'] = tmp_wall_normal_vector / np.linalg.norm(tmp_wall_normal_vector)
+                self.plane_wall_parameters['plane_wall_normal_vector'].append(tmp_wall_normal_vector / np.linalg.norm(tmp_wall_normal_vector))
                 
             ########################## Spherical wall #############################
 
@@ -388,10 +404,10 @@ class read_parameters:
                 tmp_wall_center = []
                 for i in range(3):
                     tmp_wall_center.append(float(i_parameter.split()[i+1]))
-                self.spherical_wall_parameters['spherical_wall_center'] = np.array(tmp_wall_center)
+                self.spherical_wall_parameters['spherical_wall_center'].append(np.array(tmp_wall_center))
             
             elif i_parameter.split()[0].upper() == 'Spherical_wall_radius'.upper():
-                self.spherical_wall_parameters['spherical_wall_radius'] = float(i_parameter.split()[1])
+                self.spherical_wall_parameters['spherical_wall_radius'].append(float(i_parameter.split()[1]))
                 
     def write_parameters(self, log_morest):
         log_morest.write('\n')
@@ -482,6 +498,9 @@ class read_parameters:
         return self.morest_parameters
 
     def get_sampling_parameters(self, log_morest=None):
+        if self.sampling_parameters['sampling_initialization'] == True:
+            # change MoREST_initialization as True
+            self.morest_parameters['morest_initialization'] = True
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_sampling_parameters.npy', self.sampling_parameters)
         if type(log_morest) != type(None):
@@ -508,6 +527,9 @@ class read_parameters:
         return self.md_parameters
 
     def get_scattering_parameters(self, log_morest=None):
+        if self.scattering_parameters['scattering_initialization'] == True:
+            # change MoREST_initialization as True
+            self.morest_parameters['morest_initialization'] = True
         self.scattering_parameters['scattering_time_step'] *= units.fs
         self.scattering_parameters['scattering_V_collision'] /= units.fs
         if self.scattering_parameters['scattering_stops_number'] == 0:
