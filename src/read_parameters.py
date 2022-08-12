@@ -74,6 +74,8 @@ class read_parameters:
         self.spherical_wall_parameters = {}
         self.spherical_wall_parameters['spherical_wall_center'] = []
         self.spherical_wall_parameters['spherical_wall_radius'] = []
+        self.dot_wall_parameters = {}
+        self.dot_wall_parameters['dot_wall_position'] = []
         for i_parameter in __parameters:
             if len(i_parameter.split()) < 2:
                 continue
@@ -408,6 +410,14 @@ class read_parameters:
             
             elif i_parameter.split()[0].upper() == 'Spherical_wall_radius'.upper():
                 self.spherical_wall_parameters['spherical_wall_radius'].append(float(i_parameter.split()[1]))
+
+            ########################## Spherical wall #############################
+
+            elif i_parameter.split()[0].upper() == 'Dot_wall_position'.upper():
+                tmp_wall_center = []
+                for i in range(3):
+                    tmp_wall_center.append(float(i_parameter.split()[i+1]))
+                self.dot_wall_parameters['dot_wall_position'].append(np.array(tmp_wall_center))
                 
     def write_parameters(self, log_morest):
         log_morest.write('\n')
@@ -477,6 +487,13 @@ class read_parameters:
             if self.wall_potential_parameters['wall_potential']:
                 for key in self.spherical_wall_parameters:
                     log_morest.write(key+' : '+str(self.spherical_wall_parameters[key])+'\n')
+                log_morest.write('\n')
+        except:
+            pass
+        try:
+            if self.wall_potential_parameters['wall_potential']:
+                for key in self.dot_wall_parameters:
+                    log_morest.write(key+' : '+str(self.dot_wall_parameters[key])+'\n')
                 log_morest.write('\n')
         except:
             pass
@@ -745,4 +762,13 @@ class read_parameters:
                 log_morest.write(key+' : '+str(self.spherical_wall_parameters[key])+'\n')
             log_morest.write('\n')
         return self.spherical_wall_parameters
+
+    def get_dot_wall_parameters(self, log_morest=None):
+        if self.morest_parameters['morest_save_parameters_file']:
+            np.save('MoREST_dot_wall_parameters.npy', self.dot_wall_parameters)
+        if type(log_morest) != type(None):
+            for key in self.dot_wall_parameters:
+                log_morest.write(key+' : '+str(self.dot_wall_parameters[key])+'\n')
+            log_morest.write('\n')
+        return self.dot_wall_parameters
     

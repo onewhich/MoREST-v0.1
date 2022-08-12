@@ -65,7 +65,7 @@ ITS_energy_shift                  0
 Wall_potential                    False
 Wall_number                       1    # the number of walls added in the simulation
 Wall_collective_variable          False
-Wall_shape                        spherical    # spherical, plane, dotted, linear, circular
+Wall_shape                        spherical    # spherical, plane, dot, linear, circular
 Wall_type                         power_wall    # opaque_wall, translucent_wall, power_wall 1: power_wall acts on b > 0, -1: power_wall acts on b < 0.
 Wall_scaling                      0.1      # This is parameter a in the potential
 Wall_scope                        10      # This is parameter c in the potential
@@ -74,6 +74,7 @@ Spherical_wall_center             0 0 0 # This point and radius determine the pa
 Spherical_wall_radius             20 # The radius and center point determine the parameter b in the spherical potential.
 Plane_wall_point                  0 0 3 # This point and normal vector determine the parameter b in the plane potential.
 Plane_wall_normal_vector          0 0 -5 # The normal vector does not have to be a unit vector. It will be normalized after reading.
+Dot_wall_position                 0 0 0 # The position of the dot.
 
 #### example for setting multiple wall potential ####
 #### wall parameters are given in multiple times according to the number of walls. Each parameter name is a list storing the parameters of walls. 
