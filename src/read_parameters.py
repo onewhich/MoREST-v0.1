@@ -711,6 +711,15 @@ class read_parameters:
         return self.its_parameters
             
     def get_wall_potential_parameters(self, log_morest=None):
+        for i,i_wall_type in self.wall_potential_parameters['wall_type']:
+            if i_wall_type.upper() in ['power_wall'.upper()]:
+                try:
+                    self.wall_potential_parameters['wall_scope'] >= 1
+                except:
+                    if type(log_morest) != type(None):
+                        log_morest.write('Parameter wall_scope should be >= 1 for power potential.\n')
+                        log_morest.close()
+                    raise Exception('Parameter wall_scope should be >= 1 for power potential.')
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_wall_potential_parameters.npy', self.wall_potential_parameters)
         if type(log_morest) != type(None):

@@ -14,13 +14,6 @@ def translucent_potential(a, c, vec_gc_b, norm_gc_b):
 
 def power_potential(a, c, vec_gc_b, norm_gc_b):
     # c should be larger than 1
-    #TODO move the follow checking to read_parameters
-    try:
-        c >= 1
-    except:
-        self.log_morest.write('Parameter wall_scope should be >= 1 for power potential.\n')
-        self.log_morest.close()
-        raise Exception('Parameter wall_scope should be >= 1 for power potential.')
     wall_force = -1 * a * c * norm_gc_b**(c-1) * vec_gc_b/norm_gc_b
     wall_potential = a * norm_gc_b**c
     return wall_force, wall_potential
