@@ -23,7 +23,7 @@ class repulsive_wall_potential:
         wall_force = np.zeros(np.shape(self.xyz_coordinate))
         wall_potential = 0
         for i in range(self.wall_potential_parameters['wall_number']):
-            vec_gc_b, norm_gc_b = self.get_gc_b(i, self.xyz_coordinate)
+            vec_gc_b, norm_gc_b = self.get_gc_b(i)
             tmp_force, tmp_potential = self.get_potential(i, self.a[i], self.c[i], vec_gc_b, norm_gc_b)
             wall_force += tmp_force
             wall_potential += tmp_potential
@@ -31,11 +31,11 @@ class repulsive_wall_potential:
 
     def get_gc_b(self, i_wall):
         if self.wall_potential_parameters['wall_shape'][i_wall] == 'planar':
-            return self.get_planar_wall_gc_b(self.xyz_coordinate)
+            return self.get_planar_wall_gc_b()
         elif self.wall_potential_parameters['wall_shape'][i_wall] == 'spherical':
-            return self.get_spherical_wall_gc_b(self.xyz_coordinate)
+            return self.get_spherical_wall_gc_b()
         elif self.wall_potential_parameters['wall_shape'][i_wall] == 'dot':
-            return self.get_dot_wall_gc_b(self.xyz_coordinate)
+            return self.get_dot_wall_gc_b()
 
     def get_planar_wall_gc_b(self):
         vec_gc_b = np.dot((self.xyz_coordinate - self.wall_potential_parameters['planar_wall_point']), \
