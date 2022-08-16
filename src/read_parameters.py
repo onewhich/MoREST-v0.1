@@ -19,7 +19,6 @@ class read_parameters:
     Enhanced sampling parameters are stored in dictionary named 'enhanced_sampling_parameters'.
     ITS parameters are stored in dictionary named 'its_parameters'.
     Wall potential parameters are stored in dictionary named 'wall_potential_parameters'.
-    Plane wall parameters are stored in dictionary named 'plane_wall_parameters'.
     '''
     
     def __init__(self, parameter_file='MoREST.in'):
@@ -65,17 +64,15 @@ class read_parameters:
         self.wall_potential_parameters['wall_collective_variable'] = []
         self.wall_potential_parameters['wall_shape'] = []
         self.wall_potential_parameters['wall_type'] = []
+        self.wall_potential_parameters['power_wall_direction'] = []
         self.wall_potential_parameters['wall_scaling'] = []
         self.wall_potential_parameters['wall_scope'] = []
         self.wall_potential_parameters['wall_action_atoms'] = []
-        self.plane_wall_parameters = {}
-        self.plane_wall_parameters['plane_wall_point'] = []
-        self.plane_wall_parameters['plane_wall_normal_vector'] = []
-        self.spherical_wall_parameters = {}
-        self.spherical_wall_parameters['spherical_wall_center'] = []
-        self.spherical_wall_parameters['spherical_wall_radius'] = []
-        self.dot_wall_parameters = {}
-        self.dot_wall_parameters['dot_wall_position'] = []
+        self.wall_potential_parameters['planar_wall_point'] = []
+        self.wall_potential_parameters['planar_wall_normal_vector'] = []
+        self.wall_potential_parameters['spherical_wall_center'] = []
+        self.wall_potential_parameters['spherical_wall_radius'] = []
+        self.wall_potential_parameters['dot_wall_position'] = []
         for i_parameter in __parameters:
             if len(i_parameter.split()) < 2:
                 continue
@@ -371,10 +368,14 @@ class read_parameters:
                     raise Exception('It is not clear whether the collective variable will be used.')
                 
             elif i_parameter.split()[0].upper() == 'Wall_shape'.upper():
-                self.wall_potential_parameters['wall_shape'].append(str(i_parameter.split()[1]))
+                self.wall_potential_parameters['wall_shape'].append(str(i_parameter.split()[1]).lower())
                 
             elif i_parameter.split()[0].upper() == 'Wall_type'.upper():
-                self.wall_potential_parameters['wall_type'].append(str(i_parameter.split()[1]))
+                self.wall_potential_parameters['wall_type'].append(str(i_parameter.split()[1]).lower())
+                if i_parameter.split()[1].upper() in ['power_wall'.upper()]:
+                    self.wall_potential_parameters['power_wall_direction'].append(np.sign(i_parameter.split()[1]))
+                else:
+                    self.wall_potential_parameters['power_wall_direction'].append(0)
                 
             elif i_parameter.split()[0].upper() == 'Wall_scaling'.upper():
                 self.wall_potential_parameters['wall_scaling'].append(float(i_parameter.split()[1]))
@@ -385,20 +386,20 @@ class read_parameters:
             elif i_parameter.split()[0].upper() == 'Wall_action_atoms'.upper():
                 self.wall_potential_parameters['wall_action_atoms'].append(i_parameter.split()[1:])
                 
-            ########################## Plane wall #################################
+            ########################## Planar wall #################################
 
-            elif i_parameter.split()[0].upper() == 'Plane_wall_point'.upper():
+            elif i_parameter.split()[0].upper() == 'Planar_wall_point'.upper():
                 tmp_wall_point = []
                 for i in range(3):
                     tmp_wall_point.append(float(i_parameter.split()[i+1]))
-                self.plane_wall_parameters['plane_wall_point'].append(np.array(tmp_wall_point))
+                self.wall_potential_parameters['planar_wall_point'].append(np.array(tmp_wall_point))
             
-            elif i_parameter.split()[0].upper() == 'Plane_wall_normal_vector'.upper():
+            elif i_parameter.split()[0].upper() == 'Planar_wall_normal_vector'.upper():
                 tmp_wall_normal_vector = []
                 for i in range(3):
                     tmp_wall_normal_vector.append(float(i_parameter.split()[i+1]))
                 tmp_wall_normal_vector = np.array(tmp_wall_normal_vector)
-                self.plane_wall_parameters['plane_wall_normal_vector'].append(tmp_wall_normal_vector / np.linalg.norm(tmp_wall_normal_vector))
+                self.wall_potential_parameters['planar_wall_normal_vector'].append(tmp_wall_normal_vector / np.linalg.norm(tmp_wall_normal_vector))
                 
             ########################## Spherical wall #############################
 
@@ -406,18 +407,18 @@ class read_parameters:
                 tmp_wall_center = []
                 for i in range(3):
                     tmp_wall_center.append(float(i_parameter.split()[i+1]))
-                self.spherical_wall_parameters['spherical_wall_center'].append(np.array(tmp_wall_center))
+                self.wall_potential_parameters['spherical_wall_center'].append(np.array(tmp_wall_center))
             
             elif i_parameter.split()[0].upper() == 'Spherical_wall_radius'.upper():
-                self.spherical_wall_parameters['spherical_wall_radius'].append(float(i_parameter.split()[1]))
+                self.wall_potential_parameters['spherical_wall_radius'].append(float(i_parameter.split()[1]))
 
-            ########################## Spherical wall #############################
+            ########################## dot wall ###################################
 
             elif i_parameter.split()[0].upper() == 'Dot_wall_position'.upper():
                 tmp_wall_center = []
                 for i in range(3):
                     tmp_wall_center.append(float(i_parameter.split()[i+1]))
-                self.dot_wall_parameters['dot_wall_position'].append(np.array(tmp_wall_center))
+                self.wall_potential_parameters['dot_wall_position'].append(np.array(tmp_wall_center))
                 
     def write_parameters(self, log_morest):
         log_morest.write('\n')
@@ -478,8 +479,8 @@ class read_parameters:
             pass
         try:
             if self.wall_potential_parameters['wall_potential']:
-                for key in self.plane_wall_parameters:
-                    log_morest.write(key+' : '+str(self.plane_wall_parameters[key])+'\n')
+                for key in self.planar_wall_parameters:
+                    log_morest.write(key+' : '+str(self.planar_wall_parameters[key])+'\n')
                 log_morest.write('\n')
         except:
             pass
@@ -728,7 +729,14 @@ class read_parameters:
         return self.its_parameters
             
     def get_wall_potential_parameters(self, log_morest=None):
-        for i,i_wall_type in self.wall_potential_parameters['wall_type']:
+        for key in ['wall_collective_variable', 'wall_shape', 'wall_type', 'power_wall_direction', \
+            'wall_scaling', 'wall_scope', 'wall_action_atoms', \
+            'planar_wall_point', 'planar_wall_normal_vector', \
+            'spherical_wall_center', 'spherical_wall_radius', \
+            'dot_wall_position']:
+            self.wall_potential_parameters[key] = self.wall_potential_parameters[key]\
+                [:self.wall_potential_parameters['wall_number']]
+        for i_wall_type in self.wall_potential_parameters['wall_type']:
             if i_wall_type.upper() in ['power_wall'.upper()]:
                 try:
                     self.wall_potential_parameters['wall_scope'] >= 1
@@ -737,6 +745,10 @@ class read_parameters:
                         log_morest.write('Parameter wall_scope should be >= 1 for power potential.\n')
                         log_morest.close()
                     raise Exception('Parameter wall_scope should be >= 1 for power potential.')
+            elif not i_wall_type.upper() in ['opaque_wall'.upper(), 'translucent_wall'.upper(), 'power_wall'.upper()]:
+                log_morest.write('Wall type is not recognized.\n')
+                log_morest.close()
+                raise Exception('Wall type is not recognized.')
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_wall_potential_parameters.npy', self.wall_potential_parameters)
         if type(log_morest) != type(None):
@@ -744,31 +756,4 @@ class read_parameters:
                 log_morest.write(key+' : '+str(self.wall_potential_parameters[key])+'\n')
             log_morest.write('\n')
         return self.wall_potential_parameters
-    
-    def get_plane_wall_parameters(self, log_morest=None):
-        if self.morest_parameters['morest_save_parameters_file']:
-            np.save('MoREST_plane_wall_parameters.npy', self.plane_wall_parameters)
-        if type(log_morest) != type(None):
-            for key in self.plane_wall_parameters:
-                log_morest.write(key+' : '+str(self.plane_wall_parameters[key])+'\n')
-            log_morest.write('\n')
-        return self.plane_wall_parameters
-
-    def get_spherical_wall_parameters(self, log_morest=None):
-        if self.morest_parameters['morest_save_parameters_file']:
-            np.save('MoREST_spherical_wall_parameters.npy', self.spherical_wall_parameters)
-        if type(log_morest) != type(None):
-            for key in self.spherical_wall_parameters:
-                log_morest.write(key+' : '+str(self.spherical_wall_parameters[key])+'\n')
-            log_morest.write('\n')
-        return self.spherical_wall_parameters
-
-    def get_dot_wall_parameters(self, log_morest=None):
-        if self.morest_parameters['morest_save_parameters_file']:
-            np.save('MoREST_dot_wall_parameters.npy', self.dot_wall_parameters)
-        if type(log_morest) != type(None):
-            for key in self.dot_wall_parameters:
-                log_morest.write(key+' : '+str(self.dot_wall_parameters[key])+'\n')
-            log_morest.write('\n')
-        return self.dot_wall_parameters
     
