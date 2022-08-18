@@ -20,7 +20,6 @@ class repulsive_wall:
 
     def get_repulsive_wall_force_potential(self, general_coordinate):
         wall_force = np.zeros(np.shape(general_coordinate))
-        print(wall_force)
         wall_potential = 0
         for i in range(self.wall_potential_parameters['wall_number']):
             if not self.wall_potential_parameters['wall_collective_variable'][i]:
@@ -51,7 +50,9 @@ class repulsive_wall:
 
     def get_spherical_wall_gc_b(self):
         vec_direction = self.wall_potential_parameters['spherical_wall_center'] - self.xyz_coordinate
+        print(vec_direction)
         norm_direction = np.linalg.norm(vec_direction)
+        print(norm_direction)
         vec_gc_b = vec_direction / norm_direction * (self.wall_potential_parameters['spherical_wall_radius'] - norm_direction)
         norm_gc_b = np.linalg.norm(vec_gc_b)
         return vec_gc_b, norm_gc_b
