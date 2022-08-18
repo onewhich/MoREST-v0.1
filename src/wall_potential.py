@@ -1,7 +1,7 @@
 #from distutils.sysconfig import get_config_h_filename
 import numpy as np
     
-class repulsive_wall_potential:
+class repulsive_wall:
     '''
     Adding multiple walls with shape and potential in the system.
     The plane is defined by a point in the plane and a normal vector of the plane.

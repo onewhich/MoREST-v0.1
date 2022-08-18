@@ -5,7 +5,7 @@ from read_parameters import read_parameters
 from phase_space_sampling import velocity_Verlet
 from trajectory_scattering import scattering_velocity_Verlet
 from enhanced_sampling import its, re
-from wall_potential import opaque_wall, translucent_wall
+from wall_potential import repulsive_wall
 from collective_variable import collective_variables
 
 
@@ -201,36 +201,9 @@ class morest:
                     self.wall_potential_parameters = MoREST_parameters.get_wall_potential_parameters(self.log_morest)
             #for key in self.wall_potential_parameters:
             #    print(key+' : '+str(self.wall_potential_parameters[key]))
-            
-            self.log_morest.write('Wall potential \"'+str(self.wall_potential_parameters['wall_type'])+'\" is called.\n\n')
-            if self.wall_potential_parameters['wall_type'].upper() in ['Plane_opaque_wall'.upper(),\
-                                                                'Plane_translucent_wall'.upper()]:
-                if not self.morest_parameters['morest_load_parameters_file']:
-                    self.plane_wall_parameters = MoREST_parameters.get_plane_wall_parameters(self.log_morest)
-                else:
-                    try:
-                        self.plane_wall_parameters = np.load('MoREST_plane_wall_parameters.npy',allow_pickle=True).item()
-                    except:
-                        self.log_morest.write('Can not find parameters files: MoREST_plane_wall_parameters.npy\n Read parameters from input file.\n\n')
-                        self.plane_wall_parameters = MoREST_parameters.get_plane_wall_parameters(self.log_morest)
-            if self.wall_potential_parameters['wall_type'].upper() in ['Spherical_opaque_wall'.upper(),\
-                                                                'Spherical_translucent_wall'.upper()]:
-                if not self.morest_parameters['morest_load_parameters_file']:
-                    self.spherical_wall_parameters = MoREST_parameters.get_spherical_wall_parameters(self.log_morest)
-                else:
-                    try:
-                        self.spherical_wall_parameters = np.load('MoREST_spherical_wall_parameters.npy',allow_pickle=True).item()
-                    except:
-                        self.log_morest.write('Can not find parameters files: MoREST_spherical_wall_parameters.npy\n Read parameters from input file.\n\n')
-                        self.spherical_wall_parameters = MoREST_parameters.get_spherical_wall_parameters(self.log_morest)
-            if self.wall_potential_parameters['wall_type'].upper() in ['Plane_opaque_wall'.upper(),\
-                                                    'Spherical_opaque_wall'.upper()]:
-                self.wall = opaque_wall(self.wall_potential_parameters)
-            elif self.wall_potential_parameters['wall_type'].upper() in ['Plane_translucent_wall'.upper(),\
-                                                    'Spherical_translucent_wall'.upper()]:
-                self.wall = translucent_wall(self.wall_potential_parameters)
-            #    for key in self.plane_wall_parameters:
-            #        print(key+' : '+str(self.plane_wall_parameters[key]))
+            self.log_morest.write('Wall potential \"'+str(self.wall_potential_parameters['wall_shape'])+' '\
+                +str(self.wall_potential_parameters['wall_type'])+'\" is called.\n\n')
+            self.wall = repulsive_wall(self.wall_potential_parameters)
 
         
     def phase_space_sampling(self):
@@ -364,48 +337,13 @@ class morest:
 
         if not self.wall_potential_parameters['wall_collective_variable']:
             #self.log_morest.write('Debug: In wall potential \n')
-            if self.wall_potential_parameters['wall_type'].upper() in ['Plane_opaque_wall'.upper()]:
-                #self.log_morest.write('\n')
-                #self.log_morest.write('The plane opaque wall potential and forces on atoms: XYZ coordinate, Potential, Forces\n')
-                wall_forces = []
-                for i_coordinate in general_coordinate:
-                    i_wall_force, i_wall_potential = self.wall.get_plane_opaque_wall_force_potential(i_coordinate, self.plane_wall_parameters)
-                    wall_forces.append(i_wall_force)
-                    #self.log_morest.write(str(i_coordinate)+' , '+str(i_wall_potential)+' , '+str(i_wall_force))
-                    #self.log_morest.write('\n')
-                #self.log_morest.write('\n')
-                return np.array(wall_forces)
-            
-            if self.wall_potential_parameters['wall_type'].upper() in ['Spherical_opaque_wall'.upper()]:
-                wall_forces = []
-                for i_coordinate in general_coordinate:
-                    i_wall_force, i_wall_potential = self.wall.get_spherical_opaque_wall_force_potential(i_coordinate, self.spherical_wall_parameters)
-                    wall_forces.append(i_wall_force)
-                return np.array(wall_forces)
-
-            if self.wall_potential_parameters['wall_type'].upper() in ['Plane_translucent_wall'.upper()]:
-                #self.log_morest.write('\n')
-                #self.log_morest.write('The plane translucent wall potential and force on atoms: XYZ coordinate, Potential, Forces\n')
-                wall_forces = []
-                for i_coordinate in general_coordinate:
-                    i_wall_force, i_wall_potential = self.wall.get_plane_translucent_wall_force_potential(i_coordinate, self.plane_wall_parameters)
-                    wall_forces.append(i_wall_force)
-                    #self.log_morest.write(str(i_coordinate)+' , '+str(i_wall_potential)+' , '+str(i_wall_force))
-                    #self.log_morest.write('\n')
-                #self.log_morest.write('\n')
-                return np.array(wall_forces)
-            
-            if self.wall_potential_parameters['wall_type'].upper() in ['Spherical_translucent_wall'.upper()]:
-                wall_forces = []
-                for i_coordinate in general_coordinate:
-                    i_wall_force, i_wall_potential = self.wall.get_spherical_translucent_wall_force_potential(i_coordinate, self.spherical_wall_parameters)
-                    wall_forces.append(i_wall_force)
-                return np.array(wall_forces)
-
-            else:
-                self.log_morest.write('No wall type was matched.\n')
-                self.log_morest.close()
-                return np.array([0])
+            wall_forces = []
+            wall_potential = []
+            for i_coordinate in general_coordinate:
+                i_wall_force, i_wall_potential = self.wall.get_repulsive_wall_force_potential(i_coordinate)
+                wall_forces.append(i_wall_force)
+                wall_potential.append(i_wall_potential)
+            return np.array(wall_forces)
 
         else:
             general_coordinate = CV_to_xyz(general_coordinate) # TODO conversion function is not exist.
