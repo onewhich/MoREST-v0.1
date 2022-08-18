@@ -373,7 +373,7 @@ class read_parameters:
             elif i_parameter.split()[0].upper() == 'Wall_type'.upper():
                 self.wall_potential_parameters['wall_type'].append(str(i_parameter.split()[1]).lower())
                 if i_parameter.split()[1].upper() in ['power_wall'.upper()]:
-                    self.wall_potential_parameters['power_wall_direction'].append(np.sign(i_parameter.split()[1]))
+                    self.wall_potential_parameters['power_wall_direction'].append(np.sign(int(i_parameter.split()[1])))
                 else:
                     self.wall_potential_parameters['power_wall_direction'].append(0)
                 
