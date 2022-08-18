@@ -36,29 +36,28 @@ class repulsive_wall:
 
     def get_gc_b(self, i_wall):
         if self.wall_potential_parameters['wall_shape'][i_wall] == 'planar':
-            return self.get_planar_wall_gc_b()
+            return self.get_planar_wall_gc_b(i_wall)
         elif self.wall_potential_parameters['wall_shape'][i_wall] == 'spherical':
-            return self.get_spherical_wall_gc_b()
+            return self.get_spherical_wall_gc_b(i_wall)
         elif self.wall_potential_parameters['wall_shape'][i_wall] == 'dot':
-            return self.get_dot_wall_gc_b()
+            return self.get_dot_wall_gc_b(i_wall)
 
-    def get_planar_wall_gc_b(self):
-        vec_gc_b = np.dot((self.xyz_coordinate - self.wall_potential_parameters['planar_wall_point']), \
-                self.wall_potential_parameters['planar_wall_normal_vector']) * self.wall_potential_parameters['planar_wall_normal_vector']
+    def get_planar_wall_gc_b(self, i_wall):
+        vec_gc_b = np.dot((self.xyz_coordinate - self.wall_potential_parameters['planar_wall_point'][i_wall]), \
+                self.wall_potential_parameters['planar_wall_normal_vector'][i_wall]) * \
+                    self.wall_potential_parameters['planar_wall_normal_vector'][i_wall]
         norm_gc_b = np.linalg.norm(vec_gc_b)
         return vec_gc_b, norm_gc_b
 
-    def get_spherical_wall_gc_b(self):
-        print(self.wall_potential_parameters['spherical_wall_center'])
-        print(self.xyz_coordinate)
-        vec_direction = self.wall_potential_parameters['spherical_wall_center'] - self.xyz_coordinate
+    def get_spherical_wall_gc_b(self, i_wall):
+        vec_direction = self.wall_potential_parameters['spherical_wall_center'][i_wall] - self.xyz_coordinate
         norm_direction = np.linalg.norm(vec_direction)
-        vec_gc_b = vec_direction / norm_direction * (self.wall_potential_parameters['spherical_wall_radius'] - norm_direction)
+        vec_gc_b = vec_direction / norm_direction * (self.wall_potential_parameters['spherical_wall_radius'][i_wall] - norm_direction)
         norm_gc_b = np.linalg.norm(vec_gc_b)
         return vec_gc_b, norm_gc_b
 
-    def get_dot_wall_gc_b(self):
-        vec_gc_b = self.xyz_coordinate - self.wall_potential_parameters['dot_wall_position']
+    def get_dot_wall_gc_b(self, i_wall):
+        vec_gc_b = self.xyz_coordinate - self.wall_potential_parameters['dot_wall_position'][i_wall]
         norm_gc_b = np.linalg.norm(vec_gc_b)
         return vec_gc_b, norm_gc_b
 
