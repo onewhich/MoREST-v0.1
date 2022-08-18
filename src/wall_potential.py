@@ -27,9 +27,7 @@ class repulsive_wall:
             else:
                 self.xyz_coordinate = CV_to_XYZ(general_coordinate)    # TODO CV_to_XYZ does not exist
             vec_gc_b, norm_gc_b = self.get_gc_b(i)
-            print(vec_gc_b, norm_gc_b)
             tmp_force, tmp_potential = self.get_potential(i, self.a[i], self.c[i], vec_gc_b, norm_gc_b)
-            print(tmp_force, tmp_potential)
             wall_force += tmp_force
             wall_potential += tmp_potential
         return wall_force, wall_potential
