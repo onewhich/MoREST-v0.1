@@ -49,10 +49,10 @@ class repulsive_wall:
         return vec_gc_b, norm_gc_b
 
     def get_spherical_wall_gc_b(self):
+        print(self.wall_potential_parameters['spherical_wall_center'])
+        print(self.xyz_coordinate)
         vec_direction = self.wall_potential_parameters['spherical_wall_center'] - self.xyz_coordinate
-        print(vec_direction)
         norm_direction = np.linalg.norm(vec_direction)
-        print(norm_direction)
         vec_gc_b = vec_direction / norm_direction * (self.wall_potential_parameters['spherical_wall_radius'] - norm_direction)
         norm_gc_b = np.linalg.norm(vec_gc_b)
         return vec_gc_b, norm_gc_b
