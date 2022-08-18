@@ -334,19 +334,14 @@ class morest:
         OUTPUT:
             wall_forces:            The forces of the wall potential on the atoms
         '''
-
-        if not self.wall_potential_parameters['wall_collective_variable']:
-            #self.log_morest.write('Debug: In wall potential \n')
-            wall_forces = []
-            wall_potential = []
-            for i_coordinate in general_coordinate:
-                i_wall_force, i_wall_potential = self.wall.get_repulsive_wall_force_potential(i_coordinate)
-                wall_forces.append(i_wall_force)
-                wall_potential.append(i_wall_potential)
-            return np.array(wall_forces)
-
-        else:
-            general_coordinate = CV_to_xyz(general_coordinate) # TODO conversion function is not exist.
+        #self.log_morest.write('Debug: In wall potential \n')
+        wall_forces = []
+        wall_potential = []
+        for i_coordinate in general_coordinate:
+            i_wall_force, i_wall_potential = self.wall.get_repulsive_wall_force_potential(i_coordinate)
+            wall_forces.append(i_wall_force)
+            wall_potential.append(i_wall_potential)
+        return np.array(wall_forces)
 
 
     def mission_complete(self):
