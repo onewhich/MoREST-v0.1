@@ -19,7 +19,7 @@ class repulsive_wall:
         self.c = self.wall_potential_parameters['wall_scope']
 
     def get_repulsive_wall_force_potential(self, general_coordinate):
-        wall_force = np.zeros(np.shape(self.xyz_coordinate))
+        wall_force = np.zeros(np.shape(general_coordinate))
         wall_potential = 0
         for i in range(self.wall_potential_parameters['wall_number']):
             if not self.wall_potential_parameters['wall_collective_variable'][i]:
@@ -27,7 +27,9 @@ class repulsive_wall:
             else:
                 self.xyz_coordinate = CV_to_XYZ(general_coordinate)    # TODO CV_to_XYZ does not exist
             vec_gc_b, norm_gc_b = self.get_gc_b(i)
+            print(vec_gc_b, norm_gc_b)
             tmp_force, tmp_potential = self.get_potential(i, self.a[i], self.c[i], vec_gc_b, norm_gc_b)
+            print(tmp_force, tmp_potential)
             wall_force += tmp_force
             wall_potential += tmp_potential
         return wall_force, wall_potential
