@@ -20,6 +20,7 @@ class repulsive_wall:
 
     def get_repulsive_wall_force_potential(self, general_coordinate):
         wall_force = np.zeros(np.shape(general_coordinate))
+        print(wall_force)
         wall_potential = 0
         for i in range(self.wall_potential_parameters['wall_number']):
             if not self.wall_potential_parameters['wall_collective_variable'][i]:
