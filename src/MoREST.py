@@ -216,7 +216,7 @@ class morest:
             calculator: The same as the calculator in ASE. It is required, when many body potential is specified as 'on_the_fly'.
         '''
         simulation_maxsteps = int(self.md_parameters['md_simulation_time']/self.md_parameters['md_time_step']) + 1
-        if self.enhanced_sampling_parameters['enhanced_sampling']:
+        if self.morest_parameters['enhanced_sampling']:
             if self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['re'.upper()]:
                 current_step = []
                 current_system = []
@@ -285,8 +285,8 @@ class morest:
         current_step, current_system = self.scattering_job.current_step, self.scattering_job.current_system
         simulation_maxsteps = self.scattering_parameters['scattering_traj_length']
         while current_step <= simulation_maxsteps:
-            if self.enhanced_sampling_parameters['enhanced_sampling']:
-                self.enhanced_sampling_parameters['enhanced_sampling'] = False # TODO: enhanced sampling method for trajectory scattering
+            if self.morest_parameters['enhanced_sampling']:
+                self.morest_parameters['enhanced_sampling'] = False # TODO: enhanced sampling method for trajectory scattering
             else:
                 if self.wall_potential_parameters['wall_potential']:
                     general_coordinate = current_system.get_positions()
