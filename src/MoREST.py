@@ -62,6 +62,8 @@ class morest:
                     self.sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator)
                 elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_VR']:
                     self.sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator, v_rescaling=True)
+                elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_Berendsen'.upper()]:
+                    self.sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator, Berendsen_rescaling=True)
                 elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
                     self.sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator, sv_rescaling=True)
                 else:

@@ -13,7 +13,7 @@ Sampling_initialization           True   # Overwrite or append the trajectory in
 Sampling_molecule                 MoREST.str # The input of the structure.
 Sampling_traj_interval            10    # Record sampling every Traj_interval steps
 Sampling_method                   MD    # MD, MC, LD, PIMD
-Sampling_ensemble                 NVT_SVR  10   # Choose the ensemble, e.g. NVE_VV: velocity Verlet; NVT_VR 10: velocity Verlet with velocity rescaling, with parameter NVT_VR_dT=10; NVT_Berendsen ; NVT_SVR 10: BDP stochastic velocity rescaling thermostat, with parameter NVT_SVR_tau=10
+Sampling_ensemble                 NVT_SVR  10   # Choose the ensemble, e.g. NVE_VV: velocity Verlet; NVT_VR 10: velocity Verlet with velocity rescaling, with parameter NVT_VR_dT=10; NVT_Berendsen 10: Berendsen thermostat with NVT_Berendsen_tau=10 ; NVT_SVR 10: BDP stochastic velocity rescaling thermostat, with parameter NVT_SVR_tau=10
 MD_clean_translation              True
 MD_clean_rotation                 True
 MD_time_step                      1   # unit in fs

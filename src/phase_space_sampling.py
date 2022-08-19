@@ -55,12 +55,14 @@ class velocity_Verlet(initialize_sampling):
     MoREST.str_new (default name) records the current xyz structure of the system
     '''
     
-    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, v_rescaling=False, sv_rescaling=False):
+    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, \
+                        v_rescaling=False, Berendsen_rescaling=False, sv_rescaling=False):
         super(velocity_Verlet, self).__init__(morest_parameters, sampling_parameters, calculator)
         self.md_parameters = md_parameters
         self.traj_file_name = traj_file_name
         self.log_file_name = log_file_name
         self.v_rescaling = v_rescaling
+        self.b_rescaling = Berendsen_rescaling
         self.sv_rescaling = sv_rescaling
         if type(T_simulation) == type(None):
             self.re_simulation = False
@@ -93,7 +95,10 @@ class velocity_Verlet(initialize_sampling):
         self.K_simulation = Nf/2 * units.kB * self.T_simulation # Ek = 1/2 m v^2 = 3/2 kB T for each particle
         
         if self.v_rescaling:
-            self.velocity_rescaling(self.current_system)
+            self.velocity_rescaling()
+
+        if self.b_rescaling:
+            self.Berendsen_rescaling()
         
         if self.sampling_parameters['sampling_initialization']:
             if type(self.log_file_name) == type(None):
@@ -162,6 +167,9 @@ class velocity_Verlet(initialize_sampling):
         
         if self.v_rescaling:
             self.velocity_rescaling()
+
+        if self.b_rescaling:
+            self.Berendsen_rescaling()
         
         if self.sv_rescaling:
             R_t = self.stochastic_velocity_rescaling()
@@ -205,6 +213,15 @@ class velocity_Verlet(initialize_sampling):
         if Ti > upper_T or Ti < lower_T:
             factor = np.sqrt(self.T_simulation / Ti)
             self.current_system.set_velocities(factor * velocities)
+
+    def Berendsen_rescaling(self):
+        tau = self.sampling_parameters['nvt_berendsen_tau']
+        time_step = self.sampling_parameters['md_time_step']
+        Ek = self.current_system.get_kinetic_energy()
+        Ti = 2/3 * Ek/units.kB /self.n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+        factor = np.sqrt(1 + time_step/tau * (self.T_simulation/Ti -1))
+        velocities = self.current_system.get_velocities()
+        self.current_system.set_velocities(factor * velocities)
         
     def stochastic_velocity_rescaling(self):
         '''
