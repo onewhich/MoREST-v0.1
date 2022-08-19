@@ -216,7 +216,7 @@ class velocity_Verlet(initialize_sampling):
 
     def Berendsen_rescaling(self):
         tau = self.sampling_parameters['nvt_berendsen_tau']
-        time_step = self.sampling_parameters['md_time_step']
+        time_step = self.md_parameters['md_time_step']
         Ek = self.current_system.get_kinetic_energy()
         Ti = 2/3 * Ek/units.kB /self.n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
         factor = np.sqrt(1 + time_step/tau * (self.T_simulation/Ti -1))
