@@ -13,7 +13,7 @@ Sampling_initialization           True   # Overwrite or append the trajectory in
 Sampling_molecule                 MoREST.str # The input of the structure.
 Sampling_traj_interval            10    # Record sampling every Traj_interval steps
 Sampling_method                   MD    # MD, MC, LD, PIMD
-Sampling_ensemble                 NVT_SVR  10   # Choose the ensemble, e.g. NVE_VV: velocity Verlet; NVT_VR 10: velocity Verlet with velocity rescaling, with parameter NVT_VR_dT=10; NVT_Berendsen 10: Berendsen thermostat with NVT_Berendsen_tau=10 ; NVT_SVR 10: BDP stochastic velocity rescaling thermostat, with parameter NVT_SVR_tau=10
+Sampling_ensemble                 NVT_SVR  10   # Choose the ensemble, e.g. NVE_VV: velocity Verlet; NVT_VR 10: velocity Verlet with velocity rescaling, with parameter NVT_VR_dT=10; NVT_Berendsen 10: Berendsen thermostat with NVT_Berendsen_tau=10; NVT_Langevin 0.05: Langevin thermostat with NVT_Langevin_gamma=0.05 ; NVT_SVR 10: BDP stochastic velocity rescaling thermostat, with parameter NVT_SVR_tau=10
 MD_clean_translation              True
 MD_clean_rotation                 True
 MD_time_step                      1   # unit in fs
@@ -72,8 +72,8 @@ Wall_scope                        10      # This is parameter c in the potential
 Wall_action_atoms                 all    #TODO all, 1 , 0 2 4 7.  Indicating the atoms acffected by the wall potential.
 Spherical_wall_center             0 0 0 # This point and radius determine the parameter b in the spherical potential.
 Spherical_wall_radius             20 # The radius and center point determine the parameter b in the spherical potential.
-Planar_wall_point                  0 0 3 # This point and normal vector determine the parameter b in the planar potential.
-Planar_wall_normal_vector          0 0 -5 # The normal vector does not have to be a unit vector. It will be normalized after reading.
+Planar_wall_point                 0 0 3 # This point and normal vector determine the parameter b in the planar potential.
+Planar_wall_normal_vector         0 0 -5 # The normal vector does not have to be a unit vector. It will be normalized after reading.
 Dot_wall_position                 0 0 0 # The position of the dot.
 
 #### example for setting multiple wall potential ####

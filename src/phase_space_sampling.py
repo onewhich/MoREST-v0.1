@@ -56,13 +56,14 @@ class velocity_Verlet(initialize_sampling):
     '''
     
     def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, \
-                        v_rescaling=False, Berendsen_rescaling=False, sv_rescaling=False):
+                        v_rescaling=False, Berendsen_rescaling=False, Langevin_rescaling=False, sv_rescaling=False):
         super(velocity_Verlet, self).__init__(morest_parameters, sampling_parameters, calculator)
         self.md_parameters = md_parameters
         self.traj_file_name = traj_file_name
         self.log_file_name = log_file_name
         self.v_rescaling = v_rescaling
         self.b_rescaling = Berendsen_rescaling
+        self.l_rescaling = Langevin_rescaling
         self.sv_rescaling = sv_rescaling
         if type(T_simulation) == type(None):
             self.re_simulation = False
@@ -96,8 +97,7 @@ class velocity_Verlet(initialize_sampling):
         
         if self.v_rescaling:
             self.velocity_rescaling()
-
-        if self.b_rescaling:
+        elif self.b_rescaling:
             self.Berendsen_rescaling()
         
         if self.sampling_parameters['sampling_initialization']:
@@ -167,12 +167,12 @@ class velocity_Verlet(initialize_sampling):
         
         if self.v_rescaling:
             self.velocity_rescaling()
-
-        if self.b_rescaling:
+        elif self.b_rescaling:
             self.Berendsen_rescaling()
-        
-        if self.sv_rescaling:
-            R_t = self.stochastic_velocity_rescaling()
+        elif self.l_rescaling:
+            R_t = self.stochastic_velocity_rescaling(Nf=1)
+        elif self.sv_rescaling:
+            R_t = self.stochastic_velocity_rescaling(Nf=3*self.n_atom)
         
         if self.md_parameters['md_clean_translation']:
             #next_velocities = clean_translation(next_velocities)
@@ -223,7 +223,7 @@ class velocity_Verlet(initialize_sampling):
         velocities = self.current_system.get_velocities()
         self.current_system.set_velocities(factor * velocities)
         
-    def stochastic_velocity_rescaling(self):
+    def stochastic_velocity_rescaling(self, Nf):
         '''
         This function implements stochastic velocity rescaling algorithm (Bussi, Donadio and Parrinello, JCP (2007); Bussi, Parrinello, CPC (2008)) to do canonical ensenmble sampling (NVT MD).
         '''
@@ -231,7 +231,8 @@ class velocity_Verlet(initialize_sampling):
         time_step = self.md_parameters['md_time_step']
         
         ### degree of freedom
-        Nf = 3 * self.n_atom
+        # Nf = 1                # for Langevin thermostat
+        # Nf = 3 * self.n_atom  # for SVR thermostat
         #if self.sampling_parameters['sampling_clean_translation']:
         #    Nf = Nf - 3
         #if self.sampling_parameters['sampling_clean_rotation']:
