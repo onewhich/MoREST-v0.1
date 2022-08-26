@@ -1,3 +1,4 @@
+from time import time
 import numpy as np
 #import sys
 #sys.path.append('..')
@@ -107,7 +108,7 @@ class velocity_Verlet(initialize_sampling):
                 self.MD_log = open(self.log_file_name, 'w', buffering=1)
             if self.sv_rescaling:
                 self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), Effective energy (eV)\n')   
-                self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses, self.K_simulation, self.sampling_parameters['nvt_svr_tau'], 0, 0)
+                self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses, self.K_simulation, self.md_parameters['md_time_step'], self.sampling_parameters['nvt_svr_tau'], 0, 0)
             else:
                 self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
                 write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
@@ -196,8 +197,8 @@ class velocity_Verlet(initialize_sampling):
                 write_xyz_traj(self.traj_file_name, self.current_system)
             self.kinetic_energy = self.current_system.get_kinetic_energy()
             if self.sv_rescaling:
-                #self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses, self.K_simulation, self.sampling_parameters['nvt_svr_tau'], self.d_Ee, self.Wt+R_t)
-                self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses, self.K_simulation, self.sampling_parameters['nvt_svr_tau'], self.d_Ee, R_t)
+                #self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses, self.K_simulation, time_step, self.sampling_parameters['nvt_svr_tau'], self.d_Ee, self.Wt+R_t)
+                self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses, self.K_simulation, time_step, self.sampling_parameters['nvt_svr_tau'], self.d_Ee, R_t)
             else:
                 write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses)
         
@@ -289,15 +290,15 @@ def write_MD_log(MD_log, step, Ep, Ek, masses):
     Et = Ek + Ep
     MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'\n')
     
-def write_SVR_MD_log(MD_log, step, Ep, Ek, masses, K_simulation, tau, d_Ee, Wt):
+def write_SVR_MD_log(MD_log, step, Ep, Ek, masses, K_simulation, time_step, tau, d_Ee, Wt):
     n_atom = len(masses)
     Nf = 3 * n_atom
     #Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(n_atom)])
     #Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)
     T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
     Et = Ek + Ep
-    d_Ee = d_Ee -1*((K_simulation - Ek)/tau + 2*np.sqrt(Ek*K_simulation/Nf/tau)*Wt)
-    Ee = Et + d_Ee
+    d_Ee = d_Ee + (K_simulation - Ek)*time_step/tau + 2*np.sqrt(Ek*K_simulation/Nf/tau)*Wt
+    Ee = Et - d_Ee
     MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'    '+str(Ee)+'\n')
     return d_Ee, Wt
     
