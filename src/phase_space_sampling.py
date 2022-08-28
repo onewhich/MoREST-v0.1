@@ -171,9 +171,9 @@ class velocity_Verlet(initialize_sampling):
         elif self.b_rescaling:
             self.Berendsen_rescaling()
         elif self.l_rescaling:
-            R_t = self.stochastic_velocity_rescaling(Nf=1)
+            R_t = self.stochastic_velocity_rescaling(Nf = 1, tau = 1/(2*self.sampling_parameters['nvt_langevin_gamma']))
         elif self.sv_rescaling:
-            R_t = self.stochastic_velocity_rescaling(Nf=3*self.n_atom)
+            R_t = self.stochastic_velocity_rescaling(Nf = 3*self.n_atom, tau = self.sampling_parameters['nvt_svr_tau'])
         
         if self.md_parameters['md_clean_translation']:
             #next_velocities = clean_translation(next_velocities)
@@ -224,11 +224,10 @@ class velocity_Verlet(initialize_sampling):
         velocities = self.current_system.get_velocities()
         self.current_system.set_velocities(factor * velocities)
         
-    def stochastic_velocity_rescaling(self, Nf):
+    def stochastic_velocity_rescaling(self, Nf, tau):
         '''
         This function implements stochastic velocity rescaling algorithm (Bussi, Donadio and Parrinello, JCP (2007); Bussi, Parrinello, CPC (2008)) to do canonical ensenmble sampling (NVT MD).
         '''
-        tau = self.sampling_parameters['nvt_svr_tau']
         time_step = self.md_parameters['md_time_step']
         
         ### degree of freedom

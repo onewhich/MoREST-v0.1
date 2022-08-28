@@ -147,6 +147,8 @@ class read_parameters:
                     self.sampling_parameters['nvt_vr_dt'] = float(i_parameter.split()[2])
                 elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_Berendsen'.upper()]:
                     self.sampling_parameters['nvt_berendsen_tau'] = float(i_parameter.split()[2])
+                elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_Langevin'.upper()]:
+                    self.sampling_parameters['nvt_langevin_gamma'] = float(i_parameter.split()[2])
                 elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
                     self.sampling_parameters['nvt_svr_tau'] = float(i_parameter.split()[2])
                 
@@ -532,15 +534,21 @@ class read_parameters:
     def get_md_parameters(self, log_morest=None):
         self.md_parameters['md_time_step'] *= units.fs
         self.md_parameters['md_simulation_time'] *= units.fs
-        if self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
+        if self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_Berendsen'.upper()]:
+            self.sampling_parameters['nvt_berendsen_tau'] *= units.fs
+        elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_Langevin'.upper()]:
+            self.sampling_parameters['nvt_langevin_gamma'] /= units.fs
+        elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
             self.sampling_parameters['nvt_svr_tau'] *= units.fs
         if self.sampling_parameters['phase_space_sampling']:
             if self.morest_parameters['morest_save_parameters_file']:
                 np.save('MoREST_MD_parameters.npy', self.md_parameters)
             if type(log_morest) != type(None):
                 for key in self.md_parameters:
-                    if key in ['md_time_step','md_simulation_time','nvt_svr_tau']:
+                    if key in ['md_time_step','md_simulation_time','nvt_berendsen_tau','nvt_svr_tau']:
                         log_morest.write(key+' : '+str(self.md_parameters[key]/units.fs)+'\n')
+                    elif key in ['nvt_langevin_gamma']:
+                        log_morest.write(key+' : '+str(self.md_parameters[key]*units.fs)+'\n')
                     else:
                         log_morest.write(key+' : '+str(self.md_parameters[key])+'\n')
                 log_morest.write('\n')
