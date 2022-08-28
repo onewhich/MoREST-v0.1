@@ -106,7 +106,7 @@ class velocity_Verlet(initialize_sampling):
                 self.MD_log = open('MoREST_MD.log', 'w', buffering=1)
             else:
                 self.MD_log = open(self.log_file_name, 'w', buffering=1)
-            if self.sv_rescaling:
+            if self.sv_rescaling or self.l_rescaling:
                 self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), Effective energy (eV)\n')   
                 self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses, self.K_simulation, self.md_parameters['md_time_step'], self.sampling_parameters['nvt_svr_tau'], 0, 0)
             else:
@@ -196,7 +196,7 @@ class velocity_Verlet(initialize_sampling):
             else:
                 write_xyz_traj(self.traj_file_name, self.current_system)
             self.kinetic_energy = self.current_system.get_kinetic_energy()
-            if self.sv_rescaling:
+            if self.sv_rescaling or self.l_rescaling:
                 #self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses, self.K_simulation, time_step, self.sampling_parameters['nvt_svr_tau'], self.d_Ee, self.Wt+R_t)
                 self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses, self.K_simulation, time_step, self.sampling_parameters['nvt_svr_tau'], self.d_Ee, R_t)
             else:
