@@ -6,6 +6,7 @@ MoREST_load_parameters_file       False # Read parameters from the file
 Many_body_potential               ML_FD  # ML_FD: machine learning potential with finite difference forces, on_the_fly: using QC, DFT package to calculate potential and forces
 ###Input_file                     gjf.com #TODO: read QC,DFT parameters from input file
 ML_potential_model                ../../../fhicloud-wang/Al2F2/gpr_AlF_dimer_potential_from_test11
+ML_active_learning                True
 FD_displacement                   0.0025 # Parameter for finite difference forces calculation
 
 Phase_space_sampling              False

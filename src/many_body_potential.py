@@ -13,8 +13,9 @@ class ml_potential:
     system: ase.Atoms object
     
     '''
-    def __init__(self, trained_ml_potential):
+    def __init__(self, trained_ml_potential, if_active_learning):
         self.ml_potential = joblib.load(trained_ml_potential)
+        self.if_active_learning = if_active_learning
         #self.ml_features = np.load(model_features, allow_pickle=True)
         #self.ml_labels = np.load(model_labels, allow_pickle=True)
         
@@ -97,9 +98,12 @@ class ml_potential:
         if type(system_list) != list:
             raise ValueError
         representation_list = [self.generate_Al2F2_representation(i_system) for i_system in system_list]
-        return self.ml_potential.predict(representation_list) * units.Hartree # change energy in Hartree to eV
-    
-    def get_potential_FD_forces(self, system, displacement=0.0025):
+        ml_energy, ml_energy_std = self.ml_potential.predict(representation_list, return_std=True)
+        ml_energy = np.array(ml_energy) * units.Hartree # change energy in Hartree to eV
+        ml_energy_std = np.array(ml_energy_std) * units.Hartree
+        return ml_energy, ml_energy_std
+
+    def get_potential_FD_forces(self, system, displacement=0.0025, energy_std_tolerance=0.01):
         system_list = [system]
         n_atoms = system.get_global_number_of_atoms()
         forces = []
@@ -110,9 +114,18 @@ class ml_potential:
                 coordinates[i,j] = coordinates[i,j] + displacement
                 new_system.set_positions(coordinates)
                 system_list.append(new_system)
-        energy_list = self.get_ml_potential(system_list)
-        #print(energy_list)
+        # Get the predictions of energy and uncertainty
+        energy_list, energy_std_list = self.get_ml_potential(system_list)
+        print("Energy:", energy_list)
+        print("Energy std:", energy_std_list)
         energy_0 = energy_list[0]
+        energy_std_0 = energy_std_list[0]
+
+        # Determine if the energy need to be calculated on the fly
+        if self.if_active_learning and (energy_std_0 > energy_std_tolerance):
+            print("ML energy uncertainty is larger than tolerance(=", energy_std_tolerance,"): ", energy_std_0)
+            return float('nan'), float('nan')
+
         for i,i_energy in enumerate(energy_list[1:]):
             force_value = -1*(i_energy - energy_0)/displacement
             forces.append(force_value)
@@ -120,6 +133,8 @@ class ml_potential:
         #print(forces)
         return energy_0, forces.reshape(n_atoms, 3)
 
+
+         
 class on_the_fly:
     '''
     Using ase.calculators to calculates the potential energy and forces of the system during the simulation.
