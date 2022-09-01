@@ -64,6 +64,8 @@ class morest:
                     self.sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator, v_rescaling=True)
                 elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_Berendsen'.upper()]:
                     self.sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator, Berendsen_rescaling=True)
+                elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_Langevin'.upper()]:
+                    self.sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator, Langevin_rescaling=True)
                 elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
                     self.sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator, sv_rescaling=True)
                 else:
@@ -216,7 +218,7 @@ class morest:
             calculator: The same as the calculator in ASE. It is required, when many body potential is specified as 'on_the_fly'.
         '''
         simulation_maxsteps = int(self.md_parameters['md_simulation_time']/self.md_parameters['md_time_step']) + 1
-        if self.enhanced_sampling_parameters['enhanced_sampling']:
+        if self.morest_parameters['enhanced_sampling']:
             if self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['re'.upper()]:
                 current_step = []
                 current_system = []
@@ -285,8 +287,8 @@ class morest:
         current_step, current_system = self.scattering_job.current_step, self.scattering_job.current_system
         simulation_maxsteps = self.scattering_parameters['scattering_traj_length']
         while current_step <= simulation_maxsteps:
-            if self.enhanced_sampling_parameters['enhanced_sampling']:
-                self.enhanced_sampling_parameters['enhanced_sampling'] = False # TODO: enhanced sampling method for trajectory scattering
+            if self.morest_parameters['enhanced_sampling']:
+                self.morest_parameters['enhanced_sampling'] = False # TODO: enhanced sampling method for trajectory scattering
             else:
                 if self.wall_potential_parameters['wall_potential']:
                     general_coordinate = current_system.get_positions()

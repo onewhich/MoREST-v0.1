@@ -1,3 +1,4 @@
+from time import time
 import numpy as np
 #import sys
 #sys.path.append('..')
@@ -64,13 +65,14 @@ class velocity_Verlet(initialize_sampling):
     '''
     
     def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, \
-                        v_rescaling=False, Berendsen_rescaling=False, sv_rescaling=False):
+                        v_rescaling=False, Berendsen_rescaling=False, Langevin_rescaling=False, sv_rescaling=False):
         super(velocity_Verlet, self).__init__(morest_parameters, sampling_parameters, calculator)
         self.md_parameters = md_parameters
         self.traj_file_name = traj_file_name
         self.log_file_name = log_file_name
         self.v_rescaling = v_rescaling
         self.b_rescaling = Berendsen_rescaling
+        self.l_rescaling = Langevin_rescaling
         self.sv_rescaling = sv_rescaling
         if type(T_simulation) == type(None):
             self.re_simulation = False
@@ -104,8 +106,7 @@ class velocity_Verlet(initialize_sampling):
         
         if self.v_rescaling:
             self.velocity_rescaling()
-
-        if self.b_rescaling:
+        elif self.b_rescaling:
             self.Berendsen_rescaling()
         
         if self.sampling_parameters['sampling_initialization']:
@@ -113,9 +114,12 @@ class velocity_Verlet(initialize_sampling):
                 self.MD_log = open('MoREST_MD.log', 'w', buffering=1)
             else:
                 self.MD_log = open(self.log_file_name, 'w', buffering=1)
-            if self.sv_rescaling:
+            if self.l_rescaling:
                 self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), Effective energy (eV)\n')   
-                self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses, self.K_simulation, self.sampling_parameters['nvt_svr_tau'], 0, 0)
+                self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses, self.K_simulation, self.md_parameters['md_time_step'], 1/(2*self.sampling_parameters['nvt_langevin_gamma']), 0, 0)
+            elif self.sv_rescaling:
+                self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), Effective energy (eV)\n')   
+                self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses, self.K_simulation, self.md_parameters['md_time_step'], self.sampling_parameters['nvt_svr_tau'], 0, 0)
             else:
                 self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
                 write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
@@ -178,12 +182,12 @@ class velocity_Verlet(initialize_sampling):
         
         if self.v_rescaling:
             self.velocity_rescaling()
-
-        if self.b_rescaling:
+        elif self.b_rescaling:
             self.Berendsen_rescaling()
-        
-        if self.sv_rescaling:
-            R_t = self.stochastic_velocity_rescaling()
+        elif self.l_rescaling:
+            R_t = self.stochastic_velocity_rescaling(Nf = 1, tau = 1/(2*self.sampling_parameters['nvt_langevin_gamma']))
+        elif self.sv_rescaling:
+            R_t = self.stochastic_velocity_rescaling(Nf = 3*self.n_atom, tau = self.sampling_parameters['nvt_svr_tau'])
         
         if self.md_parameters['md_clean_translation']:
             #next_velocities = clean_translation(next_velocities)
@@ -206,9 +210,12 @@ class velocity_Verlet(initialize_sampling):
             else:
                 write_xyz_traj(self.traj_file_name, self.current_system)
             self.kinetic_energy = self.current_system.get_kinetic_energy()
-            if self.sv_rescaling:
-                #self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses, self.K_simulation, self.sampling_parameters['nvt_svr_tau'], self.d_Ee, self.Wt+R_t)
-                self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses, self.K_simulation, self.sampling_parameters['nvt_svr_tau'], self.d_Ee, R_t)
+            if self.l_rescaling:
+                #self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses, self.K_simulation, time_step, self.sampling_parameters['nvt_svr_tau'], self.d_Ee, self.Wt+R_t)
+                self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses, self.K_simulation, time_step, 1/(2*self.sampling_parameters['nvt_langevin_gamma']), self.d_Ee, R_t)
+            elif self.sv_rescaling:
+                #self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses, self.K_simulation, time_step, self.sampling_parameters['nvt_svr_tau'], self.d_Ee, self.Wt+R_t)
+                self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses, self.K_simulation, time_step, self.sampling_parameters['nvt_svr_tau'], self.d_Ee, R_t)
             else:
                 write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses)
         
@@ -227,22 +234,22 @@ class velocity_Verlet(initialize_sampling):
 
     def Berendsen_rescaling(self):
         tau = self.sampling_parameters['nvt_berendsen_tau']
-        time_step = self.sampling_parameters['md_time_step']
+        time_step = self.md_parameters['md_time_step']
         Ek = self.current_system.get_kinetic_energy()
         Ti = 2/3 * Ek/units.kB /self.n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
         factor = np.sqrt(1 + time_step/tau * (self.T_simulation/Ti -1))
         velocities = self.current_system.get_velocities()
         self.current_system.set_velocities(factor * velocities)
         
-    def stochastic_velocity_rescaling(self):
+    def stochastic_velocity_rescaling(self, Nf, tau):
         '''
         This function implements stochastic velocity rescaling algorithm (Bussi, Donadio and Parrinello, JCP (2007); Bussi, Parrinello, CPC (2008)) to do canonical ensenmble sampling (NVT MD).
         '''
-        tau = self.sampling_parameters['nvt_svr_tau']
         time_step = self.md_parameters['md_time_step']
         
         ### degree of freedom
-        Nf = 3 * self.n_atom
+        # Nf = 1                # for Langevin thermostat
+        # Nf = 3 * self.n_atom  # for SVR thermostat
         #if self.sampling_parameters['sampling_clean_translation']:
         #    Nf = Nf - 3
         #if self.sampling_parameters['sampling_clean_rotation']:
@@ -299,15 +306,15 @@ def write_MD_log(MD_log, step, Ep, Ek, masses):
     Et = Ek + Ep
     MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'\n')
     
-def write_SVR_MD_log(MD_log, step, Ep, Ek, masses, K_simulation, tau, d_Ee, Wt):
+def write_SVR_MD_log(MD_log, step, Ep, Ek, masses, K_simulation, time_step, tau, d_Ee, Wt):
     n_atom = len(masses)
     Nf = 3 * n_atom
     #Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(n_atom)])
     #Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)
     T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
     Et = Ek + Ep
-    d_Ee = d_Ee -1*((K_simulation - Ek)/tau + 2*np.sqrt(Ek*K_simulation/Nf/tau)*Wt)
-    Ee = Et + d_Ee
+    d_Ee = d_Ee + (K_simulation - Ek)*time_step/tau + 2*np.sqrt(Ek*K_simulation/Nf/tau)*Wt
+    Ee = Et - d_Ee
     MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'    '+str(Ee)+'\n')
     return d_Ee, Wt
     
