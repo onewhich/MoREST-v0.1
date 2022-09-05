@@ -159,7 +159,7 @@ class velocity_Verlet(initialize_sampling):
             next_potential_energy, next_forces = self.many_body_potential.get_potential_FD_forces(next_system, \
                                                       self.morest_parameters['fd_displacement'])
             # If the ML energy has too large uncertainty, call ab initio calculations
-            if np.isnan(next_potential_energy) or np.isnan(next_forces):
+            if np.isnan(next_potential_energy) or np.isnan(next_forces.any()):
                 next_potential_energy, next_forces = self.ab_initio_potential.get_potential_forces(next_system)
         else:
             next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(next_system)
