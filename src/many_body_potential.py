@@ -1,5 +1,6 @@
 import numpy as np
-import joblib
+#import joblib
+import pickle
 from copy import deepcopy
 from ase import units
 
@@ -14,7 +15,8 @@ class ml_potential:
     
     '''
     def __init__(self, trained_ml_potential):
-        self.ml_potential = joblib.load(trained_ml_potential)
+        #self.ml_potential = joblib.load(trained_ml_potential)
+        self.ml_potential = pickle.load(open(trained_ml_potential, 'rb'))
         #self.ml_features = np.load(model_features, allow_pickle=True)
         #self.ml_labels = np.load(model_labels, allow_pickle=True)
         
