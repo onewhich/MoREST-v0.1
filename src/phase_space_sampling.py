@@ -43,7 +43,7 @@ class initialize_sampling:
             self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_FD_forces(system, \
                                                       self.morest_parameters['fd_displacement'])
             # If the ML energy has too large uncertainty, call ab initio calculations
-            if np.isnan(self.current_potential_energy) or np.isnan(self.current_forces):
+            if np.isnan(self.current_potential_energy) or np.isnan(self.current_forces.any()):
                 self.current_potential_energy, self.current_forces = self.ab_initio_potential.get_potential_forces(system)
         else:
             self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(system)
