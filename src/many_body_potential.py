@@ -14,7 +14,6 @@ class ml_potential:
     system: ase.Atoms object
     
     '''
-    
     def __init__(self, trained_ml_potential, if_active_learning):
         #self.ml_potential = joblib.load(trained_ml_potential)
         self.ml_potential = pickle.load(open(trained_ml_potential, 'rb'))

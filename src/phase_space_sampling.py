@@ -19,7 +19,9 @@ class initialize_sampling:
             self.many_body_potential = on_the_fly(calculator)
         elif self.morest_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
             trained_ml_potential = self.morest_parameters['ml_potential_model']
-            self.many_body_potential = ml_potential(trained_ml_potential)
+            self.many_body_potential = ml_potential(trained_ml_potential, self.morest_parameters['ml_active_learning'])
+            if self.morest_parameters['ml_active_learning']:
+                self.ab_initio_potential = on_the_fly(calculator)
         else:
             raise Exception('Which many body potential will you use?')
             
@@ -40,8 +42,14 @@ class initialize_sampling:
         if self.morest_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
             self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_FD_forces(system, \
                                                       self.morest_parameters['fd_displacement'])
+            # If the ML energy has too large uncertainty, call ab initio calculations
+            if np.isnan(self.current_potential_energy) or np.isnan(self.current_forces):
+                self.current_potential_energy, self.current_forces = self.ab_initio_potential.get_potential_forces(system)
         else:
             self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(system)
+
+      
+
         #self.masses = system.get_masses()
         #self.current_accelerations = np.array([self.current_forces[i_atom] / self.masses[i_atom] for i_atom in range(self.n_atom)])
         
@@ -150,6 +158,9 @@ class velocity_Verlet(initialize_sampling):
         if self.morest_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
             next_potential_energy, next_forces = self.many_body_potential.get_potential_FD_forces(next_system, \
                                                       self.morest_parameters['fd_displacement'])
+            # If the ML energy has too large uncertainty, call ab initio calculations
+            if np.isnan(next_potential_energy) or np.isnan(next_forces):
+                next_potential_energy, next_forces = self.ab_initio_potential.get_potential_forces(next_system)
         else:
             next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(next_system)
         
