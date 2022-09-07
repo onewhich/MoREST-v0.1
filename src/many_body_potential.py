@@ -189,8 +189,8 @@ class molpro_calculator:
     def run_molpro(self):
         runcommand = self.molpro_dir + " < " + self.infile + " > " + self.outfile
         inpstr = 'memory,'+self.memory+'\n\n'
-        inpstr += 'symmetry,nosym\n'
-        inpstr += self.unit + '\n'
+        inpstr += 'symmetry,nosym\n\n'
+        inpstr += self.unit + '\n\n'
         # Parse the geometry
         inpstr += 'geometry={\n'
         for i,element in enumerate(self.elements):
@@ -200,6 +200,7 @@ class molpro_calculator:
                 inpstr += ' ' + str(self.positions[i][j])
             inpstr += '\n'
         inpstr += '}'
+        inpstr += '\n'
         # Parse the basis
         inpstr += '\nbasis=' + self.basis
         # Parse the method
@@ -215,7 +216,7 @@ class molpro_calculator:
         #print("Molpro exit code:", runresult.returncode)
         return runresult.returncode
 
-    def parse_outfile(self, file, if_get_force = True):
+    def parse_outfile(self, file, if_get_force=True):
         """
         Gets the coordinates and energies from molpro single-point calculation outputs (in Bohr)
         Returns:
@@ -279,14 +280,14 @@ class molpro_calculator:
                 energy = float('Inf')
                 #return path, elements, xyz_Al1F2Al3F4, energy
                 if if_get_force:
-                    return energy, force
+                    return energy, np.array(force)
                 else:
                     return energy
             if(lines[-1].find("terminated")==-1):
                 energy = float('Inf')
                 #return path, elements, xyz_Al1F2Al3F4, energy
                 if if_get_force:
-                    return energy, force
+                    return energy, np.array(force)
                 else:
                     return energy
             for i, line in enumerate(lines):
@@ -347,7 +348,7 @@ class molpro_calculator:
             #    return path, elements, xyz, energy
 
             if if_get_force:
-                return energy, force
+                return energy, np.array(force)
             else:
                 return energy
 
