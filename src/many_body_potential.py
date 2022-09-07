@@ -213,6 +213,7 @@ class molpro_calculator:
             fin.write(inpstr)
         #print(runcommand)
         runresult = subprocess.run(runcommand, shell=True)
+        runresult = subprocess.run('rm -f *.xml', shell=True)
         #print("Molpro exit code:", runresult.returncode)
         return runresult.returncode
 
