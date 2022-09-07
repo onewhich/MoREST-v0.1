@@ -3,7 +3,7 @@ import numpy as np
 #import sys
 #sys.path.append('..')
 from structure import read_xyz_file, write_xyz_file, read_xyz_traj, write_xyz_traj
-from many_body_potential import ml_potential, on_the_fly
+from many_body_potential import ml_potential, on_the_fly, molpro_calculator
 from copy import deepcopy
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary, ZeroRotation
 from ase import units
@@ -17,11 +17,21 @@ class initialize_sampling:
             if type(calculator) == type(None):
                 raise Exception('Please specify the electronic structure method.')
             self.many_body_potential = on_the_fly(calculator)
+        if self.morest_parameters['many_body_potential'].upper() in ['molpro'.upper()]:
+            if type(calculator) == type({}):
+                molpro_para_dict = calculator
+                self.many_body_potential = molpro_calculator(molpro_para_dict)
+            else:
+                raise Exception('Please pass the molpro parameters dictionary to calculator.')
         elif self.morest_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
             trained_ml_potential = self.morest_parameters['ml_potential_model']
             self.many_body_potential = ml_potential(trained_ml_potential, self.morest_parameters['ml_active_learning'])
             if self.morest_parameters['ml_active_learning']:
-                self.ab_initio_potential = on_the_fly(calculator)
+                if type(calculator) == type({}):
+                    molpro_para_dict = calculator
+                    self.ab_initio_potential = molpro_calculator(molpro_para_dict)
+                else:
+                    self.ab_initio_potential = on_the_fly(calculator)
         else:
             raise Exception('Which many body potential will you use?')
             
