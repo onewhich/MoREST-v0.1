@@ -1,3 +1,6 @@
+from runpy import run_module
+from shutil import ExecError
+from unittest import expectedFailure
 import numpy as np
 #import joblib
 import pickle
@@ -160,42 +163,65 @@ class molpro:
         self.molpro_dir = molpro_para_dict['molpro_dir']
         self.method = molpro_para_dict['method']
         self.basis = molpro_para_dict['basis']
+        try:
+            self.memory = molpro_para_dict['memory']
+        except:
+            self.memory='12,g'
+        try:
+            self.unit = molpro_para_dict['unit']
+        except:
+            self.unit='angstrom'
+        try:
+            self.infile = molpro_para_dict['infile']
+        except:
+            self.infile='molpro.inp'
+        try:
+            self.outfile = molpro_para_dict['outfile']
+        except:
+            self.outfile='molpro.out'
+
 
     def get_potential_forces(self, system):
-        self.system = system
+        self.elements = system.get_chemical_symbols()
+        self.positions = system.get_positions()
+        self.run_molpro()
 
         return self.potential_energy, self.forces
 
-    def run_molpro(self, molpro_dir, method, basis, memory='12,g', unit="angstrom", infile="molpro.inp", outfile="molpro.out"):
-        runcommand = molpro_dir + " < " + infile + " > " + outfile
+    def run_molpro(self):
+        runcommand = self.molpro_dir + " < " + self.infile + " > " + self.outfile
 
-        inpstr = 'memory,'+memory+'\n\n'
+        inpstr = 'memory,'+self.memory+'\n\n'
         inpstr += 'symmetry,nosym\n'
 
-        inpstr += unit + '\n'
+        inpstr += self.unit + '\n'
 
         # Parse the geometry
         inpstr += 'geometry={\n'
-        for i,element in enumerate(elements):
+        for i,element in enumerate(self.elements):
             inpstr += element
             inpstr += ' '
             for j in range(3):
-                inpstr += ' ' + str(positions[i][j])
+                inpstr += ' ' + str(self.positions[i][j])
             inpstr += '\n'
 
         inpstr += '}'
 
         # Parse the basis
-        inpstr += '\nbasis=' + basis
+        inpstr += '\nbasis=' + self.basis
 
         # Parse the method
-        inpstr += '\n' + method
+        if not 'force' in self.method:
+            inpstr += '\n' + self.method + '\nforce'
+        else:
+            inpstr += '\n' + self.method
 
         # Write the input file
-        with open('molpro.inp', 'w') as fin:
+        with open(self.infile, 'w') as fin:
             fin.write(inpstr)
 
         #print(runcommand)
         runresult = subprocess.run(runcommand, shell=True)
         #print("Molpro exit code:", runresult.returncode)
         return runresult.returncode
+
