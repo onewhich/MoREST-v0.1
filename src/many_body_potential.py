@@ -224,4 +224,172 @@ class molpro:
         runresult = subprocess.run(runcommand, shell=True)
         #print("Molpro exit code:", runresult.returncode)
         return runresult.returncode
+<<<<<<< HEAD
+=======
+def get_xyz_energy(file, if_get_force = False):
+    """
+    Gets the coordinates and energies from molpro single-point calculation outputs (in Bohr)
+
+
+    Returns:
+        path: Path of molpro output file
+        elements: Elements of the atoms  --> symbol = ''.join(elements); 
+                                             ase.Atoms.set_chemical_symbols([elements]); 
+        xyz: Coordinates of the atoms  --> ase.Atoms.set_positions([xyz])
+        energy: Total energy of the system
+        force (if_get_force = True): Force of atoms             
+            
+
+    Example:
+        file = "molpro.out"
+        path, elements, xyz, energy, force = get_xyz_energy(file, if_get_force=True)
+
+
+
+    Sample Molpro outputs:
+
+           - Geometry:
+            
+             ATOMIC COORDINATES
+
+             NR  ATOM    CHARGE       X              Y              Z
+
+               1  AL     13.00    0.000000000    2.362157656    0.000000000
+               2  F       9.00    0.000000000   -2.362157656    0.000000000
+               3  AL     13.00    0.000000000    8.031336029    0.000000000
+               4  F       9.00    0.000000000    3.307020718    0.000000000
+            
+             Bond lengths in Bohr (Angstrom)
+
+             1-3  5.669178374  1-4  0.944863062
+                 ( 3.000000000)     ( 0.500000000)
+
+             Bond angles
+
+              3-1-4    0.00000000
+
+           - Force:
+
+             CCSD(T) GRADIENT FOR STATE 1.1
+
+             Atom          dE/dx               dE/dy               dE/dz
+
+             1         0.000000000        -0.000000000        -0.070539245
+             2        -0.000000000         0.000000000         0.070539245
+
+             Nuclear force contribution to virial =         0.266599708
+
+
+
+
+    """
+
+    unit_xyz = "Bohr"
+    unit_energy = "Hartree"
+    
+    print("\n\nFile:", file)
+    path = ""
+    
+    with open(file,'r') as f:
+        path = file
+        lines = f.readlines()
+        
+        
+    
+        energy = float('nan')
+        xs = []
+        ys = []
+        zs = []
+        elements = []
+        xyz = []
+        force = []
+
+ 
+        if(len(lines)<1):
+            energy = float('Inf')
+            return path, elements, xyz_Al1F2Al3F4, energy
+    
+            
+        if(lines[-1].find("terminated")==-1):
+            energy = float('Inf')
+            return path, elements, xyz_Al1F2Al3F4, energy
+    
+
+        for i, line in enumerate(lines):
+        
+            if(line.find("GRADIENT FOR STATE")!=-1):
+                ii = i+4
+                forcexs = []
+                forceys = []
+                forcezs = []
+                elements = []
+                while (lines[ii].find("Nuclear force contribution")==-1) and (len(lines[ii].split())>3):
+                    element = lines[ii].split()[1]
+                    x = float(lines[ii].split()[-3])
+                    y = float(lines[ii].split()[-2])
+                    z = float(lines[ii].split()[-1])
+                    elements.append(element)
+                    forcexs.append(x)
+                    forceys.append(y)
+                    forcezs.append(z)
+                    ii += 1            
+                force = []
+                for i_atom in range(len(forcexs)):
+                    force.append([forcexs[i_atom],forceys[i_atom],forcezs[i_atom]])
+ 
+        
+        for i, line in enumerate(lines):
+            
+
+
+            if(line.find("ATOMIC COORDINATES")!=-1):
+                ii = i+4
+                xs = []
+                ys = []
+                zs = []
+                elements = []
+                while (lines[ii].find("Bond lengths")==-1) and (len(lines[ii].split())>3):
+                    element = lines[ii].split()[1]
+                    x = float(lines[ii].split()[-3])
+                    y = float(lines[ii].split()[-2])
+                    z = float(lines[ii].split()[-1])
+                    elements.append(element)
+                    xs.append(x)
+                    ys.append(y)
+                    zs.append(z)
+                    ii += 1
+                
+                
+            """
+            Energy:
+            
+            CCSD(T)/aug-cc-pVQZ energy=   -671.623485056226
+            
+            """
+            if(line.find("Bond lengths in ")!= -1):
+                print("Unit of coordinates read from the output file:", line.split("Bond lengths in ")[-1].split(" ")[0])
+                
+                
+            if(line.find(" energy=")!=-1):
+                energy = float(line.split("=")[-1])
+        
+        
+        
+        
+        
+
+        for i_atom in range(len(xs)):
+        
+            xyz.append([xs[i_atom],ys[i_atom],zs[i_atom]])
+
+        
+        print(" \nElements:", elements, "; Coordinates:", xyz, "; \n Energy:", energy, ";\n Force:", force)
+
+
+        if if_get_force:
+            return path, elements, xyz, energy, force
+        else:
+            return path, elements, xyz, energy
+
+>>>>>>> 016ec7614b437f82d4021d02c82c3dd8ad79625b
 
