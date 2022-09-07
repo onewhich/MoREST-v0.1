@@ -7,6 +7,7 @@ Many_body_potential               ML_FD  # ML_FD: machine learning potential wit
 ###Input_file                     gjf.com #TODO: read QC,DFT parameters from input file
 ML_potential_model                ../../../fhicloud-wang/Al2F2/gpr_AlF_dimer_potential_from_test11
 ML_active_learning                True
+Energy_difference_tolerance       0.01 # Check if ab initio calculator will involve based on the difference between ML prediction and the QC calculation. It is the energy std for GPR.
 FD_displacement                   0.0025 # Parameter for finite difference forces calculation
 
 Phase_space_sampling              False
