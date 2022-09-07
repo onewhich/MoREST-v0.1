@@ -3,6 +3,7 @@ import numpy as np
 import pickle
 from copy import deepcopy
 from ase import units
+import subprocess
 
 class ml_potential:
     '''
@@ -105,7 +106,7 @@ class ml_potential:
         ml_energy_std = np.array(ml_energy_std) * units.Hartree
         return ml_energy, ml_energy_std
 
-    def get_potential_FD_forces(self, system, displacement=0.0025, energy_std_tolerance=0.01):
+    def get_potential_FD_forces(self, system, displacement=0.0025, energy_difference_tolerance=0.01):
         system_list = [system]
         n_atoms = system.get_global_number_of_atoms()
         forces = []
@@ -124,8 +125,8 @@ class ml_potential:
         energy_std_0 = energy_std_list[0]
 
         # Determine if the energy need to be calculated on the fly
-        if self.if_active_learning and (energy_std_0 > energy_std_tolerance):
-            print("ML energy uncertainty is larger than tolerance(=", energy_std_tolerance,"): ", energy_std_0)
+        if self.if_active_learning and (energy_std_0 > energy_difference_tolerance):
+            print("ML energy uncertainty is larger than tolerance(=", energy_difference_tolerance,"): ", energy_std_0)
             return float('nan'), float('nan')
 
         for i,i_energy in enumerate(energy_list[1:]):
@@ -152,3 +153,49 @@ class on_the_fly:
         self.potential_energy = system.get_potential_energy()
         
         return self.potential_energy, self.forces
+
+
+class molpro:
+    def __init__(self, molpro_para_dict):
+        self.molpro_dir = molpro_para_dict['molpro_dir']
+        self.method = molpro_para_dict['method']
+        self.basis = molpro_para_dict['basis']
+
+    def get_potential_forces(self, system):
+        self.system = system
+
+        return self.potential_energy, self.forces
+
+    def run_molpro(self, molpro_dir, method, basis, memory='12,g', unit="angstrom", infile="molpro.inp", outfile="molpro.out"):
+        runcommand = molpro_dir + " < " + infile + " > " + outfile
+
+        inpstr = 'memory,'+memory+'\n\n'
+        inpstr += 'symmetry,nosym\n'
+
+        inpstr += unit + '\n'
+
+        # Parse the geometry
+        inpstr += 'geometry={\n'
+        for i,element in enumerate(elements):
+            inpstr += element
+            inpstr += ' '
+            for j in range(3):
+                inpstr += ' ' + str(positions[i][j])
+            inpstr += '\n'
+
+        inpstr += '}'
+
+        # Parse the basis
+        inpstr += '\nbasis=' + basis
+
+        # Parse the method
+        inpstr += '\n' + method
+
+        # Write the input file
+        with open('molpro.inp', 'w') as fin:
+            fin.write(inpstr)
+
+        #print(runcommand)
+        runresult = subprocess.run(runcommand, shell=True)
+        #print("Molpro exit code:", runresult.returncode)
+        return runresult.returncode
