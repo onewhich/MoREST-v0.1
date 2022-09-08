@@ -4,6 +4,7 @@ import pickle
 from copy import deepcopy
 from ase import units
 import subprocess
+import os
 
 class ml_potential:
     '''
@@ -158,6 +159,8 @@ class on_the_fly:
 class molpro_calculator:
     def __init__(self, molpro_para_dict):
         self.molpro_dir = molpro_para_dict['molpro_dir']
+        self.ntasks = molpro_para_dict['ntasks']
+        self.nthreads = molpro_para_dict['nthreads']
         self.method = molpro_para_dict['method']
         self.basis = molpro_para_dict['basis']
         try:
@@ -187,7 +190,8 @@ class molpro_calculator:
         return self.potential_energy * units.Hartree, self.forces * (units.Hartree/units.Bohr)
 
     def run_molpro(self):
-        runcommand = self.molpro_dir + " < " + self.infile + " > " + self.outfile
+        #runcommand = self.molpro_dir + " < " + self.infile + " > " + self.outfile
+        runcommand = self.molpro_dir + " -n " + str(self.ntasks) + " -t " + str(self.nthreads) + " " + self.infile
         inpstr = 'memory,'+self.memory+'\n\n'
         inpstr += 'symmetry,nosym\n\n'
         inpstr += self.unit + '\n\n'
@@ -205,16 +209,17 @@ class molpro_calculator:
         inpstr += '\nbasis=' + self.basis
         # Parse the method
         if not 'force' in self.method:
-            inpstr += '\n' + self.method + '\nforce'
+            inpstr += '\n' + self.method + '\nforce, numerical'
         else:
             inpstr += '\n' + self.method
         # Write the input file
         with open(self.infile, 'w') as fin:
             fin.write(inpstr)
         #print(runcommand)
-        runresult = subprocess.run(runcommand, shell=True)
+        #runresult = subprocess.run(runcommand, shell=True)
         #print("Molpro exit code:", runresult.returncode)
-        return runresult.returncode
+        #return runresult.returncode
+        os.system(runcommand)
 
     def parse_outfile(self, file, if_get_force=True):
         """
