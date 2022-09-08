@@ -209,7 +209,7 @@ class molpro_calculator:
         inpstr += '\nbasis=' + self.basis
         # Parse the method
         if not 'force' in self.method:
-            inpstr += '\n' + self.method + '\nforce, numerical'
+            inpstr += '\n' + self.method + '\nforce'
         else:
             inpstr += '\n' + self.method
         # Write the input file
@@ -221,6 +221,7 @@ class molpro_calculator:
         #print("Molpro exit code:", runresult.returncode)
         #return runresult.returncode
         os.system(runcommand)
+        os.system('rm -f *.xml')
 
     def parse_outfile(self, file, if_get_force=True):
         """
