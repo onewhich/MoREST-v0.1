@@ -17,7 +17,7 @@ class initialize_sampling:
             if type(calculator) == type(None):
                 raise Exception('Please specify the electronic structure method.')
             self.many_body_potential = on_the_fly(calculator)
-        if self.morest_parameters['many_body_potential'].upper() in ['molpro'.upper()]:
+        elif self.morest_parameters['many_body_potential'].upper() in ['molpro'.upper()]:
             if type(calculator) == type({}):
                 molpro_para_dict = calculator
                 self.many_body_potential = molpro_calculator(molpro_para_dict)

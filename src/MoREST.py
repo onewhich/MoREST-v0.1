@@ -209,6 +209,8 @@ class morest:
                 +str(self.wall_potential_parameters['wall_type'])+'\" is called.\n\n')
             self.wall = repulsive_wall(self.wall_potential_parameters)
 
+        MoREST_parameters.write_parameters(self.log_morest)
+
         
     def phase_space_sampling(self):
         '''
