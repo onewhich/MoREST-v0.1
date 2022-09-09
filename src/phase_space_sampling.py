@@ -314,7 +314,7 @@ def write_MD_log(MD_log, step, Ep, Ek, masses):
     #Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)
     T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
     Et = Ek + Ep
-    MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'\n')
+    MD_log.write(str(step)+',    '+str(Ep)+',    '+str(Ek)+',    '+str(T)+',    '+str(Et)+'\n')
     
 def write_SVR_MD_log(MD_log, step, Ep, Ek, masses, K_simulation, time_step, tau, d_Ee, Wt):
     n_atom = len(masses)
@@ -325,6 +325,6 @@ def write_SVR_MD_log(MD_log, step, Ep, Ek, masses, K_simulation, time_step, tau,
     Et = Ek + Ep
     d_Ee = d_Ee + (K_simulation - Ek)*time_step/tau + 2*np.sqrt(Ek*K_simulation/Nf/tau)*Wt
     Ee = Et - d_Ee
-    MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'    '+str(Ee)+'\n')
+    MD_log.write(str(step)+',    '+str(Ep)+',    '+str(Ek)+',    '+str(T)+',    '+str(Et)+',    '+str(Ee)+'\n')
     return d_Ee, Wt
     
