@@ -24,7 +24,7 @@ class ml_potential:
         #self.ml_labels = np.load(model_labels, allow_pickle=True)
         
     @staticmethod
-    def generate_Al2F2_representation(Al2F2, representation_name="inverse_r_exp_r_relative"):
+    def generate_Al2F2_representation(Al2F2, representation_name="inverse_r_exp_r"):
         """
             Al2F2: ASE Atoms object, with positions information of Al2F2
             representation_name: Name of the structural representation:
