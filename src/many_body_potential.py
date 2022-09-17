@@ -67,9 +67,9 @@ class ml_potential:
         elif(representation_name == "inverse_r_exp_r_relative"):
 
             # Optimized bond lengths (CCSD(T)/avqz)
-            r_F2 = 1.413030165 # In Ang
-            r_Al2 = 2.568675944
-            r_AlF = 1.668734698
+            r_F2 = 1.413030165 / units.Bohr # From AA to Bohr
+            r_Al2 = 2.568675944 / units.Bohr
+            r_AlF = 1.668734698 / units.Bohr
             inverse_r_Al1_F2 = 1.0/r_Al1_F2 * r_AlF
             inverse_r_Al3_F4 = 1.0/r_Al3_F4 * r_AlF
             inverse_r_Al1_F4 = 1.0/r_Al1_F4 * r_AlF
