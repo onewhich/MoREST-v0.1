@@ -261,7 +261,8 @@ class molpro_calculator:
         os.system(runcommand)
         os.system('rm -f *.xml')
 
-    def parse_outfile(self, file, if_get_force=True):
+    @staticmethod
+    def parse_outfile(file, if_get_force=True):
         """
         Gets the coordinates and energies from molpro single-point calculation outputs (in Bohr)
         Returns:
