@@ -3,7 +3,7 @@ import numpy as np
 import pickle
 from copy import deepcopy
 from ase import units
-import subprocess
+#import subprocess
 import os
 
 class ml_potential:
@@ -394,8 +394,8 @@ class molpro_calculator:
             #    return path, elements, xyz, energy
 
             if if_get_force:
-                return energy, np.array(force)
+                return energy * units.Hartree, np.array(force) * (units.Hartree/units.Bohr)
             else:
-                return energy
+                return energy * units.Hartree
 
 
