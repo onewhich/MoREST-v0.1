@@ -225,7 +225,7 @@ class molpro_calculator:
         self.run_molpro()
         self.potential_energy, self.forces = self.parse_outfile(self.outfile, if_get_force=True)
 
-        return self.potential_energy * units.Hartree, self.forces * (units.Hartree/units.Bohr)
+        return self.potential_energy, self.forces
 
     def run_molpro(self):
         #runcommand = self.molpro_dir + " < " + self.infile + " > " + self.outfile
