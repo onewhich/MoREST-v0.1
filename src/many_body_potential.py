@@ -3,8 +3,8 @@ import numpy as np
 import pickle
 from copy import deepcopy
 from ase import units
-#import subprocess
-import os
+import subprocess
+#import os
 
 class ml_potential:
     '''
@@ -254,12 +254,12 @@ class molpro_calculator:
         with open(self.infile, 'w') as fin:
             fin.write(inpstr)
         #print(runcommand)
-        #runresult = subprocess.run(runcommand, shell=True)
-        #runresult = subprocess.run('rm -f *.xml', shell=True)
+        runresult = subprocess.run(runcommand, shell=True)
+        runresult = subprocess.run('rm -f *.xml', shell=True)
         #print("Molpro exit code:", runresult.returncode)
-        #return runresult.returncode
-        os.system(runcommand)
-        os.system('rm -f *.xml')
+        return runresult.returncode
+        #os.system(runcommand)
+        #os.system('rm -f *.xml')
 
     @staticmethod
     def parse_outfile(file, if_get_force=True):
