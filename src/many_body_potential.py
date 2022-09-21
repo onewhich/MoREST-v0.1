@@ -394,7 +394,7 @@ class molpro_calculator:
             #    return path, elements, xyz, energy
 
             if if_get_force:
-                return energy * units.Hartree, np.array(force) * (units.Hartree/units.Bohr)
+                return energy * units.Hartree, np.array(force) * (units.Hartree/units.Angstrom)
             else:
                 return energy * units.Hartree
 
