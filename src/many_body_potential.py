@@ -201,6 +201,7 @@ class molpro_calculator:
         self.nthreads = molpro_para_dict['nthreads']
         self.method = molpro_para_dict['method']
         self.basis = molpro_para_dict['basis']
+        self.geomtyp = 'xyz'
         try:
             self.memory = molpro_para_dict['memory']
         except:
@@ -220,6 +221,7 @@ class molpro_calculator:
 
 
     def get_potential_forces(self, system):
+        self.n_atom = system.get_global_number_of_atoms()
         self.elements = system.get_chemical_symbols()
         self.positions = system.get_positions()
         self.run_molpro()
@@ -234,7 +236,8 @@ class molpro_calculator:
         inpstr += 'symmetry,nosym\n\n'
         inpstr += self.unit + '\n\n'
         # Parse the geometry
-        inpstr += 'geometry={\n'
+        inpstr += 'geomtyp=xyz\n'
+        inpstr += 'geometry={\n'+str(self.n_atom)+'\n\n'
         for i,element in enumerate(self.elements):
             inpstr += element
             inpstr += ' '
@@ -378,8 +381,8 @@ class molpro_calculator:
                 
                 CCSD(T)/aug-cc-pVQZ energy=   -671.623485056226
                 """
-                if(line.find("Bond lengths in ")!= -1):
-                    print("Unit of coordinates read from the output file:", line.split("Bond lengths in ")[-1].split(" ")[0])
+                #if(line.find("Bond lengths in ")!= -1):
+                #    print("Unit of coordinates read from the output file:", line.split("Bond lengths in ")[-1].split(" ")[0])
                 if(line.find(" energy=")!=-1):
                     energy = float(line.split("=")[-1])
             
