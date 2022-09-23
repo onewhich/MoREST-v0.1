@@ -32,7 +32,7 @@ class read_parameters:
         self.morest_parameters['morest_save_parameters_file'] = False
         self.morest_parameters['morest_load_parameters_file'] = False
         self.morest_parameters['ml_active_learning'] = False
-        self.morest_parameters['energy_difference_tolerance'] = 0.01
+        self.morest_parameters['ml_de_tolerance'] = 0.01
         self.morest_parameters['fd_displacement'] = 0.0025
         self.sampling_parameters = {}
         self.sampling_parameters['phase_space_sampling'] = False
@@ -119,8 +119,8 @@ class read_parameters:
                 elif i_parameter.split()[1].upper() == 'False'.upper():
                     self.morest_parameters['ml_active_learning'] = False  
 
-            elif i_parameter.split()[0].upper() == 'Energy_difference_tolerance'.upper():
-                self.morest_parameters['energy_difference_tolerance'] = float(i_parameter.split()[1])
+            elif i_parameter.split()[0].upper() == 'ML_dE_tolerance'.upper():
+                self.morest_parameters['ml_de_tolerance'] = float(i_parameter.split()[1])
 
             elif i_parameter.split()[0].upper() == 'FD_displacement'.upper():
                 self.morest_parameters['fd_displacement'] = float(i_parameter.split()[1])
