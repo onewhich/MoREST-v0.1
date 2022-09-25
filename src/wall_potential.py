@@ -86,6 +86,7 @@ class repulsive_wall:
             return wall_force, wall_potential
 
     def power_potential(self, a, c, vec_gc_b, norm_gc_b, i_wall):
+        print('a: '+str(a)+'\nc: '+str(c)+'\nvec_gc_b: '+str(vec_gc_b)+'\nnorm_gc_b:'+str(norm_gc_b))
         # c should be larger than 1
         wall_force = -1 * a * c * norm_gc_b**(c-1) * vec_gc_b/norm_gc_b
         wall_potential = a * norm_gc_b**c
