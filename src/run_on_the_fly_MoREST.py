@@ -7,7 +7,7 @@ mult=1
 method='MN15'
 basisfile='../../../def2-TZVPD'
 calculator = Gaussian(label='gjf', cpu=cpu, mem='12GB', chk='gjf.chk', charge=charge, mult=mult,\
-                      method=method, basisfile=basisfile, geom='NoCrowd', scf='qc', nosymm='nosymm')
+                      method=method, basisfile=basisfile, geom='NoCrowd', scf='xqc', nosymm='nosymm')
 
 
 md_job = morest(calculator=calculator)
