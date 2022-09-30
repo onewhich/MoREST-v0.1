@@ -1,6 +1,6 @@
 import numpy as np
 from structure import read_xyz_file, write_xyz_file, read_xyz_traj, write_xyz_traj
-from many_body_potential import ml_potential, on_the_fly
+from many_body_potential import ml_potential, on_the_fly, molpro_calculator
 from copy import deepcopy
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary
 from ase import units
@@ -20,9 +20,21 @@ class initialize_scattering:
             if type(calculator) == type(None):
                 raise Exception('Please specify the electronic structure method.')
             self.many_body_potential = on_the_fly(calculator)
+        elif self.morest_parameters['many_body_potential'].upper() in ['molpro'.upper()]:
+            if type(calculator) == type({}):
+                molpro_para_dict = calculator
+                self.many_body_potential = molpro_calculator(molpro_para_dict)
+            else:
+                raise Exception('Please pass the molpro parameters dictionary to calculator.')
         elif self.morest_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
             trained_ml_potential = self.morest_parameters['ml_potential_model']
-            self.many_body_potential = ml_potential(trained_ml_potential)
+            self.many_body_potential = ml_potential(trained_ml_potential, self.morest_parameters['ml_active_learning'])
+            if self.morest_parameters['ml_active_learning']:
+                if type(calculator) == type({}):
+                    molpro_para_dict = calculator
+                    self.ab_initio_potential = molpro_calculator(molpro_para_dict)
+                else:
+                    self.ab_initio_potential = on_the_fly(calculator)
         else:
             raise Exception('Which many body potential will you use?')
 
@@ -80,7 +92,7 @@ class initialize_scattering:
 
 class scattering_velocity_Verlet(initialize_scattering):
     '''
-    This class implements velocity Verlet algorithm to do microcanonical ensemble (NVE MD) dynamics.
+    This class implements velocity Verlet algorithm to do microcanonical ensemble (NVE) dynamics.
     '''
     
     def __init__(self, morest_parameters, scattering_parameters, calculator=None):
@@ -151,6 +163,44 @@ class scattering_velocity_Verlet(initialize_scattering):
         write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses)
         
         return self.current_step, self.current_system
+
+class scattering_Runge_Kutta_4th(initialize_scattering):
+    '''
+    This class implements Runge-Kutta 4th order algorithm to do microcanonical ensemble (NVE) dynamics.
+    '''
+    
+    def __init__(self, morest_parameters, scattering_parameters, calculator=None):
+        super(scattering_velocity_Verlet, self).__init__(morest_parameters, scattering_parameters, calculator)
+        
+        if self.scattering_parameters['scattering_initialization']:
+            self.generate_scattering_system()
+            self.current_step = 0
+            self.current_step, self.current_system = self.get_current_structure()
+            self.current_traj = []
+            self.current_traj.append(self.current_system)
+            write_xyz_traj('MoREST_traj.xyz', self.current_system)
+        else:
+            self.current_traj = read_xyz_traj('MoREST_traj.xyz')
+            self.current_step = len(self.current_traj) - 1
+            self.current_step, self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
+        
+        ### kinetic energy at simulation temperature
+        Nf = 3 * self.n_atom
+        self.K_simulation = Nf/2 * units.kB * self.scattering_parameters['scattering_temperature'] # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+        
+        if self.scattering_parameters['scattering_initialization']:
+            self.MD_log = open('MoREST_MD.log', 'w', buffering=1)
+            self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
+            write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
+        else:
+            self.MD_log = open('MoREST_MD.log', 'a', buffering=1)
+        
+    def generate_new_step(self, bias_forces=None):
+        time_step = self.scattering_parameters['scattering_time_step']
+        
+        next_system = deepcopy(self.current_system)
+        
+    
 
 def reset_geometric_center(system):
     '''
