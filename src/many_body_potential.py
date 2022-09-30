@@ -5,6 +5,7 @@ from copy import deepcopy
 from ase import units
 import subprocess
 #import os
+import math
 
 class ml_potential:
     '''
@@ -16,13 +17,78 @@ class ml_potential:
     system: ase.Atoms object
     
     '''
-    def __init__(self, trained_ml_potential, if_active_learning=False):
+    def __init__(self, trained_ml_potential, displacement=0.0025, if_active_learning=False, energy_uncertainty_tolerance=0.01, ab_initio_calculator=None):
         #self.ml_potential = joblib.load(trained_ml_potential)
         self.ml_potential = pickle.load(open(trained_ml_potential, 'rb'))
+        self.displacement = displacement
         self.if_active_learning = if_active_learning
+        self.energy_uncertainty_tolerance = energy_uncertainty_tolerance
         #self.ml_features = np.load(model_features, allow_pickle=True)
         #self.ml_labels = np.load(model_labels, allow_pickle=True)
+        if self.if_active_learning:
+
+            self.training_set = pd.read_csv(filename_training_set)
+            if type(ab_initio_calculator) == type({}):
+                molpro_para_dict = calculator
+                self.ab_initio_potential = molpro_calculator(molpro_para_dict)
+            else:
+                self.ab_initio_potential = on_the_fly(calculator)
+
+    def RMSE(true, pred):
+        RMSE_value = 0.0
+        N = 0
+        #print(true, len(true))
+        for i in range(len(true)):
+            if(math.isnan(true[i])):
+                continue
+            if(math.isnan(pred[i])):
+                continue
+            RMSE_value += (pred[i] - true[i]) ** 2
+            N += 1
+        RMSE_value = math.sqrt(RMSE_value/N)
+        return RMSE_value
+
+    def train_ml_model_energy(self, feature_keys, label_keys, data_train, data_valid):
+
+        """
+        feature_keys: 
+        label_keys: ["total_energy"]
+        """
+        x_train = data_train[feature_keys]
+        y_train = data_train[label_keys]
+        # Todo: figure out where to generate the features, and if we should save the features, or only the xyz positions in the csv file?
+        # Maybe we can generage the features outside this function upon calling, and give both data_training_set and x_train, y_train to this function to be saved.
+
+        gpr_kernel=kernels.Matern(nu=2.5)  + kernels.WhiteKernel(noise_level=0.1, noise_level_bounds=(1e-8,1e5))
+        print("Training set: \n    Shape of feature: ", np.shape(x_train))
+        print("Size of validation set:", np.shape(y_valid))
+        gpr = GaussianProcessRegressor(kernel=gpr_kernel,normalize_y=True)
+        print("The trained kernel: %s" % gpr.kernel_)
+
+        # Get the training scores
+        y_train_pred, y_train_pred_std = gpr.predict(x_train, return_std=True)
+        print("Training RMSE:", RMSE(y_train, y_train_pred))
+        print("Training uncertainty:", np.average(y_train_pred_std))
         
+        data_train_save = x_train.copy(deep=True)
+        data_train_save["total_energy_true"] = y_train
+        data_train_save["total_energy_pred"] = y_train_pred
+        data_train_save["total_energy_pred_std"] = y_train_pred_std
+        data_train_save.to_csv("data_train-training_size_" + str(len(y_train)).zfill(6) + ".csv", index=None)
+        
+        # Get the validation scores
+        y_valid_pred, y_valid_pred_std = gpr.predict(x_valid, return_std=True)
+        print("Validation RMSE:", RMSE(y_valid, y_valid_pred))
+        print("Validation uncertainty:", np.average(y_valid_pred_std))
+
+        data_valid_save = x_valid.copy(deep=True)
+        data_valid_save["total_energy_true"] = y_valid
+        data_valid_save["total_energy_pred"] = y_valid_pred
+        data_valid_save["total_energy_pred_std"] = y_valid_pred_std
+        data_valid_save.to_csv("data_valid-training_size_" + str(len(y_train)).zfill(6) + ".csv", index=None)
+        
+
+
     @staticmethod
     def generate_Al2F2_representation(Al2F2, representation_name="inverse_r_exp_r"):
         """
@@ -140,7 +206,7 @@ class ml_potential:
         ml_energy_std = np.array(ml_energy_std) * units.Hartree
         return ml_energy, ml_energy_std
 
-    def get_potential_FD_forces(self, system, displacement=0.0025, energy_difference_tolerance=0.01):
+    def get_potential_forces(self, system):
         system_list = [system]
         n_atoms = system.get_global_number_of_atoms()
         forces = []
@@ -148,7 +214,7 @@ class ml_potential:
             for j in range(3):
                 new_system = deepcopy(system)
                 coordinates = new_system.get_positions()
-                coordinates[i,j] = coordinates[i,j] + displacement
+                coordinates[i,j] = coordinates[i,j] + self.displacement
                 new_system.set_positions(coordinates)
                 system_list.append(new_system)
         # Get the predictions of energy and uncertainty
@@ -159,12 +225,15 @@ class ml_potential:
         energy_std_0 = energy_std_list[0]
 
         # Determine if the energy need to be calculated on the fly
-        if self.if_active_learning and (energy_std_0 > energy_difference_tolerance):
-            print("ML energy uncertainty is larger than tolerance(=", energy_difference_tolerance,"): ", energy_std_0)
-            return float('nan'), float('nan')
+        if self.if_active_learning and (energy_std_0 > self.energy_uncertainty_tolerance):
+            print("ML energy uncertainty is larger than tolerance(=", self.energy_uncertainty_tolerance,"): ", energy_std_0)
+            #return float('nan'), float('nan')
+            # If the ML energy has too large uncertainty, call ab initio calculations
+            return self.ab_initio_potential.get_potential_forces(system)
+
 
         for i,i_energy in enumerate(energy_list[1:]):
-            force_value = -1*(i_energy - energy_0)/displacement
+            force_value = -1*(i_energy - energy_0)/self.displacement
             forces.append(force_value)
         forces = np.array(forces)
         #print(forces)

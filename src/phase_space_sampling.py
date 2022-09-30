@@ -25,13 +25,8 @@ class initialize_sampling:
                 raise Exception('Please pass the molpro parameters dictionary to calculator.')
         elif self.morest_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
             trained_ml_potential = self.morest_parameters['ml_potential_model']
-            self.many_body_potential = ml_potential(trained_ml_potential, self.morest_parameters['ml_active_learning'])
-            if self.morest_parameters['ml_active_learning']:
-                if type(calculator) == type({}):
-                    molpro_para_dict = calculator
-                    self.ab_initio_potential = molpro_calculator(molpro_para_dict)
-                else:
-                    self.ab_initio_potential = on_the_fly(calculator)
+            self.many_body_potential = ml_potential(trained_ml_potential, self.morest_parameters['fd_displacement'], self.morest_parameters['ml_active_learning'], \
+                                                    self.morest_parameters['ml_energy_uncertainty_tolerance'], calculator)
         else:
             raise Exception('Which many body potential will you use?')
             
@@ -49,14 +44,7 @@ class initialize_sampling:
         self.masses = system.get_masses()[:,np.newaxis]
         #self.current_accelerations = self.current_forces / self.masses
         
-        if self.morest_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
-            self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_FD_forces(system, \
-                                                      self.morest_parameters['fd_displacement'], self.morest_parameters['ml_de_tolerance'])
-            # If the ML energy has too large uncertainty, call ab initio calculations
-            if np.isnan(self.current_potential_energy) or np.isnan(self.current_forces.any()):
-                self.current_potential_energy, self.current_forces = self.ab_initio_potential.get_potential_forces(system)
-        else:
-            self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(system)
+        self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(system)
 
       
 
@@ -165,14 +153,7 @@ class velocity_Verlet(initialize_sampling):
         momenta_half = current_momenta + 0.5 * self.current_forces * time_step
         
         ### F(t+dt)
-        if self.morest_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
-            next_potential_energy, next_forces = self.many_body_potential.get_potential_FD_forces(next_system, \
-                                                      self.morest_parameters['fd_displacement'], self.morest_parameters['energy_difference_tolerance'])
-            # If the ML energy has too large uncertainty, call ab initio calculations
-            if np.isnan(next_potential_energy) or np.isnan(next_forces.any()):
-                next_potential_energy, next_forces = self.ab_initio_potential.get_potential_forces(next_system)
-        else:
-            next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(next_system)
+        next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(next_system)
         
         ### v(t+dt) = v(t+0.5dt) + 0.5 * F(t+dt) * dt / m
         #next_accelerations = self.current_forces / self.masses

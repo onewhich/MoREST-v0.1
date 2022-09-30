@@ -71,7 +71,7 @@ class initialize_scattering:
         
         if self.morest_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
             self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_FD_forces(system, \
-                                                      self.morest_parameters['fd_displacement'], self.morest_parameters['energy_difference_tolerance'])
+                                                      self.morest_parameters['fd_displacement'], self.morest_parameters['energy_uncertainty_tolerance'])
         else:
             self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(system)
         
