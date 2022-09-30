@@ -531,9 +531,10 @@ class read_parameters:
         return self.morest_parameters
 
     def get_sampling_parameters(self, log_morest=None):
-        if self.sampling_parameters['sampling_initialization'] == True:
-            # change MoREST_initialization as True
-            self.morest_parameters['morest_initialization'] = True
+        if self.morest_parameters['morest_initialization'] == True:
+           self.sampling_parameters['sampling_initialization'] = True
+        elif  self.morest_parameters['morest_initialization'] == False:
+           self.sampling_parameters['sampling_initialization'] = False
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_sampling_parameters.npy', self.sampling_parameters)
         if type(log_morest) != type(None):
@@ -566,9 +567,10 @@ class read_parameters:
         return self.md_parameters
 
     def get_scattering_parameters(self, log_morest=None):
-        if self.scattering_parameters['scattering_initialization'] == True:
-            # change MoREST_initialization as True
-            self.morest_parameters['morest_initialization'] = True
+        if self.morest_parameters['morest_initialization'] == True:
+           self.scattering_parameters['scattering_initialization'] = True
+        elif  self.morest_parameters['morest_initialization'] == False:
+           self.scattering_parameters['scattering_initialization'] = False
         self.scattering_parameters['scattering_time_step'] *= units.fs
         self.scattering_parameters['scattering_V_collision'] /= units.fs
         if self.scattering_parameters['scattering_stops_number'] == 0:
@@ -675,6 +677,10 @@ class read_parameters:
         return self.enhanced_sampling_parameters
         
     def get_re_parameters(self, log_morest=None):
+        if self.morest_parameters['morest_initialization'] == True:
+           self.re_parameters['re_initialization'] = True
+        elif  self.morest_parameters['morest_initialization'] == False:
+           self.re_parameters['re_initialization'] = False
         if not 're_replica_temperatures' in self.re_parameters:
             if int(self.re_parameters['re_replica_arrange']) == -1:
                 replica_temperatures = np.linspace(self.re_parameters['re_lower_bound_temperature'],\
@@ -712,6 +718,10 @@ class read_parameters:
         return self.re_parameters
     
     def get_its_parameters(self, log_morest=None):
+        if self.morest_parameters['morest_initialization'] == True:
+           self.its_parameters['its_initialization'] = True
+        elif  self.morest_parameters['morest_initialization'] == False:
+           self.its_parameters['its_initialization'] = False
         self.its_parameters['its_criteria_pk'] = self.its_parameters['its_delta_pk'] / \
                                                 self.its_parameters['its_number_of_replica']
         if not 'its_replica_temperatures' in self.its_parameters:

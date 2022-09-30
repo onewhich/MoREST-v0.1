@@ -300,7 +300,7 @@ class molpro_calculator:
 
     def run_molpro(self):
         #runcommand = self.molpro_dir + " < " + self.infile + " > " + self.outfile
-        runcommand = self.molpro_dir + " -n " + str(self.ntasks) + " -t " + str(self.nthreads) + " " + self.infile
+        runcommand = self.molpro_dir + " -n " + str(self.ntasks) + " -t " + str(self.nthreads) + " -W \$PWD\/wfu "  + self.infile
         inpstr = 'memory,'+self.memory+'\n\n'
         inpstr += 'symmetry,nosym\n\n'
         inpstr += self.unit + '\n\n'
