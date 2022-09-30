@@ -28,15 +28,33 @@ class initialize_scattering:
                 raise Exception('Please pass the molpro parameters dictionary to calculator.')
         elif self.morest_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
             trained_ml_potential = self.morest_parameters['ml_potential_model']
-            self.many_body_potential = ml_potential(trained_ml_potential, self.morest_parameters['ml_active_learning'])
-            if self.morest_parameters['ml_active_learning']:
-                if type(calculator) == type({}):
-                    molpro_para_dict = calculator
-                    self.ab_initio_potential = molpro_calculator(molpro_para_dict)
-                else:
-                    self.ab_initio_potential = on_the_fly(calculator)
+            self.many_body_potential = ml_potential(trained_ml_potential, self.morest_parameters['fd_displacement'], self.morest_parameters['ml_active_learning'], \
+                                                    self.morest_parameters['ml_energy_uncertainty_tolerance'], calculator)
         else:
             raise Exception('Which many body potential will you use?')
+        
+        if self.scattering_parameters['scattering_initialization']:
+            self.generate_scattering_system()
+            self.current_step = 0
+            self.current_step, self.current_system = self.get_current_structure()
+            self.current_traj = []
+            self.current_traj.append(self.current_system)
+            write_xyz_traj('MoREST_traj.xyz', self.current_system)
+        else:
+            self.current_traj = read_xyz_traj('MoREST_traj.xyz')
+            self.current_step = len(self.current_traj) - 1
+            self.current_step, self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
+        
+        ### kinetic energy at simulation temperature
+        Nf = 3 * self.n_atom
+        self.K_simulation = Nf/2 * units.kB * self.scattering_parameters['scattering_temperature'] # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+        
+        if self.scattering_parameters['scattering_initialization']:
+            self.MD_log = open('MoREST_MD.log', 'w', buffering=1)
+            self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
+            write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
+        else:
+            self.MD_log = open('MoREST_MD.log', 'a', buffering=1)
 
     def generate_scattering_system(self):
         if self.scattering_parameters['scattering_pre_thermolized']:
@@ -81,11 +99,7 @@ class initialize_scattering:
         self.n_atom = system.get_global_number_of_atoms()
         self.masses = system.get_masses()[:,np.newaxis]
         
-        if self.morest_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
-            self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_FD_forces(system, \
-                                                      self.morest_parameters['fd_displacement'], self.morest_parameters['energy_uncertainty_tolerance'])
-        else:
-            self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(system)
+        self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(system)
         
         return self.current_step, system
     
@@ -97,29 +111,6 @@ class scattering_velocity_Verlet(initialize_scattering):
     
     def __init__(self, morest_parameters, scattering_parameters, calculator=None):
         super(scattering_velocity_Verlet, self).__init__(morest_parameters, scattering_parameters, calculator)
-        
-        if self.scattering_parameters['scattering_initialization']:
-            self.generate_scattering_system()
-            self.current_step = 0
-            self.current_step, self.current_system = self.get_current_structure()
-            self.current_traj = []
-            self.current_traj.append(self.current_system)
-            write_xyz_traj('MoREST_traj.xyz', self.current_system)
-        else:
-            self.current_traj = read_xyz_traj('MoREST_traj.xyz')
-            self.current_step = len(self.current_traj) - 1
-            self.current_step, self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
-        
-        ### kinetic energy at simulation temperature
-        Nf = 3 * self.n_atom
-        self.K_simulation = Nf/2 * units.kB * self.scattering_parameters['scattering_temperature'] # Ek = 1/2 m v^2 = 3/2 kB T for each particle
-        
-        if self.scattering_parameters['scattering_initialization']:
-            self.MD_log = open('MoREST_MD.log', 'w', buffering=1)
-            self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
-            write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
-        else:
-            self.MD_log = open('MoREST_MD.log', 'a', buffering=1)
         
     def generate_new_step(self, bias_forces=None):
         time_step = self.scattering_parameters['scattering_time_step']
@@ -142,11 +133,7 @@ class scattering_velocity_Verlet(initialize_scattering):
         momenta_half = current_momenta + 0.5 * self.current_forces * time_step
         
         ### F(t+dt)
-        if self.morest_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
-            next_potential_energy, next_forces = self.many_body_potential.get_potential_FD_forces(next_system, \
-                                                      self.morest_parameters['fd_displacement'])
-        else:
-            next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(next_system)
+        next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(next_system)
         
         ### p(t+dt) = p(t+0.5dt) + 0.5 * F(t+dt) * dt
         next_momenta = momenta_half + 0.5 * next_forces * time_step
@@ -171,29 +158,6 @@ class scattering_Runge_Kutta_4th(initialize_scattering):
     
     def __init__(self, morest_parameters, scattering_parameters, calculator=None):
         super(scattering_velocity_Verlet, self).__init__(morest_parameters, scattering_parameters, calculator)
-        
-        if self.scattering_parameters['scattering_initialization']:
-            self.generate_scattering_system()
-            self.current_step = 0
-            self.current_step, self.current_system = self.get_current_structure()
-            self.current_traj = []
-            self.current_traj.append(self.current_system)
-            write_xyz_traj('MoREST_traj.xyz', self.current_system)
-        else:
-            self.current_traj = read_xyz_traj('MoREST_traj.xyz')
-            self.current_step = len(self.current_traj) - 1
-            self.current_step, self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
-        
-        ### kinetic energy at simulation temperature
-        Nf = 3 * self.n_atom
-        self.K_simulation = Nf/2 * units.kB * self.scattering_parameters['scattering_temperature'] # Ek = 1/2 m v^2 = 3/2 kB T for each particle
-        
-        if self.scattering_parameters['scattering_initialization']:
-            self.MD_log = open('MoREST_MD.log', 'w', buffering=1)
-            self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
-            write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
-        else:
-            self.MD_log = open('MoREST_MD.log', 'a', buffering=1)
         
     def generate_new_step(self, bias_forces=None):
         time_step = self.scattering_parameters['scattering_time_step']
