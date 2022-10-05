@@ -1,3 +1,4 @@
+from time import time
 import numpy as np
 from structure import read_xyz_file, write_xyz_file, read_xyz_traj, write_xyz_traj
 from many_body_potential import ml_potential, on_the_fly, molpro_calculator
@@ -164,7 +165,117 @@ class scattering_Runge_Kutta_4th(initialize_scattering):
         
         next_system = deepcopy(self.current_system)
         
-    
+        ### F(t) + bias
+        if type(bias_forces) != type(None):
+            self.current_forces = self.current_forces + bias_forces
+        
+        # x_1 = x_n, v_1 = v_n, a_1 = a_n
+        x_1 = self.current_system.get_positions()
+        v_1 = self.current_system.get_velocities()
+        a_1 = self.current_forces/self.masses
+
+        # x_2 = x_n + h/2 * v_1, v_2 = v_n + h/2 * a_1, a_2 = f(x_2)
+        x_2 = x_1 + time_step/2 * v_1
+        v_2 = v_1 + time_step/2 * a_1
+        next_system.set_positions(x_2)
+        Ep_2, F_2 = self.many_body_potential.get_potential_forces(next_system)
+        a_2 = F_2/self.masses
+
+        # x_3 = x_n + h/2 * v_2, v_3 = v_n + h/2 * a_2, a_3 = f(x_3)
+        x_3 = x_1 + time_step/2 * v_2
+        v_3 = v_1 + time_step/2 * a_2
+        next_system.set_positions(x_3)
+        Ep_3, F_3 = self.many_body_potential.get_potential_forces(next_system)
+        a_3 = F_3/self.masses
+
+        # x_4 = x_n + h * v_3, v_4 = v_n + h * a_3, a_4 = f(x_4)
+        x_4 = x_1 + time_step * v_3
+        v_4 = v_1 + time_step * a_3
+        next_system.set_positions(x_4)
+        Ep_4, F_4 = self.many_body_potential.get_potential_forces(next_system)
+        a_4 = F_4/self.masses
+
+        # x_n+1 = x_n + h/6 * (v_1 + 2*v_2 + 2*v_3 + v_4), v_n+1 = v_n + h/6 * (a_1 + 2*a_2 + 2*a_3 + a_4)
+        next_coordinates = x_1 + time_step/6 * (v_1 + 2*v_2 + 2*v_3 + v_4)
+        next_velocities = v_1 + time_step/6 * (a_1 + 2*a_2 + 2*a_3 + a_4)
+
+        next_system.set_positions(next_coordinates)
+        next_system.set_velocities(next_velocities)
+
+        ### F(t+dt)
+        next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(next_system)
+        
+        self.current_step += 1
+        self.current_system = next_system
+        self.current_forces = next_forces
+        self.current_potential_energy = next_potential_energy
+        
+        self.current_traj.append(self.current_system)
+        write_xyz_traj('MoREST_traj.xyz', self.current_system)
+        kinetic_energy = self.current_system.get_kinetic_energy()
+        write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses)
+        
+        return self.current_step, self.current_system
+ 
+    def generate_new_step_2(self, bias_forces=None):
+        '''
+        This Runge-Kutta-Nyström methods version comes from https://willbeason.com/2021/06/24/introduction-to-runge-kutta-nystrom-methods/
+        '''
+        time_step = self.scattering_parameters['scattering_time_step']
+        
+        next_system = deepcopy(self.current_system)
+        
+        ### F(t) + bias
+        if type(bias_forces) != type(None):
+            self.current_forces = self.current_forces + bias_forces
+        
+        # x_1 = x_n, v_1 = v_n, a_1 = a_n
+        x_1 = self.current_system.get_positions()
+        v_1 = self.current_system.get_velocities()
+        a_1 = self.current_forces/self.masses
+
+        # x_2 = x_n + h/2 * v_1, v_2 = v_n + h/2 * a_1, a_2 = f(x_2)
+        v_2 = v_1 + time_step/2 * a_1
+        x_2 = x_1 + time_step/2 * (v_1 + v_2)/2
+        next_system.set_positions(x_2)
+        Ep_2, F_2 = self.many_body_potential.get_potential_forces(next_system)
+        a_2 = F_2/self.masses
+
+        # x_3 = x_n + h/2 * v_2, v_3 = v_n + h/2 * a_2, a_3 = f(x_3)
+        v_3 = v_1 + time_step/2 * a_2
+        x_3 = x_1 + time_step/2 * (v_1 + v_3)/2
+        next_system.set_positions(x_3)
+        Ep_3, F_3 = self.many_body_potential.get_potential_forces(next_system)
+        a_3 = F_3/self.masses
+
+        # x_4 = x_n + h * v_3, v_4 = v_n + h * a_3, a_4 = f(x_4)
+        v_4 = v_1 + time_step * a_3
+        x_4 = x_1 + time_step * (v_1 + v_4)/2
+        next_system.set_positions(x_4)
+        Ep_4, F_4 = self.many_body_potential.get_potential_forces(next_system)
+        a_4 = F_4/self.masses
+
+        # x_n+1 = x_n + h/6 * (v_1 + 2*v_2 + 2*v_3 + v_4), v_n+1 = v_n + h/6 * (a_1 + 2*a_2 + 2*a_3 + a_4)
+        next_coordinates = x_1 + time_step/6 * (v_1 + 2*v_2 + 2*v_3 + v_4)
+        next_velocities = v_1 + time_step/6 * (a_1 + 2*a_2 + 2*a_3 + a_4)
+
+        next_system.set_positions(next_coordinates)
+        next_system.set_velocities(next_velocities)
+
+        ### F(t+dt)
+        next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(next_system)
+        
+        self.current_step += 1
+        self.current_system = next_system
+        self.current_forces = next_forces
+        self.current_potential_energy = next_potential_energy
+        
+        self.current_traj.append(self.current_system)
+        write_xyz_traj('MoREST_traj.xyz', self.current_system)
+        kinetic_energy = self.current_system.get_kinetic_energy()
+        write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses)
+        
+        return self.current_step, self.current_system
 
 def reset_geometric_center(system):
     '''
