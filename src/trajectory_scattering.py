@@ -318,4 +318,4 @@ def write_MD_log(MD_log, step, Ep, Ek, masses):
     #Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)
     T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
     Et = Ek + Ep
-    MD_log.write(str(step)+',    '+str(Ep)+',    '+str(Ek)+',    '+str(T)+',    '+str(Et)+'\n')
+    MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'\n')
