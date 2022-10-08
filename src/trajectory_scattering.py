@@ -158,7 +158,7 @@ class scattering_Runge_Kutta_4th(initialize_scattering):
     '''
     
     def __init__(self, morest_parameters, scattering_parameters, calculator=None):
-        super(scattering_velocity_Verlet, self).__init__(morest_parameters, scattering_parameters, calculator)
+        super(scattering_Runge_Kutta_4th, self).__init__(morest_parameters, scattering_parameters, calculator)
         
     def generate_new_step(self, bias_forces=None):
         '''
@@ -228,7 +228,7 @@ class scattering_Runge_Kutta_4th_a(initialize_scattering):
     '''
     
     def __init__(self, morest_parameters, scattering_parameters, calculator=None):
-        super(scattering_velocity_Verlet, self).__init__(morest_parameters, scattering_parameters, calculator)
+        super(scattering_Runge_Kutta_4th_a, self).__init__(morest_parameters, scattering_parameters, calculator)
         
     def generate_new_step(self, bias_forces=None):
         '''
