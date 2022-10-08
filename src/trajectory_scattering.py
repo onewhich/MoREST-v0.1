@@ -48,7 +48,7 @@ class initialize_scattering:
         
         ### kinetic energy at simulation temperature
         Nf = 3 * self.n_atom
-        self.K_simulation = Nf/2 * units.kB * self.scattering_parameters['scattering_temperature'] # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+        self.K_simulation = Nf/2 * units.kB * self.scattering_parameters['scattering_T_target'] # Ek = 1/2 m v^2 = 3/2 kB T for each particle
         
         if self.scattering_parameters['scattering_initialization']:
             self.MD_log = open('MoREST_MD.log', 'w', buffering=1)
