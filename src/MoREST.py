@@ -237,7 +237,7 @@ class morest:
                 # --------------- (REMD) syncrhronize all replica to the same MD steps ----------------------
                 for i,i_sampling_job in enumerate(self.sampling_job):
                     while current_step[i] < current_max_step:
-                        if self.wall_potential_parameters['wall_potential']:
+                        if self.morest_parameters['wall_potential']:
                             general_coordinate = current_system[i].get_positions()
                             bias_forces = self.wall_potential(general_coordinate)
                             current_step[i], current_system[i] = i_sampling_job.generate_new_step(bias_forces)
@@ -248,7 +248,7 @@ class morest:
                 # --------------- (REMD) run ----------------------------------------------------------------
                 while current_step[-1] <= simulation_maxsteps:
                     for i,i_sampling_job in enumerate(self.sampling_job):
-                        if self.wall_potential_parameters['wall_potential']:
+                        if self.morest_parameters['wall_potential']:
                             general_coordinate = current_system[i].get_positions()
                             bias_forces = self.wall_potential(general_coordinate)
                             current_step[i], current_system[i] = i_sampling_job.generate_new_step(bias_forces)
@@ -262,7 +262,7 @@ class morest:
                 current_step, current_system = self.sampling_job.current_step, self.sampling_job.current_system
                 while current_step <= simulation_maxsteps:
                     bias_its_forces = self.enhanced_sampling_its(current_step)
-                    if self.wall_potential_parameters['wall_potential']:
+                    if self.morest_parameters['wall_potential']:
                         general_coordinate = current_system.get_positions()
                         bias_forces_wall_potential = self.wall_potential(general_coordinate)
                         bias_forces = bias_its_forces + bias_forces_wall_potential
@@ -272,7 +272,7 @@ class morest:
 
         else:
             current_step, current_system = self.sampling_job.current_step, self.sampling_job.current_system
-            if self.wall_potential_parameters['wall_potential']:
+            if self.morest_parameters['wall_potential']:
                 while current_step <= simulation_maxsteps:
                     general_coordinate = current_system.get_positions()
                     bias_forces = self.wall_potential(general_coordinate)
@@ -296,7 +296,7 @@ class morest:
             if self.morest_parameters['enhanced_sampling']:
                 self.morest_parameters['enhanced_sampling'] = False # TODO: enhanced sampling method for trajectory scattering
             else:
-                if self.wall_potential_parameters['wall_potential']:
+                if self.morest_parameters['wall_potential']:
                     general_coordinate = current_system.get_positions()
                     bias_forces = self.wall_potential(general_coordinate)
                     current_step, current_system= self.scattering_job.generate_new_step(bias_forces)
