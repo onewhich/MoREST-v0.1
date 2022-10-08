@@ -161,6 +161,11 @@ class scattering_Runge_Kutta_4th(initialize_scattering):
         super(scattering_velocity_Verlet, self).__init__(morest_parameters, scattering_parameters, calculator)
         
     def generate_new_step(self, bias_forces=None):
+        '''
+        This version comes from classic Runge-Kutta methods:
+        Runge–Kutta methods. (2022, September 6). In Wikipedia. https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods
+         https://www.haroldserrano.com/blog/visualizing-the-runge-kutta-method
+        '''
         time_step = self.scattering_parameters['scattering_time_step']
         
         next_system = deepcopy(self.current_system)
