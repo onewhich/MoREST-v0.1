@@ -222,7 +222,15 @@ class scattering_Runge_Kutta_4th(initialize_scattering):
         
         return self.current_step, self.current_system
  
-    def generate_new_step_2(self, bias_forces=None):
+class scattering_Runge_Kutta_4th_a(initialize_scattering):
+    '''
+    This class implements Runge-Kutta 4th order algorithm to do microcanonical ensemble (NVE) dynamics.
+    '''
+    
+    def __init__(self, morest_parameters, scattering_parameters, calculator=None):
+        super(scattering_velocity_Verlet, self).__init__(morest_parameters, scattering_parameters, calculator)
+        
+    def generate_new_step(self, bias_forces=None):
         '''
         This Runge-Kutta-Nyström methods version comes from https://willbeason.com/2021/06/24/introduction-to-runge-kutta-nystrom-methods/
         '''

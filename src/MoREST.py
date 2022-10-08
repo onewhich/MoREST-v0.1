@@ -3,7 +3,7 @@ import numpy as np
 from glob import glob
 from read_parameters import read_parameters
 from phase_space_sampling import velocity_Verlet
-from trajectory_scattering import scattering_velocity_Verlet
+from trajectory_scattering import scattering_velocity_Verlet, scattering_Runge_Kutta_4th, scattering_Runge_Kutta_4th_a
 from enhanced_sampling import its, re
 from wall_potential import repulsive_wall
 from collective_variable import collective_variables
@@ -102,6 +102,10 @@ class morest:
             self.stop_condition = collective_variables(from_CVs_file=False, CVs_list=self.scattering_parameters['scattering_traj_stop'])
             if self.scattering_parameters['scattering_method'].upper() in ['VV']:
                 self.scattering_job = scattering_velocity_Verlet(self.morest_parameters, self.scattering_parameters, calculator=calculator)
+            elif self.scattering_parameters['scattering_method'].upper() in ['RK4']:
+                self.scattering_job = scattering_Runge_Kutta_4th(self.morest_parameters, self.scattering_parameters, calculator=calculator)
+            elif self.scattering_parameters['scattering_method'].upper() in ['RK4a']:
+                self.scattering_job = scattering_Runge_Kutta_4th_a(self.morest_parameters, self.scattering_parameters, calculator=calculator)
             else:
                     self.log_morest.write('It is not clear which scattering method will be used.\n')
                     self.log_morest.close()
