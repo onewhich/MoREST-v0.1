@@ -222,6 +222,7 @@ class scattering_Runge_Kutta_4th(initialize_scattering):
         
         return self.current_step, self.current_system
  
+ # Discarded: the following method is not energy preseved.
 class scattering_Runge_Kutta_4th_a(initialize_scattering):
     '''
     This class implements Runge-Kutta 4th order algorithm to do microcanonical ensemble (NVE) dynamics.

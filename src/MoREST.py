@@ -104,8 +104,6 @@ class morest:
                 self.scattering_job = scattering_velocity_Verlet(self.morest_parameters, self.scattering_parameters, calculator=calculator)
             elif self.scattering_parameters['scattering_method'].upper() in ['RK4']:
                 self.scattering_job = scattering_Runge_Kutta_4th(self.morest_parameters, self.scattering_parameters, calculator=calculator)
-            elif self.scattering_parameters['scattering_method'].upper() in ['RK4a'.upper()]:
-                self.scattering_job = scattering_Runge_Kutta_4th_a(self.morest_parameters, self.scattering_parameters, calculator=calculator)
             else:
                     self.log_morest.write('It is not clear which scattering method will be used.\n')
                     self.log_morest.close()
