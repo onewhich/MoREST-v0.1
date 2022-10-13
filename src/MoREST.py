@@ -163,6 +163,12 @@ class morest:
                         elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_VR']:
                             tmp_sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, \
                                                                 molecules[i], log_file_name[i], traj_file_name[i], T, calculator=calculator, v_rescaling=True)
+                        elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_Berendsen'.upper()]:
+                            tmp_sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, \
+                                                                molecules[i], log_file_name[i], traj_file_name[i], T, calculator=calculator, Berendsen_rescaling=True)
+                        elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_Langevin'.upper()]:
+                            tmp_sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, \
+                                                                molecules[i], log_file_name[i], traj_file_name[i], T, calculator=calculator, Langevin_rescaling=True)
                         elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
                             tmp_sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, \
                                                                 molecules[i], log_file_name[i], traj_file_name[i], T, calculator=calculator, sv_rescaling=True)
