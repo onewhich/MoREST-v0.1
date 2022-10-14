@@ -130,9 +130,12 @@ class velocity_Verlet(initialize_sampling):
                 self.d_Ee = 0
                 self.Wt =  0
         
-    def generate_new_step(self, bias_forces=None):
+    def generate_new_step(self, bias_forces=None, updated_current_system=None):
         time_step = self.md_parameters['md_time_step']
         
+        if not type(updated_current_system) == type(None):
+            self.current_system = updated_current_system
+
         next_system = deepcopy(self.current_system)
         
         ### F(t) + bias

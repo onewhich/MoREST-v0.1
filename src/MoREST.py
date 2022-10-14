@@ -246,10 +246,10 @@ class morest:
                         if self.morest_parameters['wall_potential']:
                             general_coordinate = current_system[i].get_positions()
                             bias_forces = self.wall_potential(general_coordinate)
-                            current_step[i], current_system[i] = i_sampling_job.generate_new_step(bias_forces)
+                            current_step[i], current_system[i] = i_sampling_job.generate_new_step(bias_forces,current_system[i])
                             current_potential_energy[i] = i_sampling_job.current_potential_energy
                         else:
-                            current_step[i], current_system[i] = i_sampling_job.generate_new_step()
+                            current_step[i], current_system[i] = i_sampling_job.generate_new_step(updated_current_system=current_system[i])
                             current_potential_energy[i] = i_sampling_job.current_potential_energy
                 # --------------- (REMD) run ----------------------------------------------------------------
                 while current_step[-1] <= simulation_maxsteps:
@@ -257,10 +257,10 @@ class morest:
                         if self.morest_parameters['wall_potential']:
                             general_coordinate = current_system[i].get_positions()
                             bias_forces = self.wall_potential(general_coordinate)
-                            current_step[i], current_system[i] = i_sampling_job.generate_new_step(bias_forces)
+                            current_step[i], current_system[i] = i_sampling_job.generate_new_step(bias_forces,current_system[i])
                             current_potential_energy[i] = i_sampling_job.current_potential_energy
                         else:
-                            current_step[i], current_system[i] = i_sampling_job.generate_new_step()
+                            current_step[i], current_system[i] = i_sampling_job.generate_new_step(updated_current_system=current_system[i])
                             current_potential_energy[i] = i_sampling_job.current_potential_energy
                     current_step, current_system = self.re_sampling.remd(current_step, current_potential_energy, current_system)
 
