@@ -237,6 +237,8 @@ class morest:
                     current_step.append(i_sampling_job.current_step)
                     current_system.append(i_sampling_job.current_system)
                     current_potential_energy.append(i_sampling_job.current_potential_energy)
+                current_step = np.array(current_step)
+                current_potential_energy = np.array(current_potential_energy)
                 current_max_step = np.max(current_step)
                 # --------------- (REMD) syncrhronize all replica to the same MD steps ----------------------
                 for i,i_sampling_job in enumerate(self.sampling_job):
