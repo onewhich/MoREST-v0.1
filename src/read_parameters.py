@@ -39,8 +39,8 @@ class read_parameters:
         self.sampling_parameters['sampling_initialization'] = True
         self.sampling_parameters['sampling_molecule'] = 'MoREST.str'
         self.md_parameters = {}
-        self.md_parameters['md_clean_rotation'] = True
         self.md_parameters['md_clean_translation'] = True
+        self.md_parameters['md_clean_rotation'] = False
         self.scattering_parameters = {}
         self.scattering_parameters['trajectory_scattering'] = False
         self.scattering_parameters['scattering_initialization'] = True
