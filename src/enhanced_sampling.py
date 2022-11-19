@@ -19,7 +19,11 @@ class re:
             self.replica_index = np.arange(self.re_parameters['re_number_of_replica'])
             self.write_replica_index()
         else:
-            self.replica_index = np.loadtxt(self.file_name_title+'replica_index.log',dtype='int')[-1]
+            try:
+                self.replica_index = np.loadtxt(self.file_name_title+'replica_index.log',dtype='int')[-1]
+            except:
+                self.replica_index = np.arange(self.re_parameters['re_number_of_replica'])
+                self.write_replica_index()
         
         self.temperature_log_file_list = []
         self.temperature_traj_file_name_list = []
@@ -40,9 +44,17 @@ class re:
                 for i in range(self.re_parameters['re_number_of_replica']):
                     current_molecules.append(None)
         else:
-            current_molecules = []
-            for i in range(self.re_parameters['re_number_of_replica']):
-                current_molecules.append(read_xyz_file(self.temperature_traj_file_name_list[i]))
+            try:
+                current_molecules = []
+                for i in range(self.re_parameters['re_number_of_replica']):
+                    current_molecules.append(read_xyz_file(self.temperature_traj_file_name_list[i]))
+            except:
+                if self.re_parameters['re_multiple_initi_structures']:
+                    current_molecules = read_xyz_traj(self.re_parameters['re_init_structures_list'])
+                else:
+                    current_molecules = []
+                    for i in range(self.re_parameters['re_number_of_replica']):
+                        current_molecules.append(None)
         return current_molecules
 
     def get_log_file_name(self):

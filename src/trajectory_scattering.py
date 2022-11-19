@@ -34,6 +34,10 @@ class initialize_scattering:
         else:
             raise Exception('Which many body potential will you use?')
         
+        ### kinetic energy at simulation temperature
+        Nf = 3 * self.n_atom
+        self.K_simulation = Nf/2 * units.kB * self.scattering_parameters['scattering_T_target'] # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+
         if self.scattering_parameters['scattering_initialization']:
             self.generate_scattering_system()
             self.current_step = 0
@@ -41,22 +45,26 @@ class initialize_scattering:
             self.current_traj = []
             self.current_traj.append(self.current_system)
             write_xyz_traj('MoREST_traj.xyz', self.current_system)
-        else:
-            self.current_traj = read_xyz_traj('MoREST_traj.xyz')
-            self.current_step = len(self.current_traj) - 1
-            self.current_step, self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
-        
-        ### kinetic energy at simulation temperature
-        Nf = 3 * self.n_atom
-        self.K_simulation = Nf/2 * units.kB * self.scattering_parameters['scattering_T_target'] # Ek = 1/2 m v^2 = 3/2 kB T for each particle
-        
-        if self.scattering_parameters['scattering_initialization']:
             self.MD_log = open('MoREST_MD.log', 'w', buffering=1)
             self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
             write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
         else:
-            self.MD_log = open('MoREST_MD.log', 'a', buffering=1)
-
+            try:
+                self.current_traj = read_xyz_traj('MoREST_traj.xyz')
+                self.current_step = len(self.current_traj) - 1
+                self.current_step, self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
+                self.MD_log = open('MoREST_MD.log', 'a', buffering=1)
+            except:
+                self.generate_scattering_system()
+                self.current_step = 0
+                self.current_step, self.current_system = self.get_current_structure()
+                self.current_traj = []
+                self.current_traj.append(self.current_system)
+                write_xyz_traj('MoREST_traj.xyz', self.current_system)
+                self.MD_log = open('MoREST_MD.log', 'w', buffering=1)
+                self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
+                write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
+        
     def generate_scattering_system(self):
         if self.scattering_parameters['scattering_pre_thermolized']:
             pass
@@ -95,7 +103,10 @@ class initialize_scattering:
         if self.scattering_parameters['scattering_initialization']:
             system = read_xyz_file('MoREST.str')
         else:
-            system = self.current_traj[-1]
+            try:
+                system = self.current_traj[-1]
+            except:
+                system = read_xyz_file('MoREST.str')
             
         self.n_atom = system.get_global_number_of_atoms()
         self.masses = system.get_masses()[:,np.newaxis]

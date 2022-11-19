@@ -28,7 +28,7 @@ class read_parameters:
             raise Exception('Can not find the parameter file: '+parameter_file)
         
         self.morest_parameters = {}
-        self.morest_parameters['morest_initialization'] = True
+        self.morest_parameters['morest_initialization'] = False
         self.morest_parameters['morest_save_parameters_file'] = False
         self.morest_parameters['morest_load_parameters_file'] = False
         self.morest_parameters['ml_active_learning'] = False
@@ -36,14 +36,14 @@ class read_parameters:
         self.morest_parameters['fd_displacement'] = 0.0025
         self.sampling_parameters = {}
         self.sampling_parameters['phase_space_sampling'] = False
-        self.sampling_parameters['sampling_initialization'] = True
+        self.sampling_parameters['sampling_initialization'] = False
         self.sampling_parameters['sampling_molecule'] = 'MoREST.str'
         self.md_parameters = {}
         self.md_parameters['md_clean_translation'] = True
         self.md_parameters['md_clean_rotation'] = False
         self.scattering_parameters = {}
         self.scattering_parameters['trajectory_scattering'] = False
-        self.scattering_parameters['scattering_initialization'] = True
+        self.scattering_parameters['scattering_initialization'] = False
         self.scattering_parameters['scattering_pre_thermolized'] = False
         self.scattering_parameters['scattering_traj_stop'] = None
         self.scattering_parameters['scattering_traj_length'] = None
@@ -52,11 +52,11 @@ class read_parameters:
         self.enhanced_sampling_parameters = {}
         self.enhanced_sampling_parameters['enhanced_sampling'] = False
         self.re_parameters = {}
-        self.re_parameters['re_initialization'] = True
+        self.re_parameters['re_initialization'] = False
         self.re_parameters['re_replica_arrange'] = 0
         self.re_parameters['re_energy_shift'] = 0
         self.its_parameters = {}
-        self.its_parameters['its_initialization'] = True
+        self.its_parameters['its_initialization'] = False
         self.its_parameters['its_replica_arrange'] = 0
         self.its_parameters['its_weight_pk'] = 1e-4
         self.its_parameters['its_energy_shift'] = 0
@@ -533,34 +533,35 @@ class read_parameters:
     def get_sampling_parameters(self, log_morest=None):
         if self.morest_parameters['morest_initialization'] == True:
            self.sampling_parameters['sampling_initialization'] = True
-        elif  self.morest_parameters['morest_initialization'] == False:
-           self.sampling_parameters['sampling_initialization'] = False
-        if self.morest_parameters['morest_save_parameters_file']:
-            np.save('MoREST_sampling_parameters.npy', self.sampling_parameters)
-        if type(log_morest) != type(None):
-            for key in self.sampling_parameters:
-                log_morest.write(key+' : '+str(self.sampling_parameters[key])+'\n')
-            log_morest.write('\n')
-        return self.sampling_parameters
-    
-    def get_md_parameters(self, log_morest=None):
-        self.md_parameters['md_time_step'] *= units.fs
-        self.md_parameters['md_simulation_time'] *= units.fs
         if self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_Berendsen'.upper()]:
             self.sampling_parameters['nvt_berendsen_tau'] *= units.fs
         elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_Langevin'.upper()]:
             self.sampling_parameters['nvt_langevin_gamma'] /= units.fs
         elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
             self.sampling_parameters['nvt_svr_tau'] *= units.fs
+        if self.morest_parameters['morest_save_parameters_file']:
+            np.save('MoREST_sampling_parameters.npy', self.sampling_parameters)
+        if type(log_morest) != type(None):
+            for key in self.sampling_parameters:
+                if key in ['nvt_berendsen_tau','nvt_svr_tau']:
+                    log_morest.write(key+' : '+str(self.sampling_parameters[key]/units.fs)+'\n')
+                elif key in ['nvt_langevin_gamma']:
+                    log_morest.write(key+' : '+str(self.sampling_parameters[key]*units.fs)+'\n')
+                else:
+                    log_morest.write(key+' : '+str(self.sampling_parameters[key])+'\n')
+            log_morest.write('\n')
+        return self.sampling_parameters
+    
+    def get_md_parameters(self, log_morest=None):
+        self.md_parameters['md_time_step'] *= units.fs
+        self.md_parameters['md_simulation_time'] *= units.fs
         if self.sampling_parameters['phase_space_sampling']:
             if self.morest_parameters['morest_save_parameters_file']:
                 np.save('MoREST_MD_parameters.npy', self.md_parameters)
             if type(log_morest) != type(None):
                 for key in self.md_parameters:
-                    if key in ['md_time_step','md_simulation_time','nvt_berendsen_tau','nvt_svr_tau']:
+                    if key in ['md_time_step','md_simulation_time']:
                         log_morest.write(key+' : '+str(self.md_parameters[key]/units.fs)+'\n')
-                    elif key in ['nvt_langevin_gamma']:
-                        log_morest.write(key+' : '+str(self.md_parameters[key]*units.fs)+'\n')
                     else:
                         log_morest.write(key+' : '+str(self.md_parameters[key])+'\n')
                 log_morest.write('\n')
@@ -569,8 +570,6 @@ class read_parameters:
     def get_scattering_parameters(self, log_morest=None):
         if self.morest_parameters['morest_initialization'] == True:
            self.scattering_parameters['scattering_initialization'] = True
-        elif  self.morest_parameters['morest_initialization'] == False:
-           self.scattering_parameters['scattering_initialization'] = False
         self.scattering_parameters['scattering_time_step'] *= units.fs
         self.scattering_parameters['scattering_V_collision'] /= units.fs
         if self.scattering_parameters['scattering_stops_number'] == 0:

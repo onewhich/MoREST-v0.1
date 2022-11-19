@@ -37,9 +37,15 @@ class initialize_sampling:
             else:
                 system = molecule
         else:
-            system = self.current_traj[-1]
-            #system = read_xyz_file('MoREST.str_new') #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
-            
+            try:
+                system = self.current_traj[-1]
+                #system = read_xyz_file('MoREST.str_new') #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
+            except:
+                if type(molecule) == type(None):
+                    system = read_xyz_file(self.sampling_parameters['sampling_molecule'])
+                else:
+                    system = molecule
+
         self.n_atom = system.get_global_number_of_atoms()
         self.masses = system.get_masses()[:,np.newaxis]
         #self.current_accelerations = self.current_forces / self.masses
@@ -91,13 +97,25 @@ class velocity_Verlet(initialize_sampling):
             else:
                 write_xyz_traj(self.traj_file_name, self.current_system)
         else:
-            if type(self.traj_file_name) == type(None):
-                self.current_traj = read_xyz_traj('MoREST_traj.xyz')
-            else:
-                self.current_traj = read_xyz_traj(self.traj_file_name)
-            self.current_step = (len(self.current_traj) - 1) * self.sampling_parameters['sampling_traj_interval']
-            self.current_step, self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
-        
+            try:
+                if type(self.traj_file_name) == type(None):
+                    self.current_traj = read_xyz_traj('MoREST_traj.xyz')
+                else:
+                    self.current_traj = read_xyz_traj(self.traj_file_name)
+                self.current_step = (len(self.current_traj) - 1) * self.sampling_parameters['sampling_traj_interval']
+                self.current_step, self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
+            except:
+                self.current_step = 0
+                self.current_step, self.current_system = self.get_current_structure(molecule)
+                if self.T_simulation > 1e-6:
+                    MaxwellBoltzmannDistribution(self.current_system, temperature_K = self.T_simulation)
+                self.current_traj = []
+                self.current_traj.append(self.current_system)
+                if type(self.traj_file_name) == type(None):
+                    write_xyz_traj('MoREST_traj.xyz', self.current_system)
+                else:
+                    write_xyz_traj(self.traj_file_name, self.current_system)
+
         ### kinetic energy at simulation temperature
         Nf = 3 * self.n_atom
         self.K_simulation = Nf/2 * units.kB * self.T_simulation # Ek = 1/2 m v^2 = 3/2 kB T for each particle
