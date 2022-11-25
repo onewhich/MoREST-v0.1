@@ -15,8 +15,8 @@ class ml_potential:
     #model_features: (numpy npy file) dictionary including the name of the features used in machine learning, loaded by numpy.
     #model_labels: (numpy npy file) dictionary including the name of the labels used in machine learning, loaded by numpy.
     system: ase.Atoms object
-    
     '''
+    
     def __init__(self, trained_ml_potential, displacement=0.0025, if_active_learning=False, energy_uncertainty_tolerance=0.01, ab_initio_calculator=None):
         #self.ml_potential = joblib.load(trained_ml_potential)
         self.ml_potential = pickle.load(open(trained_ml_potential, 'rb'))
@@ -57,7 +57,7 @@ class ml_potential:
         x_train = data_train[feature_keys]
         y_train = data_train[label_keys]
         # Todo: figure out where to generate the features, and if we should save the features, or only the xyz positions in the csv file?
-        # Maybe we can generage the features outside this function upon calling, and give both data_training_set and x_train, y_train to this function to be saved.
+        # Maybe we can generate the features outside this function upon calling, and give both data_training_set and x_train, y_train to this function to be saved.
 
         gpr_kernel=kernels.Matern(nu=2.5)  + kernels.WhiteKernel(noise_level=0.1, noise_level_bounds=(1e-8,1e5))
         print("Training set: \n    Shape of feature: ", np.shape(x_train))
