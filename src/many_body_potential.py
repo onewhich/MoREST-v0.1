@@ -4,8 +4,9 @@ import pickle
 from copy import deepcopy
 from ase import units
 import subprocess
-#import os
+import os
 import math
+from ase.calculators.calculator import FileIOCalculator
 
 class ml_potential:
     '''
@@ -245,7 +246,7 @@ class ml_potential:
             raise ValueError
         representation_list = [self.generate_Al2F2_representation(i_system) for i_system in system_list]
         
-         
+        
 class on_the_fly:
     '''
     Using ase.calculators to calculates the potential energy and forces of the system during the simulation.
@@ -263,14 +264,186 @@ class on_the_fly:
         return self.potential_energy, self.forces
 
 
+class Molpro(FileIOCalculator):
+    '''
+    molpro calculator for ASE interface
+    '''
+    implemented_properties = ['energy', 'forces']
+
+    def __init__(self, *args, **kwargs):
+        self.molpro_dir = kwargs['molpro_dir']
+        self.ntasks = kwargs['ntasks']
+        self.nthreads = kwargs['nthreads']
+        self.method = kwargs['method']
+        self.basis = kwargs['basis']
+        self.geomtyp = 'xyz'
+        try:
+            self.overwrite = kwargs['overwrite']
+        except:
+            self.overwrite = False
+        try:
+            self.memory = kwargs['memory']
+        except:
+            self.memory='12,g'
+        try:
+            self.unit = kwargs['unit']
+        except:
+            self.unit='angstrom'
+        try:
+            self.infile = kwargs['infile']
+        except:
+            self.infile='molpro.inp'
+        try:
+            self.outfile = kwargs['outfile']
+        except:
+            self.outfile='molpro.out'
+        FileIOCalculator.__init__(self, *args, **kwargs)
+
+    def calculate(self,  *args, **kwargs):
+        if self.overwrite:
+            self.command = self.molpro_dir + " -n " + str(self.ntasks) + " -t " + str(self.nthreads) + " -W \$PWD\/wfu "  + \
+                            " -o " + self.outfile + " " + self.infile
+        else:
+            self.command = self.molpro_dir + " -n " + str(self.ntasks) + " -t " + str(self.nthreads) + " -W \$PWD\/wfu "  + self.infile
+        FileIOCalculator.calculate(self, *args, **kwargs)
+
+    def write_input(self, system, properties=None, system_changes=None):
+        FileIOCalculator.write_input(self, system, properties, system_changes)
+        self.n_atom = system.get_global_number_of_atoms()
+        self.elements = system.get_chemical_symbols()
+        self.positions = system.get_positions()
+        inpstr = 'memory,'+self.memory+'\n\n'
+        inpstr += 'symmetry,nosym\n\n'
+        inpstr += self.unit + '\n\n'
+        # Parse the geometry
+        inpstr += 'geomtyp=xyz\n'
+        inpstr += 'geometry={\n'+str(self.n_atom)+'\n\n'
+        for i,element in enumerate(self.elements):
+            inpstr += element
+            inpstr += ' '
+            for j in range(3):
+                inpstr += ' ' + str(self.positions[i][j])
+            inpstr += '\n'
+        inpstr += '}'
+        inpstr += '\n'
+        # Parse the basis
+        inpstr += '\nbasis=' + self.basis
+        # Parse the method
+        if not 'force' in self.method:
+            inpstr += '\n' + self.method + '\nforce'
+        else:
+            inpstr += '\n' + self.method
+        # Write the input file
+        with open(self.infile, 'w') as fin:
+            fin.write(inpstr)
+
+    def read_results(self):
+        self.results['energy'], self.results['forces'] = self.parse_outfile(self.outfile)
+
+    @staticmethod
+    def parse_outfile(file):
+        """
+        Gets the coordinates and energies from molpro single-point calculation outputs (in Bohr)
+        Returns:
+            path: Path of molpro output file
+            elements: Elements of the atoms  --> symbol = ''.join(elements); 
+                                                ase.Atoms.set_chemical_symbols([elements]); 
+            xyz: Coordinates of the atoms  --> ase.Atoms.set_positions([xyz])
+            energy: Total energy of the system
+            force (if_get_force = True): Force of atoms             
+        Example:
+            file = "molpro.out"
+            path, elements, xyz, energy, force = get_xyz_energy(file, if_get_force=True)
+        Sample Molpro outputs:
+            - Geometry:
+
+                ATOMIC COORDINATES
+
+                NR  ATOM    CHARGE       X              Y              Z
+
+                1  AL     13.00    0.000000000    2.362157656    0.000000000
+                2  F       9.00    0.000000000   -2.362157656    0.000000000
+                3  AL     13.00    0.000000000    8.031336029    0.000000000
+                4  F       9.00    0.000000000    3.307020718    0.000000000
+                
+                Bond lengths in Bohr (Angstrom)
+
+                1-3  5.669178374  1-4  0.944863062
+                    ( 3.000000000)     ( 0.500000000)
+
+                Bond angles
+
+                3-1-4    0.00000000
+
+            - Gradient:
+
+                CCSD(T) GRADIENT FOR STATE 1.1
+
+                Atom          dE/dx               dE/dy               dE/dz
+
+                1         0.000000000        -0.000000000        -0.070539245
+                2        -0.000000000         0.000000000         0.070539245
+
+                Nuclear force contribution to virial =         0.266599708
+        """
+
+        with open(file,'r') as f:
+            lines = f.readlines()
+            energy = float('nan')
+            elements = []
+            force = []
+            if(len(lines)<1):
+                energy = float('Inf')
+                return energy, np.array(force)
+            if(lines[-1].find("terminated")==-1):
+                energy = float('Inf')
+                return energy, np.array(force)
+            for i, line in enumerate(lines):
+                if(line.find("GRADIENT FOR STATE")!=-1):
+                    ii = i+4
+                    forcexs = []
+                    forceys = []
+                    forcezs = []
+                    elements = []
+                    while (lines[ii].find("Nuclear force contribution")==-1) and (len(lines[ii].split())>3):
+                        element = lines[ii].split()[1]
+                        x = float(lines[ii].split()[-3])
+                        y = float(lines[ii].split()[-2])
+                        z = float(lines[ii].split()[-1])
+                        elements.append(element)
+                        forcexs.append(x)
+                        forceys.append(y)
+                        forcezs.append(z)
+                        ii += 1            
+                    force = []
+                    for i_atom in range(len(forcexs)):
+                        force.append([forcexs[i_atom],forceys[i_atom],forcezs[i_atom]])
+                """
+                Energy:
+                
+                CCSD(T)/aug-cc-pVQZ energy=   -671.623485056226
+                """
+                if(line.find(" energy=")!=-1):
+                    energy = float(line.split("=")[-1])
+            return energy * units.Hartree, np.array(force) * (units.Hartree/units.Bohr) * -1
+
+
+
 class molpro_calculator:
-    def __init__(self, molpro_para_dict):
+    '''
+    molpro calculator for direct using.
+    '''
+    def __init__(self, **molpro_para_dict):
         self.molpro_dir = molpro_para_dict['molpro_dir']
         self.ntasks = molpro_para_dict['ntasks']
         self.nthreads = molpro_para_dict['nthreads']
         self.method = molpro_para_dict['method']
         self.basis = molpro_para_dict['basis']
         self.geomtyp = 'xyz'
+        try:
+            self.overwrite = molpro_para_dict['overwrite']
+        except:
+            self.overwrite = False
         try:
             self.memory = molpro_para_dict['memory']
         except:
@@ -290,17 +463,23 @@ class molpro_calculator:
 
 
     def get_potential_forces(self, system):
-        self.n_atom = system.get_global_number_of_atoms()
-        self.elements = system.get_chemical_symbols()
-        self.positions = system.get_positions()
-        self.run_molpro()
-        self.potential_energy, self.forces = self.parse_outfile(self.outfile, if_get_force=True)
-
+        if os.path.isfile(self.outfile):
+            self.potential_energy, self.forces = self.parse_outfile(self.outfile, if_get_force=True)
+        else:
+            self.n_atom = system.get_global_number_of_atoms()
+            self.elements = system.get_chemical_symbols()
+            self.positions = system.get_positions()
+            self.run_molpro()
+            self.potential_energy, self.forces = self.parse_outfile(self.outfile, if_get_force=True)
         return self.potential_energy, self.forces
 
     def run_molpro(self):
         #runcommand = self.molpro_dir + " < " + self.infile + " > " + self.outfile
-        runcommand = self.molpro_dir + " -n " + str(self.ntasks) + " -t " + str(self.nthreads) + " -W \$PWD\/wfu "  + self.infile
+        if self.overwrite:
+            runcommand = self.molpro_dir + " -n " + str(self.ntasks) + " -t " + str(self.nthreads) + " -W \$PWD\/wfu "  + \
+                            " -o " + self.outfile + " " + self.infile
+        else:
+            runcommand = self.molpro_dir + " -n " + str(self.ntasks) + " -t " + str(self.nthreads) + " -W \$PWD\/wfu "  + self.infile
         inpstr = 'memory,'+self.memory+'\n\n'
         inpstr += 'symmetry,nosym\n\n'
         inpstr += self.unit + '\n\n'
@@ -368,7 +547,7 @@ class molpro_calculator:
 
                 3-1-4    0.00000000
 
-            - Force:
+            - Gradient:
 
                 CCSD(T) GRADIENT FOR STATE 1.1
 

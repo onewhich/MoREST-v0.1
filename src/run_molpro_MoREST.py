@@ -1,11 +1,12 @@
 from MoREST import morest
+from many_body_potential import Molpro
 
-molpro_para_dict={}
-molpro_para_dict['molpro_dir'] = "/home/wang/software/molpro/bin/molpro"
-molpro_para_dict['ntasks'] = 1
-molpro_para_dict['nthreads'] = 32
-molpro_para_dict['method'] = "hf\nccsd(t)\nforce"
-molpro_para_dict['basis'] = "avqz"
+molpro_dir = "/home/wang/software/molpro/bin/molpro"
+ntasks = 1
+nthreads = 32
+method = "hf\nccsd(t)\nforce"
+basis = "avqz"
+calculator = Molpro(molpro_dir=molpro_dir, ntasks=ntasks, nthreads=nthreads, method=method, basis=basis)
 
-md_job = morest(calculator=molpro_para_dict)
+md_job = morest(calculator=calculator)
 md_job.phase_space_sampling()
