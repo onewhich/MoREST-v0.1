@@ -279,6 +279,10 @@ class Molpro(FileIOCalculator):
         self.geomtyp = 'xyz'
         try:
             self.overwrite = kwargs['overwrite']
+            if self.overwrite.upper() in ['True'.upper()]:
+                self.overwrite = True
+            else:
+                self.overwrite = False
         except:
             self.overwrite = False
         try:
