@@ -437,7 +437,7 @@ class molpro_calculator:
     '''
     molpro calculator for direct using.
     '''
-    def __init__(self, **molpro_para_dict):
+    def __init__(self, molpro_para_dict):
         self.molpro_dir = molpro_para_dict['molpro_dir']
         self.ntasks = molpro_para_dict['ntasks']
         self.nthreads = molpro_para_dict['nthreads']
