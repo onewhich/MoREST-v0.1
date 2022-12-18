@@ -18,7 +18,7 @@ class initialize_scattering:
         self.scattering_parameters = scattering_parameters
         
         if self.morest_parameters['many_body_potential'].upper() in ['on_the_fly'.upper()]:
-            if type(calculator) == type(None):
+            if calculator == None:
                 raise Exception('Please specify the electronic structure method.')
             self.many_body_potential = on_the_fly(calculator)
         elif self.morest_parameters['many_body_potential'].upper() in ['molpro'.upper()]:
@@ -130,7 +130,7 @@ class scattering_velocity_Verlet(initialize_scattering):
         next_system = deepcopy(self.current_system)
         
         ### F(t) + bias
-        if type(bias_forces) != type(None):
+        if bias_forces != None:
             self.current_forces = self.current_forces + bias_forces
         
         ### x(t), v(t) = p(t) / m
@@ -182,7 +182,7 @@ class scattering_Runge_Kutta_4th(initialize_scattering):
         next_system = deepcopy(self.current_system)
         
         ### F(t) + bias
-        if type(bias_forces) != type(None):
+        if bias_forces != None:
             self.current_forces = self.current_forces + bias_forces
         
         # x_1 = x_n, v_1 = v_n, a_1 = a_n
@@ -251,7 +251,7 @@ class scattering_Runge_Kutta_4th_a(initialize_scattering):
         next_system = deepcopy(self.current_system)
         
         ### F(t) + bias
-        if type(bias_forces) != type(None):
+        if bias_forces != None:
             self.current_forces = self.current_forces + bias_forces
         
         # x_1 = x_n, v_1 = v_n, a_1 = a_n

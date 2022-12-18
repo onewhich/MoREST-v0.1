@@ -341,8 +341,10 @@ class Molpro(FileIOCalculator):
         with open(self.infile, 'w') as fin:
             fin.write(inpstr)
 
-    def read_results(self):
-        self.results['energy'], self.results['forces'] = self.parse_outfile(self.outfile)
+    def read_results(self, outfile=None):
+        if outfile == None:
+            outfile = self.outfile
+        self.results['energy'], self.results['forces'] = self.parse_outfile(outfile)
 
     @staticmethod
     def parse_outfile(file):

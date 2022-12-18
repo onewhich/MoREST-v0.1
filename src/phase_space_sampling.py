@@ -14,7 +14,7 @@ class initialize_sampling:
         self.sampling_parameters = sampling_parameters
         
         if self.morest_parameters['many_body_potential'].upper() in ['on_the_fly'.upper()]:
-            if type(calculator) == type(None):
+            if calculator == None:
                 raise Exception('Please specify the electronic structure method.')
             self.many_body_potential = on_the_fly(calculator)
         elif self.morest_parameters['many_body_potential'].upper() in ['molpro'.upper()]:
@@ -32,7 +32,7 @@ class initialize_sampling:
             
     def get_current_structure(self, molecule=None):
         if self.sampling_parameters['sampling_initialization']:
-            if type(molecule) == type(None):
+            if molecule == None:
                 system = read_xyz_file(self.sampling_parameters['sampling_molecule'])
             else:
                 system = molecule
@@ -41,7 +41,7 @@ class initialize_sampling:
                 system = self.current_traj[-1]
                 #system = read_xyz_file('MoREST.str_new') #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
             except:
-                if type(molecule) == type(None):
+                if molecule == None:
                     system = read_xyz_file(self.sampling_parameters['sampling_molecule'])
                 else:
                     system = molecule
@@ -78,7 +78,7 @@ class velocity_Verlet(initialize_sampling):
         self.b_rescaling = Berendsen_rescaling
         self.l_rescaling = Langevin_rescaling
         self.sv_rescaling = sv_rescaling
-        if type(T_simulation) == type(None):
+        if T_simulation == None:
             self.re_simulation = False
             self.T_simulation = self.md_parameters['md_temperature']
         else:
@@ -92,13 +92,13 @@ class velocity_Verlet(initialize_sampling):
                 MaxwellBoltzmannDistribution(self.current_system, temperature_K = self.T_simulation)
             self.current_traj = []
             self.current_traj.append(self.current_system)
-            if type(self.traj_file_name) == type(None):
+            if self.traj_file_name == None:
                 write_xyz_traj('MoREST_traj.xyz', self.current_system)
             else:
                 write_xyz_traj(self.traj_file_name, self.current_system)
         else:
             try:
-                if type(self.traj_file_name) == type(None):
+                if self.traj_file_name == None:
                     self.current_traj = read_xyz_traj('MoREST_traj.xyz')
                 else:
                     self.current_traj = read_xyz_traj(self.traj_file_name)
@@ -111,7 +111,7 @@ class velocity_Verlet(initialize_sampling):
                     MaxwellBoltzmannDistribution(self.current_system, temperature_K = self.T_simulation)
                 self.current_traj = []
                 self.current_traj.append(self.current_system)
-                if type(self.traj_file_name) == type(None):
+                if self.traj_file_name == None:
                     write_xyz_traj('MoREST_traj.xyz', self.current_system)
                 else:
                     write_xyz_traj(self.traj_file_name, self.current_system)
@@ -126,7 +126,7 @@ class velocity_Verlet(initialize_sampling):
             self.Berendsen_rescaling()
         
         if self.sampling_parameters['sampling_initialization']:
-            if type(self.log_file_name) == type(None):
+            if self.log_file_name == None:
                 self.MD_log = open('MoREST_MD.log', 'w', buffering=1)
             else:
                 self.MD_log = open(self.log_file_name, 'w', buffering=1)
@@ -140,7 +140,7 @@ class velocity_Verlet(initialize_sampling):
                 self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
                 write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
         else:
-            if type(self.log_file_name) == type(None):
+            if self.log_file_name == None:
                 self.MD_log = open('MoREST_MD.log', 'a', buffering=1)
             else:
                 self.MD_log = open(self.log_file_name, 'a', buffering=1)
@@ -151,13 +151,13 @@ class velocity_Verlet(initialize_sampling):
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
         time_step = self.md_parameters['md_time_step']
         
-        if not type(updated_current_system) == type(None):
+        if not updated_current_system == None:
             self.current_system = updated_current_system
 
         next_system = deepcopy(self.current_system)
         
         ### F(t) + bias
-        if type(bias_forces) != type(None):
+        if bias_forces != None:
             self.current_forces = self.current_forces + bias_forces
         
         ### x(t), v(t) = p(t) / m
@@ -217,7 +217,7 @@ class velocity_Verlet(initialize_sampling):
             #print(next_coordinates) #DEGUB
             #print(next_forces)    #DEBUG
             self.current_traj.append(self.current_system)
-            if type(self.traj_file_name) == type(None):
+            if self.traj_file_name == None:
                 write_xyz_traj('MoREST_traj.xyz', self.current_system)
             else:
                 write_xyz_traj(self.traj_file_name, self.current_system)
