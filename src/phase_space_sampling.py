@@ -23,10 +23,11 @@ class initialize_sampling:
                 self.many_body_potential = molpro_calculator(molpro_para_dict)
             else:
                 raise Exception('Please pass the molpro parameters dictionary to calculator.')
-        elif self.morest_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
+        elif self.morest_parameters['many_body_potential'].upper() in ['ML_potential'.upper()]:
             trained_ml_potential = self.morest_parameters['ml_potential_model']
-            self.many_body_potential = ml_potential(trained_ml_potential, self.morest_parameters['fd_displacement'], self.morest_parameters['ml_active_learning'], \
-                                                    self.morest_parameters['ml_energy_uncertainty_tolerance'], calculator)
+            self.many_body_potential = ml_potential(trained_ml_potential = trained_ml_potential, \
+                                    ml_parameters = self.morest_parameters, \
+                                    ab_initio_calculator = calculator)
         else:
             raise Exception('Which many body potential will you use?')
             

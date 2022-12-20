@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 #import joblib
 import pickle
 from copy import deepcopy
@@ -6,34 +7,42 @@ from ase import units
 import subprocess
 import os
 import math
-from ase.calculators.calculator import FileIOCalculator
+from ase.calculators.calculator import Calculator, FileIOCalculator
 
-class ml_potential:
+class ml_potential(Calculator):
     '''
     This class implements loading machine learned many body potential and returning the potential as the output of the Cartesian coordinates input.
+    It is also an interface for ASE.
     INPUT:
     trained_ml_potential: trained model in scikit-learn format and loaded by joblib.
     #model_features: (numpy npy file) dictionary including the name of the features used in machine learning, loaded by numpy.
     #model_labels: (numpy npy file) dictionary including the name of the labels used in machine learning, loaded by numpy.
     system: ase.Atoms object
     '''
-    
-    def __init__(self, trained_ml_potential, displacement=0.0025, if_active_learning=False, energy_uncertainty_tolerance=0.01, ab_initio_calculator=None):
-        #self.ml_potential = joblib.load(trained_ml_potential)
+    implemented_properties = ['energy', 'forces']
+    discard_results_on_any_change = True
+
+    def __init__(self, *args, **kwargs):
+        trained_ml_potential = kwargs['trained_ml_potential']
         self.ml_potential = pickle.load(open(trained_ml_potential, 'rb'))
-        self.displacement = displacement
-        self.if_active_learning = if_active_learning
-        self.energy_uncertainty_tolerance = energy_uncertainty_tolerance
+        self.if_fd_forces = kwargs['ml_parameters']['ml_fd_forces']
+        self.fd_displacement = kwargs['ml_parameters']['fd_displacement']
+        self.if_active_learning = kwargs['ml_parameters']['if_active_learning']
+        self.energy_uncertainty_tolerance = kwargs['ml_parameters']['energy_uncertainty_tolerance']
         #self.ml_features = np.load(model_features, allow_pickle=True)
         #self.ml_labels = np.load(model_labels, allow_pickle=True)
         if self.if_active_learning:
-
+            ab_initio_calculator = kwargs['ml_parameters']['ab_initio_calculator']
+            if  ab_initio_calculator == None:
+                raise Exception('Active learning is supposed to be used, please specify the electronic structure method.')
             self.training_set = pd.read_csv(filename_training_set)
             if type(ab_initio_calculator) == type({}):
-                molpro_para_dict = calculator
+                molpro_para_dict = ab_initio_calculator
                 self.ab_initio_potential = molpro_calculator(molpro_para_dict)
             else:
-                self.ab_initio_potential = on_the_fly(calculator)
+                self.ab_initio_potential = on_the_fly(ab_initio_calculator)
+        super().__init__(self, *args, **kwargs)
+
 
     def RMSE(true, pred):
         RMSE_value = 0.0
@@ -207,45 +216,56 @@ class ml_potential:
         ml_energy_std = np.array(ml_energy_std) * units.Hartree
         return ml_energy, ml_energy_std
 
-    def get_potential_forces(self, system):
-        system_list = [system]
-        n_atoms = system.get_global_number_of_atoms()
-        forces = []
-        for i in range(n_atoms):
-            for j in range(3):
-                new_system = deepcopy(system)
-                coordinates = new_system.get_positions()
-                coordinates[i,j] = coordinates[i,j] + self.displacement
-                new_system.set_positions(coordinates)
-                system_list.append(new_system)
-        # Get the predictions of energy and uncertainty
-        energy_list, energy_std_list = self.get_ml_potential(system_list)
-        #print("Energy:", energy_list)
-        #print("Energy std:", energy_std_list)
-        energy_0 = energy_list[0]
-        energy_std_0 = energy_std_list[0]
-
-        # Determine if the energy need to be calculated on the fly
-        if self.if_active_learning and (energy_std_0 > self.energy_uncertainty_tolerance):
-            print("ML energy uncertainty is larger than tolerance(=", self.energy_uncertainty_tolerance,"): ", energy_std_0)
-            #return float('nan'), float('nan')
-            # If the ML energy has too large uncertainty, call ab initio calculations
-            return self.ab_initio_potential.get_potential_forces(system)
-
-
-        for i,i_energy in enumerate(energy_list[1:]):
-            force_value = -1*(i_energy - energy_0)/self.displacement
-            forces.append(force_value)
-        forces = np.array(forces)
-        #print(forces)
-        return energy_0, forces.reshape(n_atoms, 3)
-
     def train_ml_potential(self, system_list):
         """system_list: The training set"""
         if type(system_list) != list:
             raise ValueError
         representation_list = [self.generate_Al2F2_representation(i_system) for i_system in system_list]
-        
+
+    def get_potential_forces(self, system):
+        self.calculate(system)
+        return self.results['energy'], self.results['forces']
+
+    def calculate(self, system):
+        if self.if_fd_forces:
+            system_list = [system]
+            n_atoms = system.get_global_number_of_atoms()
+            forces = []
+            for i in range(n_atoms):
+                for j in range(3):
+                    new_system = deepcopy(system)
+                    coordinates = new_system.get_positions()
+                    coordinates[i,j] = coordinates[i,j] + self.fd_displacement
+                    new_system.set_positions(coordinates)
+                    system_list.append(new_system)
+            # Get the predictions of energy and uncertainty
+            energy_list, energy_std_list = self.get_ml_potential(system_list)
+            #print("Energy:", energy_list)
+            #print("Energy std:", energy_std_list)
+            energy_0 = energy_list[0]
+            energy_std_0 = energy_std_list[0]
+
+            # Determine if the energy need to be calculated on the fly
+            if self.if_active_learning and (energy_std_0 > self.energy_uncertainty_tolerance):
+                print("ML energy uncertainty is larger than tolerance(=", self.energy_uncertainty_tolerance,"): ", energy_std_0)
+                #return float('nan'), float('nan')
+                # If the ML energy has too large uncertainty, call ab initio calculations
+                return self.ab_initio_potential.get_potential_forces(system)
+
+
+            for i,i_energy in enumerate(energy_list[1:]):
+                force_value = -1*(i_energy - energy_0)/self.fd_displacement
+                forces.append(force_value)
+            forces = np.array(forces)
+            #print(forces)
+        else:
+            pass
+        self.results['energy'] = energy_0
+        self.results['forces'] = forces.reshape(n_atoms, 3)
+        super().calculate(self,  atoms=system)
+
+    def read(self):
+        pass
         
 class on_the_fly:
     '''
@@ -266,9 +286,11 @@ class on_the_fly:
 
 class Molpro(FileIOCalculator):
     '''
-    molpro calculator for ASE interface
+    molpro calculator interface for ASE.
+    This class can not be used directly by MoREST, but via 'on_the_fly many body' potential method, while the calculator is redirected to this class.
     '''
     implemented_properties = ['energy', 'forces']
+    discard_results_on_any_change = True
 
     def __init__(self, *args, **kwargs):
         self.molpro_dir = kwargs['molpro_dir']
