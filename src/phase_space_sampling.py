@@ -24,10 +24,10 @@ class initialize_sampling:
             else:
                 raise Exception('Please pass the molpro parameters dictionary to calculator.')
         elif self.morest_parameters['many_body_potential'].upper() in ['ML_potential'.upper()]:
-            trained_ml_potential = self.morest_parameters['ml_potential_model']
-            self.many_body_potential = ml_potential(trained_ml_potential = trained_ml_potential, \
-                                    ml_parameters = self.morest_parameters, \
+            ml_calculator = ml_potential(ml_parameters = self.morest_parameters, \
                                     ab_initio_calculator = calculator)
+            self.many_body_potential = on_the_fly(ml_calculator)
+            
         else:
             raise Exception('Which many body potential will you use?')
             
