@@ -244,19 +244,18 @@ class ml_potential(Calculator):
         representation_list = [self.generate_Al2F2_representation(i_system) for i_system in system_list]
 
     def get_potential_forces(self, system):
-        self.calculate(system)
+        self.calculate(atoms=system)
         return self.results['energy'], self.results['forces']
 
-    def calculate(self, *args, atoms=None, properties=['energy', 'forces'],
+    def calculate(self, atoms=None, properties=['energy', 'forces'],
                   system_changes=all_changes):
-        system=args[0]
         if self.if_fd_forces:
-            system_list = [system]
-            n_atoms = system.get_global_number_of_atoms()
+            system_list = [atoms]
+            n_atoms = atoms.get_global_number_of_atoms()
             forces = []
             for i in range(n_atoms):
                 for j in range(3):
-                    new_system = deepcopy(system)
+                    new_system = deepcopy(atoms)
                     coordinates = new_system.get_positions()
                     coordinates[i,j] = coordinates[i,j] + self.fd_displacement
                     new_system.set_positions(coordinates)
@@ -272,8 +271,8 @@ class ml_potential(Calculator):
                 print("ML energy uncertainty is larger than tolerance(=", self.energy_uncertainty_tolerance,"): ", energy_std_0)
                 #return float('nan'), float('nan')
                 # If the ML energy has too large uncertainty, call ab initio calculations
-                self.results['energy'], self.results['forces'] = self.ab_initio_potential.get_potential_forces(system)
-                super().calculate(self,  atoms=system)
+                self.results['energy'], self.results['forces'] = self.ab_initio_potential.get_potential_forces(atoms)
+                super().calculate(self,  atoms=atoms, properties=properties, system_changes=system_changes)
             else:
                 for i,i_energy in enumerate(energy_list[1:]):
                     force_value = -1*(i_energy - energy_0)/self.fd_displacement
@@ -282,7 +281,7 @@ class ml_potential(Calculator):
                 #print(forces)
                 self.results['energy'] = energy_0
                 self.results['forces'] = forces.reshape(n_atoms, 3)
-                super().calculate(self,  atoms=system)
+                super().calculate(self,  atoms=atoms, properties=properties, system_changes=system_changes)
         else:
             pass
 
