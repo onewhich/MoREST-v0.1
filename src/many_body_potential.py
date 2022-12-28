@@ -25,17 +25,21 @@ class on_the_fly:
         
         return self.potential_energy, self.forces
 
-
-class ml_potential(Calculator):
+class ml_potential:
     '''
     This class implements loading machine learned many body potential and returning the potential as the output of the Cartesian coordinates input.
-    It is also an interface for ASE.
     INPUT:
     trained_ml_potential: trained model in scikit-learn format and loaded by pickle.
     #model_features: (numpy npy file) dictionary including the name of the features used in machine learning, loaded by numpy.
     #model_labels: (numpy npy file) dictionary including the name of the labels used in machine learning, loaded by numpy.
     system: ase.Atoms object
     '''
+
+class ml_calculator(Calculator):
+    '''
+    Interface of ASE for ml_potential
+    '''
+
     implemented_properties = ['energy', 'forces']
     discard_results_on_any_change = True
 
