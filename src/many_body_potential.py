@@ -6,7 +6,7 @@ from ase import units
 import subprocess
 import os
 import math
-from ase.calculators.calculator import Calculator, FileIOCalculator
+from ase.calculators.calculator import Calculator, FileIOCalculator, all_changes
 
 
 class on_the_fly:
