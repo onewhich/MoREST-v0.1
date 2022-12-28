@@ -247,7 +247,7 @@ class ml_potential(Calculator):
         self.calculate(atoms=system)
         return self.results['energy'], self.results['forces']
 
-    def calculate(self, atoms=None, **kwargs):
+    def calculate(self, atoms=None, properties=['energy','forces'], system_changes=all_changes, **kwargs):
         if self.if_fd_forces:
             system_list = [atoms]
             n_atoms = atoms.get_global_number_of_atoms()
