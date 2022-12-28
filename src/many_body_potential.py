@@ -39,16 +39,15 @@ class ml_potential(Calculator):
     implemented_properties = ['energy', 'forces']
     discard_results_on_any_change = True
 
-    def __init__(self, *args, **kwargs):
-        trained_ml_potential = kwargs['ml_parameters']['trained_ml_potential']
+    def __init__(self, *args, ab_initio_calculator=None, **kwargs):
+        trained_ml_potential = kwargs['ml_parameters']['ml_potential_model']
         self.ml_potential = pickle.load(open(trained_ml_potential, 'rb'))
         self.if_fd_forces = kwargs['ml_parameters']['ml_fd_forces']
         if self.if_fd_forces:
             self.fd_displacement = kwargs['ml_parameters']['fd_displacement']
-        self.if_active_learning = kwargs['ml_parameters']['if_active_learning']
+        self.if_active_learning = kwargs['ml_parameters']['ml_active_learning']
         if self.if_active_learning:
-            self.energy_uncertainty_tolerance = kwargs['ml_parameters']['energy_uncertainty_tolerance']
-            ab_initio_calculator = kwargs['ml_parameters']['ab_initio_calculator']
+            self.energy_uncertainty_tolerance = kwargs['ml_parameters']['ml_energy_uncertainty_tolerance']
             if  ab_initio_calculator == None:
                 raise Exception('Active learning is supposed to be used, please specify the electronic structure method.')
             #self.training_set = pd.read_csv(filename_training_set)
