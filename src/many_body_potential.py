@@ -284,7 +284,7 @@ class ml_potential(Calculator):
         else:
             pass
 
-    def read(self):
+    def read(self, *args, **kwargs):
         pass
 
 class Molpro(FileIOCalculator):
