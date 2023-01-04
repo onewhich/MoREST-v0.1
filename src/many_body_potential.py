@@ -35,15 +35,7 @@ class ml_potential:
     system: ase.Atoms object
     '''
 
-class ml_calculator(Calculator):
-    '''
-    Interface of ASE for ml_potential
-    '''
-
-    implemented_properties = ['energy', 'forces']
-    discard_results_on_any_change = True
-
-    def __init__(self, *args, ab_initio_calculator=None, **kwargs):
+    def __init__(self, ab_initio_calculator=None, **kwargs):
         trained_ml_potential = kwargs['ml_parameters']['ml_potential_model']
         self.ml_potential = pickle.load(open(trained_ml_potential, 'rb'))
         self.if_fd_forces = kwargs['ml_parameters']['ml_fd_forces']
@@ -62,7 +54,6 @@ class ml_calculator(Calculator):
                 self.ab_initio_potential = on_the_fly(ab_initio_calculator)
         #self.ml_features = np.load(model_features, allow_pickle=True)
         #self.ml_labels = np.load(model_labels, allow_pickle=True)
-        super().__init__(self, *args, **kwargs)
 
     def get_ab_initio_potential_forces(self, system):
         return self.ab_initio_potential.get_potential_forces(system)
@@ -248,17 +239,13 @@ class ml_calculator(Calculator):
         representation_list = [self.generate_Al2F2_representation(i_system) for i_system in system_list]
 
     def get_potential_forces(self, system):
-        self.calculate(atoms=system)
-        return self.results['energy'], self.results['forces']
-
-    def calculate(self, atoms=None, properties=['energy','forces'], system_changes=all_changes, **kwargs):
         if self.if_fd_forces:
-            system_list = [atoms]
-            n_atoms = atoms.get_global_number_of_atoms()
+            system_list = [system]
+            n_atoms = system.get_global_number_of_atoms()
             forces = []
             for i in range(n_atoms):
                 for j in range(3):
-                    new_system = deepcopy(atoms)
+                    new_system = deepcopy(system)
                     coordinates = new_system.get_positions()
                     coordinates[i,j] = coordinates[i,j] + self.fd_displacement
                     new_system.set_positions(coordinates)
@@ -274,19 +261,41 @@ class ml_calculator(Calculator):
                 print("ML energy uncertainty is larger than tolerance(=", self.energy_uncertainty_tolerance,"): ", energy_std_0)
                 #return float('nan'), float('nan')
                 # If the ML energy has too large uncertainty, call ab initio calculations
-                self.results['energy'], self.results['forces'] = self.ab_initio_potential.get_potential_forces(atoms)
-                super().calculate(self, atoms=atoms, **kwargs)
+                self.potential_energy, self.forces = self.ab_initio_potential.get_potential_forces(system)
             else:
                 for i,i_energy in enumerate(energy_list[1:]):
                     force_value = -1*(i_energy - energy_0)/self.fd_displacement
                     forces.append(force_value)
                 forces = np.array(forces)
-                #print(forces)
-                self.results['energy'] = energy_0
-                self.results['forces'] = forces.reshape(n_atoms, 3)
-                super().calculate(self, atoms=atoms, **kwargs)
+                self.potential_energy = energy_0
+                self.forces = forces.reshape(n_atoms, 3)
         else:
-            pass
+            potential_energy, potential_energy_std, forces, foreces_std = self.get_ml_potential(system)
+            #TODO: the RMSE of forces prediction is not used for judgment
+            if self.if_active_learning and (potential_energy_std > self.energy_uncertainty_tolerance):
+                # If the ML energy has too large uncertainty, call ab initio calculations
+                self.potential_energy, self.forces = self.ab_initio_potential.get_potential_forces(system)
+            else:
+                self.potential_energy = potential_energy
+                self.forces = forces
+        return self.potential_energy, self.forces
+
+
+class ml_calculator(Calculator):
+    '''
+    Interface of ASE for ml_potential
+    '''
+
+    implemented_properties = ['energy', 'forces']
+    discard_results_on_any_change = True
+
+    def __init__(self, *args, **kwargs):
+        
+        super().__init__(self, *args, **kwargs)
+
+    def calculate(self, atoms=None, properties=['energy','forces'], system_changes=all_changes, **kwargs):
+        super().calculate(self, atoms=atoms, **kwargs)
+        pass
 
     def read(self, *args, **kwargs):
         pass
