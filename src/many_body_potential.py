@@ -7,6 +7,7 @@ import subprocess
 import os
 import math
 from ase.calculators.calculator import Calculator, FileIOCalculator, all_changes
+from MoREAT.src.representation import generate_representation
 
 
 class on_the_fly:
@@ -58,6 +59,61 @@ class ml_potential:
     def get_ab_initio_potential_forces(self, system):
         return self.ab_initio_potential.get_potential_forces(system)
 
+    def get_ml_potential(self, system_list):
+        if type(system_list) != list:
+            raise ValueError
+        #representation_list = [self.generate_Al2F2_representation(i_system) for i_system in system_list]
+        representation_list = generate_representation(system_list).invers_r_exp_r_unsorted()
+        if self.if_fd_forces:
+            ml_energy, ml_energy_std = self.ml_potential.predict(representation_list, return_std=True)
+            ml_energy = np.array(ml_energy) * units.Hartree # change energy in Hartree to eV
+            ml_energy_std = np.array(ml_energy_std) * units.Hartree
+            return ml_energy, ml_energy_std
+        else:
+            raise Exception('ML model can not predict forces.')
+
+    def get_potential_forces(self, system):
+        if self.if_fd_forces:
+            system_list = [system]
+            n_atoms = system.get_global_number_of_atoms()
+            forces = []
+            for i in range(n_atoms):
+                for j in range(3):
+                    new_system = deepcopy(system)
+                    coordinates = new_system.get_positions()
+                    coordinates[i,j] = coordinates[i,j] + self.fd_displacement
+                    new_system.set_positions(coordinates)
+                    system_list.append(new_system)
+            # Get the predictions of energy and uncertainty
+            energy_list, energy_std_list = self.get_ml_potential(system_list)
+            #print("Energy:", energy_list)
+            #print("Energy std:", energy_std_list)
+            energy_0 = energy_list[0]
+            energy_std_0 = energy_std_list[0]
+            # Determine if the energy need to be calculated on the fly
+            if self.if_active_learning and (energy_std_0 > self.energy_uncertainty_tolerance):
+                print("ML energy uncertainty is larger than tolerance(=", self.energy_uncertainty_tolerance,"): ", energy_std_0)
+                #return float('nan'), float('nan')
+                # If the ML energy has too large uncertainty, call ab initio calculations
+                self.potential_energy, self.forces = self.ab_initio_potential.get_potential_forces(system)
+            else:
+                for i,i_energy in enumerate(energy_list[1:]):
+                    force_value = -1*(i_energy - energy_0)/self.fd_displacement
+                    forces.append(force_value)
+                forces = np.array(forces)
+                self.potential_energy = energy_0
+                self.forces = forces.reshape(n_atoms, 3)
+        else:
+            potential_energy, potential_energy_std, forces, foreces_std = self.get_ml_potential(system)
+            #TODO: the RMSE of forces prediction is not used for judgment
+            if self.if_active_learning and (potential_energy_std > self.energy_uncertainty_tolerance):
+                # If the ML energy has too large uncertainty, call ab initio calculations
+                self.potential_energy, self.forces = self.ab_initio_potential.get_potential_forces(system)
+            else:
+                self.potential_energy = potential_energy
+                self.forces = forces
+        return self.potential_energy, self.forces
+
     @staticmethod
     def RMSE(true, pred):
         RMSE_value = 0.0
@@ -73,6 +129,13 @@ class ml_potential:
         RMSE_value = math.sqrt(RMSE_value/N)
         return RMSE_value
 
+    #TODO: this function is not finished.
+    def train_ml_potential(self, system_list):
+        """system_list: The training set"""
+        if type(system_list) != list:
+            raise ValueError
+        representation_list = generate_representation(system_list).invers_r_exp_r_unsorted()
+        
     '''
     def train_ml_model_energy(self, feature_keys, label_keys, data_train, data_valid):
 
@@ -114,7 +177,7 @@ class ml_potential:
         data_valid_save.to_csv("data_valid-training_size_" + str(len(y_train)).zfill(6) + ".csv", index=None)
     '''
 
-
+    '''
     @staticmethod
     def generate_Al2F2_representation(Al2F2, representation_name="inverse_r_exp_r"):
         """
@@ -222,63 +285,7 @@ class ml_potential:
         #                  Eb_AlF2_1, Eb_AlF2_2, Eb_Al2F_1, Eb_Al2F_2],dtype=object)
     
         return np.array(representation)
-
-    def get_ml_potential(self, system_list):
-        if type(system_list) != list:
-            raise ValueError
-        representation_list = [self.generate_Al2F2_representation(i_system) for i_system in system_list]
-        ml_energy, ml_energy_std = self.ml_potential.predict(representation_list, return_std=True)
-        ml_energy = np.array(ml_energy) * units.Hartree # change energy in Hartree to eV
-        ml_energy_std = np.array(ml_energy_std) * units.Hartree
-        return ml_energy, ml_energy_std
-
-    def train_ml_potential(self, system_list):
-        """system_list: The training set"""
-        if type(system_list) != list:
-            raise ValueError
-        representation_list = [self.generate_Al2F2_representation(i_system) for i_system in system_list]
-
-    def get_potential_forces(self, system):
-        if self.if_fd_forces:
-            system_list = [system]
-            n_atoms = system.get_global_number_of_atoms()
-            forces = []
-            for i in range(n_atoms):
-                for j in range(3):
-                    new_system = deepcopy(system)
-                    coordinates = new_system.get_positions()
-                    coordinates[i,j] = coordinates[i,j] + self.fd_displacement
-                    new_system.set_positions(coordinates)
-                    system_list.append(new_system)
-            # Get the predictions of energy and uncertainty
-            energy_list, energy_std_list = self.get_ml_potential(system_list)
-            #print("Energy:", energy_list)
-            #print("Energy std:", energy_std_list)
-            energy_0 = energy_list[0]
-            energy_std_0 = energy_std_list[0]
-            # Determine if the energy need to be calculated on the fly
-            if self.if_active_learning and (energy_std_0 > self.energy_uncertainty_tolerance):
-                print("ML energy uncertainty is larger than tolerance(=", self.energy_uncertainty_tolerance,"): ", energy_std_0)
-                #return float('nan'), float('nan')
-                # If the ML energy has too large uncertainty, call ab initio calculations
-                self.potential_energy, self.forces = self.ab_initio_potential.get_potential_forces(system)
-            else:
-                for i,i_energy in enumerate(energy_list[1:]):
-                    force_value = -1*(i_energy - energy_0)/self.fd_displacement
-                    forces.append(force_value)
-                forces = np.array(forces)
-                self.potential_energy = energy_0
-                self.forces = forces.reshape(n_atoms, 3)
-        else:
-            potential_energy, potential_energy_std, forces, foreces_std = self.get_ml_potential(system)
-            #TODO: the RMSE of forces prediction is not used for judgment
-            if self.if_active_learning and (potential_energy_std > self.energy_uncertainty_tolerance):
-                # If the ML energy has too large uncertainty, call ab initio calculations
-                self.potential_energy, self.forces = self.ab_initio_potential.get_potential_forces(system)
-            else:
-                self.potential_energy = potential_energy
-                self.forces = forces
-        return self.potential_energy, self.forces
+        '''
 
 
 class ml_calculator(Calculator):
@@ -290,15 +297,15 @@ class ml_calculator(Calculator):
     discard_results_on_any_change = True
 
     def __init__(self, *args, **kwargs):
-        
+        self.ml_potential = ml_potential(ab_initio_calculator=kwargs['ab_initio_calculator'], **kwargs)
         super().__init__(self, *args, **kwargs)
 
-    def calculate(self, atoms=None, properties=['energy','forces'], system_changes=all_changes, **kwargs):
-        super().calculate(self, atoms=atoms, **kwargs)
-        pass
+    def calculate(self, *args, **kwargs):
+        self.results['energy'], self.results['forces'] = self.ml_potential.get_potential_forces(kwargs['atoms'])
+        super().calculate(self, *args, **kwargs)
 
     def read(self, *args, **kwargs):
-        pass
+        return self.results['energy'], self.results['forces']
 
 class Molpro(FileIOCalculator):
     '''
