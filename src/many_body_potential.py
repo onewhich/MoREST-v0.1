@@ -288,7 +288,7 @@ class ml_potential:
         '''
 
 
-class ml_calculator(Calculator):
+class ml_interface(Calculator):
     '''
     Interface of ASE for ml_potential
     '''

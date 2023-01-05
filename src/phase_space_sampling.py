@@ -3,7 +3,7 @@ import numpy as np
 #import sys
 #sys.path.append('..')
 from structure import read_xyz_file, write_xyz_file, read_xyz_traj, write_xyz_traj
-from many_body_potential import ml_potential, on_the_fly, molpro_calculator
+from many_body_potential import ml_interface, on_the_fly, molpro_calculator
 from copy import deepcopy
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary, ZeroRotation
 from ase import units
@@ -24,7 +24,7 @@ class initialize_sampling:
             else:
                 raise Exception('Please pass the molpro parameters dictionary to calculator.')
         elif self.morest_parameters['many_body_potential'].upper() in ['ML_potential'.upper()]:
-            ml_calculator = ml_potential(ab_initio_calculator = calculator, \
+            ml_calculator = ml_interface(ab_initio_calculator = calculator, \
                                     ml_parameters = self.morest_parameters)
             self.many_body_potential = on_the_fly(ml_calculator)
             
