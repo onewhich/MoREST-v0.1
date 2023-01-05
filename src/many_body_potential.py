@@ -36,7 +36,8 @@ class ml_potential:
     system: ase.Atoms object
     '''
 
-    def __init__(self, ab_initio_calculator=None, **kwargs):
+    def __init__(self, **kwargs):
+        ab_initio_calculator = kwargs['ab_initio_calculator']
         trained_ml_potential = kwargs['ml_parameters']['ml_potential_model']
         self.ml_potential = pickle.load(open(trained_ml_potential, 'rb'))
         self.if_fd_forces = kwargs['ml_parameters']['ml_fd_forces']
@@ -297,7 +298,7 @@ class ml_interface(Calculator):
     discard_results_on_any_change = True
 
     def __init__(self, *args, **kwargs):
-        self.ml_potential = ml_potential(ab_initio_calculator=kwargs['ab_initio_calculator'], **kwargs)
+        self.ml_potential = ml_potential(**kwargs)
         super().__init__(self, *args, **kwargs)
 
     def calculate(self, *args, **kwargs):
