@@ -303,8 +303,8 @@ class ml_interface(Calculator):
 
     def calculate(self, *args, **kwargs):
         Calculator.calculate(self, *args, **kwargs)
-        self.results['energy'], self.results['forces'] = self.ml_potential.get_potential_forces()
-        
+        self.results['energy'], self.results['forces'] = self.ml_potential.get_potential_forces(self.atoms)
+
 #    def read(self, *args, **kwargs):
 #        pass
 
