@@ -297,9 +297,9 @@ class ml_interface(Calculator):
     implemented_properties = ['energy', 'forces']
     discard_results_on_any_change = True
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, restart=None, ignore_bad_restart=False, label='ml_potential', atoms=None, command=None, **kwargs):
         self.ml_potential = ml_potential(**kwargs)
-        super().__init__(self, *args, **kwargs)
+        super().__init__(self, restart=restart, ignore_bad_restart=ignore_bad_restart, label=label, atoms=atoms, command=command, **kwargs)
 
     def calculate(self, *args, **kwargs):
         self.results['energy'], self.results['forces'] = self.ml_potential.get_potential_forces(kwargs['atoms'])
