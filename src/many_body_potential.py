@@ -305,8 +305,8 @@ class ml_interface(Calculator):
         self.results['energy'], self.results['forces'] = self.ml_potential.get_potential_forces(kwargs['atoms'])
         super().calculate(self, *args, **kwargs)
 
-    def read(self, *args, **kwargs):
-        return self.results['energy'], self.results['forces']
+#    def read(self, *args, **kwargs):
+#        pass
 
 class Molpro(FileIOCalculator):
     '''
