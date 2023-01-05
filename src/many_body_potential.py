@@ -63,8 +63,8 @@ class ml_potential:
     def get_ml_potential(self, system_list):
         if type(system_list) != list:
             raise ValueError
-        #representation_list = [self.generate_Al2F2_representation(i_system) for i_system in system_list]
-        representation_list = generate_representation(system_list).invers_r_exp_r_unsorted()
+        representation_list = [self.generate_Al2F2_representation(i_system) for i_system in system_list]
+        #representation_list = generate_representation(system_list).invers_r_exp_r_unsorted()
         if self.if_fd_forces:
             ml_energy, ml_energy_std = self.ml_potential.predict(representation_list, return_std=True)
             ml_energy = np.array(ml_energy) * units.Hartree # change energy in Hartree to eV
@@ -178,7 +178,7 @@ class ml_potential:
         data_valid_save.to_csv("data_valid-training_size_" + str(len(y_train)).zfill(6) + ".csv", index=None)
     '''
 
-    '''
+    
     @staticmethod
     def generate_Al2F2_representation(Al2F2, representation_name="inverse_r_exp_r"):
         """
@@ -286,7 +286,7 @@ class ml_potential:
         #                  Eb_AlF2_1, Eb_AlF2_2, Eb_Al2F_1, Eb_Al2F_2],dtype=object)
     
         return np.array(representation)
-        '''
+        
 
 
 class ml_interface(Calculator):
