@@ -311,7 +311,7 @@ class ml_interface(Calculator):
 class Molpro(FileIOCalculator):
     '''
     molpro calculator interface for ASE.
-    This class can not be used directly by MoREST, but via 'on_the_fly many body' potential method, while the calculator is redirected to this class.
+    This class can not be used directly by MoREST, but via 'on_the_fly many body potential method, while the calculator is redirected to this class.
     '''
     implemented_properties = ['energy', 'forces']
     discard_results_on_any_change = True
