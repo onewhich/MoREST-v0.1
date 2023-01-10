@@ -167,6 +167,8 @@ class velocity_Verlet(initialize_sampling):
         current_coordinates = self.current_system.get_positions()
         #current_velocities = self.current_system.get_velocities()
         current_momenta = self.current_system.get_momenta()
+
+        print('before get potential forces time: '+str(time()-gen_new_time_1))
         
         ### x(t+dt) = x(t) + v(t)*dt + 0.5*F(t)*dt^2/m
         #next_coordinates = current_coordinates + current_velocities * time_step + 0.5 * self.current_accelerations * time_step**2
@@ -175,8 +177,6 @@ class velocity_Verlet(initialize_sampling):
         
         ### v(t+0.5dt) = p(t+0.5dt) / m; p(t+0.5dt) = p(t) + 0.5 * F(t) * dt
         momenta_half = current_momenta + 0.5 * self.current_forces * time_step
-
-        print('before get potential forces time: '+str(time()-gen_new_time_1))
         
         ### F(t+dt)
         get_pot_time = time()
