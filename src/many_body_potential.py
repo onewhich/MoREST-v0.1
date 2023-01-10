@@ -87,8 +87,8 @@ class ml_potential:
                     system_list.append(new_system)
             # Get the predictions of energy and uncertainty
             energy_list, energy_std_list = self.get_ml_potential(system_list)
-            #print("Energy:", energy_list)
-            #print("Energy std:", energy_std_list)
+            print("Energy:", energy_list)
+            print("Energy std:", energy_std_list)
             energy_0 = energy_list[0]
             energy_std_0 = energy_std_list[0]
             # Determine if the energy need to be calculated on the fly
