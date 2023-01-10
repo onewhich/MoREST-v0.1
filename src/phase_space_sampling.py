@@ -151,13 +151,10 @@ class velocity_Verlet(initialize_sampling):
                 self.Wt =  0
         
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
-        gen_new_time_1 = time()
         time_step = self.md_parameters['md_time_step']
         
         if not updated_current_system == None:
             self.current_system = updated_current_system
-
-        print('before get potential forces time: '+str(time()-gen_new_time_1))
         
         ### F(t) + bias
         if type(bias_forces) != type(None):
