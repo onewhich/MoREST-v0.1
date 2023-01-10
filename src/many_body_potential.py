@@ -46,6 +46,7 @@ class ml_potential:
         self.if_active_learning = kwargs['ml_parameters']['ml_active_learning']
         if self.if_active_learning:
             self.energy_uncertainty_tolerance = kwargs['ml_parameters']['ml_energy_uncertainty_tolerance']
+            self.appending_set_number = kwargs['ml_parameters']['ml_appending_set_number']
             if  ab_initio_calculator == None:
                 raise Exception('Active learning is supposed to be used, please specify the electronic structure method.')
             #self.training_set = pd.read_csv(filename_training_set)
@@ -135,7 +136,7 @@ class ml_potential:
             raise ValueError
         representation_list = generate_representation(system_list).invers_r_exp_r_unsorted()
         
-    '''
+    
     def train_ml_model_energy(self, feature_keys, label_keys, data_train, data_valid):
 
         """
@@ -174,7 +175,7 @@ class ml_potential:
         data_valid_save["total_energy_pred"] = y_valid_pred
         data_valid_save["total_energy_pred_std"] = y_valid_pred_std
         data_valid_save.to_csv("data_valid-training_size_" + str(len(y_train)).zfill(6) + ".csv", index=None)
-    '''
+    
 
     
     @staticmethod

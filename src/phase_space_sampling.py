@@ -7,7 +7,6 @@ from many_body_potential import ml_interface, on_the_fly, molpro_calculator
 from copy import deepcopy
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary, ZeroRotation
 from ase import units
-from time import time
 
 class initialize_sampling:
     def __init__(self, morest_parameters, sampling_parameters, calculator=None):

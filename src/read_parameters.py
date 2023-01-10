@@ -118,10 +118,13 @@ class read_parameters:
                 if i_parameter.split()[1].upper() == 'True'.upper():
                     self.morest_parameters['ml_active_learning'] = True
                 elif i_parameter.split()[1].upper() == 'False'.upper():
-                    self.morest_parameters['ml_active_learning'] = False  
+                    self.morest_parameters['ml_active_learning'] = False
 
             elif i_parameter.split()[0].upper() == 'ML_energy_uncertainty_tolerance'.upper():
                 self.morest_parameters['ml_energy_uncertainty_tolerance'] = float(i_parameter.split()[1])
+
+            elif i_parameter.split()[0].upper() == 'ML_appending_set_number'.upper():
+                self.morest_parameters['ml_appending_set_number'] = int(i_parameter.split()[1])
 
             elif i_parameter.split()[0].upper() == 'ML_FD_forces'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():

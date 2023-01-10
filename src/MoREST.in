@@ -8,6 +8,7 @@ Many_body_potential               ML_potential  # ML_potential: machine learning
 ML_potential_model                ../../../fhicloud-wang/Al2F2/gpr_AlF_dimer_potential_from_test11
 ML_active_learning                True
 ML_energy_uncertainty_tolerance   0.01 # Check if ab initio calculator will involve based on the difference between ML prediction and the QC calculation. It is the energy std for GPR.
+ML_appending_set_number           10 # The number of samplings calculated by ab initio and added to the training set.
 ML_FD_forces                      False  # Use numerical forces calculation or read forces from the ML model.
 FD_displacement                   0.0025 # Parameter for finite difference forces calculation. Default value is 0.0025 \AA
 
