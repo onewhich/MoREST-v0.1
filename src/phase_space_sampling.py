@@ -157,8 +157,6 @@ class velocity_Verlet(initialize_sampling):
         if not updated_current_system == None:
             self.current_system = updated_current_system
 
-        next_system = deepcopy(self.current_system)
-
         print('before get potential forces time: '+str(time()-gen_new_time_1))
         
         ### F(t) + bias
@@ -173,30 +171,26 @@ class velocity_Verlet(initialize_sampling):
         ### x(t+dt) = x(t) + v(t)*dt + 0.5*F(t)*dt^2/m
         #next_coordinates = current_coordinates + current_velocities * time_step + 0.5 * self.current_accelerations * time_step**2
         next_coordinates = current_coordinates + (current_momenta * time_step + 0.5 * self.current_forces * time_step**2) / self.masses
-        next_system.set_positions(next_coordinates)
+        self.current_system.set_positions(next_coordinates)
         
         ### v(t+0.5dt) = p(t+0.5dt) / m; p(t+0.5dt) = p(t) + 0.5 * F(t) * dt
         momenta_half = current_momenta + 0.5 * self.current_forces * time_step
         
         ### F(t+dt)
-        get_pot_time = time()
-        next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(next_system)
-        print('get potential forces time: '+str(time()-get_pot_time))
-        gen_new_time_2 = time()
+        next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(self.current_system)
         
         ### v(t+dt) = v(t+0.5dt) + 0.5 * F(t+dt) * dt / m
         #next_accelerations = self.current_forces / self.masses
         #next_velocities = current_velocities + 0.5 * (self.current_accelerations + next_accelerations) * time_step
-        #next_system.set_velocities(next_velocities)
+        #self.current_system.set_velocities(next_velocities)
         
         ### p(t+dt) = p(t+0.5dt) + 0.5 * F(t+dt) * dt
         next_momenta = momenta_half + 0.5 * next_forces * time_step
-        next_system.set_momenta(next_momenta)
+        self.current_system.set_momenta(next_momenta)
         
         #next_velocities = next_system.get_velocities()
         
         self.current_step += 1
-        self.current_system = next_system
         self.current_forces = next_forces
         self.current_potential_energy = next_potential_energy
         
@@ -239,7 +233,6 @@ class velocity_Verlet(initialize_sampling):
             else:
                 write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses)
         
-        print('after get potential forces time: '+str(time()-gen_new_time_2))
         return self.current_step, self.current_system
     
     def velocity_rescaling(self):
