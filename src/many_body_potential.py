@@ -57,9 +57,6 @@ class ml_potential:
         #self.ml_features = np.load(model_features, allow_pickle=True)
         #self.ml_labels = np.load(model_labels, allow_pickle=True)
 
-    def get_ab_initio_potential_forces(self, system):
-        return self.ab_initio_potential.get_potential_forces(system)
-
     def get_ml_potential(self, system_list):
         if type(system_list) != list:
             raise ValueError

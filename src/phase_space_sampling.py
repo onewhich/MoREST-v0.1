@@ -7,6 +7,7 @@ from many_body_potential import ml_interface, on_the_fly, molpro_calculator
 from copy import deepcopy
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary, ZeroRotation
 from ase import units
+from time import time
 
 class initialize_sampling:
     def __init__(self, morest_parameters, sampling_parameters, calculator=None):
@@ -150,6 +151,7 @@ class velocity_Verlet(initialize_sampling):
                 self.Wt =  0
         
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
+        gen_new_time_init = time()
         time_step = self.md_parameters['md_time_step']
         
         if not updated_current_system == None:
@@ -175,7 +177,9 @@ class velocity_Verlet(initialize_sampling):
         momenta_half = current_momenta + 0.5 * self.current_forces * time_step
         
         ### F(t+dt)
+        get_pot_time = time()
         next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(next_system)
+        print('get potential forces time: '+str(time()-get_pot_time))
         
         ### v(t+dt) = v(t+0.5dt) + 0.5 * F(t+dt) * dt / m
         #next_accelerations = self.current_forces / self.masses
@@ -232,6 +236,7 @@ class velocity_Verlet(initialize_sampling):
             else:
                 write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses)
         
+        print('generation of new step time: '+str(time()-gen_new_time_init))
         return self.current_step, self.current_system
     
     def velocity_rescaling(self):
