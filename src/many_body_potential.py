@@ -84,17 +84,17 @@ class ml_potential:
                     system_list.append(new_system)
             # Get the predictions of energy and uncertainty
             energy_list, energy_std_list = self.get_ml_potential(system_list)
-            print("Energy:", energy_list)
-            print("Energy std:", energy_std_list)
+            #print("Energy:", energy_list)
+            #print("Energy std:", energy_std_list)
             energy_0 = energy_list[0]
             energy_std_0 = energy_std_list[0]
             # Determine if the energy need to be calculated on the fly
             if self.if_active_learning and (energy_std_0 > self.energy_uncertainty_tolerance):
-                print("ML energy uncertainty is larger than tolerance(=", self.energy_uncertainty_tolerance,"): ", energy_std_0)
+                #print("ML energy uncertainty is larger than tolerance(=", self.energy_uncertainty_tolerance,"): ", energy_std_0)
                 #return float('nan'), float('nan')
                 # If the ML energy has too large uncertainty, call ab initio calculations
                 self.potential_energy, self.forces = self.ab_initio_potential.get_potential_forces(system)
-                print(self.potential_energy)
+                #print(self.potential_energy)
             else:
                 for i,i_energy in enumerate(energy_list[1:]):
                     force_value = -1*(i_energy - energy_0)/self.fd_displacement
@@ -309,7 +309,7 @@ class ml_interface(Calculator):
 class Molpro(FileIOCalculator):
     '''
     molpro calculator interface for ASE.
-    This class can not be used directly by MoREST, but via 'on_the_fly many body potential method, while the calculator is redirected to this class.
+    This class can not be used directly by MoREST, but via on_the_fly many body potential method, while the calculator is redirected to this class.
     '''
     implemented_properties = ['energy', 'forces']
     discard_results_on_any_change = True
