@@ -158,6 +158,8 @@ class velocity_Verlet(initialize_sampling):
             self.current_system = updated_current_system
 
         next_system = deepcopy(self.current_system)
+
+        print('before get potential forces time: '+str(time()-gen_new_time_1))
         
         ### F(t) + bias
         if type(bias_forces) != type(None):
@@ -167,8 +169,6 @@ class velocity_Verlet(initialize_sampling):
         current_coordinates = self.current_system.get_positions()
         #current_velocities = self.current_system.get_velocities()
         current_momenta = self.current_system.get_momenta()
-
-        print('before get potential forces time: '+str(time()-gen_new_time_1))
         
         ### x(t+dt) = x(t) + v(t)*dt + 0.5*F(t)*dt^2/m
         #next_coordinates = current_coordinates + current_velocities * time_step + 0.5 * self.current_accelerations * time_step**2
