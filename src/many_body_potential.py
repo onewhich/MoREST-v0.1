@@ -97,6 +97,7 @@ class ml_potential:
                 #return float('nan'), float('nan')
                 # If the ML energy has too large uncertainty, call ab initio calculations
                 self.potential_energy, self.forces = self.ab_initio_potential.get_potential_forces(system)
+                print(self.potential_energy)
             else:
                 for i,i_energy in enumerate(energy_list[1:]):
                     force_value = -1*(i_energy - energy_0)/self.fd_displacement
