@@ -151,7 +151,7 @@ class velocity_Verlet(initialize_sampling):
                 self.Wt =  0
         
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
-        gen_new_time_init = time()
+        gen_new_time_1 = time()
         time_step = self.md_parameters['md_time_step']
         
         if not updated_current_system == None:
@@ -175,11 +175,14 @@ class velocity_Verlet(initialize_sampling):
         
         ### v(t+0.5dt) = p(t+0.5dt) / m; p(t+0.5dt) = p(t) + 0.5 * F(t) * dt
         momenta_half = current_momenta + 0.5 * self.current_forces * time_step
+
+        print('before get potential forces time: '+str(time()-gen_new_time_1))
         
         ### F(t+dt)
         get_pot_time = time()
         next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(next_system)
         print('get potential forces time: '+str(time()-get_pot_time))
+        gen_new_time_2 = time()
         
         ### v(t+dt) = v(t+0.5dt) + 0.5 * F(t+dt) * dt / m
         #next_accelerations = self.current_forces / self.masses
@@ -236,7 +239,7 @@ class velocity_Verlet(initialize_sampling):
             else:
                 write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses)
         
-        print('generation of new step time: '+str(time()-gen_new_time_init))
+        print('after get potential forces time: '+str(time()-gen_new_time_2))
         return self.current_step, self.current_system
     
     def velocity_rescaling(self):
