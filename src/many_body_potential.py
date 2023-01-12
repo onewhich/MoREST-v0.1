@@ -61,7 +61,7 @@ class ml_potential:
     def get_ml_potential(self, system_list):
         if type(system_list) != list:
             raise ValueError
-        representation_list = [self.generate_Al2F2_representation(i_system) for i_system in system_list]
+        representation_list = [generate_representation.generate_Al2F2_representation(i_system) for i_system in system_list]
         #representation_list = generate_representation(system_list).invers_r_exp_r_unsorted()
         if self.if_fd_forces:
             ml_energy, ml_energy_std = self.ml_potential.predict(representation_list, return_std=True)
@@ -175,116 +175,6 @@ class ml_potential:
         data_valid_save["total_energy_pred"] = y_valid_pred
         data_valid_save["total_energy_pred_std"] = y_valid_pred_std
         data_valid_save.to_csv("data_valid-training_size_" + str(len(y_train)).zfill(6) + ".csv", index=None)
-    
-
-    
-    @staticmethod
-    def generate_Al2F2_representation(Al2F2, representation_name="inverse_r_exp_r"):
-        """
-            Al2F2: ASE Atoms object, with positions information of Al2F2
-            representation_name: Name of the structural representation:
-                                 Values:
-                                       inverse_r_exp_r: 1/r_{ij}, 1/R_{ij}, exp(-r_{ij}), exp(-R), where R is the largest AlF-AlF distance.
-                                       inverse_r_exp_r_relative: Same as inverse_r_exp_r, except r_{ij}=r_{ij}/r_{ij,optimized}, 
-                                                                 where the interatomic distances are normalized by the equilibrium interatomic
-                                                                 distances of diatomic molecule ij, optimized by ab intio methods, e.g. CCSD(T).
-        """
-        Al1 = Al2F2.get_positions()[0] / units.Bohr # change length in AA to Bohr
-        F2 = Al2F2.get_positions()[1] / units.Bohr
-        Al3 = Al2F2.get_positions()[2] / units.Bohr
-        F4 = Al2F2.get_positions()[3] / units.Bohr
-
-        r_Al1_F2 = np.linalg.norm(Al1 - F2)
-        r_Al3_F4 = np.linalg.norm(Al3 - F4)
-        r_Al1_F4 = np.linalg.norm(Al1 - F4)
-        r_Al3_F2 = np.linalg.norm(Al3 - F2)
-        r_Al1_Al3 = np.linalg.norm(Al1 - Al3)
-        r_F2_F4 = np.linalg.norm(F2 - F4)
-        R1 = np.linalg.norm((Al1 + F2)/2 - (Al3 + F4)/2)
-        R2 = np.linalg.norm((Al1 + F4)/2 - (Al3 + F2)/2)
-        R = max(R1, R2)
-        if(representation_name == "inverse_r_exp_r"):
-
-            inverse_r_Al1_F2 = 1.0/r_Al1_F2
-            inverse_r_Al3_F4 = 1.0/r_Al3_F4
-            inverse_r_Al1_F4 = 1.0/r_Al1_F4
-            inverse_r_Al3_F2 = 1.0/r_Al3_F2
-            inverse_r_Al1_Al3 = 1.0/r_Al1_Al3
-            inverse_r_F2_F4 = 1.0/r_F2_F4
-            inverse_R = 1.0/R
-            exp_r_Al1_F2 = np.exp(-r_Al1_F2)
-            exp_r_Al3_F4 = np.exp(-r_Al3_F4)
-            exp_r_Al1_F4 = np.exp(-r_Al1_F4)
-            exp_r_Al3_F2 = np.exp(-r_Al3_F2)
-            exp_r_Al1_Al3 = np.exp(-r_Al1_Al3)
-            exp_r_F2_F4 = np.exp(-r_F2_F4)
-            exp_R = np.exp(-R)
-        elif(representation_name == "inverse_r_exp_r_relative"):
-
-            # Optimized bond lengths (CCSD(T)/avqz)
-            r_F2 = 1.413030165 / units.Bohr # From AA to Bohr
-            r_Al2 = 2.568675944 / units.Bohr
-            r_AlF = 1.668734698 / units.Bohr
-            inverse_r_Al1_F2 = 1.0/r_Al1_F2 * r_AlF
-            inverse_r_Al3_F4 = 1.0/r_Al3_F4 * r_AlF
-            inverse_r_Al1_F4 = 1.0/r_Al1_F4 * r_AlF
-            inverse_r_Al3_F2 = 1.0/r_Al3_F2 * r_AlF
-            inverse_r_Al1_Al3 = 1.0/r_Al1_Al3 * r_Al2
-            inverse_r_F2_F4 = 1.0/r_F2_F4 * r_F2
-            inverse_R = 1.0/R
-            exp_r_Al1_F2 = np.exp(-r_Al1_F2 / r_AlF)
-            exp_r_Al3_F4 = np.exp(-r_Al3_F4 / r_AlF)
-            exp_r_Al1_F4 = np.exp(-r_Al1_F4 / r_AlF)
-            exp_r_Al3_F2 = np.exp(-r_Al3_F2 / r_AlF)
-            exp_r_Al1_Al3 = np.exp(-r_Al1_Al3 / r_Al2)
-            exp_r_F2_F4 = np.exp(-r_F2_F4 / r_F2)
-            exp_R = np.exp(-R)
-        else:
-            print("Error: Representation not implemented:", representation_name)
-
-        features_invr_AlF = np.array([inverse_r_Al1_F2,inverse_r_Al3_F4, inverse_r_Al1_F4, inverse_r_Al3_F2])
-        features_invr_Al2_F2 = np.array([inverse_r_Al1_Al3, inverse_r_F2_F4, inverse_R])
-        features_expr_AlF = np.array([exp_r_Al1_F2,exp_r_Al3_F4, exp_r_Al1_F4, exp_r_Al3_F2])
-        features_expr_Al2_F2 = np.array([exp_r_Al1_Al3,exp_r_F2_F4, exp_R])
-
-        representation = np.concatenate((np.sort(features_invr_AlF),
-                                  features_invr_Al2_F2,
-                                  np.sort(features_expr_AlF),
-                                  features_expr_Al2_F2))
-                                  
-                
-        #E_Al = -241.93373718
-        #E_F = -99.65284502
-        #gpr_Al2 = joblib.load('GPR_Al2_inv_r_exp_r_Ebinding.joblib')
-        #gpr_F2 = joblib.load('GPR_F2_inv_r_exp_r_Ebinding.joblib')
-        #gpr_AlF = joblib.load('GPR_AlF_inv_r_exp_r_Ebinding.joblib')
-        #gpr_AlF2 = joblib.load('GPR_AlF2_inv_r_exp_r_Ebinding.joblib')
-        #gpr_Al2F = joblib.load('GPR_Al2F_inv_r_exp_r_Ebinding.joblib')
-
-        #Eb_rAl2 = gpr_Al2.predict(np.array([[inverse_r_Al1_Al3,exp_r_Al1_Al3]],dtype=object))
-        #Eb_rF2 = gpr_F2.predict(np.array([[inverse_r_F2_F4,exp_r_F2_F4]],dtype=object))
-        #Eb_rAlF_1 = gpr_AlF.predict(np.array([[inverse_r_Al1_F2,exp_r_Al1_F2]],dtype=object))
-        #Eb_rAlF_2 = gpr_AlF.predict(np.array([[inverse_r_Al3_F4,exp_r_Al3_F4]],dtype=object))
-        #Eb_rAlF_3 = gpr_AlF.predict(np.array([[inverse_r_Al1_F4,exp_r_Al1_F4]],dtype=object))
-        #Eb_rAlF_4 = gpr_AlF.predict(np.array([[inverse_r_Al3_F2,exp_r_Al3_F2]],dtype=object))
-        
-        #subfeature_AlF2_1 = np.array([[Eb_rAlF_1, inverse_r_Al1_F2, exp_r_Al1_F2, Eb_rAlF_3, inverse_r_Al1_F4, exp_r_Al1_F4, Eb_rF2, inverse_r_F2_F4, exp_r_F2_F4]],dtype=object)
-        #subfeature_AlF2_2 = np.array([[Eb_rAlF_2, inverse_r_Al3_F4, exp_r_Al3_F4, Eb_rAlF_4, inverse_r_Al3_F2, exp_r_Al3_F2, Eb_rF2, inverse_r_F2_F4, exp_r_F2_F4]],dtype=object)
-        #subfeature_Al2F_1 = np.array([[Eb_rAlF_1, inverse_r_Al1_F2, exp_r_Al1_F2, Eb_rAlF_4, inverse_r_Al3_F2, exp_r_Al3_F2, Eb_rAl2, inverse_r_Al1_Al3, exp_r_Al1_Al3]],dtype=object)
-        #subfeature_Al2F_2 = np.array([[Eb_rAlF_2, inverse_r_Al3_F4, exp_r_Al3_F4, Eb_rAlF_3, inverse_r_Al1_F4, exp_r_Al1_F4, Eb_rAl2, inverse_r_Al1_Al3, exp_r_Al1_Al3]],dtype=object)
-        
-        #Eb_AlF2_1 = gpr_AlF2.predict(subfeature_AlF2_1)
-        #Eb_AlF2_2 = gpr_AlF2.predict(subfeature_AlF2_2)
-        #Eb_Al2F_1 = gpr_AlF2.predict(subfeature_Al2F_1)
-        #Eb_Al2F_2 = gpr_AlF2.predict(subfeature_Al2F_2)
-        
-        #representation = np.array([E_Al, E_F,
-        #                  Eb_rAl2, inverse_r_Al1_Al3, exp_r_Al1_Al3, Eb_rF2, inverse_r_F2_F4, exp_r_F2_F4,
-        #                  Eb_rAlF_1, inverse_r_Al1_F2, exp_r_Al1_F2, Eb_rAlF_2, inverse_r_Al3_F4, exp_r_Al3_F4,
-        #                  Eb_rAlF_3, inverse_r_Al1_F4, exp_r_Al1_F4, Eb_rAlF_4, inverse_r_Al3_F2, exp_r_Al3_F2,
-        #                  Eb_AlF2_1, Eb_AlF2_2, Eb_Al2F_1, Eb_Al2F_2],dtype=object)
-    
-        return np.array(representation)
         
 
 
