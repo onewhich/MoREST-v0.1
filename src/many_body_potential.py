@@ -98,7 +98,7 @@ class ml_potential:
                 #print(self.potential_energy)
             else:
                 for i,i_energy in enumerate(energy_list[1:]):
-                    force_value = (i_energy - energy_0)/self.fd_displacement
+                    force_value = -1*(i_energy - energy_0)/self.fd_displacement
                     forces.append(force_value)
                 forces = np.array(forces)
                 self.potential_energy = energy_0
