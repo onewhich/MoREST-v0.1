@@ -3,7 +3,7 @@ import numpy as np
 from glob import glob
 from read_parameters import read_parameters
 from phase_space_sampling import velocity_Verlet
-from trajectory_scattering import scattering_velocity_Verlet, scattering_Runge_Kutta_4th, scattering_Runge_Kutta_4th_a
+from trajectory_scattering import scattering_velocity_Verlet, scattering_Runge_Kutta_4th
 from enhanced_sampling import its, re
 from wall_potential import repulsive_wall
 from collective_variable import collective_variables

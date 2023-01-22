@@ -1,13 +1,16 @@
 import numpy as np
-import pandas as pd
+#import pandas as pd
 import pickle
 from copy import deepcopy
 from ase import units
+from structure import read_xyz_traj, write_xyz_traj
 import subprocess
 import os
 import math
-from ase.calculators.calculator import Calculator, FileIOCalculator, all_changes
+from collective_variable import collective_variables
+from ase.calculators.calculator import Calculator, FileIOCalculator
 from MoREAT.src.representation import generate_representation
+from sklearn.gaussian_process import GaussianProcessRegressor, kernels
 
 
 class on_the_fly:
@@ -37,39 +40,56 @@ class ml_potential:
     '''
 
     def __init__(self, **kwargs):
-        ab_initio_calculator = kwargs['ab_initio_calculator']
-        trained_ml_potential = kwargs['ml_parameters']['ml_potential_model']
-        self.ml_potential = pickle.load(open(trained_ml_potential, 'rb'))
+        self.log_morest = open('MoREST.log','a', buffering=1)
         self.if_fd_forces = kwargs['ml_parameters']['ml_fd_forces']
         if self.if_fd_forces:
             self.fd_displacement = kwargs['ml_parameters']['fd_displacement']
         self.if_active_learning = kwargs['ml_parameters']['ml_active_learning']
         if self.if_active_learning:
-            self.energy_uncertainty_tolerance = kwargs['ml_parameters']['ml_energy_uncertainty_tolerance']
-            self.appending_set_number = kwargs['ml_parameters']['ml_appending_set_number']
+            ab_initio_calculator = kwargs['ab_initio_calculator']
             if  ab_initio_calculator == None:
                 raise Exception('Active learning is supposed to be used, please specify the electronic structure method.')
-            #self.training_set = pd.read_csv(filename_training_set)
+            try:
+                self.filename_training_set = kwargs['ml_parameters']['ml_training_set']
+                self.training_set = read_xyz_traj(self.filename_training_set)
+            except:
+                self.filename_training_set = 'traning_set.xyz'
+                self.training_set = []
+            try:
+                trained_ml_potential = kwargs['ml_parameters']['ml_potential_model']
+                self.ml_potential = pickle.load(open(trained_ml_potential, 'rb'))
+            except:
+                self.ml_potential = self.train_ml_potential(self.training_set)
+            self.additional_features = collective_variables(CVs_list=kwargs['ml_parameters']['ml_additional_features'])
+            self.energy_uncertainty_tolerance = kwargs['ml_parameters']['ml_energy_uncertainty_tolerance']
+            self.appending_set_number = kwargs['ml_parameters']['ml_appending_set_number']
+            self.appending_set_counter = 0
             if type(ab_initio_calculator) == type({}):
                 molpro_para_dict = ab_initio_calculator
                 self.ab_initio_potential = molpro_calculator(molpro_para_dict)
             else:
                 self.ab_initio_potential = on_the_fly(ab_initio_calculator)
-        #self.ml_features = np.load(model_features, allow_pickle=True)
-        #self.ml_labels = np.load(model_labels, allow_pickle=True)
+        else:
+            try:
+                trained_ml_potential = kwargs['ml_parameters']['ml_potential_model']
+                self.ml_potential = pickle.load(open(trained_ml_potential, 'rb'))
+            except:
+                raise Exception('ML model can not be read. Please specify the name.')
 
     def get_ml_potential(self, system_list):
         if type(system_list) != list:
             raise ValueError
-        representation_list = [generate_representation.generate_Al2F2_representation(i_system) for i_system in system_list]
-        #representation_list = generate_representation(system_list).invers_r_exp_r_unsorted()
+        #representation_list = [generate_representation.generate_Al2F2_representation(i_system) for i_system in system_list]
+        representation_list = generate_representation(system_list).inverse_r_exp_r_unsorted()
+        addional_features_list = self.additional_features.generate_CVs_list(system_list)
+        new_representation_list = np.hstack((representation_list,addional_features_list))
         if self.if_fd_forces:
-            ml_energy, ml_energy_std = self.ml_potential.predict(representation_list, return_std=True)
-            ml_energy = np.array(ml_energy) * units.Hartree # change energy in Hartree to eV
-            ml_energy_std = np.array(ml_energy_std) * units.Hartree
+            ml_energy, ml_energy_std = self.ml_potential.predict(new_representation_list, return_std=True)
+            ml_energy = np.array(ml_energy)
+            ml_energy_std = np.array(ml_energy_std)
             return ml_energy, ml_energy_std
         else:
-            raise Exception('ML model can not predict forces.')
+            raise Exception('Recent ML model can not predict forces.')
 
     def get_potential_forces(self, system):
         if self.if_fd_forces:
@@ -91,11 +111,16 @@ class ml_potential:
             energy_std_0 = energy_std_list[0]
             # Determine if the energy need to be calculated on the fly
             if self.if_active_learning and (energy_std_0 > self.energy_uncertainty_tolerance):
-                #print("ML energy uncertainty is larger than tolerance(=", self.energy_uncertainty_tolerance,"): ", energy_std_0)
+                write_xyz_traj(self.filename_training_set, system)
+                self.training_set.append(system)
+                self.log_morest.write("ML energy uncertainty is larger than tolerance(="+str(self.energy_uncertainty_tolerance)+"): "+str(energy_std_0)+"\n")
+                self.log_morest.write("The relevant ML predicted potential energy: "+str(energy_0)+"\n")
                 #return float('nan'), float('nan')
                 # If the ML energy has too large uncertainty, call ab initio calculations
                 self.potential_energy, self.forces = self.ab_initio_potential.get_potential_forces(system)
-                #print(self.potential_energy)
+                self.appending_set_counter += 1
+                if self.appending_set_counter == self.appending_set_number:
+                    self.ml_potential = self.train_ml_potential(self.training_set)
             else:
                 for i,i_energy in enumerate(energy_list[1:]):
                     force_value = -1*(i_energy - energy_0)/self.fd_displacement
@@ -129,15 +154,37 @@ class ml_potential:
         RMSE_value = math.sqrt(RMSE_value/N)
         return RMSE_value
 
-    #TODO: this function is not finished.
-    def train_ml_potential(self, system_list):
-        """system_list: The training set"""
-        if type(system_list) != list:
+    def train_ml_potential(self, training_set):
+        """system_list: The trajectory for training set"""
+        if type(training_set) != list:
             raise ValueError
-        representation_list = generate_representation(system_list).invers_r_exp_r_unsorted()
-        
-    
-    def train_ml_model_energy(self, feature_keys, label_keys, data_train, data_valid):
+        if len(training_set) < 1:
+            raise Exception('The training set has no system.')
+        representation_list = generate_representation(training_set).inverse_r_exp_r_unsorted()
+        addional_features_list = self.additional_features.generate_CVs_list(training_set)
+        x_train = np.hstack((representation_list,addional_features_list))
+
+        if self.if_fd_forces:
+            potential_energy_list = np.array([i_system.get_potential_energy() for i_system in training_set])
+            y_train = potential_energy_list
+        else:
+            potential_energy_list = np.array([i_system.get_potential_energy() for i_system in training_set])
+            forces_list = np.array([i_system.get_forces() for i_system in training_set])
+            y_train = np.hstack((potential_energy_list,forces_list))
+            
+        gpr_kernel=kernels.Matern(nu=2.5)*kernels.DotProduct(sigma_0=10)  + kernels.WhiteKernel(noise_level=0.1, noise_level_bounds=(2e-7,1e5))
+        self.log_morest.write("Training set:\n\tShape of feature: "+str(np.shape(x_train))+"\n")
+        gpr = GaussianProcessRegressor(kernel=gpr_kernel,normalize_y=True)
+        self.log_morest.write("The trained kernel: "+str(gpr.kernel_)+"\n")
+
+        y_train_pred, y_train_pred_std = gpr.predict(x_train, return_std=True)
+        self.log_morest.write("Training RMSE: "+str(self.RMSE(y_train, y_train_pred))+"\n")
+        self.log_morest.write("Training uncertainty: "+str(np.average(y_train_pred_std))+"\n")
+
+        return gpr
+
+    '''
+    def train_ml_model_energy(self, feature_keys, label_keys, data_train, data_valid, if_train_forces):
 
         """
         feature_keys: 
@@ -148,7 +195,8 @@ class ml_potential:
         # Todo: figure out where to generate the features, and if we should save the features, or only the xyz positions in the csv file?
         # Maybe we can generate the features outside this function upon calling, and give both data_training_set and x_train, y_train to this function to be saved.
 
-        gpr_kernel=kernels.Matern(nu=2.5)  + kernels.WhiteKernel(noise_level=0.1, noise_level_bounds=(1e-8,1e5))
+        #gpr_kernel=kernels.Matern(nu=2.5)  + kernels.WhiteKernel(noise_level=0.1, noise_level_bounds=(1e-8,1e5))
+        gpr_kernel=kernels.Matern(nu=2.5)*kernels.DotProduct(sigma_0=10)  + kernels.WhiteKernel(noise_level=0.1, noise_level_bounds=(2e-7,1e5))
         print("Training set: \n    Shape of feature: ", np.shape(x_train))
         print("Size of validation set:", np.shape(y_valid))
         gpr = GaussianProcessRegressor(kernel=gpr_kernel,normalize_y=True)
@@ -156,7 +204,7 @@ class ml_potential:
 
         # Get the training scores
         y_train_pred, y_train_pred_std = gpr.predict(x_train, return_std=True)
-        print("Training RMSE:", RMSE(y_train, y_train_pred))
+        print("Training RMSE:", self.RMSE(y_train, y_train_pred))
         print("Training uncertainty:", np.average(y_train_pred_std))
         
         data_train_save = x_train.copy(deep=True)
@@ -167,7 +215,7 @@ class ml_potential:
         
         # Get the validation scores
         y_valid_pred, y_valid_pred_std = gpr.predict(x_valid, return_std=True)
-        print("Validation RMSE:", RMSE(y_valid, y_valid_pred))
+        print("Validation RMSE:", self.RMSE(y_valid, y_valid_pred))
         print("Validation uncertainty:", np.average(y_valid_pred_std))
 
         data_valid_save = x_valid.copy(deep=True)
@@ -175,7 +223,9 @@ class ml_potential:
         data_valid_save["total_energy_pred"] = y_valid_pred
         data_valid_save["total_energy_pred_std"] = y_valid_pred_std
         data_valid_save.to_csv("data_valid-training_size_" + str(len(y_train)).zfill(6) + ".csv", index=None)
-        
+
+        return gpr
+        '''
 
 
 class ml_interface(Calculator):

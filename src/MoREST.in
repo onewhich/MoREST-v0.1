@@ -5,10 +5,15 @@ MoREST_save_parameters_file       False # Write parameters in the file
 MoREST_load_parameters_file       False # Read parameters from the file
 Many_body_potential               ML_potential  # ML_potential: machine learning potential with finite difference forces; on_the_fly: using QC, DFT package (molpro is added) via ASE to calculate potential and forces; molpro: using home-made molpro API to run molpro
 ###Input_file                     gjf.com #TODO: read QC,DFT parameters from input file
-ML_potential_model                ../../../fhicloud-wang/Al2F2/gpr_AlF_dimer_potential_from_test11
+ML_potential_model                ../../../fhicloud-wang/Al2F2/gpr_AlF_dimer_potential_from_test11 # It can be not offered when active learning is used.
 ML_active_learning                True
+ML_training_set                   training_set.xyz # the xyz trajectory for the training set.
+ML_add_features_number            2
+ML_additional_features            inverse_r_exp_r 1,2 3,4 inverse_r_exp_r 1,4 2,3
+                                  # min_distance: calculte the minimum distance between atoms / atom groups (group1: 1,2; group2: 3,4; group3: 1,4; group4: 2,3). max_distance: caluclate the maximum distance between atoms / atom groups.
 ML_energy_uncertainty_tolerance   0.01 # Check if ab initio calculator will involve based on the difference between ML prediction and the QC calculation. It is the energy std for GPR.
 ML_appending_set_number           10 # The number of samplings calculated by ab initio and added to the training set.
+ML_appending_sampling_steps       100 # Ab initio samplings will be added to traning set for every given MD/MC sampling steps.
 ML_FD_forces                      False  # Use numerical forces calculation or read forces from the ML model.
 FD_displacement                   0.0025 # Parameter for finite difference forces calculation. Default value is 0.0025 \AA
 
@@ -35,7 +40,12 @@ Scattering_E_collision            1  # Initial collision energy in eV. This ener
 Scattering_T_target               400 # in K. When Scattering_pre_thermolized is False. The initial temperature of the target molecule will be initialized by Maxwell-Boltzmann distribution, and remove translational movement.
 Scattering_T_incident             400 # in K. When Scattering_pre_thermolized is False. The initial temperature of the incident moelcule will be initialized by Maxwell-Boltzmann distribution, and remove translational movement.
 Scattering_stops_number           2 # The number of stop conditions whcih will be checked.
-Scattering_traj_stop              central_R_one 1 10 all distance 1 2 6 7 angle -1 2 6 7 10  # distance: check the distance between 2 and 6 atoms, it will stop when the distance is larger (1)/ shorter (-1) than 7. angle: check the angle of 2-6-7, it will stop when the angle is smaller (-1) than 10 degree. None: do not check the stop condition.
+Scattering_traj_stop              central_R_one 1 10 2 4 5 central_R_all 1 9 all distance 1 2 6 7 angle -1 2 6 7 10 
+                                  # central_R_one: check distances of 2 atoms (atom 4 and atom 5) from the central (0,0,0), it will stop when the distance is larger (1)/ shorter (-1) than 10.
+                                  # central_R_all: check distances of all atoms from the central (0,0,0), it will stop when the distance is larger (1)/ shorter (-1) than 9.
+                                  # distance: check the distance between 2 and 6 atoms, it will stop when the distance is larger (1)/ shorter (-1) than 7.
+                                  # angle: check the angle of 2-6-7, it will stop when the angle is smaller (-1) than 10 degree.
+                                  # None: do not check the stop condition.
 Scattering_traj_length            1000 # It will stop when the number of steps is larger than the length. None: do not check the number of steps.
 Scattering_target_molecule        MoREST.str_target # structure or trajectory of the target molecule.
 Scattering_incident_molecule      MoREST.str_incident # structure or trajectory of the incident molecule.

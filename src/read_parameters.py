@@ -1,13 +1,13 @@
 import numpy as np
 #import scipy.constants
-from json import JSONEncoder
+#from json import JSONEncoder
 from ase import units
 
-class NumpyArrayEncoder(JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        return JSONEncoder.default(self, obj)
+#class NumpyArrayEncoder(JSONEncoder):
+#    def default(self, obj):
+#        if isinstance(obj, np.ndarray):
+#            return obj.tolist()
+#        return JSONEncoder.default(self, obj)
 
 class read_parameters:
     '''
@@ -119,12 +119,24 @@ class read_parameters:
                     self.morest_parameters['ml_active_learning'] = True
                 elif i_parameter.split()[1].upper() == 'False'.upper():
                     self.morest_parameters['ml_active_learning'] = False
+                
+            elif i_parameter.split()[0].upper() == 'ML_training_set'.upper():
+                self.morest_parameters['ml_training_set'] = str(i_parameter.split()[1])
+
+            elif i_parameter.split()[0].upper() == 'ML_add_features_number'.upper():
+                self.morest_parameters['ml_add_features_number'] = int(i_parameter.split()[1])
+
+            elif i_parameter.split()[0].upper() == 'ML_additional_features'.upper():
+                self.additional_features_parameter = i_parameter.split()[1:]
 
             elif i_parameter.split()[0].upper() == 'ML_energy_uncertainty_tolerance'.upper():
                 self.morest_parameters['ml_energy_uncertainty_tolerance'] = float(i_parameter.split()[1])
 
             elif i_parameter.split()[0].upper() == 'ML_appending_set_number'.upper():
                 self.morest_parameters['ml_appending_set_number'] = int(i_parameter.split()[1])
+
+            elif i_parameter.split()[0].upper() == 'ML_appending_sampling_steps'.upper():
+                self.morest_parameters['ml_appending_sampling_steps'] = int(i_parameter.split()[1])
 
             elif i_parameter.split()[0].upper() == 'ML_FD_forces'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():
@@ -534,6 +546,74 @@ class read_parameters:
         self.morest_parameters['trajectory_scattering'] = self.scattering_parameters['trajectory_scattering']
         self.morest_parameters['enhanced_sampling'] = self.enhanced_sampling_parameters['enhanced_sampling']
         self.morest_parameters['wall_potential'] = self.wall_potential_parameters['wall_potential']
+        if self.morest_parameters['ml_add_features_number'] == 0:
+            self.morest_parameters['scattering_additional_features'] = None
+        else:
+            additional_features = []
+            i_loc = 0 # used to locate the index of the CVs parameters
+            for i_feature in range(self.morest_parameters['ml_add_features_number']):
+                if self.additional_features_parameter[0+i_loc] == 'None'.upper():
+                    self.morest_parameters['scattering_additional_features'] = None
+                elif self.additional_features_parameter[0+i_loc].upper() == 'distance'.upper():
+                    tmp_feature = []
+                    tmp_feature.append('distance')
+                    group_1 = self.additional_features_parameter[1+i_loc].split(',')
+                    tmp_feature.append(np.array(group_1).reshape(-1))
+                    group_2 = self.additional_features_parameter[2+i_loc].split(',')
+                    tmp_feature.append(np.array(group_2).reshape(-1))
+                    i_loc += 3
+                    additional_features.append(tmp_feature)
+                elif self.additional_features_parameter[0+i_loc].upper() == 'inverse_r'.upper():
+                    tmp_feature = []
+                    tmp_feature.append('inverse_r')
+                    group_1 = self.additional_features_parameter[1+i_loc].split(',')
+                    tmp_feature.append(np.array(group_1).reshape(-1))
+                    group_2 = self.additional_features_parameter[2+i_loc].split(',')
+                    tmp_feature.append(np.array(group_2).reshape(-1))
+                    i_loc += 3
+                    additional_features.append(tmp_feature)
+                elif self.additional_features_parameter[0+i_loc].upper() == 'exp_r'.upper():
+                    tmp_feature = []
+                    tmp_feature.append('exp_r')
+                    group_1 = self.additional_features_parameter[1+i_loc].split(',')
+                    tmp_feature.append(np.array(group_1).reshape(-1))
+                    group_2 = self.additional_features_parameter[2+i_loc].split(',')
+                    tmp_feature.append(np.array(group_2).reshape(-1))
+                    i_loc += 3
+                    additional_features.append(tmp_feature)
+                elif self.additional_features_parameter[0+i_loc].upper() in ['inverse_r_exp_r'.upper(), 'exp_r_inverse_r'.upper()]:
+                    tmp_feature = []
+                    tmp_feature.append('inverse_r_exp_r')
+                    group_1 = self.additional_features_parameter[1+i_loc].split(',')
+                    tmp_feature.append(np.array(group_1).reshape(-1))
+                    group_2 = self.additional_features_parameter[2+i_loc].split(',')
+                    tmp_feature.append(np.array(group_2).reshape(-1))
+                    i_loc += 3
+                    additional_features.append(tmp_feature)
+                elif self.additional_features_parameter[0+i_loc].upper() == 'central_R'.upper():
+                    tmp_feature = []
+                    tmp_feature.append('central_R')
+                    group_1 = self.additional_features_parameter[1+i_loc].split(',')
+                    tmp_feature.append(np.array(group_1).reshape(-1))
+                    i_loc += 2
+                    additional_features.append(tmp_feature)
+                elif self.additional_features_parameter[0+i_loc].upper() == 'min_distance'.upper():
+                    tmp_feature = []
+                    tmp_feature.append('min_distance')
+                    group_1 = self.additional_features_parameter[1+i_loc].split(',')
+                    tmp_feature.append(np.array(group_1).reshape(-1))
+                    i_loc += 2
+                    additional_features.append(tmp_feature)
+                elif self.additional_features_parameter[0+i_loc].upper() == 'max_distance'.upper():
+                    tmp_feature = []
+                    tmp_feature.append('max_distance')
+                    group_1 = self.additional_features_parameter[1+i_loc].split(',')
+                    tmp_feature.append(np.array(group_1).reshape(-1))
+                    i_loc += 2
+                    additional_features.append(tmp_feature)
+                else:
+                    raise Exception('It is not clear which features will be added.')
+            self.morest_parameters['scattering_additional_features'] = additional_features
         if type(log_morest) != type(None):
             for key in self.morest_parameters:
                 log_morest.write(key+' : '+str(self.morest_parameters[key])+'\n')
