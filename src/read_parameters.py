@@ -547,13 +547,13 @@ class read_parameters:
         self.morest_parameters['enhanced_sampling'] = self.enhanced_sampling_parameters['enhanced_sampling']
         self.morest_parameters['wall_potential'] = self.wall_potential_parameters['wall_potential']
         if self.morest_parameters['ml_add_features_number'] == 0:
-            self.morest_parameters['scattering_additional_features'] = None
+            self.morest_parameters['ml_additional_features'] = None
         else:
             additional_features = []
             i_loc = 0 # used to locate the index of the CVs parameters
             for i_feature in range(self.morest_parameters['ml_add_features_number']):
                 if self.additional_features_parameter[0+i_loc] == 'None'.upper():
-                    self.morest_parameters['scattering_additional_features'] = None
+                    self.morest_parameters['ml_additional_features'] = None
                 elif self.additional_features_parameter[0+i_loc].upper() == 'distance'.upper():
                     tmp_feature = []
                     tmp_feature.append('distance')
@@ -613,7 +613,7 @@ class read_parameters:
                     additional_features.append(tmp_feature)
                 else:
                     raise Exception('It is not clear which features will be added.')
-            self.morest_parameters['scattering_additional_features'] = additional_features
+            self.morest_parameters['ml_additional_features'] = additional_features
         if type(log_morest) != type(None):
             for key in self.morest_parameters:
                 log_morest.write(key+' : '+str(self.morest_parameters[key])+'\n')
