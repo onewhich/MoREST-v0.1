@@ -418,6 +418,21 @@ class Molpro(FileIOCalculator):
                     energy = float(line.split("=")[-1])
             return energy * units.Hartree, np.array(force) * (units.Hartree/units.Bohr) * -1
 
+    @staticmethod
+    def get_atoms_from_output(file):
+        molpro_output = open('molpro.out_1','r').read       
+        for i,i_line in enumerate(molpro_output):
+            if "geometry=" in i_line:
+                n_atoms = int(molpro_output[i+1])
+                chemical_symbols = []
+                positions = []
+                for i_atom in range(n_atoms):
+                    element = molpro_output[i+2+i_atom].split()[0]
+                    chemical_symbols.append(element)
+                    tmp_pos = float(molpro_output[i+2+i_atom].split()[1:4])
+                    positions.append(tmp_pos)
+        return chemical_symbols, np.array(positions)
+
 
 
 class molpro_calculator:
