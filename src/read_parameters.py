@@ -77,8 +77,6 @@ class read_parameters:
         self.wall_potential_parameters['spherical_wall_radius'] = []
         self.wall_potential_parameters['dot_wall_position'] = []
 
-        self.log_morest = open('MoREST.log','a', buffering=1)
-
         for i_parameter in __parameters:
             if len(i_parameter.split()) < 2:
                 continue
@@ -460,89 +458,13 @@ class read_parameters:
                     tmp_wall_center.append(float(i_parameter.split()[i+1]))
                 self.wall_potential_parameters['dot_wall_position'].append(np.array(tmp_wall_center))
                 
-    def write_parameters(self, log_morest):
+    def write_morest_parameters(self, log_morest):
         log_morest.write('\n')
-        try:
-            for key in self.morest_parameters:
-                log_morest.write(key+' : '+str(self.morest_parameters[key])+'\n')
-            log_morest.write('\n')
-        except:
-            pass
-        try:
-            if self.sampling_parameters['phase_space_sampling']:
-                for key in self.sampling_parameters:
-                    log_morest.write(key+' : '+str(self.sampling_parameters[key])+'\n')
-                log_morest.write('\n')
-        except:
-            pass
-        try:
-            if self.sampling_parameters['phase_space_sampling']:
-                for key in self.md_parameters:
-                    log_morest.write(key+' : '+str(self.md_parameters[key])+'\n')
-                log_morest.write('\n')
-        except:
-            pass
-        try:
-            if self.scattering_parameters['trajectory_scattering']:
-                for key in self.scattering_parameters:
-                    log_morest.write(key+' : '+str(self.scattering_parameters[key])+'\n')
-                log_morest.write('\n')
-        except:
-            pass
-        try:
-            if self.enhanced_sampling_parameters['enhanced_sampling']:
-                for key in self.enhanced_sampling_parameters:
-                    log_morest.write(key+' : '+str(self.enhanced_sampling_parameters[key])+'\n')
-                log_morest.write('\n')
-        except:
-            pass
-        try:
-            if self.enhanced_sampling_parameters['enhanced_sampling']:
-                for key in self.its_parameters:
-                    log_morest.write(key+' : '+str(self.its_parameters[key])+'\n')
-                log_morest.write('\n')
-        except:
-            pass
-        try:
-            if self.enhanced_sampling_parameters['enhanced_sampling']:
-                for key in self.re_parameters:
-                    log_morest.write(key+' : '+str(self.re_parameters[key])+'\n')
-                log_morest.write('\n')
-        except:
-            pass
-        try:
-            if self.wall_potential_parameters['wall_potential']:
-                for key in self.wall_potential_parameters:
-                    log_morest.write(key+' : '+str(self.wall_potential_parameters[key])+'\n')
-                log_morest.write('\n')
-        except:
-            pass
-        try:
-            if self.wall_potential_parameters['wall_potential']:
-                for key in self.planar_wall_parameters:
-                    log_morest.write(key+' : '+str(self.planar_wall_parameters[key])+'\n')
-                log_morest.write('\n')
-        except:
-            pass
-        try:
-            if self.wall_potential_parameters['wall_potential']:
-                for key in self.spherical_wall_parameters:
-                    log_morest.write(key+' : '+str(self.spherical_wall_parameters[key])+'\n')
-                log_morest.write('\n')
-        except:
-            pass
-        try:
-            if self.wall_potential_parameters['wall_potential']:
-                for key in self.dot_wall_parameters:
-                    log_morest.write(key+' : '+str(self.dot_wall_parameters[key])+'\n')
-                log_morest.write('\n')
-        except:
-            pass
+        for key in self.morest_parameters:
+            log_morest.write(key+' : '+str(self.morest_parameters[key])+'\n')
         log_morest.write('\n')
-            
-
-                
-    def get_morest_parameters(self, log_morest=None):
+        
+    def get_morest_parameters(self):
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_morest_parameters.npy', self.morest_parameters)
         self.morest_parameters['phase_space_sampling'] = self.sampling_parameters['phase_space_sampling']
@@ -616,12 +538,7 @@ class read_parameters:
                     additional_features.append(tmp_feature)
                 else:
                     raise Exception('It is not clear which features will be added.')
-            self.log_morest.write('Additional features are added for machine learning:\n'+'\t'+str(additional_features)+'\n')
             self.morest_parameters['ml_additional_features'] = additional_features
-        if type(log_morest) != type(None):
-            for key in self.morest_parameters:
-                log_morest.write(key+' : '+str(self.morest_parameters[key])+'\n')
-            log_morest.write('\n')
         return self.morest_parameters
 
     def get_sampling_parameters(self, log_morest=None):
