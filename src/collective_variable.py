@@ -105,7 +105,7 @@ class collective_variables:
             elif i_CV[0] == 'exp_r':
                 CVs.append(self.exp_r(system, i_CV[1], i_CV[2]))
             elif i_CV[0] == 'inverse_r_exp_r':
-                for i in self.exp_r(system, i_CV[1], i_CV[2]):
+                for i in self.inverse_r_exp_r(system, i_CV[1], i_CV[2]):
                     CVs.append(i)
             elif i_CV[0] == 'distance':
                 CVs.append(self.distance(system, i_CV[1], i_CV[2]))
