@@ -429,7 +429,7 @@ class Molpro(FileIOCalculator):
                 for i_atom in range(n_atoms):
                     element = molpro_output[i+2+i_atom].split()[0]
                     chemical_symbols.append(element)
-                    tmp_pos = np.array(molpro_output[i+2+i_atom].split()[1:4])
+                    tmp_pos = np.array(molpro_output[i+2+i_atom].split()[1:4],dtype=float)
                     positions.append(tmp_pos)
         return chemical_symbols, np.array(positions)
 
