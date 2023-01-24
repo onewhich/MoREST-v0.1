@@ -49,6 +49,7 @@ class ml_potential:
             ab_initio_calculator = kwargs['ab_initio_calculator']
             if  ab_initio_calculator == None:
                 raise Exception('Active learning is supposed to be used, please specify the electronic structure method.')
+            self.additional_features = collective_variables(CVs_list=kwargs['ml_parameters']['ml_additional_features'])
             try:
                 self.filename_training_set = kwargs['ml_parameters']['ml_training_set']
                 self.training_set = read_xyz_traj(self.filename_training_set)
@@ -60,7 +61,6 @@ class ml_potential:
                 self.ml_potential = pickle.load(open(trained_ml_potential, 'rb'))
             except:
                 self.ml_potential = self.train_ml_potential(self.training_set)
-            self.additional_features = collective_variables(CVs_list=kwargs['ml_parameters']['ml_additional_features'])
             self.energy_uncertainty_tolerance = kwargs['ml_parameters']['ml_energy_uncertainty_tolerance']
             self.appending_set_number = kwargs['ml_parameters']['ml_appending_set_number']
             self.appending_set_counter = 0
