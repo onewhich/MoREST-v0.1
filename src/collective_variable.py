@@ -148,13 +148,6 @@ class collective_variables:
         coordinates = system.get_positions()
         average_1_coordinate = np.sum(coordinates[group_1-1],axis=0)/len(group_1)
         average_2_coordinate = np.sum(coordinates[group_2-1],axis=0)/len(group_2)
-        print(coordinates)
-        print(group_1)
-        print(coordinates[group_1-1])
-        print(average_1_coordinate)
-        print(group_2)
-        print(coordinates[group_2-1])
-        print(average_2_coordinate)
         R_1_2 = np.linalg.norm(average_1_coordinate - average_2_coordinate)
         return R_1_2
 
