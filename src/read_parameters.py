@@ -613,6 +613,7 @@ class read_parameters:
                     additional_features.append(tmp_feature)
                 else:
                     raise Exception('It is not clear which features will be added.')
+            log_morest.write('Additional features are added for machine learning:\n'+'\t'+str(additional_features)+'\n')
             self.morest_parameters['ml_additional_features'] = additional_features
         if type(log_morest) != type(None):
             for key in self.morest_parameters:
