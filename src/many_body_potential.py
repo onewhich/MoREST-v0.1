@@ -175,7 +175,7 @@ class ml_potential:
         gpr_kernel=kernels.Matern(nu=2.5)*kernels.DotProduct(sigma_0=10)  + kernels.WhiteKernel(noise_level=0.1, noise_level_bounds=(2e-7,1e5))
         self.log_morest.write("Training set:\n\tShape of feature: "+str(np.shape(x_train))+"\n")
         gpr = GaussianProcessRegressor(kernel=gpr_kernel,normalize_y=True)
-        self.log_morest.write("The trained kernel: "+str(gpr.kernel_)+"\n")
+        #self.log_morest.write("The trained kernel: "+str(gpr.kernel_)+"\n")
 
         y_train_pred, y_train_pred_std = gpr.predict(x_train, return_std=True)
         self.log_morest.write("Training RMSE: "+str(self.RMSE(y_train, y_train_pred))+"\n")
