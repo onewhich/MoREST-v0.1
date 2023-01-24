@@ -146,8 +146,13 @@ class collective_variables:
         elif type(group_2) != np.ndarray:
             raise ValueError
         coordinates = system.get_positions()
+        print(coordinates)
         average_1_coordinate = np.linalg.norm(coordinates[group_1-1],axis=0)
+        print(coordinates[group_1-1])
+        print(average_1_coordinate)
         average_2_coordinate = np.linalg.norm(coordinates[group_2-1],axis=0)
+        print(coordinates[group_2-1])
+        print(average_2_coordinate)
         R_1_2 = np.linalg.norm(average_1_coordinate - average_2_coordinate)
         return R_1_2
 
@@ -160,6 +165,9 @@ class collective_variables:
         return np.exp(1/R)
 
     def inverse_r_exp_r(self, system, group_1, group_2):
+        print(self.distance(system, group_1, group_2))
+        print(group_1)
+        print(group_2)
         inverse_R = 1/self.distance(system, group_1, group_2)
         return np.array([inverse_R, np.exp(inverse_R)])
 
