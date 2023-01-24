@@ -483,57 +483,57 @@ class read_parameters:
                     tmp_feature = []
                     tmp_feature.append('distance')
                     group_1 = self.additional_features_parameter[1+i_loc].split(',')
-                    tmp_feature.append(np.array(group_1).reshape(-1))
+                    tmp_feature.append(np.array(group_1,dtype=int).reshape(-1))
                     group_2 = self.additional_features_parameter[2+i_loc].split(',')
-                    tmp_feature.append(np.array(group_2).reshape(-1))
+                    tmp_feature.append(np.array(group_2,dtype=int).reshape(-1))
                     i_loc += 3
                     additional_features.append(tmp_feature)
                 elif self.additional_features_parameter[0+i_loc].upper() == 'inverse_r'.upper():
                     tmp_feature = []
                     tmp_feature.append('inverse_r')
                     group_1 = self.additional_features_parameter[1+i_loc].split(',')
-                    tmp_feature.append(np.array(group_1).reshape(-1))
+                    tmp_feature.append(np.array(group_1,dtype=int).reshape(-1))
                     group_2 = self.additional_features_parameter[2+i_loc].split(',')
-                    tmp_feature.append(np.array(group_2).reshape(-1))
+                    tmp_feature.append(np.array(group_2,dtype=int).reshape(-1))
                     i_loc += 3
                     additional_features.append(tmp_feature)
                 elif self.additional_features_parameter[0+i_loc].upper() == 'exp_r'.upper():
                     tmp_feature = []
                     tmp_feature.append('exp_r')
                     group_1 = self.additional_features_parameter[1+i_loc].split(',')
-                    tmp_feature.append(np.array(group_1).reshape(-1))
+                    tmp_feature.append(np.array(group_1,dtype=int).reshape(-1))
                     group_2 = self.additional_features_parameter[2+i_loc].split(',')
-                    tmp_feature.append(np.array(group_2).reshape(-1))
+                    tmp_feature.append(np.array(group_2,dtype=int).reshape(-1))
                     i_loc += 3
                     additional_features.append(tmp_feature)
                 elif self.additional_features_parameter[0+i_loc].upper() in ['inverse_r_exp_r'.upper(), 'exp_r_inverse_r'.upper()]:
                     tmp_feature = []
                     tmp_feature.append('inverse_r_exp_r')
                     group_1 = self.additional_features_parameter[1+i_loc].split(',')
-                    tmp_feature.append(np.array(group_1).reshape(-1))
+                    tmp_feature.append(np.array(group_1,dtype=int).reshape(-1))
                     group_2 = self.additional_features_parameter[2+i_loc].split(',')
-                    tmp_feature.append(np.array(group_2).reshape(-1))
+                    tmp_feature.append(np.array(group_2,dtype=int).reshape(-1))
                     i_loc += 3
                     additional_features.append(tmp_feature)
                 elif self.additional_features_parameter[0+i_loc].upper() == 'central_R'.upper():
                     tmp_feature = []
                     tmp_feature.append('central_R')
                     group_1 = self.additional_features_parameter[1+i_loc].split(',')
-                    tmp_feature.append(np.array(group_1).reshape(-1))
+                    tmp_feature.append(np.array(group_1,dtype=int).reshape(-1))
                     i_loc += 2
                     additional_features.append(tmp_feature)
                 elif self.additional_features_parameter[0+i_loc].upper() == 'min_distance'.upper():
                     tmp_feature = []
                     tmp_feature.append('min_distance')
                     group_1 = self.additional_features_parameter[1+i_loc].split(',')
-                    tmp_feature.append(np.array(group_1).reshape(-1))
+                    tmp_feature.append(np.array(group_1,dtype=int).reshape(-1))
                     i_loc += 2
                     additional_features.append(tmp_feature)
                 elif self.additional_features_parameter[0+i_loc].upper() == 'max_distance'.upper():
                     tmp_feature = []
                     tmp_feature.append('max_distance')
                     group_1 = self.additional_features_parameter[1+i_loc].split(',')
-                    tmp_feature.append(np.array(group_1).reshape(-1))
+                    tmp_feature.append(np.array(group_1,dtype=int).reshape(-1))
                     i_loc += 2
                     additional_features.append(tmp_feature)
                 else:
