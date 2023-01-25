@@ -53,8 +53,6 @@ class ml_potential:
             try:
                 self.filename_training_set = kwargs['ml_parameters']['ml_training_set']
                 self.training_set = read_xyz_traj(self.filename_training_set)
-                for i in range(len(self.training_set)):
-                    self.training_set[i].calc = ab_initio_calculator
             except:
                 self.filename_training_set = 'traning_set.xyz'
                 self.training_set = []
