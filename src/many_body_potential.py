@@ -60,6 +60,7 @@ class ml_potential:
                 trained_ml_potential = kwargs['ml_parameters']['ml_potential_model']
                 self.ml_potential = pickle.load(open(trained_ml_potential, 'rb'))
             except:
+                self.log_morest.write('Trained ML model has not beed indicated. The ML model will be trained from training set.\n')
                 self.ml_potential = self.train_ml_potential(self.training_set)
             self.energy_uncertainty_tolerance = kwargs['ml_parameters']['ml_energy_uncertainty_tolerance']
             self.appending_set_number = kwargs['ml_parameters']['ml_appending_set_number']
