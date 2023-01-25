@@ -164,6 +164,9 @@ class ml_potential:
         representation_list = generate_representation(training_set).inverse_r_exp_r_unsorted()
         addional_features_list = self.additional_features.generate_CVs_list(training_set)
         x_train = np.hstack((representation_list,addional_features_list))
+        rep_file = open('training_set_representation','w')
+        for i_rep in x_train:
+            rep_file.write(str(i_rep)+'\n')
 
         if self.if_fd_forces:
             potential_energy_list = np.array([i_system.get_potential_energy() for i_system in training_set])
