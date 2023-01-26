@@ -118,16 +118,17 @@ class ml_potential:
             energy_std_0 = energy_std_list[0]
             # Determine if the energy need to be calculated on the fly
             if self.if_active_learning and (energy_std_0 > self.energy_uncertainty_tolerance):
-                write_xyz_traj(self.filename_training_set, system)
-                self.training_set.append(system)
                 self.log_morest.write("ML energy uncertainty is larger than tolerance(="+str(self.energy_uncertainty_tolerance)+"): "+str(energy_std_0)+"\n")
                 self.log_morest.write("The relevant ML predicted potential energy: "+str(energy_0)+"\n")
                 #return float('nan'), float('nan')
                 # If the ML energy has too large uncertainty, call ab initio calculations
                 self.potential_energy, self.forces = self.ab_initio_potential.get_potential_forces(system)
+                write_xyz_traj(self.filename_training_set, system)
+                self.training_set.append(system)
                 self.appending_set_counter += 1
                 if self.appending_set_counter == self.appending_set_number:
                     self.ml_potential = self.train_ml_potential(self.training_set)
+                    self.appending_set_counter = 0
             else:
                 for i,i_energy in enumerate(energy_list[1:]):
                     force_value = -1*(i_energy - energy_0)/self.fd_displacement
