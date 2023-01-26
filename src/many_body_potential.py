@@ -190,7 +190,9 @@ class ml_potential:
         self.log_morest.write("Training set:\n\tShape of feature: "+str(np.shape(x_train))+"\n")
         gpr = GaussianProcessRegressor(kernel=gpr_kernel,normalize_y=True)
         gpr.fit(x_train, y_train)
-        #self.log_morest.write("The trained kernel: "+str(gpr.kernel_)+"\n")
+        with open('trained_ml_potential_model.pkl','wb') as trained_model_file:
+            pickle.dump(gpr, trained_model_file)
+        self.log_morest.write("The trained kernel: "+str(gpr.kernel_)+"\n")
 
         y_train_pred, y_train_pred_std = gpr.predict(x_train, return_std=True)
         self.log_morest.write("Training RMSE: "+str(self.RMSE(y_train, y_train_pred))+"\n")
