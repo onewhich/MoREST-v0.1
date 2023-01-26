@@ -49,7 +49,10 @@ class ml_potential:
             ab_initio_calculator = kwargs['ab_initio_calculator']
             if  ab_initio_calculator == None:
                 raise Exception('Active learning is supposed to be used, please specify the electronic structure method.')
-            self.additional_features = collective_variables(CVs_list=kwargs['ml_parameters']['ml_additional_features'])
+            if kwargs['ml_parameters']['ml_additional_features'] == None:
+                self.additional_features = None
+            else:
+                self.additional_features = collective_variables(CVs_list=kwargs['ml_parameters']['ml_additional_features'])
             try:
                 self.filename_training_set = kwargs['ml_parameters']['ml_training_set']
                 self.training_set = read_xyz_traj(self.filename_training_set)
@@ -82,8 +85,11 @@ class ml_potential:
             raise ValueError
         #representation_list = [generate_representation.generate_Al2F2_representation(i_system) for i_system in system_list]
         representation_list = generate_representation(system_list).inverse_r_exp_r_unsorted()
-        addional_features_list = self.additional_features.generate_CVs_list(system_list)
-        new_representation_list = np.hstack((representation_list,addional_features_list))
+        if self.additional_features == None:
+            new_representation_list = representation_list
+        else:
+            addional_features_list = self.additional_features.generate_CVs_list(system_list)
+            new_representation_list = np.hstack((representation_list,addional_features_list))
         if self.if_fd_forces:
             ml_energy, ml_energy_std = self.ml_potential.predict(new_representation_list, return_std=True)
             ml_energy = np.array(ml_energy)
@@ -162,8 +168,11 @@ class ml_potential:
         if len(training_set) < 1:
             raise Exception('The training set has no system.')
         representation_list = generate_representation(training_set).inverse_r_exp_r_unsorted()
-        addional_features_list = self.additional_features.generate_CVs_list(training_set)
-        x_train = np.hstack((representation_list,addional_features_list))
+        if self.additional_features == None:
+            x_train = representation_list
+        else:
+            addional_features_list = self.additional_features.generate_CVs_list(training_set)
+            x_train = np.hstack((representation_list,addional_features_list))
         rep_file = open('training_set_representation','w')
         for i_rep in x_train:
             rep_file.write(str(i_rep)+'\n')
