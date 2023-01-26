@@ -433,7 +433,7 @@ class Molpro(FileIOCalculator):
 
     @staticmethod
     def get_atoms_from_output(file):
-        molpro_output = open('molpro.out_1','r').readlines()
+        molpro_output = open(file,'r').readlines()
         for i,i_line in enumerate(molpro_output):
             if "geometry=" in i_line:
                 n_atoms = int(molpro_output[i+1])
