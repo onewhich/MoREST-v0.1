@@ -393,14 +393,14 @@ class Molpro(FileIOCalculator):
 
         with open(file,'r') as f:
             lines = f.readlines()
-            energy = float('nan')
+            energy = np.nan
             elements = []
             force = []
             if(len(lines)<1):
-                energy = float('Inf')
+                energy = np.inf
                 return energy, np.array(force)
             if(lines[-1].find("terminated")==-1):
-                energy = float('Inf')
+                energy = np.inf
                 return energy, np.array(force)
             for i, line in enumerate(lines):
                 if(line.find("GRADIENT FOR STATE")!=-1):
@@ -585,7 +585,7 @@ class molpro_calculator:
         with open(file,'r') as f:
             #path = file
             lines = f.readlines()
-            energy = float('nan')
+            energy = np.nan
             #xs = []
             #ys = []
             #zs = []
@@ -593,14 +593,14 @@ class molpro_calculator:
             #xyz = []
             force = []
             if(len(lines)<1):
-                energy = float('Inf')
+                energy = np.inf
                 #return path, elements, xyz_Al1F2Al3F4, energy
                 if if_get_force:
                     return energy, np.array(force)
                 else:
                     return energy
             if(lines[-1].find("terminated")==-1):
-                energy = float('Inf')
+                energy = np.inf
                 #return path, elements, xyz_Al1F2Al3F4, energy
                 if if_get_force:
                     return energy, np.array(force)
