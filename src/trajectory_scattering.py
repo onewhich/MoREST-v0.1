@@ -324,6 +324,34 @@ def get_translational_momentum(system):
     n_atom = system.get_global_number_of_atoms()
     return np.sum(system.get_momenta(), axis=0)/n_atom
 
+def rotate_system_at_center(system, theta, unit_normal_vector, center=[0,0,0]):
+    '''
+    a x b = c,
+    when a and c are orthogonal, b = (c x a) / (|a|*|a|) + a * cos(theta)
+    '''
+    # (r x r_new) / (|r| * |r_new|) = sin(theta) * unit_normal_vector, where |r| == |r_new|
+    # r x r_new = sin(theta) * unit_normal_vector * |r|^2
+    unit_normal_vector = unit_normal_vector / np.linalg.norm(unit_normal_vector)
+    coordinates = system.get_positions()
+    masses = system.get_masses()
+    if type(center) == list:
+        center = np.array(center)
+    elif center.upper() == 'geometry'.upper():
+        center = np.sum(coordinates, axis=0)
+    elif center.upper() == 'mass'.upper():
+        center = np.sum(masses*coordinates, axis=0)/np.sum(masses)
+    coordinates = coordinates - center
+
+    r_cross_r_new = np.sin(theta) * unit_normal_vector
+    r2 = np.linalg.norm(coordinates, axis=1)**2
+    r_cross_r_new = np.array([r_cross_r_new * i_r2 for i_r2 in r2])
+
+    coordinates_new = np.cross(r_cross_r_new, coordinates) / (np.linalg.norm(coordinates)**2) + coordinates * np.cos(theta)
+
+    return coordinates_new
+
+
+
 def write_MD_log(MD_log, step, Ep, Ek, masses):
     n_atom = len(masses)
     #Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(n_atom)])

@@ -294,14 +294,22 @@ def clean_translation(velocities):
     return velocities
     
 def clean_rotation(velocities, coordinates, masses):
+    '''
+    L = r x p = r x (m v) = r x (omega x (m r)) = m r^2 omega = I omega
+    L : angular momentum
+    omega: angular velocity
+    I : moment of inertia
+    '''
     v_vector = velocities
     #center_of_mass = np.sum([masses[i]*coordinates[i] for i in range(len(masses))], axis=0)/np.sum(masses)
     center_of_mass = np.sum(masses*coordinates, axis=0)/np.sum(masses)
     r_vector = coordinates - center_of_mass
-        
+    # r_cross_v : angular velocities
+    # omega = (r x v) / |r|^2
     r_cross_v = np.cross(r_vector, v_vector)
     r_2 = np.linalg.norm(r_vector, axis=1)**2
     omega = np.array([r_cross_v[i]/r_2[i] for i in range(4)])
+    # Rv = omega/n_atom : system total angular velocity
     rotat_vector = np.sum(omega, axis=0)/len(masses)
     v_tang = np.cross(rotat_vector, r_vector)
     velocities = v_vector - v_tang
