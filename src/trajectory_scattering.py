@@ -326,31 +326,36 @@ def get_translational_momentum(system):
 
 def rotate_system_at_center(system, theta, unit_normal_vector, center=[0,0,0]):
     '''
-    a x b = c,
-    when a and c are orthogonal, b = (c x a) / (|a|*|a|) + a * cos(theta)
+    theta: angles, in degree
+    center: 1-D list of 3 numbers (define the position of the center), or 'geometry' (calculate geometric center), or 'mass' (calculate mass' center)
+    r x r' = n,
+    when r and n are orthogonal, r' = (n x r) / (|r|*|n|) * r +  cos(theta) * r
     '''
     # (r x r_new) / (|r| * |r_new|) = sin(theta) * unit_normal_vector, where |r| == |r_new|
     # r x r_new = sin(theta) * unit_normal_vector * |r|^2
+    theta = np.deg2rad(theta)
+    unit_normal_vector = np.array(unit_normal_vector)
     unit_normal_vector = unit_normal_vector / np.linalg.norm(unit_normal_vector)
     coordinates = system.get_positions()
-    masses = system.get_masses()
     if type(center) == list:
         center = np.array(center)
     elif center.upper() == 'geometry'.upper():
-        center = np.sum(coordinates, axis=0)
+        center = np.sum(coordinates, axis=0)/len(coordinates)
     elif center.upper() == 'mass'.upper():
+        masses = system.get_masses()[:,np.newaxis]
         center = np.sum(masses*coordinates, axis=0)/np.sum(masses)
     coordinates = coordinates - center
 
     r_cross_r_new = np.sin(theta) * unit_normal_vector
-    r2 = np.linalg.norm(coordinates, axis=1)**2
-    r_cross_r_new = np.array([r_cross_r_new * i_r2 for i_r2 in r2])
+    r = np.linalg.norm(coordinates, axis=1)[:,np.newaxis]
+    r2 = r**2
+    r_cross_r_new = r_cross_r_new * r2
 
-    coordinates_new = np.cross(r_cross_r_new, coordinates) / (np.linalg.norm(coordinates)**2) + coordinates * np.cos(theta)
+    system_new = system.copy()
+    coordinates_new = np.cross(r_cross_r_new, coordinates) / r2 + np.cos(theta) * coordinates
+    system_new.set_positions(coordinates_new)
 
-    return coordinates_new
-
-
+    return system_new
 
 def write_MD_log(MD_log, step, Ep, Ek, masses):
     n_atom = len(masses)
