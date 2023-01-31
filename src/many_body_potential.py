@@ -118,13 +118,20 @@ class ml_potential:
             energy_std_0 = energy_std_list[0]
             # Determine if the energy need to be calculated on the fly
             if self.if_active_learning and (energy_std_0 > self.energy_uncertainty_tolerance):
-                self.log_morest.write("ML energy uncertainty is larger than tolerance(="+str(self.energy_uncertainty_tolerance)+"): "+str(energy_std_0)+"\n")
+                self.log_morest.write("Current ML energy uncertainty is larger than tolerance(="+str(self.energy_uncertainty_tolerance)+"): "+str(energy_std_0)+"\n")
                 self.log_morest.write("The relevant ML predicted potential energy: "+str(energy_0)+"\n")
+                self.log_morest.write("Current system:\n")
+                chemical_symbols = system.get_chemical_symbols()
+                coordinates = system.get_positions()
+                for i in range(len(coordinates)):
+                    self.log_morest.write(chemical_symbols[i]+" "+str(coordinates[i])+"\n")
+                self.log_morest.write("\n")
                 #return float('nan'), float('nan')
                 # If the ML energy has too large uncertainty, call ab initio calculations
                 self.potential_energy, self.forces = self.ab_initio_potential.get_potential_forces(system)
                 write_xyz_traj(self.filename_training_set, system)
                 self.training_set.append(system)
+                self.log_morest.write("The current system has been added to the training set.\n\n")
                 self.appending_set_counter += 1
                 if self.appending_set_counter == self.appending_set_number:
                     self.ml_potential = self.train_ml_potential(self.training_set)
@@ -136,9 +143,9 @@ class ml_potential:
                 forces = np.array(forces)
                 self.potential_energy = energy_0
                 self.forces = forces.reshape(n_atoms, 3)
-                print('Predicted energy: ',energy_0)
-                print('Std error of the predicted energy: ',energy_std_0)
-                print('\n')
+                #print('Predicted energy: ',energy_0)
+                #print('Std error of the predicted energy: ',energy_std_0)
+                #print('\n')
         else:
             potential_energy, potential_energy_std, forces, foreces_std = self.get_ml_potential(system)
             #TODO: the RMSE of forces prediction is not used for judgment
