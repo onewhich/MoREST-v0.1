@@ -706,7 +706,7 @@ class read_parameters:
             else:
                 raise Exception('No RE_replica_arrange type was matched.')
             self.re_parameters['re_replica_temperatures'] = replica_temperatures
-        
+        self.re_parameters['re_replica_temperatures'] = np.around(self.re_parameters['re_replica_temperatures'], decimals=6)
         self.re_parameters['re_replica_beta'] = 1/(self.re_parameters['re_replica_temperatures'] * units.kB)
         #                                            scipy.constants.value('Boltzmann constant in eV/K'))
         if not 're_init_structures_list' in self.re_parameters:
