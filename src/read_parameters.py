@@ -749,7 +749,7 @@ class read_parameters:
             else:
                 raise Exception('No ITS_replica_arrange type was matched.')
             self.its_parameters['its_replica_temperatures'] = replica_temperatures
-        
+        self.re_parameters['its_replica_temperatures'] = np.around(self.re_parameters['its_replica_temperatures'], decimals=6)
         self.its_parameters['its_replica_beta'] = 1/(self.its_parameters['its_replica_temperatures'] * units.kB)
         #                                            scipy.constants.value('Boltzmann constant in eV/K')
         if not 'its_initial_nk' in self.its_parameters:
