@@ -96,7 +96,12 @@ class ml_potential:
             ml_energy_std = np.array(ml_energy_std)
             return ml_energy, ml_energy_std
         else:
-            raise Exception('Recent ML model can not predict forces.')
+            ml_energy_forces, ml_energy_forces_std = self.ml_potential.predict(new_representation_list, return_std=True)
+            ml_energy = np.array(ml_energy_forces[:,0])
+            ml_forces = np.array(ml_energy_forces[:,1:]).reshape(-1,3)
+            ml_energy_std = np.array(ml_energy_forces_std[:,0])
+            ml_forces_std = np.array(ml_energy_forces_std[:,1:]).reshape(-1,3)
+            return ml_energy, ml_energy_std, ml_forces, ml_forces_std
 
     def get_potential_forces(self, system):
         if self.if_fd_forces:
@@ -150,8 +155,25 @@ class ml_potential:
             potential_energy, potential_energy_std, forces, foreces_std = self.get_ml_potential(system)
             #TODO: the RMSE of forces prediction is not used for judgment
             if self.if_active_learning and (potential_energy_std > self.energy_uncertainty_tolerance):
+                self.log_morest.write("Current ML energy uncertainty is larger than tolerance(="+str(self.energy_uncertainty_tolerance)+"): "+str(potential_energy_std)+"\n")
+                self.log_morest.write("The relevant ML predicted potential energy: "+str(potential_energy)+"\n")
+                self.log_morest.write("Current ML forces uncertainty is: "+str(forces_std.flatten())+"\n")
+                self.log_morest.write("The relevant ML predicted forces: "+str(forces.flatten())+"\n")
+                self.log_morest.write("Current system:\n")
+                chemical_symbols = system.get_chemical_symbols()
+                coordinates = system.get_positions()
+                for i in range(len(coordinates)):
+                    self.log_morest.write(chemical_symbols[i]+" "+str(coordinates[i])+"\n")
+                self.log_morest.write("\n")
                 # If the ML energy has too large uncertainty, call ab initio calculations
                 self.potential_energy, self.forces = self.ab_initio_potential.get_potential_forces(system)
+                write_xyz_traj(self.filename_training_set, system)
+                self.training_set.append(system)
+                self.log_morest.write("The current system has been added to the training set.\n\n")
+                self.appending_set_counter += 1
+                if self.appending_set_counter == self.appending_set_number:
+                    self.ml_potential = self.train_ml_potential(self.training_set)
+                    self.appending_set_counter = 0
             else:
                 self.potential_energy = potential_energy
                 self.forces = forces
@@ -159,6 +181,8 @@ class ml_potential:
 
     @staticmethod
     def RMSE(true, pred):
+        true = true.flatten()
+        pred = pred.flatten()
         RMSE_value = 0.0
         N = 0
         #print(true, len(true))
@@ -191,7 +215,7 @@ class ml_potential:
             y_train = potential_energy_list
         else:
             potential_energy_list = np.array([i_system.get_potential_energy() for i_system in training_set])
-            forces_list = np.array([i_system.get_forces() for i_system in training_set])
+            forces_list = np.array([i_system.get_forces().flatten() for i_system in training_set])
             y_train = np.hstack((potential_energy_list,forces_list))
         np.savetxt('training_set_label',y_train)
             
