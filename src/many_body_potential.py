@@ -184,9 +184,7 @@ class ml_potential:
         else:
             addional_features_list = self.additional_features.generate_CVs_list(training_set)
             x_train = np.hstack((representation_list,addional_features_list))
-        rep_file = open('training_set_representation','w')
-        for i_rep in x_train:
-            rep_file.write(str(i_rep)+'\n')
+        np.savetxt('training_set_representation',x_train)
 
         if self.if_fd_forces:
             potential_energy_list = np.array([i_system.get_potential_energy() for i_system in training_set])
@@ -195,6 +193,7 @@ class ml_potential:
             potential_energy_list = np.array([i_system.get_potential_energy() for i_system in training_set])
             forces_list = np.array([i_system.get_forces() for i_system in training_set])
             y_train = np.hstack((potential_energy_list,forces_list))
+        np.savetxt('training_set_label',y_train)
             
         gpr_kernel=kernels.Matern(nu=2.5)*kernels.DotProduct(sigma_0=10)  + kernels.WhiteKernel(noise_level=0.1, noise_level_bounds=(2e-7,1e5))
         self.log_morest.write("Training set:\n\tShape of feature: "+str(np.shape(x_train))+"\n")
@@ -206,7 +205,7 @@ class ml_potential:
 
         y_train_pred, y_train_pred_std = gpr.predict(x_train, return_std=True)
         self.log_morest.write("Training RMSE: "+str(self.RMSE(y_train, y_train_pred))+"\n")
-        self.log_morest.write("Training uncertainty: "+str(np.average(y_train_pred_std))+"\n")
+        self.log_morest.write("Training uncertainty: "+str(np.average(y_train_pred_std))+"\n\n")
 
         return gpr
 
