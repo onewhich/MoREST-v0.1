@@ -9,7 +9,7 @@ from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary
 from ase import units
 
 class initialize_sampling:
-    def __init__(self, morest_parameters, sampling_parameters, calculator=None):
+    def __init__(self, morest_parameters, sampling_parameters, calculator=None, log_file=None):
         self.morest_parameters = morest_parameters
         self.sampling_parameters = sampling_parameters
         
@@ -25,7 +25,8 @@ class initialize_sampling:
                 raise Exception('Please pass the molpro parameters dictionary to calculator.')
         elif self.morest_parameters['many_body_potential'].upper() in ['ML_potential'.upper()]:
             ml_calculator = ml_interface(ab_initio_calculator = calculator, \
-                                    ml_parameters = self.morest_parameters)
+                                    ml_parameters = self.morest_parameters, \
+                                    log_file = log_file)
             self.many_body_potential = on_the_fly(ml_calculator)
             
         else:
@@ -70,8 +71,8 @@ class velocity_Verlet(initialize_sampling):
     '''
     
     def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, \
-                        v_rescaling=False, Berendsen_rescaling=False, Langevin_rescaling=False, sv_rescaling=False):
-        super(velocity_Verlet, self).__init__(morest_parameters, sampling_parameters, calculator)
+                        v_rescaling=False, Berendsen_rescaling=False, Langevin_rescaling=False, sv_rescaling=False, log_file=None):
+        super(velocity_Verlet, self).__init__(morest_parameters, sampling_parameters, calculator, log_file)
         self.md_parameters = md_parameters
         self.traj_file_name = traj_file_name
         self.log_file_name = log_file_name

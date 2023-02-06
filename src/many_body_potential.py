@@ -40,7 +40,7 @@ class ml_potential:
     '''
 
     def __init__(self, **kwargs):
-        self.log_morest = open('MoREST.log','a', buffering=1)
+        self.log_morest = kwargs['log_file']
         self.if_fd_forces = kwargs['ml_parameters']['ml_fd_forces']
         if self.if_fd_forces:
             self.fd_displacement = kwargs['ml_parameters']['fd_displacement']
@@ -57,7 +57,7 @@ class ml_potential:
                 self.filename_training_set = kwargs['ml_parameters']['ml_training_set']
                 self.training_set = read_xyz_traj(self.filename_training_set)
             except:
-                self.filename_training_set = 'traning_set.xyz'
+                self.filename_training_set = 'training_set.xyz'
                 self.training_set = []
             try:
                 trained_ml_potential = kwargs['ml_parameters']['ml_potential_model']
@@ -135,11 +135,12 @@ class ml_potential:
                 # If the ML energy has too large uncertainty, call ab initio calculations
                 self.potential_energy, self.forces = self.ab_initio_potential.get_potential_forces(system)
                 write_xyz_traj(self.filename_training_set, system)
-                self.training_set.append(system)
+                self.training_set = read_xyz_traj(self.filename_training_set)
                 self.log_morest.write("The current system has been added to the training set.\n\n")
                 self.appending_set_counter += 1
                 if self.appending_set_counter == self.appending_set_number:
-                    self.ml_potential = self.train_ml_potential(self.training_set)
+                    self.log_morest.write("Start to train a new model:\n")
+                    self.ml_potential = self.train_ml_potential()
                     self.appending_set_counter = 0
             else:
                 for i,i_energy in enumerate(energy_list[1:]):
@@ -152,7 +153,7 @@ class ml_potential:
                 #print('Std error of the predicted energy: ',energy_std_0)
                 #print('\n')
         else:
-            potential_energy, potential_energy_std, forces, foreces_std = self.get_ml_potential(system)
+            potential_energy, potential_energy_std, forces, forces_std = self.get_ml_potential(system)
             #TODO: the RMSE of forces prediction is not used for judgment
             if self.if_active_learning and (potential_energy_std > self.energy_uncertainty_tolerance):
                 self.log_morest.write("Current ML energy uncertainty is larger than tolerance(="+str(self.energy_uncertainty_tolerance)+"): "+str(potential_energy_std)+"\n")
@@ -168,11 +169,11 @@ class ml_potential:
                 # If the ML energy has too large uncertainty, call ab initio calculations
                 self.potential_energy, self.forces = self.ab_initio_potential.get_potential_forces(system)
                 write_xyz_traj(self.filename_training_set, system)
-                self.training_set.append(system)
+                self.training_set = read_xyz_traj(self.filename_training_set)
                 self.log_morest.write("The current system has been added to the training set.\n\n")
                 self.appending_set_counter += 1
                 if self.appending_set_counter == self.appending_set_number:
-                    self.ml_potential = self.train_ml_potential(self.training_set)
+                    self.ml_potential = self.train_ml_potential()
                     self.appending_set_counter = 0
             else:
                 self.potential_energy = potential_energy
@@ -196,29 +197,28 @@ class ml_potential:
         RMSE_value = math.sqrt(RMSE_value/N)
         return RMSE_value
 
-    def train_ml_potential(self, training_set):
+    def train_ml_potential(self):
         """system_list: The trajectory for training set"""
-        if type(training_set) != list:
-            raise ValueError
-        if len(training_set) < 1:
+        #self.log_morest.write("Model is training.\n")
+        if len(self.training_set) < 1:
             raise Exception('The training set has no system.')
-        representation_list = generate_representation(training_set).inverse_r_exp_r_unsorted()
+        representation_list = generate_representation(self.training_set).inverse_r_exp_r_unsorted()
         if self.additional_features == None:
             x_train = representation_list
         else:
-            addional_features_list = self.additional_features.generate_CVs_list(training_set)
+            addional_features_list = self.additional_features.generate_CVs_list(self.training_set)
             x_train = np.hstack((representation_list,addional_features_list))
         np.savetxt('training_set_representation',x_train)
 
         if self.if_fd_forces:
-            potential_energy_list = np.array([i_system.get_potential_energy() for i_system in training_set])
+            potential_energy_list = np.array([i_system.get_potential_energy() for i_system in self.training_set])
             y_train = potential_energy_list
         else:
-            potential_energy_list = np.array([i_system.get_potential_energy() for i_system in training_set])
-            forces_list = np.array([i_system.get_forces().flatten() for i_system in training_set])
+            potential_energy_list = np.array([i_system.get_potential_energy() for i_system in self.training_set])
+            forces_list = np.array([i_system.get_forces().flatten() for i_system in self.training_set])
             y_train = np.hstack((potential_energy_list,forces_list))
         np.savetxt('training_set_label',y_train)
-            
+
         gpr_kernel=kernels.Matern(nu=2.5)*kernels.DotProduct(sigma_0=10)  + kernels.WhiteKernel(noise_level=0.1, noise_level_bounds=(2e-7,1e5))
         self.log_morest.write("Training set:\n\tShape of feature: "+str(np.shape(x_train))+"\n")
         gpr = GaussianProcessRegressor(kernel=gpr_kernel,normalize_y=True)
