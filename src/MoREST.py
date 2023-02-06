@@ -164,19 +164,24 @@ class morest:
                     if self.sampling_parameters['sampling_method'].upper() in ['MD']:
                         if self.sampling_parameters['sampling_ensemble'].upper() in ['NVE_VV']:
                             tmp_sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, \
-                                                                molecules[i], log_file_name[i], traj_file_name[i], T, calculator=calculator)
+                                                                molecules[i], log_file_name[i], traj_file_name[i], T, calculator=calculator, \
+                                                                log_file=self.log_morest)
                         elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_VR']:
                             tmp_sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, \
-                                                                molecules[i], log_file_name[i], traj_file_name[i], T, calculator=calculator, v_rescaling=True)
+                                                                molecules[i], log_file_name[i], traj_file_name[i], T, calculator=calculator, v_rescaling=True, \
+                                                                log_file=self.log_morest)
                         elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_Berendsen'.upper()]:
                             tmp_sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, \
-                                                                molecules[i], log_file_name[i], traj_file_name[i], T, calculator=calculator, Berendsen_rescaling=True)
+                                                                molecules[i], log_file_name[i], traj_file_name[i], T, calculator=calculator, Berendsen_rescaling=True, \
+                                                                log_file=self.log_morest)
                         elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_Langevin'.upper()]:
                             tmp_sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, \
-                                                                molecules[i], log_file_name[i], traj_file_name[i], T, calculator=calculator, Langevin_rescaling=True)
+                                                                molecules[i], log_file_name[i], traj_file_name[i], T, calculator=calculator, Langevin_rescaling=True, \
+                                                                log_file=self.log_morest)
                         elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
                             tmp_sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, \
-                                                                molecules[i], log_file_name[i], traj_file_name[i], T, calculator=calculator, sv_rescaling=True)
+                                                                molecules[i], log_file_name[i], traj_file_name[i], T, calculator=calculator, sv_rescaling=True, \
+                                                                log_file=self.log_morest)
                     self.sampling_job.append(tmp_sampling_job)
                     self.log_morest.write('Replica '+str(i)+' at '+str(T)+' K is ready.\n')
                 self.log_morest.write('\n')
