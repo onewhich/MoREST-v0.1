@@ -54,6 +54,15 @@ class ml_potential:
             else:
                 self.additional_features = collective_variables(CVs_list=kwargs['ml_parameters']['ml_additional_features'])
             try:
+                tmp_noise_level_bounds = kwargs['ml_parameters']['ml_gpr_noise_level_bounds']
+                if type(tmp_noise_level_bounds) == float:
+                    self.noise_level_bounds = np.array([tmp_noise_level_bounds, 1e5])
+                elif type(tmp_noise_level_bounds) == np.ndarray:
+                    self.noise_level_bounds = np.array([tmp_noise_level_bounds[0], tmp_noise_level_bounds[1]])
+            except:
+                self.noise_level_bounds = np.array([1e-5, 1e5])
+            print(self.noise_level_bounds)
+            try:
                 self.filename_training_set = kwargs['ml_parameters']['ml_training_set']
                 self.training_set = read_xyz_traj(self.filename_training_set)
             except:
@@ -64,7 +73,7 @@ class ml_potential:
                 self.ml_potential = pickle.load(open(trained_ml_potential, 'rb'))
             except:
                 self.log_morest.write('Trained ML model has not beed indicated. The ML model will be trained from training set.\n')
-                self.ml_potential = self.train_ml_potential(self.training_set)
+                self.ml_potential = self.train_ml_potential()
             self.energy_uncertainty_tolerance = kwargs['ml_parameters']['ml_energy_uncertainty_tolerance']
             self.appending_set_number = kwargs['ml_parameters']['ml_appending_set_number']
             self.appending_set_counter = 0
@@ -219,7 +228,8 @@ class ml_potential:
             y_train = np.hstack((potential_energy_list,forces_list))
         np.savetxt('training_set_label',y_train)
 
-        gpr_kernel=kernels.Matern(nu=2.5)*kernels.DotProduct(sigma_0=10)  + kernels.WhiteKernel(noise_level=0.1, noise_level_bounds=(2e-7,1e5))
+        gpr_kernel=kernels.Matern(nu=2.5)*kernels.DotProduct(sigma_0=10)  + kernels.WhiteKernel(noise_level=0.1, \
+                                                                            noise_level_bounds=(self.noise_level_bounds[0],self.noise_level_bounds[1]))
         self.log_morest.write("Training set:\n\tShape of feature: "+str(np.shape(x_train))+"\n")
         gpr = GaussianProcessRegressor(kernel=gpr_kernel,normalize_y=True)
         gpr.fit(x_train, y_train)

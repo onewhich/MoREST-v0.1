@@ -149,6 +149,14 @@ class read_parameters:
             elif i_parameter.split()[0].upper() == 'FD_displacement'.upper():
                 self.morest_parameters['fd_displacement'] = float(i_parameter.split()[1])
 
+            elif i_parameter.split()[0].upper() == 'ML_GPR_noise_level_bounds'.upper():
+                noise_level_bounds = i_parameter.split()
+                try:
+                    self.morest_parameters['ml_gpr_noise_level_bounds'] = np.array([float(noise_level_bounds[1]),float(noise_level_bounds[2])])
+                except:
+                    self.morest_parameters['ml_gpr_noise_level_bounds'] = float(noise_level_bounds[1])
+                print(self.morest_parameters['ml_gpr_noise_level_bounds'])
+
             ########################## Phase space sampling #######################
 
             elif i_parameter.split()[0].upper() == 'Phase_space_sampling'.upper():
