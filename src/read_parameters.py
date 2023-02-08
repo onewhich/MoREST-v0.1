@@ -155,7 +155,6 @@ class read_parameters:
                     self.morest_parameters['ml_gpr_noise_level_bounds'] = np.array([float(noise_level_bounds[1]),float(noise_level_bounds[2])])
                 except:
                     self.morest_parameters['ml_gpr_noise_level_bounds'] = float(noise_level_bounds[1])
-                print(self.morest_parameters['ml_gpr_noise_level_bounds'])
 
             ########################## Phase space sampling #######################
 
