@@ -157,9 +157,9 @@ class ml_potential:
                 forces = np.array(forces)
                 self.potential_energy = energy_0
                 self.forces = forces.reshape(n_atoms, 3)
-                print('Predicted energy: ',energy_0)
-                print('Std error of the predicted energy: ',energy_std_0)
-                print('\n')
+                #print('Predicted energy: ',energy_0)
+                #print('Std error of the predicted energy: ',energy_std_0)
+                #print('\n')
         else:
             potential_energy, potential_energy_std, forces, forces_std = self.get_ml_potential(system)
             #TODO: the RMSE of forces prediction is not used for judgment
