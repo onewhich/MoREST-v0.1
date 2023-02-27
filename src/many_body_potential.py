@@ -45,14 +45,14 @@ class ml_potential:
         if self.if_fd_forces:
             self.fd_displacement = kwargs['ml_parameters']['fd_displacement']
         self.if_active_learning = kwargs['ml_parameters']['ml_active_learning']
+        if kwargs['ml_parameters']['ml_additional_features'] == None:
+            self.additional_features = None
+        else:
+            self.additional_features = collective_variables(CVs_list=kwargs['ml_parameters']['ml_additional_features'])
         if self.if_active_learning:
             ab_initio_calculator = kwargs['ab_initio_calculator']
             if  ab_initio_calculator == None:
                 raise Exception('Active learning is supposed to be used, please specify the electronic structure method.')
-            if kwargs['ml_parameters']['ml_additional_features'] == None:
-                self.additional_features = None
-            else:
-                self.additional_features = collective_variables(CVs_list=kwargs['ml_parameters']['ml_additional_features'])
             try:
                 tmp_noise_level_bounds = kwargs['ml_parameters']['ml_gpr_noise_level_bounds']
                 if type(tmp_noise_level_bounds) == float:
