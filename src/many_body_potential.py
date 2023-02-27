@@ -92,7 +92,7 @@ class ml_potential:
         if type(system_list) != list:
             raise ValueError
         #representation_list = [generate_representation.generate_Al2F2_representation(i_system) for i_system in system_list]
-        representation_list = generate_representation(system_list).inverse_r_exp_r()
+        representation_list = generate_representation(system_list).inverse_r_exp_r_unsorted()
         if self.additional_features == None:
             new_representation_list = representation_list
         else:
@@ -138,10 +138,10 @@ class ml_potential:
                 coordinates = system.get_positions()
                 for i in range(len(coordinates)):
                     self.log_morest.write(chemical_symbols[i]+" "+str(coordinates[i])+"\n")
-                self.log_morest.write("\n")
                 #return float('nan'), float('nan')
                 # If the ML energy has too large uncertainty, call ab initio calculations
                 self.potential_energy, self.forces = self.ab_initio_potential.get_potential_forces(system)
+                self.log_morest.write("The relevant ab initio potential energy: "+str(self.potential_energy)+"\n")
                 write_xyz_traj(self.filename_training_set, system)
                 self.training_set = read_xyz_traj(self.filename_training_set)
                 self.log_morest.write("The current system has been added to the training set.\n\n")
@@ -173,9 +173,9 @@ class ml_potential:
                 coordinates = system.get_positions()
                 for i in range(len(coordinates)):
                     self.log_morest.write(chemical_symbols[i]+" "+str(coordinates[i])+"\n")
-                self.log_morest.write("\n")
                 # If the ML energy has too large uncertainty, call ab initio calculations
                 self.potential_energy, self.forces = self.ab_initio_potential.get_potential_forces(system)
+                self.log_morest.write("The relevant ab initio potential energy: "+str(self.potential_energy)+"\n")
                 write_xyz_traj(self.filename_training_set, system)
                 self.training_set = read_xyz_traj(self.filename_training_set)
                 self.log_morest.write("The current system has been added to the training set.\n\n")
@@ -210,7 +210,7 @@ class ml_potential:
         #self.log_morest.write("Model is training.\n")
         if len(self.training_set) < 1:
             raise Exception('The training set has no system.')
-        representation_list = generate_representation(self.training_set).inverse_r_exp_r()
+        representation_list = generate_representation(self.training_set).inverse_r_exp_r_unsorted()
         if self.additional_features == None:
             x_train = representation_list
         else:
