@@ -258,6 +258,7 @@ class ml_potential:
         gpr_kernel=kernels.Matern(nu=2.5)*kernels.DotProduct(sigma_0=10)  + kernels.WhiteKernel(noise_level=0.1, \
                                                                             noise_level_bounds=(self.noise_level_bounds[0],self.noise_level_bounds[1]))
         self.log_morest.write("Training set:\n\tShape of feature: "+str(np.shape(x_train))+"\n")
+        self.log_morest.write("\tShape of label: "+str(np.shape(y_train))+"\n")
         gpr = GaussianProcessRegressor(kernel=gpr_kernel,normalize_y=True)
         gpr.fit(x_train, y_train)
         with open('trained_ml_potential_model.pkl','wb') as trained_model_file:
@@ -266,7 +267,8 @@ class ml_potential:
 
         y_train_pred, y_train_pred_std = gpr.predict(x_train, return_std=True)
         self.log_morest.write("Training RMSE: "+str(self.RMSE(y_train, y_train_pred))+"\n")
-        self.log_morest.write("Training uncertainty: "+str(np.average(y_train_pred_std))+"\n\n")
+        self.log_morest.write("Training uncertainty: "+str(np.average(y_train_pred_std))+"\n")
+        self.log_morest.write("Median training uncertainty: ", np.median(y_train_pred_std), "\n\n")
 
         return gpr
 
