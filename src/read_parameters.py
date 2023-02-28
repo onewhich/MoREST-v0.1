@@ -33,8 +33,8 @@ class read_parameters:
         self.morest_parameters['morest_load_parameters_file'] = False
         self.morest_parameters['ml_active_learning'] = False
         self.morest_parameters['ml_add_features_number'] = 0
-        self.morest_parameters['ml_features_min_number']
-        self.morest_parameters['ml_features_max_number']
+        self.morest_parameters['ml_features_min_number'] = 0
+        self.morest_parameters['ml_features_max_number'] = 0
         self.morest_parameters['ml_energy_uncertainty_tolerance'] = 0.01
         self.morest_parameters['ml_fd_forces'] = True
         self.morest_parameters['fd_displacement'] = 0.0025
