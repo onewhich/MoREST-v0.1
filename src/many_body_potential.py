@@ -68,7 +68,7 @@ class ml_potential:
                 elif type(tmp_noise_level_bounds) == np.ndarray:
                     self.noise_level_bounds = np.array([tmp_noise_level_bounds[0], tmp_noise_level_bounds[1]])
             except:
-                self.noise_level_bounds = np.array([1e-5, 1e5])
+                self.noise_level_bounds = np.array([1e-7, 1e5])
             try:
                 self.filename_training_set = kwargs['ml_parameters']['ml_training_set']
                 self.training_set = read_xyz_traj(self.filename_training_set)
