@@ -268,7 +268,7 @@ class ml_potential:
         y_train_pred, y_train_pred_std = gpr.predict(x_train, return_std=True)
         self.log_morest.write("Training RMSE: "+str(self.RMSE(y_train, y_train_pred))+"\n")
         self.log_morest.write("Training uncertainty: "+str(np.average(y_train_pred_std))+"\n")
-        self.log_morest.write("Median training uncertainty: "+np.median(y_train_pred_std)+"\n\n")
+        self.log_morest.write("Median training uncertainty: "+str(np.median(y_train_pred_std))+"\n\n")
 
         return gpr
 
