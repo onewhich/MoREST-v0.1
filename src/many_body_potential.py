@@ -49,6 +49,14 @@ class ml_potential:
             self.additional_features = None
         else:
             self.additional_features = collective_variables(CVs_list=kwargs['ml_parameters']['ml_additional_features'])
+        if kwargs['ml_parameters']['ml_additional_features_min'] == None:
+            self.additional_features_min = None
+        else:
+            self.additional_features_min = collective_variables(CVs_list=kwargs['ml_parameters']['ml_additional_features_min'])
+        if kwargs['ml_parameters']['ml_additional_features_max'] == None:
+            self.additional_features_max = None
+        else:
+            self.additional_features_max = collective_variables(CVs_list=kwargs['ml_parameters']['ml_additional_features_max'])
         if self.if_active_learning:
             ab_initio_calculator = kwargs['ab_initio_calculator']
             if  ab_initio_calculator == None:
@@ -92,19 +100,29 @@ class ml_potential:
         if type(system_list) != list:
             raise ValueError
         #representation_list = [generate_representation.generate_Al2F2_representation(i_system) for i_system in system_list]
-        representation_list = generate_representation(system_list).inverse_r_exp_r_unsorted()
+        representation_list = generate_representation(system_list).inverse_r_exp_r()
         if self.additional_features == None:
-            new_representation_list = representation_list
+            representation_list = representation_list
         else:
             addional_features_list = self.additional_features.generate_CVs_list(system_list)
-            new_representation_list = np.hstack((representation_list,addional_features_list))
+            representation_list = np.hstack((representation_list,addional_features_list))
+        if self.additional_features_min == None:
+            representation_list = representation_list
+        else:
+            addional_features_list = self.additional_features_min.generate_CV_min_list(system_list)
+            representation_list = np.hstack((representation_list,addional_features_list))
+        if self.additional_features_max == None:
+            representation_list = representation_list
+        else:
+            addional_features_list = self.additional_features_max.generate_CV_max_list(system_list)
+            representation_list = np.hstack((representation_list,addional_features_list))
         if self.if_fd_forces:
-            ml_energy, ml_energy_std = self.ml_potential.predict(new_representation_list, return_std=True)
+            ml_energy, ml_energy_std = self.ml_potential.predict(representation_list, return_std=True)
             ml_energy = np.array(ml_energy)
             ml_energy_std = np.array(ml_energy_std)
             return ml_energy, ml_energy_std
         else:
-            ml_energy_forces, ml_energy_forces_std = self.ml_potential.predict(new_representation_list, return_std=True)
+            ml_energy_forces, ml_energy_forces_std = self.ml_potential.predict(representation_list, return_std=True)
             ml_energy = np.array(ml_energy_forces[:,0])
             ml_forces = np.array(ml_energy_forces[:,1:]).reshape(-1,3)
             ml_energy_std = np.array(ml_energy_forces_std[:,0])
@@ -210,12 +228,22 @@ class ml_potential:
         #self.log_morest.write("Model is training.\n")
         if len(self.training_set) < 1:
             raise Exception('The training set has no system.')
-        representation_list = generate_representation(self.training_set).inverse_r_exp_r_unsorted()
+        x_train = generate_representation(self.training_set).inverse_r_exp_r()
         if self.additional_features == None:
-            x_train = representation_list
+            x_train = x_train
         else:
             addional_features_list = self.additional_features.generate_CVs_list(self.training_set)
-            x_train = np.hstack((representation_list,addional_features_list))
+            x_train = np.hstack((x_train,addional_features_list))
+        if self.additional_features_min == None:
+            x_train = x_train
+        else:
+            addional_features_list = self.additional_features_min.generate_CV_min_list(self.training_set)
+            x_train = np.hstack((x_train,addional_features_list))
+        if self.additional_features_max == None:
+            x_train = x_train
+        else:
+            addional_features_list = self.additional_features_max.generate_CV_max_list(self.training_set)
+            x_train = np.hstack((x_train,addional_features_list))
         np.savetxt('training_set_representation',x_train)
 
         if self.if_fd_forces:

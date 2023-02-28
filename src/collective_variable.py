@@ -117,6 +117,64 @@ class collective_variables:
             elif i_CV[0] == 'max_distance':
                 CVs.append(self.max_distance(system, i_CV[1]))
         return np.array(CVs)
+    
+    def generate_CV_min_list(self, system_list):
+        if type(system_list) == type([]):
+            return np.array([self.generate_CV_min(i_sys) for i_sys in system_list])
+        else:
+            raise ValueError
+        
+    def generate_CV_min(self, system):
+        CVs = []
+        for i_CV in self.CVs_list:
+            if i_CV[0] == 'inverse_r':
+                CVs.append(self.inverse_r(system, i_CV[1], i_CV[2]))
+            elif i_CV[0] == 'exp_r':
+                CVs.append(self.exp_r(system, i_CV[1], i_CV[2]))
+            elif i_CV[0] == 'inverse_r_exp_r':
+                CVs.append(self.inverse_r_exp_r(system, i_CV[1], i_CV[2]))
+            elif i_CV[0] == 'distance':
+                CVs.append(self.distance(system, i_CV[1], i_CV[2]))
+            elif i_CV[0] == 'central_R':
+                CVs.append(self.central_R(system, i_CV[1]))
+            elif i_CV[0] == 'min_distance':
+                CVs.append(self.min_distance(system, i_CV[1]))
+            elif i_CV[0] == 'max_distance':
+                CVs.append(self.max_distance(system, i_CV[1]))
+        CVs = np.array(CVs)
+        min_CV = CVs[0]
+        for i_CV in CVs[1:]:
+            min_CV = np.minimum(min_CV, i_CV)
+        return min_CV
+    
+    def generate_CV_max_list(self, system_list):
+        if type(system_list) == type([]):
+            return np.array([self.generate_CV_max(i_sys) for i_sys in system_list])
+        else:
+            raise ValueError
+        
+    def generate_CV_max(self, system):
+        CVs = []
+        for i_CV in self.CVs_list:
+            if i_CV[0] == 'inverse_r':
+                CVs.append(self.inverse_r(system, i_CV[1], i_CV[2]))
+            elif i_CV[0] == 'exp_r':
+                CVs.append(self.exp_r(system, i_CV[1], i_CV[2]))
+            elif i_CV[0] == 'inverse_r_exp_r':
+                CVs.append(self.inverse_r_exp_r(system, i_CV[1], i_CV[2]))
+            elif i_CV[0] == 'distance':
+                CVs.append(self.distance(system, i_CV[1], i_CV[2]))
+            elif i_CV[0] == 'central_R':
+                CVs.append(self.central_R(system, i_CV[1]))
+            elif i_CV[0] == 'min_distance':
+                CVs.append(self.min_distance(system, i_CV[1]))
+            elif i_CV[0] == 'max_distance':
+                CVs.append(self.max_distance(system, i_CV[1]))
+        CVs = np.array(CVs)
+        max_CV = CVs[0]
+        for i_CV in CVs[1:]:
+            max_CV = np.maximum(max_CV, i_CV)
+        return max_CV
 
     @staticmethod
     def central_R(system, atom_list):
