@@ -95,7 +95,7 @@ class collective_variables:
         if type(system_list) == type([]):
             return np.array([self.generate_collective_variables(i_sys) for i_sys in system_list])
         else:
-            raise ValueError
+            return np.array([self.generate_collective_variables(i_sys) for i_sys in [system_list]])
 
     def generate_collective_variables(self, system):
         CVs = []
@@ -122,7 +122,7 @@ class collective_variables:
         if type(system_list) == type([]):
             return np.array([self.generate_CV_min(i_sys) for i_sys in system_list])
         else:
-            raise ValueError
+            return np.array([self.generate_CV_min(i_sys) for i_sys in [system_list]])
         
     def generate_CV_min(self, system):
         CVs = []
@@ -151,7 +151,7 @@ class collective_variables:
         if type(system_list) == type([]):
             return np.array([self.generate_CV_max(i_sys) for i_sys in system_list])
         else:
-            raise ValueError
+            return np.array([self.generate_CV_max(i_sys) for i_sys in [system_list]])
         
     def generate_CV_max(self, system):
         CVs = []

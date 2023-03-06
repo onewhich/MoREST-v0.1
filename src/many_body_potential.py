@@ -64,11 +64,11 @@ class ml_potential:
             try:
                 tmp_noise_level_bounds = kwargs['ml_parameters']['ml_gpr_noise_level_bounds']
                 if type(tmp_noise_level_bounds) == float:
-                    self.noise_level_bounds = np.array([tmp_noise_level_bounds, 1e5])
+                    self.noise_level_bounds = np.array([tmp_noise_level_bounds, 1.])
                 elif type(tmp_noise_level_bounds) == np.ndarray:
                     self.noise_level_bounds = np.array([tmp_noise_level_bounds[0], tmp_noise_level_bounds[1]])
             except:
-                self.noise_level_bounds = np.array([1e-7, 1e5])
+                self.noise_level_bounds = np.array([1e-7, 1.])
             try:
                 self.filename_training_set = kwargs['ml_parameters']['ml_training_set']
                 self.training_set = read_xyz_traj(self.filename_training_set)
@@ -97,8 +97,8 @@ class ml_potential:
                 raise Exception('ML model can not be read. Please specify the name.')
 
     def get_ml_potential(self, system_list):
-        if type(system_list) != list:
-            raise ValueError
+        #if type(system_list) != list:
+        #    raise ValueError
         #representation_list = [generate_representation.generate_Al2F2_representation(i_system) for i_system in system_list]
         representation_list = generate_representation(system_list).inverse_r_exp_r()
         if self.additional_features == None:
@@ -130,6 +130,8 @@ class ml_potential:
             return ml_energy, ml_energy_std, ml_forces, ml_forces_std
 
     def get_potential_forces(self, system):
+        if type(system) == list:
+            system = system[0]
         if self.if_fd_forces:
             system_list = [system]
             n_atoms = system.get_global_number_of_atoms()
@@ -261,7 +263,7 @@ class ml_potential:
         self.log_morest.write("\tShape of label: "+str(np.shape(y_train))+"\n")
         gpr = GaussianProcessRegressor(kernel=gpr_kernel,normalize_y=True)
         gpr.fit(x_train, y_train)
-        with open('trained_ml_potential_model.pkl','wb') as trained_model_file:
+        with open(self.filename_training_set,'wb') as trained_model_file:
             pickle.dump(gpr, trained_model_file)
         self.log_morest.write("The trained kernel: "+str(gpr.kernel_)+"\n")
 
