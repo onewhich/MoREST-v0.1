@@ -157,7 +157,7 @@ class ml_potential:
                 chemical_symbols = system.get_chemical_symbols()
                 coordinates = system.get_positions()
                 for i in range(len(coordinates)):
-                    self.log_morest.write(chemical_symbols[i]+" "+str(coordinates[i])+"\n")
+                    self.log_morest.write(chemical_symbols[i]+" "+str(coordinates[i][0])+" "+str(coordinates[i][1])+" "+str(coordinates[i][2])+"\n")
                 #return float('nan'), float('nan')
                 # If the ML energy has too large uncertainty, call ab initio calculations
                 self.potential_energy, self.forces = self.ab_initio_potential.get_potential_forces(system)
@@ -192,7 +192,7 @@ class ml_potential:
                 chemical_symbols = system.get_chemical_symbols()
                 coordinates = system.get_positions()
                 for i in range(len(coordinates)):
-                    self.log_morest.write(chemical_symbols[i]+" "+str(coordinates[i])+"\n")
+                    self.log_morest.write(chemical_symbols[i]+" "+str(coordinates[i][0])+" "+str(coordinates[i][1])+" "+str(coordinates[i][2])+"\n")
                 # If the ML energy has too large uncertainty, call ab initio calculations
                 self.potential_energy, self.forces = self.ab_initio_potential.get_potential_forces(system)
                 self.log_morest.write("The relevant ab initio potential energy: "+str(self.potential_energy)+"\n")
