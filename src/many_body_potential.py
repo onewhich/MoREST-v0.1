@@ -76,8 +76,8 @@ class ml_potential:
                 self.filename_training_set = 'training_set.xyz'
                 self.training_set = []
             try:
-                trained_ml_potential = kwargs['ml_parameters']['ml_potential_model']
-                self.ml_potential = pickle.load(open(trained_ml_potential, 'rb'))
+                self.trained_ml_potential = kwargs['ml_parameters']['ml_potential_model']
+                self.ml_potential = pickle.load(open(self.trained_ml_potential, 'rb'))
             except:
                 self.log_morest.write('Trained ML model has not beed indicated. The ML model will be trained from training set.\n')
                 self.ml_potential = self.train_ml_potential()
@@ -91,8 +91,8 @@ class ml_potential:
                 self.ab_initio_potential = on_the_fly(ab_initio_calculator)
         else:
             try:
-                trained_ml_potential = kwargs['ml_parameters']['ml_potential_model']
-                self.ml_potential = pickle.load(open(trained_ml_potential, 'rb'))
+                self.trained_ml_potential = kwargs['ml_parameters']['ml_potential_model']
+                self.ml_potential = pickle.load(open(self.trained_ml_potential, 'rb'))
             except:
                 raise Exception('ML model can not be read. Please specify the name.')
 
@@ -263,7 +263,7 @@ class ml_potential:
         self.log_morest.write("\tShape of label: "+str(np.shape(y_train))+"\n")
         gpr = GaussianProcessRegressor(kernel=gpr_kernel,normalize_y=True)
         gpr.fit(x_train, y_train)
-        with open(self.filename_training_set,'wb') as trained_model_file:
+        with open(self.trained_ml_potential,'wb') as trained_model_file:
             pickle.dump(gpr, trained_model_file)
         self.log_morest.write("The trained kernel: "+str(gpr.kernel_)+"\n")
 
