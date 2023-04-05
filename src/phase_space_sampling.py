@@ -52,7 +52,7 @@ class initialize_sampling:
         self.masses = system.get_masses()[:,np.newaxis]
         #self.current_accelerations = self.current_forces / self.masses
         
-        self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(system)
+        self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(system, current_step=self.current_step)
 
       
 
@@ -174,7 +174,7 @@ class velocity_Verlet(initialize_sampling):
         momenta_half = current_momenta + 0.5 * self.current_forces * time_step
         
         ### F(t+dt)
-        next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(self.current_system)
+        next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(self.current_system, current_step=self.current_step)
         
         ### v(t+dt) = v(t+0.5dt) + 0.5 * F(t+dt) * dt / m
         #next_accelerations = self.current_forces / self.masses

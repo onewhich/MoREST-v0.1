@@ -22,7 +22,7 @@ class on_the_fly:
     def __init__(self, calculator):
         self.calculator = calculator
         
-    def get_potential_forces(self, system):
+    def get_potential_forces(self, system, **kwargs):
         system.calc = self.calculator
         self.forces = system.get_forces()
         self.potential_energy = system.get_potential_energy()
@@ -41,6 +41,7 @@ class ml_potential:
 
     def __init__(self, **kwargs):
         self.log_morest = kwargs['log_file']
+        self.if_print_uncertainty = kwargs['ml_parameters']['ml_print_uncertainty']
         self.if_fd_forces = kwargs['ml_parameters']['ml_fd_forces']
         if self.if_fd_forces:
             self.fd_displacement = kwargs['ml_parameters']['fd_displacement']
@@ -129,7 +130,8 @@ class ml_potential:
             ml_forces_std = np.array(ml_energy_forces_std[:,1:]).reshape(-1,3)
             return ml_energy, ml_energy_std, ml_forces, ml_forces_std
 
-    def get_potential_forces(self, system):
+    def get_potential_forces(self, system, **kwargs):
+        current_step = kwargs['current_step']
         if type(system) == list:
             system = system[0]
         if self.if_fd_forces:
@@ -151,6 +153,7 @@ class ml_potential:
             energy_std_0 = energy_std_list[0]
             # Determine if the energy need to be calculated on the fly
             if self.if_active_learning and (energy_std_0 > self.energy_uncertainty_tolerance):
+                self.log_morest.write("Current sampling step: "+str(current_step)+"\n")
                 self.log_morest.write("Current ML energy uncertainty is larger than tolerance(="+str(self.energy_uncertainty_tolerance)+"): "+str(energy_std_0)+"\n")
                 self.log_morest.write("The relevant ML predicted potential energy: "+str(energy_0)+"\n")
                 self.log_morest.write("Current system:\n")
@@ -160,7 +163,7 @@ class ml_potential:
                     self.log_morest.write(chemical_symbols[i]+" "+str(coordinates[i][0])+" "+str(coordinates[i][1])+" "+str(coordinates[i][2])+"\n")
                 #return float('nan'), float('nan')
                 # If the ML energy has too large uncertainty, call ab initio calculations
-                self.potential_energy, self.forces = self.ab_initio_potential.get_potential_forces(system)
+                self.potential_energy, self.forces = self.ab_initio_potential.get_potential_forces(system, **kwargs)
                 self.log_morest.write("The relevant ab initio potential energy: "+str(self.potential_energy)+"\n")
                 write_xyz_traj(self.filename_training_set, system)
                 self.training_set = read_xyz_traj(self.filename_training_set)
@@ -171,6 +174,9 @@ class ml_potential:
                     self.ml_potential = self.train_ml_potential()
                     self.appending_set_counter = 0
             else:
+                if self.if_print_uncertainty:
+                    self.log_morest.write("Current sampling step: "+str(current_step)+"\n")
+                    self.log_morest.write("Current ML energy uncertainty: "+str(energy_std_0)+"\n\n")
                 for i,i_energy in enumerate(energy_list[1:]):
                     force_value = -1*(i_energy - energy_0)/self.fd_displacement
                     forces.append(force_value)
@@ -184,6 +190,7 @@ class ml_potential:
             potential_energy, potential_energy_std, forces, forces_std = self.get_ml_potential(system)
             #TODO: the RMSE of forces prediction is not used for judgment
             if self.if_active_learning and (potential_energy_std > self.energy_uncertainty_tolerance):
+                self.log_morest.write("Current sampling step: "+str(current_step)+"\n")
                 self.log_morest.write("Current ML energy uncertainty is larger than tolerance(="+str(self.energy_uncertainty_tolerance)+"): "+str(potential_energy_std)+"\n")
                 self.log_morest.write("The relevant ML predicted potential energy: "+str(potential_energy)+"\n")
                 self.log_morest.write("Current ML forces uncertainty is: "+str(forces_std.flatten())+"\n")
@@ -194,16 +201,20 @@ class ml_potential:
                 for i in range(len(coordinates)):
                     self.log_morest.write(chemical_symbols[i]+" "+str(coordinates[i][0])+" "+str(coordinates[i][1])+" "+str(coordinates[i][2])+"\n")
                 # If the ML energy has too large uncertainty, call ab initio calculations
-                self.potential_energy, self.forces = self.ab_initio_potential.get_potential_forces(system)
+                self.potential_energy, self.forces = self.ab_initio_potential.get_potential_forces(system, **kwargs)
                 self.log_morest.write("The relevant ab initio potential energy: "+str(self.potential_energy)+"\n")
                 write_xyz_traj(self.filename_training_set, system)
                 self.training_set = read_xyz_traj(self.filename_training_set)
                 self.log_morest.write("The current system has been added to the training set.\n\n")
                 self.appending_set_counter += 1
                 if self.appending_set_counter == self.appending_set_number:
+                    self.log_morest.write("Start to train a new model:\n")
                     self.ml_potential = self.train_ml_potential()
                     self.appending_set_counter = 0
             else:
+                if self.if_print_uncertainty:
+                    self.log_morest.write("Current sampling step: "+str(current_step)+"\n")
+                    self.log_morest.write("Current ML energy uncertainty: "+str(potential_energy_std)+"\n\n")
                 self.potential_energy = potential_energy
                 self.forces = forces
         return self.potential_energy, self.forces
@@ -333,7 +344,7 @@ class ml_interface(Calculator):
 
     def calculate(self, *args, **kwargs):
         Calculator.calculate(self, *args, **kwargs)
-        self.results['energy'], self.results['forces'] = self.ml_potential.get_potential_forces(self.atoms)
+        self.results['energy'], self.results['forces'] = self.ml_potential.get_potential_forces(self.atoms, **kwargs)
 
 #    def read(self, *args, **kwargs):
 #        pass
@@ -559,7 +570,7 @@ class molpro_calculator:
             self.outfile='molpro.out'
 
 
-    def get_potential_forces(self, system):
+    def get_potential_forces(self, system, **kwargs):
         if os.path.isfile(self.outfile):
             self.potential_energy, self.forces = self.parse_outfile(self.outfile, if_get_force=True)
         else:

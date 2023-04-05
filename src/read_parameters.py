@@ -35,6 +35,7 @@ class read_parameters:
         self.morest_parameters['ml_add_features_number'] = 0
         self.morest_parameters['ml_features_min_number'] = 0
         self.morest_parameters['ml_features_max_number'] = 0
+        self.morest_parameters['ml_print_uncertainty'] = False
         self.morest_parameters['ml_energy_uncertainty_tolerance'] = 0.01
         self.morest_parameters['ml_fd_forces'] = True
         self.morest_parameters['fd_displacement'] = 0.0025
@@ -144,6 +145,12 @@ class read_parameters:
 
             elif i_parameter.split()[0].upper() == 'ML_additional_features_max'.upper():
                 self.additional_features_max_parameter = i_parameter.split()[1:]
+
+            elif i_parameter.split()[0].upper() == 'ML_print_uncertainty'.upper():
+                if i_parameter.split()[1].upper() == 'True'.upper():
+                    self.morest_parameters['ml_print_uncertainty'] = True
+                elif i_parameter.split()[1].upper() == 'False'.upper():
+                    self.morest_parameters['ml_print_uncertainty'] = False
 
             elif i_parameter.split()[0].upper() == 'ML_energy_uncertainty_tolerance'.upper():
                 self.morest_parameters['ml_energy_uncertainty_tolerance'] = float(i_parameter.split()[1])

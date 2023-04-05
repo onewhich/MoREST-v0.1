@@ -14,6 +14,7 @@ ML_features_min_number            2 # The number of features calculated for chec
 ML_additional_features_min        inverse_r_exp_r 1,2 3,4 inverse_r_exp_r 1,4 2,3 # Only the feature with the minimum value will be added into the representation.
 #ML_features_max_number            2 # The number of features calculated for checking the maximum value in ML_additional_features_min
 #ML_additional_features_max        inverse_r_exp_r 1,2 3,4 inverse_r_exp_r 1,4 2,3 # Only the feature with the maximum value will be added into the representation.
+ML_print_uncertainty              False
 ML_energy_uncertainty_tolerance   0.01 # Check if ab initio calculator will involve based on the difference between ML prediction and the QC calculation. It is the energy std for GPR.
 ML_appending_set_number           10 # The number of samplings calculated by ab initio and added to the training set.
 ML_appending_sampling_steps       100 #TODO: Ab initio samplings will be added to traning set for every given MD/MC sampling steps.
