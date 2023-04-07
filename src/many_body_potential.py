@@ -340,7 +340,7 @@ class ml_potential(Calculator):
         return gpr
         '''
 
-
+'''
 class ml_interface(Calculator):
     '''
     Interface of ASE for ml_potential
@@ -359,6 +359,7 @@ class ml_interface(Calculator):
 
 #    def read(self, *args, **kwargs):
 #        pass
+'''
 
 class Molpro(FileIOCalculator):
     '''
