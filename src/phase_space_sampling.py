@@ -186,7 +186,7 @@ class velocity_Verlet(initialize_sampling):
         momenta_half = current_momenta + 0.5 * self.current_forces * time_step
         
         ### F(t+dt)
-        next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(self.current_system, current_step=self.current_step)
+        next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(self.current_system)
         
         ### v(t+dt) = v(t+0.5dt) + 0.5 * F(t+dt) * dt / m
         #next_accelerations = self.current_forces / self.masses
