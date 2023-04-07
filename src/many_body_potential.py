@@ -11,7 +11,6 @@ from collective_variable import collective_variables
 from ase.calculators.calculator import Calculator, FileIOCalculator
 from MoREAT.src.representation import generate_representation
 from sklearn.gaussian_process import GaussianProcessRegressor, kernels
-from phase_space_sampling import get_current_step
 
 
 class on_the_fly:
@@ -30,7 +29,7 @@ class on_the_fly:
         
         return self.potential_energy, self.forces
 
-class ml_potential:
+class ml_potential(Calculator):
     '''
     This class implements loading machine learned many body potential and returning the potential as the output of the Cartesian coordinates input.
     INPUT:
@@ -40,7 +39,12 @@ class ml_potential:
     system: ase.Atoms object
     '''
 
-    def __init__(self, **kwargs):
+    implemented_properties = ['energy', 'forces']
+    discard_results_on_any_change = True
+
+    def __init__(self, restart=None, ignore_bad_restart=False, label='ml_potential', atoms=None, command=None, **kwargs):
+        Calculator.__init__(self, restart=restart, ignore_bad_restart=ignore_bad_restart, label=label, atoms=atoms, command=command, **kwargs)
+
         self.log_morest = kwargs['log_file']
         self.if_print_uncertainty = kwargs['ml_parameters']['ml_print_uncertainty']
         self.if_fd_forces = kwargs['ml_parameters']['ml_fd_forces']
@@ -98,6 +102,10 @@ class ml_potential:
             except:
                 raise Exception('ML model can not be read. Please specify the name.')
 
+    def calculate(self, *args, **kwargs):
+        Calculator.calculate(self, *args, **kwargs)
+        self.results['energy'], self.results['forces'] = self.get_potential_forces(self.atoms)
+
     def get_ml_potential(self, system_list):
         #if type(system_list) != list:
         #    raise ValueError
@@ -132,7 +140,6 @@ class ml_potential:
             return ml_energy, ml_energy_std, ml_forces, ml_forces_std
 
     def get_potential_forces(self, system):
-        current_step = get_current_step()
         if type(system) == list:
             system = system[0]
         if self.if_fd_forces:
@@ -154,7 +161,7 @@ class ml_potential:
             energy_std_0 = energy_std_list[0]
             # Determine if the energy need to be calculated on the fly
             if self.if_active_learning and (energy_std_0 > self.energy_uncertainty_tolerance):
-                self.log_morest.write("Current sampling step: "+str(current_step)+"\n")
+                self.log_morest.write("Current sampling step: "+str(self.current_step)+"\n")
                 self.log_morest.write("Current ML energy uncertainty is larger than tolerance(="+str(self.energy_uncertainty_tolerance)+"): "+str(energy_std_0)+"\n")
                 self.log_morest.write("The relevant ML predicted potential energy: "+str(energy_0)+"\n")
                 self.log_morest.write("Current system:\n")
@@ -176,7 +183,7 @@ class ml_potential:
                     self.appending_set_counter = 0
             else:
                 if self.if_print_uncertainty:
-                    self.log_morest.write("Current sampling step: "+str(current_step)+"\n")
+                    self.log_morest.write("Current sampling step: "+str(self.current_step)+"\n")
                     self.log_morest.write("Current ML energy uncertainty: "+str(energy_std_0)+"\n\n")
                 for i,i_energy in enumerate(energy_list[1:]):
                     force_value = -1*(i_energy - energy_0)/self.fd_displacement
@@ -191,7 +198,7 @@ class ml_potential:
             potential_energy, potential_energy_std, forces, forces_std = self.get_ml_potential(system)
             #TODO: the RMSE of forces prediction is not used for judgment
             if self.if_active_learning and (potential_energy_std > self.energy_uncertainty_tolerance):
-                self.log_morest.write("Current sampling step: "+str(current_step)+"\n")
+                self.log_morest.write("Current sampling step: "+str(self.current_step)+"\n")
                 self.log_morest.write("Current ML energy uncertainty is larger than tolerance(="+str(self.energy_uncertainty_tolerance)+"): "+str(potential_energy_std)+"\n")
                 self.log_morest.write("The relevant ML predicted potential energy: "+str(potential_energy)+"\n")
                 self.log_morest.write("Current ML forces uncertainty is: "+str(forces_std.flatten())+"\n")
@@ -214,11 +221,14 @@ class ml_potential:
                     self.appending_set_counter = 0
             else:
                 if self.if_print_uncertainty:
-                    self.log_morest.write("Current sampling step: "+str(current_step)+"\n")
+                    self.log_morest.write("Current sampling step: "+str(self.current_step)+"\n")
                     self.log_morest.write("Current ML energy uncertainty: "+str(potential_energy_std)+"\n\n")
                 self.potential_energy = potential_energy
                 self.forces = forces
         return self.potential_energy, self.forces
+    
+    def get_current_step(self, current_step):
+        self.current_step = current_step
 
     @staticmethod
     def RMSE(true, pred):
@@ -345,7 +355,7 @@ class ml_interface(Calculator):
 
     def calculate(self, *args, **kwargs):
         Calculator.calculate(self, *args, **kwargs)
-        self.results['energy'], self.results['forces'] = self.ml_potential.get_potential_forces(self.atoms, **kwargs)
+        self.results['energy'], self.results['forces'] = self.ml_potential.get_potential_forces(self.atoms)
 
 #    def read(self, *args, **kwargs):
 #        pass
