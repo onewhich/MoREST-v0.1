@@ -11,6 +11,7 @@ from collective_variable import collective_variables
 from ase.calculators.calculator import Calculator, FileIOCalculator
 from MoREAT.src.representation import generate_representation
 from sklearn.gaussian_process import GaussianProcessRegressor, kernels
+from phase_space_sampling import get_current_step
 
 
 class on_the_fly:
@@ -22,7 +23,7 @@ class on_the_fly:
     def __init__(self, calculator):
         self.calculator = calculator
         
-    def get_potential_forces(self, system, **kwargs):
+    def get_potential_forces(self, system):
         system.calc = self.calculator
         self.forces = system.get_forces()
         self.potential_energy = system.get_potential_energy()
@@ -130,8 +131,8 @@ class ml_potential:
             ml_forces_std = np.array(ml_energy_forces_std[:,1:]).reshape(-1,3)
             return ml_energy, ml_energy_std, ml_forces, ml_forces_std
 
-    def get_potential_forces(self, system, **kwargs):
-        current_step = kwargs['current_step']
+    def get_potential_forces(self, system):
+        current_step = get_current_step()
         if type(system) == list:
             system = system[0]
         if self.if_fd_forces:
@@ -163,7 +164,7 @@ class ml_potential:
                     self.log_morest.write(chemical_symbols[i]+" "+str(coordinates[i][0])+" "+str(coordinates[i][1])+" "+str(coordinates[i][2])+"\n")
                 #return float('nan'), float('nan')
                 # If the ML energy has too large uncertainty, call ab initio calculations
-                self.potential_energy, self.forces = self.ab_initio_potential.get_potential_forces(system, **kwargs)
+                self.potential_energy, self.forces = self.ab_initio_potential.get_potential_forces(system)
                 self.log_morest.write("The relevant ab initio potential energy: "+str(self.potential_energy)+"\n")
                 write_xyz_traj(self.filename_training_set, system)
                 self.training_set = read_xyz_traj(self.filename_training_set)
@@ -201,7 +202,7 @@ class ml_potential:
                 for i in range(len(coordinates)):
                     self.log_morest.write(chemical_symbols[i]+" "+str(coordinates[i][0])+" "+str(coordinates[i][1])+" "+str(coordinates[i][2])+"\n")
                 # If the ML energy has too large uncertainty, call ab initio calculations
-                self.potential_energy, self.forces = self.ab_initio_potential.get_potential_forces(system, **kwargs)
+                self.potential_energy, self.forces = self.ab_initio_potential.get_potential_forces(system)
                 self.log_morest.write("The relevant ab initio potential energy: "+str(self.potential_energy)+"\n")
                 write_xyz_traj(self.filename_training_set, system)
                 self.training_set = read_xyz_traj(self.filename_training_set)
@@ -275,7 +276,7 @@ class ml_potential:
         gpr = GaussianProcessRegressor(kernel=gpr_kernel,normalize_y=True)
         gpr.fit(x_train, y_train)
         with open(self.trained_ml_potential,'wb') as trained_model_file:
-            pickle.dump(gpr, trained_model_file)
+            pickle.dump(gpr, trained_model_file, protocol=4)
         self.log_morest.write("The trained kernel: "+str(gpr.kernel_)+"\n")
 
         y_train_pred, y_train_pred_std = gpr.predict(x_train, return_std=True)
@@ -570,7 +571,7 @@ class molpro_calculator:
             self.outfile='molpro.out'
 
 
-    def get_potential_forces(self, system, **kwargs):
+    def get_potential_forces(self, system):
         if os.path.isfile(self.outfile):
             self.potential_energy, self.forces = self.parse_outfile(self.outfile, if_get_force=True)
         else:
