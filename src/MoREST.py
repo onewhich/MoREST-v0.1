@@ -183,7 +183,7 @@ class morest:
                                                                 molecules[i], log_file_name[i], traj_file_name[i], T, calculator=calculator, sv_rescaling=True, \
                                                                 log_file=self.log_morest)
                     self.sampling_job.append(tmp_sampling_job)
-                    self.log_morest.write('Replica '+str(i)+' at '+str(T)+' K is ready.\n')
+                    self.log_morest.write('Replica '+str(i)+' at '+str(T)+' K is ready.\n\n')
                 self.log_morest.write('\n')
                     
             elif self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['its'.upper()]:
