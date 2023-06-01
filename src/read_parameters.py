@@ -31,16 +31,20 @@ class read_parameters:
         self.morest_parameters['morest_initialization'] = False
         self.morest_parameters['morest_save_parameters_file'] = False
         self.morest_parameters['morest_load_parameters_file'] = False
+        self.morest_parameters['ml_print_uncertainty'] = False
+        self.morest_parameters['ml_fd_forces'] = True
+        self.morest_parameters['fd_displacement'] = 0.0025
         self.morest_parameters['ml_active_learning'] = False
         self.morest_parameters['ml_add_features_number'] = 0
         self.morest_parameters['ml_features_min_number'] = 0
         self.morest_parameters['ml_features_max_number'] = 0
-        self.morest_parameters['ml_print_uncertainty'] = False
         self.morest_parameters['ml_energy_uncertainty_tolerance'] = 0.01
-        self.morest_parameters['ml_fd_forces'] = True
-        self.morest_parameters['fd_displacement'] = 0.0025
+        self.morest_parameters['phase_space_sampling'] = False
+        self.morest_parameters['trajectory_scattering'] = False
+        self.morest_parameters['structure_searching'] = False
+        self.morest_parameters['enhanced_sampling'] = False
+        self.morest_parameters['wall_potential'] = False
         self.sampling_parameters = {}
-        self.sampling_parameters['phase_space_sampling'] = False
         self.sampling_parameters['sampling_initialization'] = False
         self.sampling_parameters['sampling_molecule'] = 'MoREST.str'
         self.md_parameters = {}
@@ -54,8 +58,21 @@ class read_parameters:
         self.scattering_parameters['scattering_traj_length'] = None
         self.scattering_parameters['scattering_target_molecule'] = 'MoREST.str_target'
         self.scattering_parameters['scattering_incident_molecule'] = 'MoREST.str_incident'
+        self.searching_parameters = {}
+        self.searching_parameters['structure_searching'] = False
+        self.searching_parameters['searching_initialization'] = False
+        self.searching_parameters['searching_starting_point'] = 'MoREST.str'
+        self.searching_parameters['searching_convergence'] = 1e-3
+        self.searching_parameters['searching_max_steps'] = 100
+        self.searching_parameters['searching_constrained'] = False
+        self.fire_parameters = {}
+        self.fire_parameters['fire_equal_masses'] = True
+        self.fire_parameters['fire_alpha_init'] = 0.1
+        self.fire_parameters['fire_N_min'] = 5
+        self.fire_parameters['fire_f_increase'] = 1.1
+        self.fire_parameters['fire_f_decrease'] = 0.5
+        self.fire_parameters['fire_f_alpha'] = 0.99
         self.enhanced_sampling_parameters = {}
-        self.enhanced_sampling_parameters['enhanced_sampling'] = False
         self.re_parameters = {}
         self.re_parameters['re_initialization'] = False
         self.re_parameters['re_replica_arrange'] = 0
@@ -119,373 +136,109 @@ class read_parameters:
             elif i_parameter.split()[0].upper() == 'ML_potential_model'.upper():
                 self.morest_parameters['ml_potential_model'] = str(i_parameter.split()[1])
 
-            elif i_parameter.split()[0].upper() == 'ML_active_learning'.upper():
-                if i_parameter.split()[1].upper() == 'True'.upper():
-                    self.morest_parameters['ml_active_learning'] = True
-                elif i_parameter.split()[1].upper() == 'False'.upper():
-                    self.morest_parameters['ml_active_learning'] = False
-                
-            elif i_parameter.split()[0].upper() == 'ML_training_set'.upper():
-                self.morest_parameters['ml_training_set'] = str(i_parameter.split()[1])
-
-            elif i_parameter.split()[0].upper() == 'ML_add_features_number'.upper():
-                self.morest_parameters['ml_add_features_number'] = int(i_parameter.split()[1])
-
-            elif i_parameter.split()[0].upper() == 'ML_additional_features'.upper():
-                self.additional_features_parameter = i_parameter.split()[1:]
-
-            elif i_parameter.split()[0].upper() == 'ML_features_min_number'.upper():
-                self.morest_parameters['ml_features_min_number'] = int(i_parameter.split()[1])
-
-            elif i_parameter.split()[0].upper() == 'ML_additional_features_min'.upper():
-                self.additional_features_min_parameter = i_parameter.split()[1:]
-
-            elif i_parameter.split()[0].upper() == 'ML_features_max_number'.upper():
-                self.morest_parameters['ml_features_max_number'] = int(i_parameter.split()[1])
-
-            elif i_parameter.split()[0].upper() == 'ML_additional_features_max'.upper():
-                self.additional_features_max_parameter = i_parameter.split()[1:]
-
             elif i_parameter.split()[0].upper() == 'ML_print_uncertainty'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():
                     self.morest_parameters['ml_print_uncertainty'] = True
                 elif i_parameter.split()[1].upper() == 'False'.upper():
                     self.morest_parameters['ml_print_uncertainty'] = False
-
-            elif i_parameter.split()[0].upper() == 'ML_energy_uncertainty_tolerance'.upper():
-                self.morest_parameters['ml_energy_uncertainty_tolerance'] = float(i_parameter.split()[1])
-
-            elif i_parameter.split()[0].upper() == 'ML_appending_set_number'.upper():
-                self.morest_parameters['ml_appending_set_number'] = int(i_parameter.split()[1])
-
-            elif i_parameter.split()[0].upper() == 'ML_appending_sampling_steps'.upper():
-                self.morest_parameters['ml_appending_sampling_steps'] = int(i_parameter.split()[1])
+                else:
+                    raise Exception('It is not clear whether print the uncertainty.')
 
             elif i_parameter.split()[0].upper() == 'ML_FD_forces'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():
                     self.morest_parameters['ml_fd_forces'] = True
                 elif i_parameter.split()[1].upper() == 'False'.upper():
                     self.morest_parameters['ml_fd_forces'] = False  
+                else:
+                    raise Exception('It is not clear whether the finite difference forces will be used.')
 
             elif i_parameter.split()[0].upper() == 'FD_displacement'.upper():
                 self.morest_parameters['fd_displacement'] = float(i_parameter.split()[1])
 
-            elif i_parameter.split()[0].upper() == 'ML_GPR_noise_level_bounds'.upper():
-                noise_level_bounds = i_parameter.split()
-                try:
-                    self.morest_parameters['ml_gpr_noise_level_bounds'] = np.array([float(noise_level_bounds[1]),float(noise_level_bounds[2])])
-                except:
-                    self.morest_parameters['ml_gpr_noise_level_bounds'] = float(noise_level_bounds[1])
-
-            ########################## Phase space sampling #######################
+            elif i_parameter.split()[0].upper() == 'ML_active_learning'.upper():
+                if i_parameter.split()[1].upper() == 'True'.upper():
+                    self.morest_parameters['ml_active_learning'] = True
+                elif i_parameter.split()[1].upper() == 'False'.upper():
+                    self.morest_parameters['ml_active_learning'] = False
+                else:
+                    raise Exception('It is not clear whether the active learning will be used.')
 
             elif i_parameter.split()[0].upper() == 'Phase_space_sampling'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():
-                    self.sampling_parameters['phase_space_sampling'] = True
+                    self.morest_parameters['phase_space_sampling'] = True
                 elif i_parameter.split()[1].upper() == 'False'.upper():
-                    self.sampling_parameters['phase_space_sampling'] = False
+                    self.morest_parameters['phase_space_sampling'] = False
                 else:
                     raise Exception('It is not clear whether the sampling method will be used.')
-
-            elif i_parameter.split()[0].upper() == 'Sampling_initialization'.upper():
-                if i_parameter.split()[1].upper() == 'True'.upper():
-                    self.sampling_parameters['sampling_initialization'] = True
-                elif i_parameter.split()[1].upper() == 'False'.upper():
-                    self.sampling_parameters['sampling_initialization'] = False
-                else:
-                    raise Exception('It is not clear whether the sampling method will be initialized.')
-                    
-            elif i_parameter.split()[0].upper() == 'Sampling_molecule'.upper():
-                self.sampling_parameters['sampling_molecule'] = str(i_parameter.split()[1])
-                    
-            elif i_parameter.split()[0].upper() == 'Sampling_traj_interval'.upper():
-                self.sampling_parameters['sampling_traj_interval'] = int(i_parameter.split()[1])
-                    
-            elif i_parameter.split()[0].upper() == 'Sampling_method'.upper():
-                self.sampling_parameters['sampling_method'] = str(i_parameter.split()[1])
-                    
-            elif i_parameter.split()[0].upper() == 'Sampling_ensemble'.upper():
-                self.sampling_parameters['sampling_ensemble'] = str(i_parameter.split()[1])
-                if self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_VR']:
-                    self.sampling_parameters['nvt_vr_dt'] = float(i_parameter.split()[2])
-                elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_Berendsen'.upper()]:
-                    self.sampling_parameters['nvt_berendsen_tau'] = float(i_parameter.split()[2])
-                elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_Langevin'.upper()]:
-                    self.sampling_parameters['nvt_langevin_gamma'] = float(i_parameter.split()[2])
-                elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
-                    self.sampling_parameters['nvt_svr_tau'] = float(i_parameter.split()[2])
-                
-            ########################## Molecular dynamics #########################
-                
-            elif i_parameter.split()[0].upper() == 'MD_time_step'.upper():
-                self.md_parameters['md_time_step'] = float(i_parameter.split()[1])
-            
-            elif i_parameter.split()[0].upper() == 'MD_simulation_time'.upper():
-                self.md_parameters['md_simulation_time'] = float(i_parameter.split()[1])
-            
-            elif i_parameter.split()[0].upper() == 'MD_temperature'.upper():
-                self.md_parameters['md_temperature'] = float(i_parameter.split()[1])
-            
-            elif i_parameter.split()[0].upper() == 'MD_clean_rotation'.upper():
-                if i_parameter.split()[1].upper() == 'True'.upper():
-                    self.md_parameters['md_clean_rotation'] = True
-                elif i_parameter.split()[1].upper() == 'False'.upper():
-                    self.md_parameters['md_clean_rotation'] = False
-                else:
-                    raise Exception('It is not clear whether the rotation will be removed.')
-                    
-            elif i_parameter.split()[0].upper() == 'MD_clean_translation'.upper():
-                if i_parameter.split()[1].upper() == 'True'.upper():
-                    self.md_parameters['md_clean_translation'] = True
-                elif i_parameter.split()[1].upper() == 'False'.upper():
-                    self.md_parameters['md_clean_translation'] = False
-                else:
-                    raise Exception('It is not clear whether the translation will be removed.')
-                
-            ########################## Trajectory scattering ######################
-                
+                                
             elif i_parameter.split()[0].upper() == 'Trajectory_scattering'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():
-                    self.scattering_parameters['trajectory_scattering'] = True
+                    self.morest_parameters['trajectory_scattering'] = True
                 elif i_parameter.split()[1].upper() == 'False'.upper():
-                    self.scattering_parameters['trajectory_scattering'] = False
+                    self.morest_parameters['trajectory_scattering'] = False
                 else:
                     raise Exception('It is not clear whether the scattering method will be used.')
-                    
-            elif i_parameter.split()[0].upper() == 'Scattering_initialization'.upper():
+                
+            elif i_parameter.split()[0].upper() == 'Structure_searching'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():
-                    self.scattering_parameters['scattering_initialization'] = True
+                    self.morest_parameters['Structure_searching'] = True
                 elif i_parameter.split()[1].upper() == 'False'.upper():
-                    self.scattering_parameters['scattering_initialization'] = False
+                    self.morest_parameters['Structure_searching'] = False
                 else:
-                    raise Exception('It is not clear whether the scattering method will be initialized.')
-                    
-            elif i_parameter.split()[0].upper() == 'Scattering_pre_thermolized'.upper():
-                if i_parameter.split()[1].upper() == 'True'.upper():
-                    self.scattering_parameters['scattering_pre_thermolized'] = True
-                elif i_parameter.split()[1].upper() == 'False'.upper():
-                    self.scattering_parameters['scattering_pre_thermolized'] = False
-                else:
-                    raise Exception('It is not clear whether the pre-thermolized trajectory will be used.')
-
-            elif i_parameter.split()[0].upper() == 'Scattering_traj_number'.upper():
-                self.scattering_parameters['scattering_traj_number'] = int(i_parameter.split()[1])
-                    
-            elif i_parameter.split()[0].upper() == 'Scattering_method'.upper():
-                self.scattering_parameters['scattering_method'] = str(i_parameter.split()[1])
-
-            elif i_parameter.split()[0].upper() == 'Scattering_time_step'.upper():
-                self.scattering_parameters['scattering_time_step'] = float(i_parameter.split()[1])
-
-            elif i_parameter.split()[0].upper() == 'Scattering_V_collision'.upper():
-                self.scattering_parameters['scattering_V_collision'] = float(i_parameter.split()[1])
-
-            elif i_parameter.split()[0].upper() == 'Scattering_E_collision'.upper():
-                self.scattering_parameters['scattering_E_collision'] = float(i_parameter.split()[1])
-
-            elif i_parameter.split()[0].upper() == 'Scattering_T_target'.upper():
-                self.scattering_parameters['scattering_T_target'] = float(i_parameter.split()[1])
-
-            elif i_parameter.split()[0].upper() == 'Scattering_T_incident'.upper():
-                self.scattering_parameters['scattering_T_incident'] = float(i_parameter.split()[1])
-
-            elif i_parameter.split()[0].upper() == 'Scattering_stops_number'.upper():
-                self.scattering_parameters['scattering_stops_number'] = int(i_parameter.split()[1])
-
-            elif i_parameter.split()[0].upper() == 'Scattering_traj_stop'.upper():
-                self.traj_stop_parameter = i_parameter.split()[1:]
-
-            elif i_parameter.split()[0].upper() == 'Scattering_traj_length'.upper():
-                self.scattering_parameters['scattering_traj_length'] = int(i_parameter.split()[1])
-
-            elif i_parameter.split()[0].upper() == 'Scattering_target_molecule'.upper():
-                self.scattering_parameters['scattering_target_molecule'] = str(i_parameter.split()[1])
-
-            elif i_parameter.split()[0].upper() == 'Scattering_incident_molecule'.upper():
-                self.scattering_parameters['scattering_incident_molecule'] = str(i_parameter.split()[1])
-
-            elif i_parameter.split()[0].upper() == 'Scattering_R_target'.upper():
-                self.scattering_parameters['scattering_R_target'] = float(i_parameter.split()[1])
-
-            elif i_parameter.split()[0].upper() == 'Scattering_R_incident'.upper():
-                self.scattering_parameters['scattering_R_incident'] = float(i_parameter.split()[1])
-
-
-            ########################## Enhanced sampling ##########################
+                    raise Exception('It is not clear whether the searching method will be used.')
 
             elif i_parameter.split()[0].upper() == 'Enhanced_sampling'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():
-                    self.enhanced_sampling_parameters['enhanced_sampling'] = True
+                    self.morest_parameters['enhanced_sampling'] = True
                 elif i_parameter.split()[1].upper() == 'False'.upper():
-                    self.enhanced_sampling_parameters['enhanced_sampling'] = False
+                    self.morest_parameters['enhanced_sampling'] = False
                 else:
                     raise Exception('It is not clear whether the enhanced sampling will be used.')
-                
-            elif i_parameter.split()[0].upper() == 'Enhanced_sampling_method'.upper():
-                self.enhanced_sampling_parameters['enhanced_sampling_method'] = str(i_parameter.split()[1])
             
-            ########################## RE parameters  #############################
-
-            elif i_parameter.split()[0].upper() == 'RE_initialization'.upper():
-                if i_parameter.split()[1].upper() == 'True'.upper():
-                    self.re_parameters['re_initialization'] = True
-                elif i_parameter.split()[1].upper() == 'False'.upper():
-                    self.re_parameters['re_initialization'] = False
-                else:
-                    raise Exception('It is not clear whether the replica exchange sampling will be initialized.')
-                
-            elif i_parameter.split()[0].upper() == 'RE_lower_bound_temperature'.upper():
-                self.re_parameters['re_lower_bound_temperature'] = float(i_parameter.split()[1])
-                
-            elif i_parameter.split()[0].upper() == 'RE_upper_bound_temperature'.upper():
-                self.re_parameters['re_upper_bound_temperature'] = float(i_parameter.split()[1])
-                
-            elif i_parameter.split()[0].upper() == 'RE_number_of_replica'.upper():
-                self.re_parameters['re_number_of_replica'] = int(i_parameter.split()[1])
-                
-            elif i_parameter.split()[0].upper() == 'RE_replica_arrange'.upper():
-                self.re_parameters['re_replica_arrange'] = float(i_parameter.split()[1])
-                
-            elif i_parameter.split()[0].upper() == 'RE_replica_temperatures'.upper():
-                tmp_temperatures = []
-                for i in range(self.re_parameters['re_number_of_replica']):
-                    tmp_temperatures.append(float(i_parameter.split()[i+1]))
-                self.re_parameters['re_replica_temperatures'] = np.array(tmp_temperatures)
-                
-            elif i_parameter.split()[0].upper() == 'RE_swap_interval'.upper():
-                self.re_parameters['re_swap_interval'] = int(i_parameter.split()[1])
-                
-            elif i_parameter.split()[0].upper() == 'RE_init_structures_list'.upper():
-                self.re_parameters['re_init_structures_list'] = str(i_parameter.split()[1])
-                
-            elif i_parameter.split()[0].upper() == 'RE_energy_shift'.upper():
-                self.re_parameters['re_energy_shift'] = float(i_parameter.split()[1])
-
-            ########################## ITS parameters    ##########################
-
-            elif i_parameter.split()[0].upper() == 'ITS_initialization'.upper():
-                if i_parameter.split()[1].upper() == 'True'.upper():
-                    self.its_parameters['its_initialization'] = True
-                elif i_parameter.split()[1].upper() == 'False'.upper():
-                    self.its_parameters['its_initialization'] = False
-                else:
-                    raise Exception('It is not clear whether the integrated tempering sampling will be initialized.')
-                
-            elif i_parameter.split()[0].upper() == 'ITS_lower_bound_temperature'.upper():
-                self.its_parameters['its_lower_bound_temperature'] = float(i_parameter.split()[1])
-                
-            elif i_parameter.split()[0].upper() == 'ITS_upper_bound_temperature'.upper():
-                self.its_parameters['its_upper_bound_temperature'] = float(i_parameter.split()[1])
-                
-            elif i_parameter.split()[0].upper() == 'ITS_number_of_replica'.upper():
-                self.its_parameters['its_number_of_replica'] = int(i_parameter.split()[1])
-                
-            elif i_parameter.split()[0].upper() == 'ITS_replica_arrange'.upper():
-                self.its_parameters['its_replica_arrange'] = float(i_parameter.split()[1])
-                
-            elif i_parameter.split()[0].upper() == 'ITS_replica_temperatures'.upper():
-                tmp_temperatures = []
-                for i in range(self.its_parameters['its_number_of_replica']):
-                    tmp_temperatures.append(float(i_parameter.split()[i+1]))
-                self.its_parameters['its_replica_temperatures'] = np.array(tmp_temperatures)
-                
-            elif i_parameter.split()[0].upper() == 'ITS_initial_nk'.upper():
-                tmp_nk = []
-                for i in range(self.its_parameters['its_number_of_replica']):
-                    tmp_nk.append(float(i_parameter.split()[i+1]))
-                self.its_parameters['its_initial_nk'] = np.array(tmp_nk)
-                
-            elif i_parameter.split()[0].upper() == 'ITS_pk0'.upper():
-                tmp_pk0 = []
-                for i in range(self.its_parameters['its_number_of_replica']):
-                    tmp_pk0.append(float(i_parameter.split()[i+1]))
-                self.its_parameters['its_pk0'] = np.array(tmp_pk0)
-                
-            elif i_parameter.split()[0].upper() == 'ITS_trial_MD_steps'.upper():
-                self.its_parameters['its_trial_MD_steps'] = int(i_parameter.split()[1])
-                
-            elif i_parameter.split()[0].upper() == 'ITS_delta_pk'.upper():
-                self.its_parameters['its_delta_pk'] = float(i_parameter.split()[1])
-                
-            elif i_parameter.split()[0].upper() == 'ITS_weight_pk'.upper():
-                self.its_parameters['its_weight_pk'] = float(i_parameter.split()[1])
-                
-            elif i_parameter.split()[0].upper() == 'ITS_energy_shift'.upper():
-                self.its_parameters['its_energy_shift'] = float(i_parameter.split()[1])
-            
-            ########################## Wall potential #############################
-
             elif i_parameter.split()[0].upper() == 'Wall_potential'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():
-                    self.wall_potential_parameters['wall_potential'] = True
+                    self.morest_parameters['wall_potential'] = True
                 elif i_parameter.split()[1].upper() == 'False'.upper():
-                    self.wall_potential_parameters['wall_potential'] = False
+                    self.morest_parameters['wall_potential'] = False
                 else:
                     raise Exception('It is not clear whether the wall potential will be used.')
                 
-            elif i_parameter.split()[0].upper() == 'Wall_number'.upper():
-                self.wall_potential_parameters['wall_number'] = int(i_parameter.split()[1])
-   
-            elif i_parameter.split()[0].upper() == 'Wall_collective_variable'.upper():
-                if i_parameter.split()[1].upper() == 'True'.upper():
-                    self.wall_potential_parameters['wall_collective_variable'].append(True)
-                elif i_parameter.split()[1].upper() == 'False'.upper():
-                    self.wall_potential_parameters['wall_collective_variable'].append(False)
-                else:
-                    raise Exception('It is not clear whether the collective variable will be used.')
-                
-            elif i_parameter.split()[0].upper() == 'Wall_shape'.upper():
-                self.wall_potential_parameters['wall_shape'].append(str(i_parameter.split()[1]).lower())
-                
-            elif i_parameter.split()[0].upper() == 'Wall_type'.upper():
-                self.wall_potential_parameters['wall_type'].append(str(i_parameter.split()[1]).lower())
-                if i_parameter.split()[1].upper() in ['power_wall'.upper()]:
-                    self.wall_potential_parameters['power_wall_direction'].append(np.sign(int(i_parameter.split()[2])))
-                else:
-                    self.wall_potential_parameters['power_wall_direction'].append(0)
-                
-            elif i_parameter.split()[0].upper() == 'Wall_scaling'.upper():
-                self.wall_potential_parameters['wall_scaling'].append(float(i_parameter.split()[1]))
-                
-            elif i_parameter.split()[0].upper() == 'Wall_scope'.upper():
-                self.wall_potential_parameters['wall_scope'].append(float(i_parameter.split()[1]))
-                
-            elif i_parameter.split()[0].upper() == 'Wall_action_atoms'.upper():
-                self.wall_potential_parameters['wall_action_atoms'].append(i_parameter.split()[1:])
-                
-            ########################## Planar wall #################################
+            ########################## active learning parameters #################
+            if self.morest_parameters['ml_active_learning']:
+                self.read_active_learning_parameters(i_parameter)
 
-            elif i_parameter.split()[0].upper() == 'Planar_wall_point'.upper():
-                tmp_wall_point = []
-                for i in range(3):
-                    tmp_wall_point.append(float(i_parameter.split()[i+1]))
-                self.wall_potential_parameters['planar_wall_point'].append(np.array(tmp_wall_point))
-            
-            elif i_parameter.split()[0].upper() == 'Planar_wall_normal_vector'.upper():
-                tmp_wall_normal_vector = []
-                for i in range(3):
-                    tmp_wall_normal_vector.append(float(i_parameter.split()[i+1]))
-                tmp_wall_normal_vector = np.array(tmp_wall_normal_vector)
-                self.wall_potential_parameters['planar_wall_normal_vector'].append(tmp_wall_normal_vector / np.linalg.norm(tmp_wall_normal_vector))
+            ########################## Phase space sampling #######################
+            if self.morest_parameters['phase_space_sampling']:
+                self.read_sampling_parameters(i_parameter)
+                ########################## Molecular dynamics #########################
+                if self.sampling_parameters['sampling_method'].upper() in ['MD']:
+                    self.read_MD_parameters(i_parameter)
                 
-            ########################## Spherical wall #############################
+            ########################## Trajectory scattering ######################
+            if self.morest_parameters['trajectory_scattering']:
+                self.read_scattering_parameters(i_parameter)
 
-            elif i_parameter.split()[0].upper() == 'Spherical_wall_center'.upper():
-                tmp_wall_center = []
-                for i in range(3):
-                    tmp_wall_center.append(float(i_parameter.split()[i+1]))
-                self.wall_potential_parameters['spherical_wall_center'].append(np.array(tmp_wall_center))
-            
-            elif i_parameter.split()[0].upper() == 'Spherical_wall_radius'.upper():
-                self.wall_potential_parameters['spherical_wall_radius'].append(float(i_parameter.split()[1]))
-
-            ########################## dot wall ###################################
-
-            elif i_parameter.split()[0].upper() == 'Dot_wall_position'.upper():
-                tmp_wall_center = []
-                for i in range(3):
-                    tmp_wall_center.append(float(i_parameter.split()[i+1]))
-                self.wall_potential_parameters['dot_wall_position'].append(np.array(tmp_wall_center))
+            ########################## Structure searching ########################
+            if self.morest_parameters['structure_searching']:
+                self.read_searching_parameters(i_parameter)
+                ########################## FIRE #######################################
+                if self.searching_parameters['searching_method'].upper() in ['FIRE'.upper()]:
+                    self.read_FIRE_parameters(i_parameter)
+                
+            ########################## Enhanced sampling ##########################
+            if self.morest_parameters['enhanced_sampling']:
+                if i_parameter.split()[0].upper() == 'Enhanced_sampling_method'.upper():
+                    self.enhanced_sampling_parameters['enhanced_sampling_method'] = str(i_parameter.split()[1])
+                ########################## RE parameters  #############################
+                if self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['re'.upper()]:
+                    self.read_RE_parameters(i_parameter)
+                ########################## ITS parameters    ##########################
+                elif self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['its'.upper()]:
+                    self.read_ITS_parameters(i_parameter)
+                
+            ########################## Wall potential #############################
+            if self.morest_parameters['wall_potential']:
+                self.read_wall_potential_parameters(i_parameter)
                 
     def write_morest_parameters(self, log_morest):
         log_morest.write('\n')
@@ -493,20 +246,383 @@ class read_parameters:
             log_morest.write(key+' : '+str(self.morest_parameters[key])+'\n')
         log_morest.write('\n')
         
+    ########################### read parameters ##################################################################
+
+    def read_active_learning_parameters(self, i_parameter):                
+        if i_parameter.split()[0].upper() == 'ML_training_set'.upper():
+            self.morest_parameters['ml_training_set'] = str(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'ML_add_features_number'.upper():
+            self.morest_parameters['ml_add_features_number'] = int(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'ML_additional_features'.upper():
+            self.additional_features_parameter = i_parameter.split()[1:]
+
+        elif i_parameter.split()[0].upper() == 'ML_features_min_number'.upper():
+            self.morest_parameters['ml_features_min_number'] = int(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'ML_additional_features_min'.upper():
+            self.additional_features_min_parameter = i_parameter.split()[1:]
+
+        elif i_parameter.split()[0].upper() == 'ML_features_max_number'.upper():
+            self.morest_parameters['ml_features_max_number'] = int(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'ML_additional_features_max'.upper():
+            self.additional_features_max_parameter = i_parameter.split()[1:]
+
+        elif i_parameter.split()[0].upper() == 'ML_energy_uncertainty_tolerance'.upper():
+            self.morest_parameters['ml_energy_uncertainty_tolerance'] = float(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'ML_appending_set_number'.upper():
+            self.morest_parameters['ml_appending_set_number'] = int(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'ML_appending_sampling_steps'.upper():
+            self.morest_parameters['ml_appending_sampling_steps'] = int(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'ML_GPR_noise_level_bounds'.upper():
+            noise_level_bounds = i_parameter.split()
+            try:
+                self.morest_parameters['ml_gpr_noise_level_bounds'] = np.array([float(noise_level_bounds[1]),float(noise_level_bounds[2])])
+            except:
+                self.morest_parameters['ml_gpr_noise_level_bounds'] = float(noise_level_bounds[1])
+    
+    def read_sampling_parameters(self, i_parameter):
+        if i_parameter.split()[0].upper() == 'Sampling_initialization'.upper():
+            if i_parameter.split()[1].upper() == 'True'.upper():
+                self.sampling_parameters['sampling_initialization'] = True
+            elif i_parameter.split()[1].upper() == 'False'.upper():
+                self.sampling_parameters['sampling_initialization'] = False
+            else:
+                raise Exception('It is not clear whether the sampling method will be initialized.')
+                
+        elif i_parameter.split()[0].upper() == 'Sampling_molecule'.upper():
+            self.sampling_parameters['sampling_molecule'] = str(i_parameter.split()[1])
+                
+        elif i_parameter.split()[0].upper() == 'Sampling_traj_interval'.upper():
+            self.sampling_parameters['sampling_traj_interval'] = int(i_parameter.split()[1])
+                
+        elif i_parameter.split()[0].upper() == 'Sampling_method'.upper():
+            self.sampling_parameters['sampling_method'] = str(i_parameter.split()[1])
+                
+        elif i_parameter.split()[0].upper() == 'Sampling_ensemble'.upper():
+            self.sampling_parameters['sampling_ensemble'] = str(i_parameter.split()[1])
+            if self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_VR']:
+                self.sampling_parameters['nvt_vr_dt'] = float(i_parameter.split()[2])
+            elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_Berendsen'.upper()]:
+                self.sampling_parameters['nvt_berendsen_tau'] = float(i_parameter.split()[2])
+            elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_Langevin'.upper()]:
+                self.sampling_parameters['nvt_langevin_gamma'] = float(i_parameter.split()[2])
+            elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
+                self.sampling_parameters['nvt_svr_tau'] = float(i_parameter.split()[2])
+
+    def read_MD_parameters(self, i_parameter):
+        if i_parameter.split()[0].upper() == 'MD_time_step'.upper():
+            self.md_parameters['md_time_step'] = float(i_parameter.split()[1])
+        
+        elif i_parameter.split()[0].upper() == 'MD_simulation_time'.upper():
+            self.md_parameters['md_simulation_time'] = float(i_parameter.split()[1])
+        
+        elif i_parameter.split()[0].upper() == 'MD_temperature'.upper():
+            self.md_parameters['md_temperature'] = float(i_parameter.split()[1])
+        
+        elif i_parameter.split()[0].upper() == 'MD_clean_rotation'.upper():
+            if i_parameter.split()[1].upper() == 'True'.upper():
+                self.md_parameters['md_clean_rotation'] = True
+            elif i_parameter.split()[1].upper() == 'False'.upper():
+                self.md_parameters['md_clean_rotation'] = False
+            else:
+                raise Exception('It is not clear whether the rotation will be removed.')
+                
+        elif i_parameter.split()[0].upper() == 'MD_clean_translation'.upper():
+            if i_parameter.split()[1].upper() == 'True'.upper():
+                self.md_parameters['md_clean_translation'] = True
+            elif i_parameter.split()[1].upper() == 'False'.upper():
+                self.md_parameters['md_clean_translation'] = False
+            else:
+                raise Exception('It is not clear whether the translation will be removed.')
+
+    def read_scattering_parameters(self, i_parameter):
+        if i_parameter.split()[0].upper() == 'Scattering_initialization'.upper():
+            if i_parameter.split()[1].upper() == 'True'.upper():
+                self.scattering_parameters['scattering_initialization'] = True
+            elif i_parameter.split()[1].upper() == 'False'.upper():
+                self.scattering_parameters['scattering_initialization'] = False
+            else:
+                raise Exception('It is not clear whether the scattering method will be initialized.')
+                
+        elif i_parameter.split()[0].upper() == 'Scattering_pre_thermolized'.upper():
+            if i_parameter.split()[1].upper() == 'True'.upper():
+                self.scattering_parameters['scattering_pre_thermolized'] = True
+            elif i_parameter.split()[1].upper() == 'False'.upper():
+                self.scattering_parameters['scattering_pre_thermolized'] = False
+            else:
+                raise Exception('It is not clear whether the pre-thermolized trajectory will be used.')
+
+        elif i_parameter.split()[0].upper() == 'Scattering_traj_number'.upper():
+            self.scattering_parameters['scattering_traj_number'] = int(i_parameter.split()[1])
+                
+        elif i_parameter.split()[0].upper() == 'Scattering_method'.upper():
+            self.scattering_parameters['scattering_method'] = str(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'Scattering_time_step'.upper():
+            self.scattering_parameters['scattering_time_step'] = float(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'Scattering_V_collision'.upper():
+            self.scattering_parameters['scattering_V_collision'] = float(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'Scattering_E_collision'.upper():
+            self.scattering_parameters['scattering_E_collision'] = float(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'Scattering_T_target'.upper():
+            self.scattering_parameters['scattering_T_target'] = float(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'Scattering_T_incident'.upper():
+            self.scattering_parameters['scattering_T_incident'] = float(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'Scattering_stops_number'.upper():
+            self.scattering_parameters['scattering_stops_number'] = int(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'Scattering_traj_stop'.upper():
+            self.traj_stop_parameter = i_parameter.split()[1:]
+
+        elif i_parameter.split()[0].upper() == 'Scattering_traj_length'.upper():
+            self.scattering_parameters['scattering_traj_length'] = int(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'Scattering_target_molecule'.upper():
+            self.scattering_parameters['scattering_target_molecule'] = str(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'Scattering_incident_molecule'.upper():
+            self.scattering_parameters['scattering_incident_molecule'] = str(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'Scattering_R_target'.upper():
+            self.scattering_parameters['scattering_R_target'] = float(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'Scattering_R_incident'.upper():
+            self.scattering_parameters['scattering_R_incident'] = float(i_parameter.split()[1])
+
+    def read_searching_parameters(self, i_parameter):
+        if i_parameter.split()[0].upper() == 'Searching_initialization'.upper():
+            if i_parameter.split()[1].upper() == 'True'.upper():
+                self.searching_parameters['searching_initialization'] = True
+            elif i_parameter.split()[1].upper() == 'False'.upper():
+                self.searching_parameters['searching_initialization'] = False
+            else:
+                raise Exception('It is not clear whether the structure searching will be initialized.')
+
+        elif i_parameter.split()[0].upper() == 'Searching_starting_point'.upper():
+            self.searching_parameters['searching_starting_point'] = str(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'Searching_convergence'.upper():
+            self.searching_parameters['searching_convergence'] = float(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'Searching_max_steps'.upper():
+            self.searching_parameters['searching_max_steps'] = int(i_parameter.split()[1])
+            
+        elif i_parameter.split()[0].upper() == 'Searching_constrained'.upper():
+            if i_parameter.split()[1].upper() == 'True'.upper():
+                self.searching_parameters['searching_constrained'] = True
+            elif i_parameter.split()[1].upper() == 'False'.upper():
+                self.searching_parameters['searching_constrained'] = False
+            else:
+                raise Exception('It is not clear whether the contrained searching will be used.')
+
+        elif i_parameter.split()[0].upper() == 'Searching_method'.upper():
+            self.searching_parameters['searching_method'] = str(i_parameter.split()[1])
+    
+    def read_FIRE_parameters(self, i_parameter):
+        if i_parameter.split()[0].upper() == 'FIRE_equal_masses'.upper():
+            if i_parameter.split()[1].upper() == 'True'.upper():
+                self.fire_parameters['fire_equal_masses'] = True
+            elif i_parameter.split()[1].upper() == 'False'.upper():
+                self.fire_parameters['fire_equal_masses'] = False
+            else:
+                raise Exception('It is not clear whether the atom masses will be equal.')
+
+        elif i_parameter.split()[0].upper() == 'FIRE_time_step'.upper():
+            self.fire_parameters['fire_time_step'] = float(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'FIRE_max_time_step'.upper():
+            self.fire_parameters['fire_max_time_step'] = float(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'FIRE_alpha_init'.upper():
+            self.fire_parameters['fire_alpha_init'] = float(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'FIRE_N_min'.upper():
+            self.fire_parameters['fire_N_min'] = int(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'FIRE_f_increase'.upper():
+            self.fire_parameters['fire_f_increase'] = float(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'FIRE_f_decrease'.upper():
+            self.fire_parameters['fire_f_decrease'] = float(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'FIRE_f_alpha'.upper():
+            self.fire_parameters['fire_f_alpha'] = float(i_parameter.split()[1])
+
+    def read_RE_parameters(self, i_parameter):
+        if i_parameter.split()[0].upper() == 'RE_initialization'.upper():
+            if i_parameter.split()[1].upper() == 'True'.upper():
+                self.re_parameters['re_initialization'] = True
+            elif i_parameter.split()[1].upper() == 'False'.upper():
+                self.re_parameters['re_initialization'] = False
+            else:
+                raise Exception('It is not clear whether the replica exchange sampling will be initialized.')
+            
+        elif i_parameter.split()[0].upper() == 'RE_lower_bound_temperature'.upper():
+            self.re_parameters['re_lower_bound_temperature'] = float(i_parameter.split()[1])
+            
+        elif i_parameter.split()[0].upper() == 'RE_upper_bound_temperature'.upper():
+            self.re_parameters['re_upper_bound_temperature'] = float(i_parameter.split()[1])
+            
+        elif i_parameter.split()[0].upper() == 'RE_number_of_replica'.upper():
+            self.re_parameters['re_number_of_replica'] = int(i_parameter.split()[1])
+            
+        elif i_parameter.split()[0].upper() == 'RE_replica_arrange'.upper():
+            self.re_parameters['re_replica_arrange'] = float(i_parameter.split()[1])
+            
+        elif i_parameter.split()[0].upper() == 'RE_replica_temperatures'.upper():
+            tmp_temperatures = []
+            for i in range(self.re_parameters['re_number_of_replica']):
+                tmp_temperatures.append(float(i_parameter.split()[i+1]))
+            self.re_parameters['re_replica_temperatures'] = np.array(tmp_temperatures)
+            
+        elif i_parameter.split()[0].upper() == 'RE_swap_interval'.upper():
+            self.re_parameters['re_swap_interval'] = int(i_parameter.split()[1])
+            
+        elif i_parameter.split()[0].upper() == 'RE_init_structures_list'.upper():
+            self.re_parameters['re_init_structures_list'] = str(i_parameter.split()[1])
+            
+        elif i_parameter.split()[0].upper() == 'RE_energy_shift'.upper():
+            self.re_parameters['re_energy_shift'] = float(i_parameter.split()[1])
+
+    def read_ITS_parameters(self, i_parameter):
+        if i_parameter.split()[0].upper() == 'ITS_initialization'.upper():
+            if i_parameter.split()[1].upper() == 'True'.upper():
+                self.its_parameters['its_initialization'] = True
+            elif i_parameter.split()[1].upper() == 'False'.upper():
+                self.its_parameters['its_initialization'] = False
+            else:
+                raise Exception('It is not clear whether the integrated tempering sampling will be initialized.')
+            
+        elif i_parameter.split()[0].upper() == 'ITS_lower_bound_temperature'.upper():
+            self.its_parameters['its_lower_bound_temperature'] = float(i_parameter.split()[1])
+            
+        elif i_parameter.split()[0].upper() == 'ITS_upper_bound_temperature'.upper():
+            self.its_parameters['its_upper_bound_temperature'] = float(i_parameter.split()[1])
+            
+        elif i_parameter.split()[0].upper() == 'ITS_number_of_replica'.upper():
+            self.its_parameters['its_number_of_replica'] = int(i_parameter.split()[1])
+            
+        elif i_parameter.split()[0].upper() == 'ITS_replica_arrange'.upper():
+            self.its_parameters['its_replica_arrange'] = float(i_parameter.split()[1])
+            
+        elif i_parameter.split()[0].upper() == 'ITS_replica_temperatures'.upper():
+            tmp_temperatures = []
+            for i in range(self.its_parameters['its_number_of_replica']):
+                tmp_temperatures.append(float(i_parameter.split()[i+1]))
+            self.its_parameters['its_replica_temperatures'] = np.array(tmp_temperatures)
+            
+        elif i_parameter.split()[0].upper() == 'ITS_initial_nk'.upper():
+            tmp_nk = []
+            for i in range(self.its_parameters['its_number_of_replica']):
+                tmp_nk.append(float(i_parameter.split()[i+1]))
+            self.its_parameters['its_initial_nk'] = np.array(tmp_nk)
+            
+        elif i_parameter.split()[0].upper() == 'ITS_pk0'.upper():
+            tmp_pk0 = []
+            for i in range(self.its_parameters['its_number_of_replica']):
+                tmp_pk0.append(float(i_parameter.split()[i+1]))
+            self.its_parameters['its_pk0'] = np.array(tmp_pk0)
+            
+        elif i_parameter.split()[0].upper() == 'ITS_trial_MD_steps'.upper():
+            self.its_parameters['its_trial_MD_steps'] = int(i_parameter.split()[1])
+            
+        elif i_parameter.split()[0].upper() == 'ITS_delta_pk'.upper():
+            self.its_parameters['its_delta_pk'] = float(i_parameter.split()[1])
+            
+        elif i_parameter.split()[0].upper() == 'ITS_weight_pk'.upper():
+            self.its_parameters['its_weight_pk'] = float(i_parameter.split()[1])
+            
+        elif i_parameter.split()[0].upper() == 'ITS_energy_shift'.upper():
+            self.its_parameters['its_energy_shift'] = float(i_parameter.split()[1])
+
+    def read_wall_potential_parameters(self, i_parameter):
+        if i_parameter.split()[0].upper() == 'Wall_number'.upper():
+            self.wall_potential_parameters['wall_number'] = int(i_parameter.split()[1])
+    
+        elif i_parameter.split()[0].upper() == 'Wall_collective_variable'.upper():
+            if i_parameter.split()[1].upper() == 'True'.upper():
+                self.wall_potential_parameters['wall_collective_variable'].append(True)
+            elif i_parameter.split()[1].upper() == 'False'.upper():
+                self.wall_potential_parameters['wall_collective_variable'].append(False)
+            else:
+                raise Exception('It is not clear whether the collective variable will be used.')
+            
+        elif i_parameter.split()[0].upper() == 'Wall_shape'.upper():
+            self.wall_potential_parameters['wall_shape'].append(str(i_parameter.split()[1]).lower())
+            
+        elif i_parameter.split()[0].upper() == 'Wall_type'.upper():
+            self.wall_potential_parameters['wall_type'].append(str(i_parameter.split()[1]).lower())
+            if i_parameter.split()[1].upper() in ['power_wall'.upper()]:
+                self.wall_potential_parameters['power_wall_direction'].append(np.sign(int(i_parameter.split()[2])))
+            else:
+                self.wall_potential_parameters['power_wall_direction'].append(0)
+            
+        elif i_parameter.split()[0].upper() == 'Wall_scaling'.upper():
+            self.wall_potential_parameters['wall_scaling'].append(float(i_parameter.split()[1]))
+            
+        elif i_parameter.split()[0].upper() == 'Wall_scope'.upper():
+            self.wall_potential_parameters['wall_scope'].append(float(i_parameter.split()[1]))
+            
+        elif i_parameter.split()[0].upper() == 'Wall_action_atoms'.upper():
+            self.wall_potential_parameters['wall_action_atoms'].append(i_parameter.split()[1:])
+            
+        ########################## Planar wall #################################
+
+        elif i_parameter.split()[0].upper() == 'Planar_wall_point'.upper():
+            tmp_wall_point = []
+            for i in range(3):
+                tmp_wall_point.append(float(i_parameter.split()[i+1]))
+            self.wall_potential_parameters['planar_wall_point'].append(np.array(tmp_wall_point))
+        
+        elif i_parameter.split()[0].upper() == 'Planar_wall_normal_vector'.upper():
+            tmp_wall_normal_vector = []
+            for i in range(3):
+                tmp_wall_normal_vector.append(float(i_parameter.split()[i+1]))
+            tmp_wall_normal_vector = np.array(tmp_wall_normal_vector)
+            self.wall_potential_parameters['planar_wall_normal_vector'].append(tmp_wall_normal_vector / np.linalg.norm(tmp_wall_normal_vector))
+            
+        ########################## Spherical wall #############################
+
+        elif i_parameter.split()[0].upper() == 'Spherical_wall_center'.upper():
+            tmp_wall_center = []
+            for i in range(3):
+                tmp_wall_center.append(float(i_parameter.split()[i+1]))
+            self.wall_potential_parameters['spherical_wall_center'].append(np.array(tmp_wall_center))
+        
+        elif i_parameter.split()[0].upper() == 'Spherical_wall_radius'.upper():
+            self.wall_potential_parameters['spherical_wall_radius'].append(float(i_parameter.split()[1]))
+
+        ########################## dot wall ###################################
+
+        elif i_parameter.split()[0].upper() == 'Dot_wall_position'.upper():
+            tmp_wall_center = []
+            for i in range(3):
+                tmp_wall_center.append(float(i_parameter.split()[i+1]))
+            self.wall_potential_parameters['dot_wall_position'].append(np.array(tmp_wall_center))
+
+    ########################### output parameters ##################################################################
+
     def get_morest_parameters(self):
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_morest_parameters.npy', self.morest_parameters)
-        self.morest_parameters['phase_space_sampling'] = self.sampling_parameters['phase_space_sampling']
-        self.morest_parameters['trajectory_scattering'] = self.scattering_parameters['trajectory_scattering']
-        self.morest_parameters['enhanced_sampling'] = self.enhanced_sampling_parameters['enhanced_sampling']
-        self.morest_parameters['wall_potential'] = self.wall_potential_parameters['wall_potential']
         if self.morest_parameters['ml_add_features_number'] == 0:
             self.morest_parameters['ml_additional_features'] = None
         else:
             additional_features = []
             i_loc = 0 # used to locate the index of the CVs parameters
             for i_feature in range(self.morest_parameters['ml_add_features_number']):
-                additional_features, i_loc = self.generate_additional_parameters(additional_features, i_loc, self.additional_features_parameter)
+                additional_features, i_loc = self.generate_additional_features(additional_features, i_loc, self.additional_features_parameter)
             self.morest_parameters['ml_additional_features'] = additional_features
         if self.morest_parameters['ml_features_min_number'] == 0:
             self.morest_parameters['ml_additional_features_min'] = None
@@ -514,7 +630,7 @@ class read_parameters:
             additional_features_min = []
             i_loc = 0 # used to locate the index of the CVs parameters
             for i_feature in range(self.morest_parameters['ml_features_min_number']):
-                additional_features_min, i_loc = self.generate_additional_parameters(additional_features_min, i_loc, self.additional_features_min_parameter)
+                additional_features_min, i_loc = self.generate_additional_features(additional_features_min, i_loc, self.additional_features_min_parameter)
             self.morest_parameters['ml_additional_features_min'] = additional_features_min
         if self.morest_parameters['ml_features_max_number'] == 0:
             self.morest_parameters['ml_additional_features_max'] = None
@@ -522,11 +638,11 @@ class read_parameters:
             additional_features_max = []
             i_loc = 0 # used to locate the index of the CVs parameters
             for i_feature in range(self.morest_parameters['ml_features_max_number']):
-                additional_features_max, i_loc = self.generate_additional_parameters(additional_features_max, i_loc, self.additional_features_max_parameter)
+                additional_features_max, i_loc = self.generate_additional_features(additional_features_max, i_loc, self.additional_features_max_parameter)
             self.morest_parameters['ml_additional_features_max'] = additional_features_max
         return self.morest_parameters
     
-    def generate_additional_parameters(self, additional_features, i_loc, additional_features_parameter):
+    def generate_additional_features(self, additional_features, i_loc, additional_features_parameter):
         if additional_features_parameter[0+i_loc] == 'None'.upper():
             self.morest_parameters['ml_additional_features'] = None
         elif additional_features_parameter[0+i_loc].upper() == 'distance'.upper():
@@ -615,16 +731,15 @@ class read_parameters:
     def get_md_parameters(self, log_morest=None):
         self.md_parameters['md_time_step'] *= units.fs
         self.md_parameters['md_simulation_time'] *= units.fs
-        if self.sampling_parameters['phase_space_sampling']:
-            if self.morest_parameters['morest_save_parameters_file']:
-                np.save('MoREST_MD_parameters.npy', self.md_parameters)
-            if type(log_morest) != type(None):
-                for key in self.md_parameters:
-                    if key in ['md_time_step','md_simulation_time']:
-                        log_morest.write(key+' : '+str(self.md_parameters[key]/units.fs)+'\n')
-                    else:
-                        log_morest.write(key+' : '+str(self.md_parameters[key])+'\n')
-                log_morest.write('\n')
+        if self.morest_parameters['morest_save_parameters_file']:
+            np.save('MoREST_MD_parameters.npy', self.md_parameters)
+        if type(log_morest) != type(None):
+            for key in self.md_parameters:
+                if key in ['md_time_step','md_simulation_time']:
+                    log_morest.write(key+' : '+str(self.md_parameters[key]/units.fs)+'\n')
+                else:
+                    log_morest.write(key+' : '+str(self.md_parameters[key])+'\n')
+            log_morest.write('\n')
         return self.md_parameters
 
     def get_scattering_parameters(self, log_morest=None):
@@ -725,6 +840,29 @@ class read_parameters:
                     log_morest.write(key+' : '+str(self.scattering_parameters[key])+'\n')
             log_morest.write('\n')
         return self.scattering_parameters
+    
+    def get_searching_parameters(self, log_morest=None):
+        if self.morest_parameters['morest_save_parameters_file']:
+            np.save('MoREST_searching_parameters.npy', self.searching_parameters)
+        if type(log_morest) != type(None):
+            for key in self.searching_parameters:
+                log_morest.write(key+' : '+str(self.searching_parameters[key])+'\n')
+            log_morest.write('\n')
+        return self.searching_parameters
+    
+    def get_fire_parameters(self, log_morest=None):
+        self.fire_parameters['fire_time_step'] *= units.fs
+        self.fire_parameters['fire_max_time_step'] *= units.fs
+        if self.morest_parameters['morest_save_parameters_file']:
+            np.save('MoREST_FIRE_parameters.npy', self.fire_parameters)
+        if type(log_morest) != type(None):
+            for key in self.fire_parameters:
+                if key in ['fire_time_step','fire_max_time_step']:
+                    log_morest.write(key+' : '+str(self.fire_parameters[key]/units.fs)+'\n')
+                else:
+                    log_morest.write(key+' : '+str(self.fire_parameters[key])+'\n')
+            log_morest.write('\n')
+        return self.fire_parameters
 
     def get_enhanced_sampling_parameters(self, log_morest=None):
         if self.morest_parameters['morest_save_parameters_file']:
@@ -738,8 +876,6 @@ class read_parameters:
     def get_re_parameters(self, log_morest=None):
         if self.morest_parameters['morest_initialization'] == True:
            self.re_parameters['re_initialization'] = True
-        elif  self.morest_parameters['morest_initialization'] == False:
-           self.re_parameters['re_initialization'] = False
         if not 're_replica_temperatures' in self.re_parameters:
             if int(self.re_parameters['re_replica_arrange']) == -1:
                 replica_temperatures = np.linspace(self.re_parameters['re_lower_bound_temperature'],\
@@ -779,8 +915,6 @@ class read_parameters:
     def get_its_parameters(self, log_morest=None):
         if self.morest_parameters['morest_initialization'] == True:
            self.its_parameters['its_initialization'] = True
-        elif  self.morest_parameters['morest_initialization'] == False:
-           self.its_parameters['its_initialization'] = False
         self.its_parameters['its_criteria_pk'] = self.its_parameters['its_delta_pk'] / \
                                                 self.its_parameters['its_number_of_replica']
         if not 'its_replica_temperatures' in self.its_parameters:

@@ -6,6 +6,9 @@ MoREST_load_parameters_file       False # Read parameters from the file
 Many_body_potential               ML_potential  # ML_potential: machine learning potential with finite difference forces; on_the_fly: using QC, DFT package (molpro is added) via ASE to calculate potential and forces; molpro: using home-made molpro API to run molpro
 ###Input_file                     gjf.com #TODO: read QC,DFT parameters from input file
 ML_potential_model                ../../../fhicloud-wang/Al2F2/gpr_AlF_dimer_potential_from_test11 # It can be not offered when active learning is used.
+ML_print_uncertainty              False
+ML_FD_forces                      False  # Use numerical forces calculation or read forces from the ML model.
+FD_displacement                   0.0025 # Parameter for finite difference forces calculation. Default value is 0.0025 \AA
 ML_active_learning                True
 ML_training_set                   training_set.xyz # the xyz trajectory for the training set.
 #ML_add_features_number            2 # The number of additional features (setted in ML_additional_features) which will be added into the representation.
@@ -14,16 +17,13 @@ ML_features_min_number            2 # The number of features calculated for chec
 ML_additional_features_min        inverse_r_exp_r 1,2 3,4 inverse_r_exp_r 1,4 2,3 # Only the feature with the minimum value will be added into the representation.
 #ML_features_max_number            2 # The number of features calculated for checking the maximum value in ML_additional_features_min
 #ML_additional_features_max        inverse_r_exp_r 1,2 3,4 inverse_r_exp_r 1,4 2,3 # Only the feature with the maximum value will be added into the representation.
-ML_print_uncertainty              False
 ML_energy_uncertainty_tolerance   0.01 # Check if ab initio calculator will involve based on the difference between ML prediction and the QC calculation. It is the energy std for GPR.
 ML_appending_set_number           10 # The number of samplings calculated by ab initio and added to the training set.
 ML_appending_sampling_steps       100 #TODO: Ab initio samplings will be added to traning set for every given MD/MC sampling steps.
-ML_FD_forces                      False  # Use numerical forces calculation or read forces from the ML model.
-FD_displacement                   0.0025 # Parameter for finite difference forces calculation. Default value is 0.0025 \AA
 ML_GPR_noise_level_bounds         1e-7 1. # Parameter noise_level_bounds in GPR. Default value is 1e-7 1. It only gives the lower bound, if there is only one number given.
 
 Phase_space_sampling              False
-Sampling_initialization           True   # Overwrite or append the trajectory in MoREST_traj.xyz file, read structure from MoREST.str or MoREST.str_new
+Sampling_initialization           False   # Overwrite or append the trajectory in MoREST_traj.xyz file, read structure from MoREST.str or MoREST.str_new
 Sampling_molecule                 MoREST.str # The input of the structure.
 Sampling_traj_interval            10    # Record sampling every Traj_interval steps
 Sampling_method                   MD    # MD, MC, LD, PIMD
@@ -35,7 +35,7 @@ MD_simulation_time                100000   # unit in fs
 MD_temperature                    1000
 
 Trajectory_scattering             False
-Scattering_initialization         True
+Scattering_initialization         False
 Scattering_pre_thermolized        False # If true, the thermolization trajectories of the target and incident molecules are required. Otherwise, the initial structures are required.
 Scattering_traj_number            2000 # The number of trajectories for the scattering.
 Scattering_method                 VV # VV: velocity Verlet; RK4: Runge-Kutta 4th order; LD: Langevin dynamics
@@ -58,9 +58,13 @@ Scattering_R_target               1 # the final point of the incident direction 
 Scattering_R_incident             9 # the initial point of the incident direction vector locates on the surface of the sphere with 9 AA radius. The central point of the sphere locates at the geometric center of the target molecule.
 
 Structure_searching               False
-Searching_initialization          True
+Searching_initialization          False
 Searching_starting_point          MoREST.str # The input of the structure
+Searching_convergence             1e-3 # unit in eV/AA. The convergence criteria of forces when searching.
+Searching_max_steps               100 # The maximum steps for structure searching.
+Searching_constrained             False #TODO: whether constrained optimization is used.
 Searching_method                  FIRE # CG: conjugate gradient; FIRE; dimer: for transition state.
+FIRE_equal_masses                 True # Setting all the atom masses equal.
 FIRE_time_step                    1 # unit in fs
 FIRE_max_time_step                10 # unit in fs. It is usually 10 times of time step.
 FIRE_alpha_init                   0.1
