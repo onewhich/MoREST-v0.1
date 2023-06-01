@@ -2,7 +2,7 @@
 import numpy as np
 from structure import read_xyz_file, write_xyz_file, read_xyz_traj, write_xyz_traj
 from many_body_potential import ml_potential, on_the_fly, molpro_calculator
-from copy import deepcopy
+#from copy import deepcopy
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary
 from ase import units
 
@@ -127,8 +127,6 @@ class scattering_velocity_Verlet(initialize_scattering):
     def generate_new_step(self, bias_forces=None):
         time_step = self.scattering_parameters['scattering_time_step']
         
-        next_system = deepcopy(self.current_system)
-        
         ### F(t) + bias
         if bias_forces != None:
             self.current_forces = self.current_forces + bias_forces
@@ -139,20 +137,19 @@ class scattering_velocity_Verlet(initialize_scattering):
         
         ### x(t+dt) = x(t) + v(t)*dt + 0.5*F(t)*dt^2/m
         next_coordinates = current_coordinates + (current_momenta * time_step + 0.5 * self.current_forces * time_step**2) / self.masses
-        next_system.set_positions(next_coordinates)
+        self.current_system.set_positions(next_coordinates)
         
         ### v(t+0.5dt) = p(t+0.5dt) / m; p(t+0.5dt) = p(t) + 0.5 * F(t) * dt
         momenta_half = current_momenta + 0.5 * self.current_forces * time_step
         
         ### F(t+dt)
-        next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(next_system)
+        next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(self.current_system)
         
         ### p(t+dt) = p(t+0.5dt) + 0.5 * F(t+dt) * dt
         next_momenta = momenta_half + 0.5 * next_forces * time_step
-        next_system.set_momenta(next_momenta)
+        self.current_system.set_momenta(next_momenta)
         
         self.current_step += 1
-        self.current_system = next_system
         self.current_forces = next_forces
         self.current_potential_energy = next_potential_energy
         
@@ -179,8 +176,6 @@ class scattering_Runge_Kutta_4th(initialize_scattering):
         '''
         time_step = self.scattering_parameters['scattering_time_step']
         
-        next_system = deepcopy(self.current_system)
-        
         ### F(t) + bias
         if bias_forces != None:
             self.current_forces = self.current_forces + bias_forces
@@ -193,36 +188,35 @@ class scattering_Runge_Kutta_4th(initialize_scattering):
         # x_2 = x_n + h/2 * v_1, v_2 = v_n + h/2 * a_1, a_2 = f(x_2)
         x_2 = x_1 + time_step/2 * v_1
         v_2 = v_1 + time_step/2 * a_1
-        next_system.set_positions(x_2)
-        Ep_2, F_2 = self.many_body_potential.get_potential_forces(next_system)
+        self.current_system.set_positions(x_2)
+        Ep_2, F_2 = self.many_body_potential.get_potential_forces(self.current_system)
         a_2 = F_2/self.masses
 
         # x_3 = x_n + h/2 * v_2, v_3 = v_n + h/2 * a_2, a_3 = f(x_3)
         x_3 = x_1 + time_step/2 * v_2
         v_3 = v_1 + time_step/2 * a_2
-        next_system.set_positions(x_3)
-        Ep_3, F_3 = self.many_body_potential.get_potential_forces(next_system)
+        self.current_system.set_positions(x_3)
+        Ep_3, F_3 = self.many_body_potential.get_potential_forces(self.current_system)
         a_3 = F_3/self.masses
 
         # x_4 = x_n + h * v_3, v_4 = v_n + h * a_3, a_4 = f(x_4)
         x_4 = x_1 + time_step * v_3
         v_4 = v_1 + time_step * a_3
-        next_system.set_positions(x_4)
-        Ep_4, F_4 = self.many_body_potential.get_potential_forces(next_system)
+        self.current_system.set_positions(x_4)
+        Ep_4, F_4 = self.many_body_potential.get_potential_forces(self.current_system)
         a_4 = F_4/self.masses
 
         # x_n+1 = x_n + h/6 * (v_1 + 2*v_2 + 2*v_3 + v_4), v_n+1 = v_n + h/6 * (a_1 + 2*a_2 + 2*a_3 + a_4)
         next_coordinates = x_1 + time_step/6 * (v_1 + 2*v_2 + 2*v_3 + v_4)
         next_velocities = v_1 + time_step/6 * (a_1 + 2*a_2 + 2*a_3 + a_4)
 
-        next_system.set_positions(next_coordinates)
-        next_system.set_velocities(next_velocities)
+        self.current_system.set_positions(next_coordinates)
+        self.current_system.set_velocities(next_velocities)
 
         ### F(t+dt)
-        next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(next_system)
+        next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(self.current_system)
         
         self.current_step += 1
-        self.current_system = next_system
         self.current_forces = next_forces
         self.current_potential_energy = next_potential_energy
         
@@ -248,8 +242,6 @@ class scattering_Runge_Kutta_4th_a(initialize_scattering):
         '''
         time_step = self.scattering_parameters['scattering_time_step']
         
-        next_system = deepcopy(self.current_system)
-        
         ### F(t) + bias
         if bias_forces != None:
             self.current_forces = self.current_forces + bias_forces
@@ -262,36 +254,35 @@ class scattering_Runge_Kutta_4th_a(initialize_scattering):
         # x_2 = x_n + h/2 * v_1, v_2 = v_n + h/2 * a_1, a_2 = f(x_2)
         v_2 = v_1 + time_step/2 * a_1
         x_2 = x_1 + time_step/2 * (v_1 + v_2)/2
-        next_system.set_positions(x_2)
-        Ep_2, F_2 = self.many_body_potential.get_potential_forces(next_system)
+        self.current_system.set_positions(x_2)
+        Ep_2, F_2 = self.many_body_potential.get_potential_forces(self.current_system)
         a_2 = F_2/self.masses
 
         # x_3 = x_n + h/2 * v_2, v_3 = v_n + h/2 * a_2, a_3 = f(x_3)
         v_3 = v_1 + time_step/2 * a_2
         x_3 = x_1 + time_step/2 * (v_1 + v_3)/2
-        next_system.set_positions(x_3)
-        Ep_3, F_3 = self.many_body_potential.get_potential_forces(next_system)
+        self.current_system.set_positions(x_3)
+        Ep_3, F_3 = self.many_body_potential.get_potential_forces(self.current_system)
         a_3 = F_3/self.masses
 
         # x_4 = x_n + h * v_3, v_4 = v_n + h * a_3, a_4 = f(x_4)
         v_4 = v_1 + time_step * a_3
         x_4 = x_1 + time_step * (v_1 + v_4)/2
-        next_system.set_positions(x_4)
-        Ep_4, F_4 = self.many_body_potential.get_potential_forces(next_system)
+        self.current_system.set_positions(x_4)
+        Ep_4, F_4 = self.many_body_potential.get_potential_forces(self.current_system)
         a_4 = F_4/self.masses
 
         # x_n+1 = x_n + h/6 * (v_1 + 2*v_2 + 2*v_3 + v_4), v_n+1 = v_n + h/6 * (a_1 + 2*a_2 + 2*a_3 + a_4)
         next_coordinates = x_1 + time_step/6 * (v_1 + 2*v_2 + 2*v_3 + v_4)
         next_velocities = v_1 + time_step/6 * (a_1 + 2*a_2 + 2*a_3 + a_4)
 
-        next_system.set_positions(next_coordinates)
-        next_system.set_velocities(next_velocities)
+        self.current_system.set_positions(next_coordinates)
+        self.current_system.set_velocities(next_velocities)
 
         ### F(t+dt)
-        next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(next_system)
+        next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(self.current_system)
         
         self.current_step += 1
-        self.current_system = next_system
         self.current_forces = next_forces
         self.current_potential_energy = next_potential_energy
         
