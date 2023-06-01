@@ -13,7 +13,7 @@ class initialize_scattering:
     The incident momenta directs from the mass center of incident molecule to the point on a spherical surface closely covering the target molecule and centered at original point.
     The target molecule is in the front of the incident molecule in the combined scattering system.
     '''
-    def __init__(self, morest_parameters, scattering_parameters, calculator=None):
+    def __init__(self, morest_parameters, scattering_parameters, calculator=None, log_file=None):
         self.morest_parameters = morest_parameters
         self.scattering_parameters = scattering_parameters
         
@@ -27,13 +27,15 @@ class initialize_scattering:
                 self.many_body_potential = molpro_calculator(molpro_para_dict)
             else:
                 raise Exception('Please pass the molpro parameters dictionary to calculator.')
-        elif self.morest_parameters['many_body_potential'].upper() in ['ML_FD'.upper()]:
-            trained_ml_potential = self.morest_parameters['ml_potential_model']
-            self.many_body_potential = ml_potential(trained_ml_potential, self.morest_parameters['fd_displacement'], self.morest_parameters['ml_active_learning'], \
-                                                    self.morest_parameters['ml_energy_uncertainty_tolerance'], calculator)
+        elif self.morest_parameters['many_body_potential'].upper() in ['ML_potential'.upper()]:
+            self.ml_calculator = ml_potential(ab_initio_calculator = calculator, \
+                                    ml_parameters = self.morest_parameters, \
+                                    log_file = log_file)
+            self.many_body_potential = on_the_fly(self.ml_calculator)
+            
         else:
             raise Exception('Which many body potential will you use?')
-        
+            
         ### kinetic energy at simulation temperature
         Nf = 3 * self.n_atom
         self.K_simulation = Nf/2 * units.kB * self.scattering_parameters['scattering_T_target'] # Ek = 1/2 m v^2 = 3/2 kB T for each particle
@@ -121,8 +123,8 @@ class scattering_velocity_Verlet(initialize_scattering):
     This class implements velocity Verlet algorithm to do microcanonical ensemble (NVE) dynamics.
     '''
     
-    def __init__(self, morest_parameters, scattering_parameters, calculator=None):
-        super(scattering_velocity_Verlet, self).__init__(morest_parameters, scattering_parameters, calculator)
+    def __init__(self, morest_parameters, scattering_parameters, calculator=None, log_file=None):
+        super(scattering_velocity_Verlet, self).__init__(morest_parameters, scattering_parameters, calculator, log_file)
         
     def generate_new_step(self, bias_forces=None):
         time_step = self.scattering_parameters['scattering_time_step']
@@ -165,8 +167,8 @@ class scattering_Runge_Kutta_4th(initialize_scattering):
     This class implements Runge-Kutta 4th order algorithm to do microcanonical ensemble (NVE) dynamics.
     '''
     
-    def __init__(self, morest_parameters, scattering_parameters, calculator=None):
-        super(scattering_Runge_Kutta_4th, self).__init__(morest_parameters, scattering_parameters, calculator)
+    def __init__(self, morest_parameters, scattering_parameters, calculator=None, log_file=None):
+        super(scattering_Runge_Kutta_4th, self).__init__(morest_parameters, scattering_parameters, calculator, log_file)
         
     def generate_new_step(self, bias_forces=None):
         '''
@@ -233,8 +235,8 @@ class scattering_Runge_Kutta_4th_a(initialize_scattering):
     This class implements Runge-Kutta 4th order algorithm to do microcanonical ensemble (NVE) dynamics.
     '''
     
-    def __init__(self, morest_parameters, scattering_parameters, calculator=None):
-        super(scattering_Runge_Kutta_4th_a, self).__init__(morest_parameters, scattering_parameters, calculator)
+    def __init__(self, morest_parameters, scattering_parameters, calculator=None, log_file=None):
+        super(scattering_Runge_Kutta_4th_a, self).__init__(morest_parameters, scattering_parameters, calculator, log_file)
         
     def generate_new_step(self, bias_forces=None):
         '''

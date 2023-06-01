@@ -12,6 +12,7 @@ class initialize_sampling:
     def __init__(self, morest_parameters, sampling_parameters, calculator=None, log_file=None):
         self.morest_parameters = morest_parameters
         self.sampling_parameters = sampling_parameters
+        self.log_file = log_file
         
         if self.morest_parameters['many_body_potential'].upper() in ['on_the_fly'.upper()]:
             if calculator == None:
@@ -26,7 +27,7 @@ class initialize_sampling:
         elif self.morest_parameters['many_body_potential'].upper() in ['ML_potential'.upper()]:
             self.ml_calculator = ml_potential(ab_initio_calculator = calculator, \
                                     ml_parameters = self.morest_parameters, \
-                                    log_file = log_file)
+                                    log_file = self.log_file)
             self.many_body_potential = on_the_fly(self.ml_calculator)
             
         else:
@@ -43,6 +44,7 @@ class initialize_sampling:
                 system = self.current_traj[-1]
                 #system = read_xyz_file('MoREST.str_new') #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
             except:
+                self.log_file.write('Can not read current structure, and read structure from starting point.')
                 if molecule == None:
                     system = read_xyz_file(self.sampling_parameters['sampling_molecule'])
                 else:

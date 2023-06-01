@@ -4,6 +4,7 @@ from glob import glob
 from read_parameters import read_parameters
 from phase_space_sampling import velocity_Verlet
 from trajectory_scattering import scattering_velocity_Verlet, scattering_Runge_Kutta_4th
+from structure_searching import FIRE_velocity_Verlet
 from enhanced_sampling import its, re
 from wall_potential import repulsive_wall
 from collective_variable import collective_variables
@@ -35,15 +36,18 @@ class morest:
         if self.morest_parameters['phase_space_sampling']:
             if not self.morest_parameters['morest_load_parameters_file']:
                 self.sampling_parameters = MoREST_parameters.get_sampling_parameters(self.log_morest)
-                self.md_parameters = MoREST_parameters.get_md_parameters(self.log_morest)
+                if self.sampling_parameters['sampling_method'].upper() in ['MD']:
+                    self.md_parameters = MoREST_parameters.get_md_parameters(self.log_morest)
             else:
                 try:
                     self.sampling_parameters = np.load('MoREST_sampling_parameters.npy',allow_pickle=True).item()
-                    self.md_parameters = np.load('MoREST_MD_parameters.npy',allow_pickle=True).item()
+                    if self.sampling_parameters['sampling_method'].upper() in ['MD']:
+                        self.md_parameters = np.load('MoREST_MD_parameters.npy',allow_pickle=True).item()
                 except:
                     self.log_morest.write('Can not find parameters files: MoREST_sampling_parameters.npy, MoREST_MD_parameters.npy\n Read parameters from input file.\n\n')
                     self.sampling_parameters = MoREST_parameters.get_sampling_parameters(self.log_morest)
-                    self.md_parameters = MoREST_parameters.get_md_parameters(self.log_morest)
+                    if self.sampling_parameters['sampling_method'].upper() in ['MD']:
+                        self.md_parameters = MoREST_parameters.get_md_parameters(self.log_morest)
 
             if self.sampling_parameters['sampling_initialization']:
                 self.log_morest.write('Start to sample the phase space\n\n')
@@ -106,13 +110,49 @@ class morest:
                 
             self.stop_condition = collective_variables(from_CVs_file=False, CVs_list=self.scattering_parameters['scattering_traj_stop'])
             if self.scattering_parameters['scattering_method'].upper() in ['VV']:
-                self.scattering_job = scattering_velocity_Verlet(self.morest_parameters, self.scattering_parameters, calculator=calculator)
+                self.scattering_job = scattering_velocity_Verlet(self.morest_parameters, self.scattering_parameters, calculator=calculator, log_file=self.log_morest)
             elif self.scattering_parameters['scattering_method'].upper() in ['RK4']:
-                self.scattering_job = scattering_Runge_Kutta_4th(self.morest_parameters, self.scattering_parameters, calculator=calculator)
+                self.scattering_job = scattering_Runge_Kutta_4th(self.morest_parameters, self.scattering_parameters, calculator=calculator, log_file=self.log_morest)
             else:
-                    self.log_morest.write('It is not clear which scattering method will be used.\n')
-                    self.log_morest.close()
-                    raise Exception('Which scattering method will you use?')
+                self.log_morest.write('It is not clear which scattering method will be used.\n')
+                self.log_morest.close()
+                raise Exception('Which scattering method will you use?')
+
+        #################### Structure searching initialization ###############################
+        if self.morest_parameters['structure_searching']:
+            if not self.morest_parameters['morest_load_parameters_file']:
+                self.searching_parameters = MoREST_parameters.get_searching_parameters(self.log_morest)
+                if self.searching_parameters['searching_method'].upper() in ['FIRE'.upper()]:
+                    self.fire_parameters = MoREST_parameters.get_fire_parameters(self.log_morest)
+            else:
+                try:
+                    self.searching_parameters = np.load('MoREST_searching_parameters.npy',allow_pickle=True).item()
+                    if self.searching_parameters['searching_method'].upper() in ['FIRE'.upper()]:
+                        self.fire_parameters = np.load('MoREST_FIRE_parameters.npy',allow_pickle=True).item()
+                except:
+                    self.log_morest.write('Can not find parameters files: MoREST_searching_parameters.npy, MoREST_FIRE_parameters.npy\n Read parameters from input file.\n\n')
+                    self.searching_parameters = MoREST_parameters.get_searching_parameters(self.log_morest)
+                    if self.searching_parameters['searching_method'].upper() in ['FIRE'.upper()]:
+                        self.fire_parameters = MoREST_parameters.get_fire_parameters(self.log_morest)
+
+            if self.searching_parameters['searching_initialization']:
+                self.log_morest.write('Start to search the stationary structure.\n\n')
+                #Method: '+str(self.sampling_parameters['sampling_method'])+'\nEnsemble: '+str(self.sampling_parameters['sampling_ensemble'])+'\n\n')
+                try:
+                    #os.remove('MoREST.str_new')
+                    os.remove('MoREST_traj.xyz')
+                    os.remove('MoREST_FIRE.log')
+                except:
+                    pass
+            else:
+                self.log_morest.write('Continue to search the stationary structure.\n\n')
+                #Method: '+str(self.sampling_parameters['sampling_method'])+'\nEnsemble: '+str(self.sampling_parameters['sampling_ensemble'])+'\n\n')
+            if self.searching_parameters['searching_method'].upper() in ['FIRE'.upper()]:
+                self.searching_job = FIRE_velocity_Verlet(self.morest_parameters, self.searching_parameters, self.fire_parameters, calculator=calculator, log_file=self.log_morest)
+            else:
+                self.log_morest.write('It is not clear which searching method will be used.\n')
+                self.log_morest.close()
+                raise Exception('Will you use the structure searching method?')
     
         #################### Enhanced sampling initialization #################################
         if self.morest_parameters['enhanced_sampling']:
@@ -279,6 +319,8 @@ class morest:
                 break
         self.log_morest.write('Trajectory scattering with molecular dynamics method is finished!\n')
         self.mission_complete()
+
+    def structure_searching(self):
 
     def enhanced_sampling_re(self,simulation_maxsteps):
         current_step = []
