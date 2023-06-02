@@ -1,6 +1,7 @@
 import numpy as np
-from structure import read_xyz_file, write_xyz_file, read_xyz_traj, write_xyz_traj
+from structure import read_xyz_file, read_xyz_traj, write_xyz_traj
 from many_body_potential import ml_potential, on_the_fly, molpro_calculator
+from ase.md.velocitydistribution import Stationary, ZeroRotation
 from ase import units
 
 class initialize_sampling:
@@ -172,6 +173,9 @@ class fire_velocity_Verlet(initialize_sampling):
         self.current_forces = next_forces
         self.current_potential_energy = next_potential_energy
         self.current_convergence = np.max(np.linalg.norm(self.current_forces,axis=-1))
+
+        Stationary(self.current_system)
+        ZeroRotation(self.current_system)
             
         try:
             self.ml_calculator.get_current_step(self.current_step)
