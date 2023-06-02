@@ -61,7 +61,7 @@ class initialize_sampling:
         #self.masses = system.get_masses()
         #self.current_accelerations = np.array([self.current_forces[i_atom] / self.masses[i_atom] for i_atom in range(self.n_atom)])
         
-        return self.current_step, system
+        return system
     
 
 class velocity_Verlet(initialize_sampling):
@@ -95,7 +95,7 @@ class velocity_Verlet(initialize_sampling):
                 self.ml_calculator.get_current_step(self.current_step)
             except:
                 pass
-            self.current_step, self.current_system = self.get_current_structure(molecule)
+            self.current_system = self.get_current_structure(molecule)
             if self.T_simulation > 1e-6:
                 MaxwellBoltzmannDistribution(self.current_system, temperature_K = self.T_simulation)
             self.current_traj = []
@@ -115,14 +115,14 @@ class velocity_Verlet(initialize_sampling):
                     self.ml_calculator.get_current_step(self.current_step)
                 except:
                     pass
-                self.current_step, self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
+                self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
             except:
                 self.current_step = 0
                 try:
                     self.ml_calculator.get_current_step(self.current_step)
                 except:
                     pass
-                self.current_step, self.current_system = self.get_current_structure(molecule)
+                self.current_system = self.get_current_structure(molecule)
                 if self.T_simulation > 1e-6:
                     MaxwellBoltzmannDistribution(self.current_system, temperature_K = self.T_simulation)
                 self.current_traj = []

@@ -43,7 +43,7 @@ class initialize_scattering:
         if self.scattering_parameters['scattering_initialization']:
             self.generate_scattering_system()
             self.current_step = 0
-            self.current_step, self.current_system = self.get_current_structure()
+            self.current_system = self.get_current_structure()
             self.current_traj = []
             self.current_traj.append(self.current_system)
             write_xyz_traj('MoREST_traj.xyz', self.current_system)
@@ -54,12 +54,12 @@ class initialize_scattering:
             try:
                 self.current_traj = read_xyz_traj('MoREST_traj.xyz')
                 self.current_step = len(self.current_traj) - 1
-                self.current_step, self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
+                self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
                 self.MD_log = open('MoREST_MD.log', 'a', buffering=1)
             except:
                 self.generate_scattering_system()
                 self.current_step = 0
-                self.current_step, self.current_system = self.get_current_structure()
+                self.current_system = self.get_current_structure()
                 self.current_traj = []
                 self.current_traj.append(self.current_system)
                 write_xyz_traj('MoREST_traj.xyz', self.current_system)
@@ -115,7 +115,7 @@ class initialize_scattering:
         
         self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(system)
         
-        return self.current_step, system
+        return system
     
 
 class scattering_velocity_Verlet(initialize_scattering):
@@ -154,6 +154,11 @@ class scattering_velocity_Verlet(initialize_scattering):
         self.current_step += 1
         self.current_forces = next_forces
         self.current_potential_energy = next_potential_energy
+            
+        try:
+            self.ml_calculator.get_current_step(self.current_step)
+        except:
+            pass
         
         self.current_traj.append(self.current_system)
         write_xyz_traj('MoREST_traj.xyz', self.current_system)
@@ -221,6 +226,11 @@ class scattering_Runge_Kutta_4th(initialize_scattering):
         self.current_step += 1
         self.current_forces = next_forces
         self.current_potential_energy = next_potential_energy
+            
+        try:
+            self.ml_calculator.get_current_step(self.current_step)
+        except:
+            pass
         
         self.current_traj.append(self.current_system)
         write_xyz_traj('MoREST_traj.xyz', self.current_system)
@@ -287,6 +297,11 @@ class scattering_Runge_Kutta_4th_a(initialize_scattering):
         self.current_step += 1
         self.current_forces = next_forces
         self.current_potential_energy = next_potential_energy
+            
+        try:
+            self.ml_calculator.get_current_step(self.current_step)
+        except:
+            pass
         
         self.current_traj.append(self.current_system)
         write_xyz_traj('MoREST_traj.xyz', self.current_system)

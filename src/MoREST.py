@@ -329,18 +329,19 @@ class morest:
             calculator: The same as the calculator in ASE. It is required, when many body potential is specified as 'on_the_fly'.
         '''
         searching_convergence = self.searching_parameters['searching_convergence']
+        searching_maxsteps = self.searching_parameters['searching_max_steps']
         if self.morest_parameters['enhanced_sampling']:
             self.morest_parameters['enhanced_sampling'] = False # TODO: enhanced sampling method for trajectory scattering
         else:
-            current_convergence, current_system = self.searching_job.current_convergence, self.searching_job.current_system
+            current_convergence, current_step, current_system = self.searching_job.current_convergence, self.searching_job.current_step, self.searching_job.current_system
             if self.morest_parameters['wall_potential']:
-                while current_convergence >= searching_convergence:
+                while current_convergence >= searching_convergence and current_step <= searching_maxsteps:
                     general_coordinate = current_system.get_positions()
                     bias_forces = self.wall_potential(general_coordinate)
-                    current_convergence, current_system= self.searching_job.generate_new_step(bias_forces)
+                    current_convergence, current_step, current_system= self.searching_job.generate_new_step(bias_forces)
             else:
-                while current_convergence >= searching_convergence:
-                    current_convergence, current_system= self.searching_job.generate_new_step()
+                while current_convergence >= searching_convergence and current_step <= searching_maxsteps:
+                    current_convergence, current_step, current_system= self.searching_job.generate_new_step()
         self.log_morest.write('Phase space sampling with molecular dynamics method is finished!\n')
         self.mission_complete()
 
