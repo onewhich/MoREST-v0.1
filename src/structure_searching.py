@@ -180,7 +180,6 @@ class fire_velocity_Verlet(initialize_sampling):
         
         self.current_traj.append(self.current_system)
         write_xyz_traj('MoREST_traj.xyz', self.current_system)
-        write_xyz_file(self.searching_parameters['searching_starting_point']+'_new', self.current_system)
         kinetic_energy = self.current_system.get_kinetic_energy()
         write_searching_log(self.searching_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses)
 
