@@ -9,10 +9,10 @@ from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary
 from ase import units
 
 class initialize_sampling:
-    def __init__(self, morest_parameters, sampling_parameters, calculator=None, log_file=None):
+    def __init__(self, morest_parameters, sampling_parameters, calculator=None, log_morest=None):
         self.morest_parameters = morest_parameters
         self.sampling_parameters = sampling_parameters
-        self.log_file = log_file
+        self.log_morest = log_morest
         
         if self.morest_parameters['many_body_potential'].upper() in ['on_the_fly'.upper()]:
             if calculator == None:
@@ -27,7 +27,7 @@ class initialize_sampling:
         elif self.morest_parameters['many_body_potential'].upper() in ['ML_potential'.upper()]:
             self.ml_calculator = ml_potential(ab_initio_calculator = calculator, \
                                     ml_parameters = self.morest_parameters, \
-                                    log_file = self.log_file)
+                                    log_file = self.log_morest)
             self.many_body_potential = on_the_fly(self.ml_calculator)
             
         else:
@@ -44,7 +44,7 @@ class initialize_sampling:
                 system = self.current_traj[-1]
                 #system = read_xyz_file('MoREST.str_new') #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
             except:
-                self.log_file.write('Can not read current structure, and read structure from starting point.')
+                self.log_morest.write('Can not read current structure, and read structure from starting point.')
                 if molecule == None:
                     system = read_xyz_file(self.sampling_parameters['sampling_molecule'])
                 else:
@@ -73,8 +73,8 @@ class velocity_Verlet(initialize_sampling):
     '''
     
     def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, \
-                        v_rescaling=False, Berendsen_rescaling=False, Langevin_rescaling=False, sv_rescaling=False, log_file=None):
-        super(velocity_Verlet, self).__init__(morest_parameters, sampling_parameters, calculator, log_file)
+                        v_rescaling=False, Berendsen_rescaling=False, Langevin_rescaling=False, sv_rescaling=False, log_morest=None):
+        super(velocity_Verlet, self).__init__(morest_parameters, sampling_parameters, calculator, log_morest)
         self.md_parameters = md_parameters
         self.traj_file_name = traj_file_name
         self.log_file_name = log_file_name
@@ -167,11 +167,11 @@ class velocity_Verlet(initialize_sampling):
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
         time_step = self.md_parameters['md_time_step']
         
-        if not updated_current_system == None:
+        if updated_current_system != None:
             self.current_system = updated_current_system
         
         ### F(t) + bias
-        if type(bias_forces) != type(None):
+        if bias_forces != None:
             self.current_forces = self.current_forces + bias_forces
         
         ### x(t), v(t) = p(t) / m

@@ -4,7 +4,7 @@ from glob import glob
 from read_parameters import read_parameters
 from phase_space_sampling import velocity_Verlet
 from trajectory_scattering import scattering_velocity_Verlet, scattering_Runge_Kutta_4th
-from structure_searching import FIRE_velocity_Verlet
+from structure_searching import fire_velocity_Verlet
 from enhanced_sampling import its, re
 from wall_potential import repulsive_wall
 from collective_variable import collective_variables
@@ -141,14 +141,15 @@ class morest:
                 try:
                     #os.remove('MoREST.str_new')
                     os.remove('MoREST_traj.xyz')
-                    os.remove('MoREST_FIRE.log')
+                    if self.searching_parameters['searching_method'].upper() in ['FIRE'.upper()]:
+                        os.remove('MoREST_FIRE.log')
                 except:
                     pass
             else:
                 self.log_morest.write('Continue to search the stationary structure.\n\n')
                 #Method: '+str(self.sampling_parameters['sampling_method'])+'\nEnsemble: '+str(self.sampling_parameters['sampling_ensemble'])+'\n\n')
             if self.searching_parameters['searching_method'].upper() in ['FIRE'.upper()]:
-                self.searching_job = FIRE_velocity_Verlet(self.morest_parameters, self.searching_parameters, self.fire_parameters, calculator=calculator, log_file=self.log_morest)
+                self.searching_job = fire_velocity_Verlet(self.morest_parameters, self.searching_parameters, self.fire_parameters, calculator=calculator, log_file=self.log_morest)
             else:
                 self.log_morest.write('It is not clear which searching method will be used.\n')
                 self.log_morest.close()
@@ -321,6 +322,27 @@ class morest:
         self.mission_complete()
 
     def structure_searching(self):
+        '''
+        This function is called to excute structure searching method.
+        --------
+        INPUT:
+            calculator: The same as the calculator in ASE. It is required, when many body potential is specified as 'on_the_fly'.
+        '''
+        searching_convergence = self.searching_parameters['searching_convergence']
+        if self.morest_parameters['enhanced_sampling']:
+            self.morest_parameters['enhanced_sampling'] = False # TODO: enhanced sampling method for trajectory scattering
+        else:
+            current_convergence, current_system = self.searching_job.current_convergence, self.searching_job.current_system
+            if self.morest_parameters['wall_potential']:
+                while current_convergence >= searching_convergence:
+                    general_coordinate = current_system.get_positions()
+                    bias_forces = self.wall_potential(general_coordinate)
+                    current_convergence, current_system= self.searching_job.generate_new_step(bias_forces)
+            else:
+                while current_convergence >= searching_convergence:
+                    current_convergence, current_system= self.searching_job.generate_new_step()
+        self.log_morest.write('Phase space sampling with molecular dynamics method is finished!\n')
+        self.mission_complete()
 
     def enhanced_sampling_re(self,simulation_maxsteps):
         current_step = []

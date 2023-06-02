@@ -13,7 +13,7 @@ class initialize_scattering:
     The incident momenta directs from the mass center of incident molecule to the point on a spherical surface closely covering the target molecule and centered at original point.
     The target molecule is in the front of the incident molecule in the combined scattering system.
     '''
-    def __init__(self, morest_parameters, scattering_parameters, calculator=None, log_file=None):
+    def __init__(self, morest_parameters, scattering_parameters, calculator=None, log_morest=None):
         self.morest_parameters = morest_parameters
         self.scattering_parameters = scattering_parameters
         
@@ -30,7 +30,7 @@ class initialize_scattering:
         elif self.morest_parameters['many_body_potential'].upper() in ['ML_potential'.upper()]:
             self.ml_calculator = ml_potential(ab_initio_calculator = calculator, \
                                     ml_parameters = self.morest_parameters, \
-                                    log_file = log_file)
+                                    log_file = log_morest)
             self.many_body_potential = on_the_fly(self.ml_calculator)
             
         else:
@@ -123,8 +123,8 @@ class scattering_velocity_Verlet(initialize_scattering):
     This class implements velocity Verlet algorithm to do microcanonical ensemble (NVE) dynamics.
     '''
     
-    def __init__(self, morest_parameters, scattering_parameters, calculator=None, log_file=None):
-        super(scattering_velocity_Verlet, self).__init__(morest_parameters, scattering_parameters, calculator, log_file)
+    def __init__(self, morest_parameters, scattering_parameters, calculator=None, log_morest=None):
+        super(scattering_velocity_Verlet, self).__init__(morest_parameters, scattering_parameters, calculator, log_morest)
         
     def generate_new_step(self, bias_forces=None):
         time_step = self.scattering_parameters['scattering_time_step']

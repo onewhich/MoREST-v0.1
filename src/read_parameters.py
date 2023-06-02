@@ -852,7 +852,10 @@ class read_parameters:
     
     def get_fire_parameters(self, log_morest=None):
         self.fire_parameters['fire_time_step'] *= units.fs
-        self.fire_parameters['fire_max_time_step'] *= units.fs
+        if not 'fire_max_time_step' in self.fire_parameters:
+            self.fire_parameters['fire_max_time_step'] = 10 * self.fire_parameters['fire_time_step']
+        else:
+            self.fire_parameters['fire_max_time_step'] *= units.fs
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_FIRE_parameters.npy', self.fire_parameters)
         if type(log_morest) != type(None):
