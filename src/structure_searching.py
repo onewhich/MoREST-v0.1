@@ -229,7 +229,7 @@ class fire_velocity_Verlet(initialize_sampling):
                 self.alpha[i] = self.fire_parameters['fire_alpha_init']
 
             next_velocities.append(i_next_velocity)
-            print(self.current_step, P, self.N_negative[i], self.time_step[i], self.alpha[i])
+            print(self.current_step, P, self.N_negative[i], self.time_step[i] / units.fs, self.alpha[i])
         self.current_system.set_velocities(np.array(next_velocities))
 
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
