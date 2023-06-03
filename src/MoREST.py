@@ -64,19 +64,19 @@ class morest:
             if self.sampling_parameters['sampling_method'].upper() in ['MD']:
                 if self.sampling_parameters['sampling_ensemble'].upper() in ['NVE_VV']:
                     self.sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator, \
-                                                        log_file=self.log_morest)
+                                                        log_morest=self.log_morest)
                 elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_VR']:
                     self.sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator, v_rescaling=True, \
-                                                        log_file=self.log_morest)
+                                                        log_morest=self.log_morest)
                 elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_Berendsen'.upper()]:
                     self.sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator, Berendsen_rescaling=True, \
-                                                        log_file=self.log_morest)
+                                                        log_morest=self.log_morest)
                 elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_Langevin'.upper()]:
                     self.sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator, Langevin_rescaling=True, \
-                                                        log_file=self.log_morest)
+                                                        log_morest=self.log_morest)
                 elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
                     self.sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator, sv_rescaling=True, \
-                                                        log_file=self.log_morest)
+                                                        log_morest=self.log_morest)
                 else:
                     self.log_morest.write('It is not clear which ensemble will be used.\n')
                     self.log_morest.close()
@@ -110,9 +110,9 @@ class morest:
                 
             self.stop_condition = collective_variables(from_CVs_file=False, CVs_list=self.scattering_parameters['scattering_traj_stop'])
             if self.scattering_parameters['scattering_method'].upper() in ['VV']:
-                self.scattering_job = scattering_velocity_Verlet(self.morest_parameters, self.scattering_parameters, calculator=calculator, log_file=self.log_morest)
+                self.scattering_job = scattering_velocity_Verlet(self.morest_parameters, self.scattering_parameters, calculator=calculator, log_morest=self.log_morest)
             elif self.scattering_parameters['scattering_method'].upper() in ['RK4']:
-                self.scattering_job = scattering_Runge_Kutta_4th(self.morest_parameters, self.scattering_parameters, calculator=calculator, log_file=self.log_morest)
+                self.scattering_job = scattering_Runge_Kutta_4th(self.morest_parameters, self.scattering_parameters, calculator=calculator, log_morest=self.log_morest)
             else:
                 self.log_morest.write('It is not clear which scattering method will be used.\n')
                 self.log_morest.close()
@@ -149,7 +149,7 @@ class morest:
                 self.log_morest.write('Continue to search the stationary structure.\n\n')
                 #Method: '+str(self.sampling_parameters['sampling_method'])+'\nEnsemble: '+str(self.sampling_parameters['sampling_ensemble'])+'\n\n')
             if self.searching_parameters['searching_method'].upper() in ['FIRE'.upper()]:
-                self.searching_job = fire_velocity_Verlet(self.morest_parameters, self.searching_parameters, self.fire_parameters, calculator=calculator, log_file=self.log_morest)
+                self.searching_job = fire_velocity_Verlet(self.morest_parameters, self.searching_parameters, self.fire_parameters, calculator=calculator, log_morest=self.log_morest)
             else:
                 self.log_morest.write('It is not clear which searching method will be used.\n')
                 self.log_morest.close()
