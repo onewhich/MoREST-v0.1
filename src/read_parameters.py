@@ -234,6 +234,8 @@ class read_parameters:
                 ########################## ITS parameters    ##########################
                 elif self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['its'.upper()]:
                     self.read_ITS_parameters(i_parameter)
+                else:
+                    pass
                 
             ########################## Wall potential #############################
             if self.morest_parameters['wall_potential']:
