@@ -218,24 +218,22 @@ class read_parameters:
             ########################## Structure searching ########################
             if self.morest_parameters['structure_searching']:
                 self.read_searching_parameters(i_parameter)
-                ########################## FIRE #######################################
-                if self.searching_parameters['searching_method'].upper() in ['FIRE'.upper()]:
-                    self.read_FIRE_parameters(i_parameter)
-                else:
-                    pass
+                if 'searching_method' in self.searching_parameters:
+                    ########################## FIRE #######################################
+                    if self.searching_parameters['searching_method'].upper() in ['FIRE'.upper()]:
+                        self.read_FIRE_parameters(i_parameter)
                 
             ########################## Enhanced sampling ##########################
             if self.morest_parameters['enhanced_sampling']:
                 if i_parameter.split()[0].upper() == 'Enhanced_sampling_method'.upper():
                     self.enhanced_sampling_parameters['enhanced_sampling_method'] = str(i_parameter.split()[1])
-                ########################## RE parameters  #############################
-                if self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['re'.upper()]:
-                    self.read_RE_parameters(i_parameter)
-                ########################## ITS parameters    ##########################
-                elif self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['its'.upper()]:
-                    self.read_ITS_parameters(i_parameter)
-                else:
-                    pass
+                if 'enhanced_sampling_method' in self.enhanced_sampling_parameters:
+                    ########################## RE parameters  #############################
+                    if self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['re'.upper()]:
+                        self.read_RE_parameters(i_parameter)
+                    ########################## ITS parameters    ##########################
+                    elif self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['its'.upper()]:
+                        self.read_ITS_parameters(i_parameter)
                 
             ########################## Wall potential #############################
             if self.morest_parameters['wall_potential']:
