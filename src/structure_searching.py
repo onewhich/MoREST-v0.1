@@ -135,7 +135,7 @@ class fire_velocity_Verlet(initialize_sampling):
         self.N_negative =  np.zeros(self.n_atom, dtype=int)
 
     def searching_velocity_Verlet(self, bias_forces=None, updated_current_system=None):
-        time_step = self.time_step[:,np.newaxis()]
+        time_step = self.time_step[:,np.newaxis]
         
         if updated_current_system != None:
             self.current_system = updated_current_system
