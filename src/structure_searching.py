@@ -176,8 +176,8 @@ class fire_velocity_Verlet(initialize_sampling):
         self.current_potential_energy = next_potential_energy
         self.current_convergence = np.max(np.linalg.norm(self.current_forces,axis=-1))
 
-        Stationary(self.current_system)
-        ZeroRotation(self.current_system)
+        #Stationary(self.current_system)
+        #ZeroRotation(self.current_system)
             
         try:
             self.ml_calculator.get_current_step(self.current_step)
