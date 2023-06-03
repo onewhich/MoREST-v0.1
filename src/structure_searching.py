@@ -49,8 +49,9 @@ class initialize_sampling:
 
         self.n_atom = system.get_global_number_of_atoms()
         if self.fire_parameters['fire_equal_masses']:
-            self.masses = np.ones(self.n_atom)[:,np.newaxis]
-            system.set_masses(self.masses)
+            masses = np.ones(self.n_atom)
+            system.set_masses(masses)
+            self.masses = masses[:,np.newaxis]
         else:
             self.masses = system.get_masses()[:,np.newaxis]
         self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(system)
