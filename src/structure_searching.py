@@ -83,7 +83,7 @@ class fire_velocity_Verlet(initialize_sampling):
                 pass
             self.current_system = self.get_current_structure(molecule)
             self.current_traj = []
-            self.current_traj.append(self.current_system)
+            self.current_traj.append(deepcopy(self.current_system))
             if self.traj_file_name == None:
                 write_xyz_traj('MoREST_traj.xyz', self.current_system)
             else:
@@ -108,7 +108,7 @@ class fire_velocity_Verlet(initialize_sampling):
                     pass
                 self.current_system = self.get_current_structure(molecule)
                 self.current_traj = []
-                self.current_traj.append(self.current_system)
+                self.current_traj.append(deepcopy(self.current_system))
                 if self.traj_file_name == None:
                     write_xyz_traj('MoREST_traj.xyz', self.current_system)
                 else:
