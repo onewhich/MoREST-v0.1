@@ -150,6 +150,7 @@ class fire_velocity_Verlet(initialize_sampling):
         
         ### x(t+dt) = x(t) + v(t)*dt + 0.5*F(t)*dt^2/m
         #next_coordinates = current_coordinates + current_velocities * time_step + 0.5 * self.current_accelerations * time_step**2
+        print(self.masses)
         next_coordinates = current_coordinates + (current_momenta * self.time_step + 0.5 * self.current_forces * self.time_step**2) / self.masses
         self.current_system.set_positions(next_coordinates)
         
