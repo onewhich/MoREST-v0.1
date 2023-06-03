@@ -190,8 +190,11 @@ class fire_velocity_Verlet(initialize_sampling):
         write_searching_log(self.searching_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses,self.current_convergence)
         
         self.current_traj.append(self.current_system)
+        print(self.current_traj[-1].get_potential_energy(), self.current_traj[0].get_potential_energy())
         if self.current_traj[-1].get_potential_energy() > self.current_traj[0].get_potential_energy():
+            print(self.current_traj[-2].get_potential_energy(), self.current_traj[0].get_potential_energy())
             if self.current_traj[-2].get_potential_energy() > self.current_traj[0].get_potential_energy():
+                print(self.current_traj[-3].get_potential_energy(), self.current_traj[0].get_potential_energy())
                 if self.current_traj[-3].get_potential_energy() > self.current_traj[0].get_potential_energy():
                     try:
                         self.log_morest.write('The optimization has an abnormal energy rise. The mission of MoREST is terminated.\n')
