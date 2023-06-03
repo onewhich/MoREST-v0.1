@@ -217,7 +217,7 @@ class fire_velocity_Verlet(initialize_sampling):
 
             # F3: if P > 0
             if P > 0 and self.N_negative[i] > self.N_min:
-                self.N_negative[i] = 0
+                #self.N_negative[i] = 0
                 self.time_step[i] = min(self.time_step[i]*self.f_increase, self.max_time_step)
                 self.alpha[i] *= self.f_alpha
 
