@@ -204,7 +204,7 @@ class fire_velocity_Verlet(initialize_sampling):
         '''
         current_velocities = self.current_system.get_velocities()
         # F1: P = F \dot v
-        P = np.dot(self.current_forces, current_velocities)
+        P = np.dot(self.current_forces, current_velocities.T)
 
         # F2: v = (1-alpha)*v + alpha * F * |v|
         next_velocities = (1-self.alpha)*current_velocities + self.alpha*self.current_forces*np.linalg.norm(current_velocities)

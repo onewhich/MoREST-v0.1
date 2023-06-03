@@ -841,6 +841,8 @@ class read_parameters:
         return self.scattering_parameters
     
     def get_searching_parameters(self, log_morest=None):
+        if self.morest_parameters['morest_initialization'] == True:
+           self.searching_parameters['searching_initialization'] = True
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_searching_parameters.npy', self.searching_parameters)
         if log_morest != None:
