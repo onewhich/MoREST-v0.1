@@ -125,14 +125,14 @@ class fire_velocity_Verlet(initialize_sampling):
             else:
                 self.searching_log = open(self.log_file_name, 'a', buffering=1)
 
-        self.time_step = self.fire_parameters['fire_time_step']
+        self.time_step = self.fire_parameters['fire_time_step'] * np.ones(self.n_atom)
         self.max_time_step = self.fire_parameters['fire_max_time_step']
-        self.alpha = self.fire_parameters['fire_alpha_init']
+        self.alpha = self.fire_parameters['fire_alpha_init'] * np.ones(self.n_atom)
         self.N_min = self.fire_parameters['fire_N_min']
         self.f_increase = self.fire_parameters['fire_f_increase']
         self.f_decrease = self.fire_parameters['fire_f_decrease']
         self.f_alpha = self.fire_parameters['fire_f_alpha']
-        self.N_negative = 0
+        self.N_negative =  np.zeros(self.n_atom, dtype=int)
 
     def searching_velocity_Verlet(self, bias_forces=None, updated_current_system=None):
         
@@ -203,25 +203,32 @@ class fire_velocity_Verlet(initialize_sampling):
         }
         '''
         current_velocities = self.current_system.get_velocities()
-        # F1: P = F \dot v
-        P = np.dot(self.current_forces, current_velocities.T)
+        next_velocities = []
+        for i in range(self.n_atom):
+            i_force = self.current_forces[i]
+            i_velocity = current_velocities[i]
 
-        # F2: v = (1-alpha)*v + alpha * F * |v|
-        next_velocities = (1-self.alpha)*current_velocities + self.alpha*self.current_forces*np.linalg.norm(current_velocities)
-        self.current_system.set_velocities(next_velocities)
+            # F1: P = F \dot v
+            P = np.dot(i_force, i_velocity)
 
-        # F3: if P > 0
-        if P > 0 and self.N_negative > self.N_min:
-            self.N_negative = 0
-            self.time_step = np.min(self.time_step*self.f_increase, self.max_time_step)
-            self.alpha *= self.f_alpha
+            # F2: v = (1-alpha)*v + alpha * F * |v|
+            i_next_velocity = (1-self.alpha[i])*i_velocity + self.alpha[i]*i_force*np.linalg.norm(i_velocity)
 
-        # F4: if P < 0
-        elif P <= 0:
-            self.N_negative += 1
-            self.time_step *= self.f_decrease
-            self.current_system.set_velocities(np.zeros(np.shape(next_velocities)))
-            self.alpha = self.fire_parameters['fire_alpha_init']
+            # F3: if P > 0
+            if P > 0 and self.N_negative[i] > self.N_min:
+                self.N_negative[i] = 0
+                self.time_step[i] = np.min(self.time_step[i]*self.f_increase, self.max_time_step)
+                self.alpha[i] *= self.f_alpha
+
+            # F4: if P < 0
+            elif P <= 0:
+                self.N_negative[i] += 1
+                self.time_step[i] *= self.f_decrease
+                i_next_velocity *= 0
+                self.alpha[i] = self.fire_parameters['fire_alpha_init']
+
+            next_velocities.append(i_next_velocity)
+        self.current_system.set_velocities(np.array(next_velocities))
 
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
         self.searching_velocity_Verlet(bias_forces, updated_current_system)
