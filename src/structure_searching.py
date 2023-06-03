@@ -73,6 +73,7 @@ class fire_velocity_Verlet(initialize_sampling):
         self.fire_parameters = fire_parameters
         self.traj_file_name = traj_file_name
         self.log_file_name = log_file_name
+        self.log_morest = log_morest
         if self.searching_parameters['searching_initialization']:
             self.current_step = 0
             try:
@@ -185,6 +186,14 @@ class fire_velocity_Verlet(initialize_sampling):
             pass
         
         self.current_traj.append(self.current_system)
+        if self.current_traj[-1].get_potential_energy() > self.current_traj[0].get_potential_energy():
+            if self.current_traj[-2].get_potential_energy() > self.current_traj[0].get_potential_energy():
+                if self.current_traj[-3].get_potential_energy() > self.current_traj[0].get_potential_energy():
+                    try:
+                        self.log_morest.write('The optimization has an abnormal energy rise. The mission of MoREST is terminated.\n')
+                    except:
+                        pass
+                    raise Exception('The optimization has an abnormal energy rise. The mission is terminated.')
         write_xyz_traj('MoREST_traj.xyz', self.current_system)
         kinetic_energy = self.current_system.get_kinetic_energy()
         write_searching_log(self.searching_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses,self.current_convergence)
