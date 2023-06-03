@@ -98,8 +98,8 @@ class velocity_Verlet(initialize_sampling):
             self.current_system = self.get_current_structure(molecule)
             if self.T_simulation > 1e-6:
                 MaxwellBoltzmannDistribution(self.current_system, temperature_K = self.T_simulation)
-            self.current_traj = []
-            self.current_traj.append(self.current_system)
+            #self.current_traj = []
+            #self.current_traj.append(self.current_system)
             if self.traj_file_name == None:
                 write_xyz_traj('MoREST_traj.xyz', self.current_system)
             else:
@@ -125,8 +125,8 @@ class velocity_Verlet(initialize_sampling):
                 self.current_system = self.get_current_structure(molecule)
                 if self.T_simulation > 1e-6:
                     MaxwellBoltzmannDistribution(self.current_system, temperature_K = self.T_simulation)
-                self.current_traj = []
-                self.current_traj.append(self.current_system)
+                #self.current_traj = []
+                #self.current_traj.append(self.current_system)
                 if self.traj_file_name == None:
                     write_xyz_traj('MoREST_traj.xyz', self.current_system)
                 else:
@@ -234,7 +234,7 @@ class velocity_Verlet(initialize_sampling):
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             #print(next_coordinates) #DEGUB
             #print(next_forces)    #DEBUG
-            self.current_traj.append(self.current_system)
+            #self.current_traj.append(self.current_system)
             if self.traj_file_name == None:
                 write_xyz_traj('MoREST_traj.xyz', self.current_system)
             else:

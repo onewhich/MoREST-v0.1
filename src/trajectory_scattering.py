@@ -44,8 +44,8 @@ class initialize_scattering:
             self.generate_scattering_system()
             self.current_step = 0
             self.current_system = self.get_current_structure()
-            self.current_traj = []
-            self.current_traj.append(self.current_system)
+            #self.current_traj = []
+            #self.current_traj.append(self.current_system)
             write_xyz_traj('MoREST_traj.xyz', self.current_system)
             self.MD_log = open('MoREST_MD.log', 'w', buffering=1)
             self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
@@ -60,8 +60,8 @@ class initialize_scattering:
                 self.generate_scattering_system()
                 self.current_step = 0
                 self.current_system = self.get_current_structure()
-                self.current_traj = []
-                self.current_traj.append(self.current_system)
+                #self.current_traj = []
+                #self.current_traj.append(self.current_system)
                 write_xyz_traj('MoREST_traj.xyz', self.current_system)
                 self.MD_log = open('MoREST_MD.log', 'w', buffering=1)
                 self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
@@ -160,7 +160,7 @@ class scattering_velocity_Verlet(initialize_scattering):
         except:
             pass
         
-        self.current_traj.append(self.current_system)
+        #self.current_traj.append(self.current_system)
         write_xyz_traj('MoREST_traj.xyz', self.current_system)
         kinetic_energy = self.current_system.get_kinetic_energy()
         write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses)
@@ -232,7 +232,7 @@ class scattering_Runge_Kutta_4th(initialize_scattering):
         except:
             pass
         
-        self.current_traj.append(self.current_system)
+        #self.current_traj.append(self.current_system)
         write_xyz_traj('MoREST_traj.xyz', self.current_system)
         kinetic_energy = self.current_system.get_kinetic_energy()
         write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses)
@@ -303,7 +303,7 @@ class scattering_Runge_Kutta_4th_a(initialize_scattering):
         except:
             pass
         
-        self.current_traj.append(self.current_system)
+        #self.current_traj.append(self.current_system)
         write_xyz_traj('MoREST_traj.xyz', self.current_system)
         kinetic_energy = self.current_system.get_kinetic_energy()
         write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses)
