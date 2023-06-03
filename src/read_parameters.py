@@ -51,7 +51,6 @@ class read_parameters:
         self.md_parameters['md_clean_translation'] = True
         self.md_parameters['md_clean_rotation'] = False
         self.scattering_parameters = {}
-        self.scattering_parameters['trajectory_scattering'] = False
         self.scattering_parameters['scattering_initialization'] = False
         self.scattering_parameters['scattering_pre_thermolized'] = False
         self.scattering_parameters['scattering_traj_stop'] = None
@@ -59,7 +58,6 @@ class read_parameters:
         self.scattering_parameters['scattering_target_molecule'] = 'MoREST.str_target'
         self.scattering_parameters['scattering_incident_molecule'] = 'MoREST.str_incident'
         self.searching_parameters = {}
-        self.searching_parameters['structure_searching'] = False
         self.searching_parameters['searching_initialization'] = False
         self.searching_parameters['searching_starting_point'] = 'MoREST.str'
         self.searching_parameters['searching_convergence'] = 1e-3
@@ -83,7 +81,6 @@ class read_parameters:
         self.its_parameters['its_weight_pk'] = 1e-4
         self.its_parameters['its_energy_shift'] = 0
         self.wall_potential_parameters = {}
-        self.wall_potential_parameters['wall_potential'] = False
         self.wall_potential_parameters['wall_number'] = 1
         self.wall_potential_parameters['wall_collective_variable'] = []
         self.wall_potential_parameters['wall_shape'] = []
@@ -181,9 +178,9 @@ class read_parameters:
                 
             elif i_parameter.split()[0].upper() == 'Structure_searching'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():
-                    self.morest_parameters['Structure_searching'] = True
+                    self.morest_parameters['structure_searching'] = True
                 elif i_parameter.split()[1].upper() == 'False'.upper():
-                    self.morest_parameters['Structure_searching'] = False
+                    self.morest_parameters['structure_searching'] = False
                 else:
                     raise Exception('It is not clear whether the searching method will be used.')
 
@@ -717,7 +714,7 @@ class read_parameters:
             self.sampling_parameters['nvt_svr_tau'] *= units.fs
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_sampling_parameters.npy', self.sampling_parameters)
-        if type(log_morest) != type(None):
+        if log_morest != None:
             for key in self.sampling_parameters:
                 if key in ['nvt_berendsen_tau','nvt_svr_tau']:
                     log_morest.write(key+' : '+str(self.sampling_parameters[key]/units.fs)+'\n')
@@ -733,7 +730,7 @@ class read_parameters:
         self.md_parameters['md_simulation_time'] *= units.fs
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_MD_parameters.npy', self.md_parameters)
-        if type(log_morest) != type(None):
+        if log_morest != None:
             for key in self.md_parameters:
                 if key in ['md_time_step','md_simulation_time']:
                     log_morest.write(key+' : '+str(self.md_parameters[key]/units.fs)+'\n')
@@ -830,7 +827,7 @@ class read_parameters:
             #print(self.scattering_parameters['scattering_traj_stop'])       # DEBUG
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_scattering_parameters.npy', self.scattering_parameters)
-        if type(log_morest) != type(None):
+        if log_morest != None:
             for key in self.scattering_parameters:
                 if key in ['scattering_time_step']:
                     log_morest.write(key+' : '+str(self.scattering_parameters[key]/units.fs)+'\n')
@@ -844,7 +841,7 @@ class read_parameters:
     def get_searching_parameters(self, log_morest=None):
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_searching_parameters.npy', self.searching_parameters)
-        if type(log_morest) != type(None):
+        if log_morest != None:
             for key in self.searching_parameters:
                 log_morest.write(key+' : '+str(self.searching_parameters[key])+'\n')
             log_morest.write('\n')
@@ -858,7 +855,7 @@ class read_parameters:
             self.fire_parameters['fire_max_time_step'] *= units.fs
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_FIRE_parameters.npy', self.fire_parameters)
-        if type(log_morest) != type(None):
+        if log_morest != None:
             for key in self.fire_parameters:
                 if key in ['fire_time_step','fire_max_time_step']:
                     log_morest.write(key+' : '+str(self.fire_parameters[key]/units.fs)+'\n')
@@ -870,7 +867,7 @@ class read_parameters:
     def get_enhanced_sampling_parameters(self, log_morest=None):
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_enhanced_sampling_parameters.npy', self.enhanced_sampling_parameters)
-        if type(log_morest) != type(None):
+        if log_morest != None:
             for key in self.enhanced_sampling_parameters:
                 log_morest.write(key+' : '+str(self.enhanced_sampling_parameters[key])+'\n')
             log_morest.write('\n')
@@ -909,7 +906,7 @@ class read_parameters:
         #    self.re_parameters['re_current_replica'] = step_replica[1]
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_RE_parameters.npy',self.re_parameters)
-        if type(log_morest) != type(None):
+        if log_morest != None:
             for key in self.re_parameters:
                 log_morest.write(key+' : '+str(self.re_parameters[key])+'\n')
             log_morest.write('\n')
@@ -949,7 +946,7 @@ class read_parameters:
         #    json.dump(self.its_parameters,its_json, cls=NumpyArrayEncoder)
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_ITS_parameters.npy',self.its_parameters)
-        if type(log_morest) != type(None):
+        if log_morest != None:
             for key in self.its_parameters:
                 log_morest.write(key+' : '+str(self.its_parameters[key])+'\n')
             log_morest.write('\n')
@@ -968,7 +965,7 @@ class read_parameters:
                 try:
                     self.wall_potential_parameters['wall_scope'][i_wall] >= 1
                 except:
-                    if type(log_morest) != type(None):
+                    if log_morest != None:
                         log_morest.write('Parameter wall_scope should be >= 1 for power potential.\n')
                         log_morest.close()
                     raise Exception('Parameter wall_scope should be >= 1 for power potential.')
@@ -978,7 +975,7 @@ class read_parameters:
                 raise Exception('Wall type is not recognized.')
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_wall_potential_parameters.npy', self.wall_potential_parameters)
-        if type(log_morest) != type(None):
+        if log_morest != None:
             for key in self.wall_potential_parameters:
                 log_morest.write(key+' : '+str(self.wall_potential_parameters[key])+'\n')
             log_morest.write('\n')
