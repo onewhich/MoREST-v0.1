@@ -60,7 +60,7 @@ class read_parameters:
         self.searching_parameters = {}
         self.searching_parameters['searching_initialization'] = False
         self.searching_parameters['searching_starting_point'] = 'MoREST.str'
-        self.searching_parameters['searching_convergence'] = 1e-3
+        self.searching_parameters['searching_convergence'] = 5e-3
         self.searching_parameters['searching_max_steps'] = 100
         self.searching_parameters['searching_constrained'] = False
         self.fire_parameters = {}
