@@ -133,6 +133,24 @@ class read_parameters:
             elif i_parameter.split()[0].upper() == 'ML_potential_model'.upper():
                 self.morest_parameters['ml_potential_model'] = str(i_parameter.split()[1])
 
+            elif i_parameter.split()[0].upper() == 'ML_add_features_number'.upper():
+                self.morest_parameters['ml_add_features_number'] = int(i_parameter.split()[1])
+
+            elif i_parameter.split()[0].upper() == 'ML_additional_features'.upper():
+                self.additional_features_parameter = i_parameter.split()[1:]
+
+            elif i_parameter.split()[0].upper() == 'ML_features_min_number'.upper():
+                self.morest_parameters['ml_features_min_number'] = int(i_parameter.split()[1])
+
+            elif i_parameter.split()[0].upper() == 'ML_additional_features_min'.upper():
+                self.additional_features_min_parameter = i_parameter.split()[1:]
+
+            elif i_parameter.split()[0].upper() == 'ML_features_max_number'.upper():
+                self.morest_parameters['ml_features_max_number'] = int(i_parameter.split()[1])
+
+            elif i_parameter.split()[0].upper() == 'ML_additional_features_max'.upper():
+                self.additional_features_max_parameter = i_parameter.split()[1:]
+
             elif i_parameter.split()[0].upper() == 'ML_print_uncertainty'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():
                     self.morest_parameters['ml_print_uncertainty'] = True
@@ -250,24 +268,6 @@ class read_parameters:
     def read_active_learning_parameters(self, i_parameter):                
         if i_parameter.split()[0].upper() == 'ML_training_set'.upper():
             self.morest_parameters['ml_training_set'] = str(i_parameter.split()[1])
-
-        elif i_parameter.split()[0].upper() == 'ML_add_features_number'.upper():
-            self.morest_parameters['ml_add_features_number'] = int(i_parameter.split()[1])
-
-        elif i_parameter.split()[0].upper() == 'ML_additional_features'.upper():
-            self.additional_features_parameter = i_parameter.split()[1:]
-
-        elif i_parameter.split()[0].upper() == 'ML_features_min_number'.upper():
-            self.morest_parameters['ml_features_min_number'] = int(i_parameter.split()[1])
-
-        elif i_parameter.split()[0].upper() == 'ML_additional_features_min'.upper():
-            self.additional_features_min_parameter = i_parameter.split()[1:]
-
-        elif i_parameter.split()[0].upper() == 'ML_features_max_number'.upper():
-            self.morest_parameters['ml_features_max_number'] = int(i_parameter.split()[1])
-
-        elif i_parameter.split()[0].upper() == 'ML_additional_features_max'.upper():
-            self.additional_features_max_parameter = i_parameter.split()[1:]
 
         elif i_parameter.split()[0].upper() == 'ML_energy_uncertainty_tolerance'.upper():
             self.morest_parameters['ml_energy_uncertainty_tolerance'] = float(i_parameter.split()[1])
