@@ -135,6 +135,7 @@ class fire_velocity_Verlet(initialize_sampling):
         self.N_negative =  np.zeros(self.n_atom, dtype=int)
 
     def searching_velocity_Verlet(self, bias_forces=None, updated_current_system=None):
+        time_step = self.time_step[:,np.newaxis()]
         
         if updated_current_system != None:
             self.current_system = updated_current_system
@@ -150,12 +151,11 @@ class fire_velocity_Verlet(initialize_sampling):
         
         ### x(t+dt) = x(t) + v(t)*dt + 0.5*F(t)*dt^2/m
         #next_coordinates = current_coordinates + current_velocities * time_step + 0.5 * self.current_accelerations * time_step**2
-        print(self.masses)
-        next_coordinates = current_coordinates + (current_momenta * self.time_step + 0.5 * self.current_forces * self.time_step**2) / self.masses
+        next_coordinates = current_coordinates + (current_momenta * time_step + 0.5 * self.current_forces * time_step**2) / self.masses
         self.current_system.set_positions(next_coordinates)
         
         ### v(t+0.5dt) = p(t+0.5dt) / m; p(t+0.5dt) = p(t) + 0.5 * F(t) * dt
-        momenta_half = current_momenta + 0.5 * self.current_forces * self.time_step
+        momenta_half = current_momenta + 0.5 * self.current_forces * time_step
         
         ### F(t+dt)
         next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(self.current_system)
@@ -166,7 +166,7 @@ class fire_velocity_Verlet(initialize_sampling):
         #self.current_system.set_velocities(next_velocities)
         
         ### p(t+dt) = p(t+0.5dt) + 0.5 * F(t+dt) * dt
-        next_momenta = momenta_half + 0.5 * next_forces * self.time_step
+        next_momenta = momenta_half + 0.5 * next_forces * time_step
         self.current_system.set_momenta(next_momenta)
         
         #next_velocities = next_system.get_velocities()
