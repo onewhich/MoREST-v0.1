@@ -225,9 +225,10 @@ class read_parameters:
             ########################## Phase space sampling #######################
             if self.morest_parameters['phase_space_sampling']:
                 self.read_sampling_parameters(i_parameter)
-                ########################## Molecular dynamics #########################
-                if self.sampling_parameters['sampling_method'].upper() in ['MD']:
-                    self.read_MD_parameters(i_parameter)
+                if 'sampling_method' in self.sampling_parameters:
+                    ########################## Molecular dynamics #########################
+                    if self.sampling_parameters['sampling_method'].upper() in ['MD']:
+                        self.read_MD_parameters(i_parameter)
                 
             ########################## Trajectory scattering ######################
             if self.morest_parameters['trajectory_scattering']:
@@ -238,7 +239,7 @@ class read_parameters:
                 self.read_searching_parameters(i_parameter)
                 if 'searching_method' in self.searching_parameters:
                     ########################## FIRE #######################################
-                    if self.searching_parameters['searching_method'].upper() in ['FIRE'.upper()]:
+                    if self.searching_parameters['searching_method'].upper() in ['FIRE']:
                         self.read_FIRE_parameters(i_parameter)
                 
             ########################## Enhanced sampling ##########################
