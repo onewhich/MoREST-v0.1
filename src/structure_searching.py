@@ -118,7 +118,7 @@ class fire_velocity_Verlet(initialize_sampling):
             else:
                 self.searching_log = open(self.log_file_name, 'w', buffering=1)
             self.searching_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
-            write_searching_log(self.searching_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
+            write_searching_log(self.searching_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses, self.current_convergence)
         else:
             if self.log_file_name == None:
                 self.searching_log = open('MoREST_FIRE.log', 'a', buffering=1)
@@ -187,7 +187,7 @@ class fire_velocity_Verlet(initialize_sampling):
         self.current_traj.append(self.current_system)
         write_xyz_traj('MoREST_traj.xyz', self.current_system)
         kinetic_energy = self.current_system.get_kinetic_energy()
-        write_searching_log(self.searching_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses)
+        write_searching_log(self.searching_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses,self.current_convergence)
 
     def FIRE(self):
         '''
@@ -237,10 +237,10 @@ class fire_velocity_Verlet(initialize_sampling):
 
         return self.current_convergence, self.current_step, self.current_system
 
-def write_searching_log(searching_log, step, Ep, Ek, masses):
+def write_searching_log(searching_log, step, Ep, Ek, masses, convergence):
     n_atom = len(masses)
     #Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(n_atom)])
     #Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)
     T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
     Et = Ek + Ep
-    searching_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'\n')
+    searching_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'    '+str(convergence)+'\n')
