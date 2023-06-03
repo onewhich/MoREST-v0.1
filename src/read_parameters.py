@@ -221,6 +221,8 @@ class read_parameters:
                 ########################## FIRE #######################################
                 if self.searching_parameters['searching_method'].upper() in ['FIRE'.upper()]:
                     self.read_FIRE_parameters(i_parameter)
+                else:
+                    pass
                 
             ########################## Enhanced sampling ##########################
             if self.morest_parameters['enhanced_sampling']:
