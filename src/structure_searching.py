@@ -82,7 +82,7 @@ class fire_velocity_Verlet(initialize_sampling):
             except:
                 pass
             self.current_system = self.get_current_structure(molecule)
-            print(self.current_system)
+            print(self.current_system.__dict__)
             print(type(self.current_system))
             self.current_traj = []
             self.current_traj.append(deepcopy(self.current_system))
