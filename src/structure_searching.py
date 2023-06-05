@@ -193,7 +193,6 @@ class fire_velocity_Verlet(initialize_sampling):
         kinetic_energy = self.current_system.get_kinetic_energy()
         write_searching_log(self.searching_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses,self.current_convergence)
         
-        print(self.potential_energy_list)
         if self.potential_energy_list[-1] > self.potential_energy_list[0]:
             if self.potential_energy_list[-2] > self.potential_energy_list[0]:
                 if self.potential_energy_list[-3] > self.potential_energy_list[0]:

@@ -65,6 +65,7 @@ class read_parameters:
         self.searching_parameters['searching_constrained'] = False
         self.fire_parameters = {}
         self.fire_parameters['fire_equal_masses'] = True
+        self.fire_parameters['fire_time_step'] = 3
         self.fire_parameters['fire_alpha_init'] = 0.1
         self.fire_parameters['fire_N_min'] = 5
         self.fire_parameters['fire_f_increase'] = 1.1
