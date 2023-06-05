@@ -3,7 +3,7 @@ from structure import read_xyz_file, read_xyz_traj, write_xyz_traj
 from many_body_potential import ml_potential, on_the_fly, molpro_calculator
 from ase.md.velocitydistribution import Stationary, ZeroRotation
 from ase import units
-from copy import deepcopy
+#from copy import deepcopy
 
 class initialize_sampling:
     def __init__(self, morest_parameters, searching_parameters, fire_parameters, calculator=None, log_morest=None):
@@ -82,10 +82,8 @@ class fire_velocity_Verlet(initialize_sampling):
             except:
                 pass
             self.current_system = self.get_current_structure(molecule)
-            print(self.current_system.__dict__)
-            print(type(self.current_system))
-            self.current_traj = []
-            self.current_traj.append(deepcopy(self.current_system))
+            self.potential_energy_list = []
+            self.potential_energy_list.append(self.current_system.get_potential_energy())
             if self.traj_file_name == None:
                 write_xyz_traj('MoREST_traj.xyz', self.current_system)
             else:
@@ -102,6 +100,8 @@ class fire_velocity_Verlet(initialize_sampling):
                 except:
                     pass
                 self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
+                self.potential_energy_list = [i_sys.get_potential_energy() for i_sys in self.current_traj]
+                self.potential_energy_list.append(self.current_system.get_potential_energy())
             except:
                 self.current_step = 0
                 try:
@@ -109,8 +109,8 @@ class fire_velocity_Verlet(initialize_sampling):
                 except:
                     pass
                 self.current_system = self.get_current_structure(molecule)
-                self.current_traj = []
-                self.current_traj.append(deepcopy(self.current_system))
+                self.potential_energy_list = []
+                self.potential_energy_list.append(self.current_system.get_potential_energy())
                 if self.traj_file_name == None:
                     write_xyz_traj('MoREST_traj.xyz', self.current_system)
                 else:
@@ -121,7 +121,7 @@ class fire_velocity_Verlet(initialize_sampling):
                 self.searching_log = open('MoREST_FIRE.log', 'w', buffering=1)
             else:
                 self.searching_log = open(self.log_file_name, 'w', buffering=1)
-            self.searching_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
+            self.searching_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), MAX atomic force (eV/A)\n')   
             write_searching_log(self.searching_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses, self.current_convergence)
         else:
             if self.log_file_name == None:
@@ -188,14 +188,15 @@ class fire_velocity_Verlet(initialize_sampling):
         except:
             pass
         
-        self.current_traj.append(deepcopy(self.current_system))
+        self.potential_energy_list.append(self.current_system.get_potential_energy())
         write_xyz_traj('MoREST_traj.xyz', self.current_system)
         kinetic_energy = self.current_system.get_kinetic_energy()
         write_searching_log(self.searching_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses,self.current_convergence)
         
-        if self.current_traj[-1].get_potential_energy() > self.current_traj[0].get_potential_energy():
-            if self.current_traj[-2].get_potential_energy() > self.current_traj[0].get_potential_energy():
-                if self.current_traj[-3].get_potential_energy() > self.current_traj[0].get_potential_energy():
+        print(self.potential_energy_list)
+        if self.potential_energy_list[-1] > self.potential_energy_list[0]:
+            if self.potential_energy_list[-2] > self.potential_energy_list[0]:
+                if self.potential_energy_list[-3] > self.potential_energy_list[0]:
                     try:
                         self.log_morest.write('The optimization has an abnormal energy rise. The mission of MoREST is terminated.\n')
                     except:
