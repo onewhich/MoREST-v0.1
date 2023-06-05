@@ -159,6 +159,13 @@ class ml_potential(Calculator):
             #print("Energy std:", energy_std_list)
             energy_0 = energy_list[0]
             energy_std_0 = energy_std_list[0]
+            try:
+                if len(energy_0) >= 1:
+                    energy_0 = energy_0[0]
+                if len(energy_std_0) >= 1:
+                    energy_std_0 = energy_std_0[0]
+            except:
+                pass
             # Determine if the energy need to be calculated on the fly
             if self.if_active_learning and (energy_std_0 > self.energy_uncertainty_tolerance):
                 self.log_morest.write("Current sampling step: "+str(self.current_step)+"\n")
