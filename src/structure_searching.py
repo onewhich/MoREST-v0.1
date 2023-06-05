@@ -3,7 +3,7 @@ from structure import read_xyz_file, read_xyz_traj, write_xyz_traj
 from many_body_potential import ml_potential, on_the_fly, molpro_calculator
 from ase.md.velocitydistribution import Stationary, ZeroRotation
 from ase import units
-from copy import deepcopy
+from copy import copy
 
 class initialize_sampling:
     def __init__(self, morest_parameters, searching_parameters, fire_parameters, calculator=None, log_morest=None):
@@ -83,7 +83,7 @@ class fire_velocity_Verlet(initialize_sampling):
                 pass
             self.current_system = self.get_current_structure(molecule)
             self.current_traj = []
-            self.current_traj.append(deepcopy(self.current_system))
+            self.current_traj.append(copy(self.current_system))
             if self.traj_file_name == None:
                 write_xyz_traj('MoREST_traj.xyz', self.current_system)
             else:
@@ -108,7 +108,7 @@ class fire_velocity_Verlet(initialize_sampling):
                     pass
                 self.current_system = self.get_current_structure(molecule)
                 self.current_traj = []
-                self.current_traj.append(deepcopy(self.current_system))
+                self.current_traj.append(copy(self.current_system))
                 if self.traj_file_name == None:
                     write_xyz_traj('MoREST_traj.xyz', self.current_system)
                 else:
@@ -186,7 +186,7 @@ class fire_velocity_Verlet(initialize_sampling):
         except:
             pass
         
-        self.current_traj.append(deepcopy(self.current_system))
+        self.current_traj.append(copy(self.current_system))
         write_xyz_traj('MoREST_traj.xyz', self.current_system)
         kinetic_energy = self.current_system.get_kinetic_energy()
         write_searching_log(self.searching_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses,self.current_convergence)
