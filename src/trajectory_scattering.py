@@ -366,6 +366,11 @@ def rotate_system_at_center(system, theta, unit_normal_vector, center=[0,0,0]):
     return system_new
 
 def write_MD_log(MD_log, step, Ep, Ek, masses):
+    try:
+        if len(Ep) >= 1:
+            Ep = Ep[0]
+    except:
+        pass
     n_atom = len(masses)
     #Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(n_atom)])
     #Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)

@@ -337,6 +337,11 @@ def clean_rotation(velocities, coordinates, masses):
     return velocities
         
 def write_MD_log(MD_log, step, Ep, Ek, masses):
+    try:
+        if len(Ep) >= 1:
+            Ep = Ep[0]
+    except:
+        pass
     n_atom = len(masses)
     #Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(n_atom)])
     #Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)
@@ -345,6 +350,11 @@ def write_MD_log(MD_log, step, Ep, Ek, masses):
     MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'\n')
     
 def write_SVR_MD_log(MD_log, step, Ep, Ek, masses, K_simulation, time_step, tau, d_Ee, Wt):
+    try:
+        if len(Ep) >= 1:
+            Ep = Ep[0]
+    except:
+        pass
     n_atom = len(masses)
     Nf = 3 * n_atom
     #Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(n_atom)])
