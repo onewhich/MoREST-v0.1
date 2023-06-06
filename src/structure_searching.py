@@ -196,11 +196,13 @@ class fire_velocity_Verlet(initialize_sampling):
         if self.potential_energy_list[-1] > self.potential_energy_list[0]:
             if self.potential_energy_list[-2] > self.potential_energy_list[0]:
                 if self.potential_energy_list[-3] > self.potential_energy_list[0]:
-                    try:
-                        self.log_morest.write('The optimization has an abnormal energy rise. The mission of MoREST is terminated.\n')
-                    except:
-                        pass
-                    raise Exception('The optimization has an abnormal energy rise. The mission is terminated.')
+                    if self.potential_energy_list[-4] > self.potential_energy_list[0]:
+                        if self.potential_energy_list[-5] > self.potential_energy_list[0]:
+                            try:
+                                self.log_morest.write('The optimization has an abnormal energy rise. The mission of MoREST is terminated.\n')
+                            except:
+                                pass
+                            raise Exception('The optimization has an abnormal energy rise. The mission is terminated.')
                 
     def FIRE(self):
         '''
