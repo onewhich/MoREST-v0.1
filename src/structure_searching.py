@@ -1,5 +1,5 @@
 import numpy as np
-from structure import read_xyz_file, read_xyz_traj, write_xyz_traj
+from structure import read_xyz_file, read_xyz_traj, write_xyz_traj, write_xyz_file
 from many_body_potential import ml_potential, on_the_fly, molpro_calculator
 from ase.md.velocitydistribution import Stationary, ZeroRotation
 from ase import units
@@ -190,6 +190,7 @@ class fire_velocity_Verlet(initialize_sampling):
         
         self.potential_energy_list.append(self.current_system.get_potential_energy())
         write_xyz_traj('MoREST_traj.xyz', self.current_system)
+        write_xyz_file(self.searching_parameters['searching_starting_point']+'_new', self.current_system)
         kinetic_energy = self.current_system.get_kinetic_energy()
         write_searching_log(self.searching_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses,self.current_convergence)
         
