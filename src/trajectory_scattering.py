@@ -1,12 +1,13 @@
 #from time import time
 import numpy as np
 from structure import read_xyz_file, write_xyz_file, read_xyz_traj, write_xyz_traj
+from initialization import initialize_calculator
 from many_body_potential import ml_potential, on_the_fly, molpro_calculator
 #from copy import deepcopy
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary
 from ase import units
 
-class initialize_scattering:
+class initialize_scattering(initialize_calculator):
     '''
     The mass center of target molecule locates at original point [0,0,0].
     The mass center of incident molecule locates on the spherical surface with a specified radius and centered at original point.
@@ -14,27 +15,8 @@ class initialize_scattering:
     The target molecule is in the front of the incident molecule in the combined scattering system.
     '''
     def __init__(self, morest_parameters, scattering_parameters, calculator=None, log_morest=None):
-        self.morest_parameters = morest_parameters
+        super(initialize_scattering, self).__init__(morest_parameters, calculator, log_morest)
         self.scattering_parameters = scattering_parameters
-        
-        if self.morest_parameters['many_body_potential'].upper() in ['on_the_fly'.upper()]:
-            if calculator == None:
-                raise Exception('Please specify the electronic structure method.')
-            self.many_body_potential = on_the_fly(calculator)
-        elif self.morest_parameters['many_body_potential'].upper() in ['molpro'.upper()]:
-            if type(calculator) == type({}):
-                molpro_para_dict = calculator
-                self.many_body_potential = molpro_calculator(molpro_para_dict)
-            else:
-                raise Exception('Please pass the molpro parameters dictionary to calculator.')
-        elif self.morest_parameters['many_body_potential'].upper() in ['ML_potential'.upper()]:
-            self.ml_calculator = ml_potential(ab_initio_calculator = calculator, \
-                                    ml_parameters = self.morest_parameters, \
-                                    log_file = log_morest)
-            self.many_body_potential = on_the_fly(self.ml_calculator)
-            
-        else:
-            raise Exception('Which many body potential will you use?')
             
         ### kinetic energy at simulation temperature
         Nf = 3 * self.n_atom

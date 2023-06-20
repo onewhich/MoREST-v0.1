@@ -3,35 +3,15 @@ import numpy as np
 #import sys
 #sys.path.append('..')
 from structure import read_xyz_file, write_xyz_file, read_xyz_traj, write_xyz_traj
-from many_body_potential import ml_potential, on_the_fly, molpro_calculator
+from initialization import initialize_calculator
 #from copy import deepcopy
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary, ZeroRotation
 from ase import units
 
-class initialize_sampling:
+class initialize_sampling(initialize_calculator):
     def __init__(self, morest_parameters, sampling_parameters, calculator=None, log_morest=None):
-        self.morest_parameters = morest_parameters
+        super(initialize_sampling, self).__init__(morest_parameters, calculator, log_morest)
         self.sampling_parameters = sampling_parameters
-        self.log_morest = log_morest
-        
-        if self.morest_parameters['many_body_potential'].upper() in ['on_the_fly'.upper()]:
-            if calculator == None:
-                raise Exception('Please specify the electronic structure method.')
-            self.many_body_potential = on_the_fly(calculator)
-        elif self.morest_parameters['many_body_potential'].upper() in ['molpro'.upper()]:
-            if type(calculator) == type({}):
-                molpro_para_dict = calculator
-                self.many_body_potential = molpro_calculator(molpro_para_dict)
-            else:
-                raise Exception('Please pass the molpro parameters dictionary to calculator.')
-        elif self.morest_parameters['many_body_potential'].upper() in ['ML_potential'.upper()]:
-            self.ml_calculator = ml_potential(ab_initio_calculator = calculator, \
-                                    ml_parameters = self.morest_parameters, \
-                                    log_file = self.log_morest)
-            self.many_body_potential = on_the_fly(self.ml_calculator)
-            
-        else:
-            raise Exception('Which many body potential will you use?')
             
     def get_current_structure(self, molecule=None):
         if self.sampling_parameters['sampling_initialization']:
