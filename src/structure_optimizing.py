@@ -5,11 +5,10 @@ from ase.md.velocitydistribution import Stationary, ZeroRotation
 from ase import units
 #from copy import deepcopy
 
-class initialize_sampling:
-    def __init__(self, morest_parameters, searching_parameters, fire_parameters, calculator=None, log_morest=None):
+class initialize_optimizing:
+    def __init__(self, morest_parameters, optimizing_parameters, calculator=None, log_morest=None):
         self.morest_parameters = morest_parameters
-        self.searching_parameters = searching_parameters
-        self.fire_parameters = fire_parameters
+        self.optimizing_parameters = optimizing_parameters
         self.log_morest = log_morest
         
         if self.morest_parameters['many_body_potential'].upper() in ['on_the_fly'.upper()]:
@@ -32,9 +31,9 @@ class initialize_sampling:
             raise Exception('Which many body potential will you use?')
             
     def get_current_structure(self, molecule=None):
-        if self.searching_parameters['searching_initialization']:
+        if self.optimizing_parameters['optimizing_initialization']:
             if molecule == None:
-                system = read_xyz_file(self.searching_parameters['searching_starting_point'])
+                system = read_xyz_file(self.optimizing_parameters['optimizing_starting_point'])
             else:
                 system = molecule
         else:
@@ -44,38 +43,32 @@ class initialize_sampling:
             except:
                 self.log_morest.write('Can not read current structure, and read structure from starting point.')
                 if molecule == None:
-                    system = read_xyz_file(self.searching_parameters['searching_starting_point'])
+                    system = read_xyz_file(self.optimizing_parameters['optimizing_starting_point'])
                 else:
                     system = molecule
 
         self.n_atom = system.get_global_number_of_atoms()
-        if self.fire_parameters['fire_equal_masses']:
-            masses = np.ones(self.n_atom)
-            system.set_masses(masses)
-            self.masses = masses[:,np.newaxis]
-        else:
-            self.masses = system.get_masses()[:,np.newaxis]
+        self.masses = system.get_masses()[:,np.newaxis]
         self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(system)
         self.current_convergence = np.max(np.linalg.norm(self.current_forces,axis=-1))
         
         return system
     
 
-class fire_velocity_Verlet(initialize_sampling):
+class optimizing_velocity_Verlet(initialize_optimizing):
     '''
-    This class implements FIRE structure optimization algorithm based on velocity Verlet integrator.
+    This class implements velocity Verlet algorithm for structure optimizing methods.
     MoREST_traj.xyz records the trajectory in an extended xyz format
     MoREST.str (default name) records the initial xyz structure of the system
     MoREST.str_new (default name) records the current xyz structure of the system
     '''
-    def __init__(self, morest_parameters, searching_parameters, fire_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
-        super(fire_velocity_Verlet, self).__init__(morest_parameters, searching_parameters, fire_parameters, calculator, log_morest)
-        self.searching_parameters = searching_parameters
-        self.fire_parameters = fire_parameters
+    def __init__(self, morest_parameters, optimizing_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
+        super(fire_velocity_Verlet, self).__init__(morest_parameters, optimizing_parameters, calculator, log_morest)
+        self.optimizing_parameters = optimizing_parameters
         self.traj_file_name = traj_file_name
         self.log_file_name = log_file_name
         self.log_morest = log_morest
-        if self.searching_parameters['searching_initialization']:
+        if self.optimizing_parameters['optimizing_initialization']:
             self.current_step = 0
             try:
                 self.ml_calculator.get_current_step(self.current_step)
@@ -116,29 +109,7 @@ class fire_velocity_Verlet(initialize_sampling):
                 else:
                     write_xyz_traj(self.traj_file_name, self.current_system)
 
-        if self.searching_parameters['searching_initialization']:
-            if self.log_file_name == None:
-                self.searching_log = open('MoREST_FIRE.log', 'w', buffering=1)
-            else:
-                self.searching_log = open(self.log_file_name, 'w', buffering=1)
-            self.searching_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), MAX atomic force (eV/A)\n')   
-            write_searching_log(self.searching_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses, self.current_convergence)
-        else:
-            if self.log_file_name == None:
-                self.searching_log = open('MoREST_FIRE.log', 'a', buffering=1)
-            else:
-                self.searching_log = open(self.log_file_name, 'a', buffering=1)
-
-        self.time_step = self.fire_parameters['fire_time_step'] * np.ones(self.n_atom)
-        self.max_time_step = self.fire_parameters['fire_max_time_step']
-        self.alpha = self.fire_parameters['fire_alpha_init'] * np.ones(self.n_atom)
-        self.N_min = self.fire_parameters['fire_N_min']
-        self.f_increase = self.fire_parameters['fire_f_increase']
-        self.f_decrease = self.fire_parameters['fire_f_decrease']
-        self.f_alpha = self.fire_parameters['fire_f_alpha']
-        self.N_negative =  np.zeros(self.n_atom, dtype=int)
-
-    def searching_velocity_Verlet(self, bias_forces=None, updated_current_system=None):
+    def VV_next_step(self, bias_forces=None, updated_current_system=None):
         time_step = self.time_step[:,np.newaxis]
         
         if updated_current_system != None:
@@ -190,20 +161,100 @@ class fire_velocity_Verlet(initialize_sampling):
         
         self.potential_energy_list.append(self.current_system.get_potential_energy())
         write_xyz_traj('MoREST_traj.xyz', self.current_system)
-        write_xyz_file(self.searching_parameters['searching_starting_point']+'_new', self.current_system)
+        write_xyz_file(self.optimizing_parameters['optimizing_starting_point']+'_new', self.current_system)
         kinetic_energy = self.current_system.get_kinetic_energy()
-        write_searching_log(self.searching_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses,self.current_convergence)
+        write_optimizing_log(self.optimizing_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses,self.current_convergence)
         
         if self.potential_energy_list[-1] > self.potential_energy_list[0]:
-            if self.potential_energy_list[-2] > self.potential_energy_list[0]:
-                if self.potential_energy_list[-3] > self.potential_energy_list[0]:
-                    if self.potential_energy_list[-4] > self.potential_energy_list[0]:
-                        if self.potential_energy_list[-5] > self.potential_energy_list[0]:
+            if self.potential_energy_list[-2] > self.potential_energy_list[-1]:
+                if self.potential_energy_list[-3] > self.potential_energy_list[-2]:
+                    if self.potential_energy_list[-4] > self.potential_energy_list[-3]:
+                        if self.potential_energy_list[-5] > self.potential_energy_list[-4]:
                             try:
                                 self.log_morest.write('The optimization has an abnormal energy rise. The mission of MoREST is terminated.\n')
                             except:
                                 pass
                             raise Exception('The optimization has an abnormal energy rise. The mission is terminated.')
+        
+
+class fire_velocity_Verlet(optimizing_velocity_Verlet):
+    '''
+    This class implements FIRE structure optimization algorithm based on velocity Verlet integrator.
+    '''
+    def __init__(self, morest_parameters, optimizing_parameters, fire_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
+        super(fire_velocity_Verlet, self).__init__(morest_parameters, optimizing_parameters, molecule, log_file_name, traj_file_name, calculator, log_morest)
+        self.optimizing_parameters = optimizing_parameters
+        self.fire_parameters = fire_parameters
+        self.traj_file_name = traj_file_name
+        self.log_file_name = log_file_name
+        self.log_morest = log_morest
+        if self.optimizing_parameters['optimizing_initialization']:
+            self.current_step = 0
+            try:
+                self.ml_calculator.get_current_step(self.current_step)
+            except:
+                pass
+            self.current_system = self.get_current_structure(molecule)
+            self.potential_energy_list = []
+            self.potential_energy_list.append(self.current_system.get_potential_energy())
+            if self.traj_file_name == None:
+                write_xyz_traj('MoREST_traj.xyz', self.current_system)
+            else:
+                write_xyz_traj(self.traj_file_name, self.current_system)
+        else:
+            try:
+                if self.traj_file_name == None:
+                    self.current_traj = read_xyz_traj('MoREST_traj.xyz')
+                else:
+                    self.current_traj = read_xyz_traj(self.traj_file_name)
+                self.current_step = len(self.current_traj) - 1
+                try:
+                    self.ml_calculator.get_current_step(self.current_step)
+                except:
+                    pass
+                self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
+                self.potential_energy_list = [i_sys.get_potential_energy() for i_sys in self.current_traj]
+                self.potential_energy_list.append(self.current_system.get_potential_energy())
+            except:
+                self.current_step = 0
+                try:
+                    self.ml_calculator.get_current_step(self.current_step)
+                except:
+                    pass
+                self.current_system = self.get_current_structure(molecule)
+                self.potential_energy_list = []
+                self.potential_energy_list.append(self.current_system.get_potential_energy())
+                if self.traj_file_name == None:
+                    write_xyz_traj('MoREST_traj.xyz', self.current_system)
+                else:
+                    write_xyz_traj(self.traj_file_name, self.current_system)
+
+        if self.optimizing_parameters['optimizing_initialization']:
+            if self.log_file_name == None:
+                self.optimizing_log = open('MoREST_FIRE.log', 'w', buffering=1)
+            else:
+                self.optimizing_log = open(self.log_file_name, 'w', buffering=1)
+            self.optimizing_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), MAX atomic force (eV/A)\n')   
+            write_optimizing_log(self.optimizing_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses, self.current_convergence)
+        else:
+            if self.log_file_name == None:
+                self.optimizing_log = open('MoREST_FIRE.log', 'a', buffering=1)
+            else:
+                self.optimizing_log = open(self.log_file_name, 'a', buffering=1)
+
+
+        if self.fire_parameters['fire_equal_masses']:
+            masses = np.ones(self.n_atom)
+            self.current_system.set_masses(masses)
+            self.masses = masses[:,np.newaxis]
+        self.time_step = self.fire_parameters['fire_time_step'] * np.ones(self.n_atom)
+        self.max_time_step = self.fire_parameters['fire_max_time_step']
+        self.alpha = self.fire_parameters['fire_alpha_init'] * np.ones(self.n_atom)
+        self.N_min = self.fire_parameters['fire_N_min']
+        self.f_increase = self.fire_parameters['fire_f_increase']
+        self.f_decrease = self.fire_parameters['fire_f_decrease']
+        self.f_alpha = self.fire_parameters['fire_f_alpha']
+        self.N_negative =  np.zeros(self.n_atom, dtype=int)
                 
     def FIRE(self):
         '''
@@ -248,12 +299,12 @@ class fire_velocity_Verlet(initialize_sampling):
         self.current_system.set_velocities(np.array(next_velocities))
 
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
-        self.searching_velocity_Verlet(bias_forces, updated_current_system)
+        self.VV_next_step(bias_forces, updated_current_system)
         self.FIRE()
 
         return self.current_convergence, self.current_step, self.current_system
 
-def write_searching_log(searching_log, step, Ep, Ek, masses, convergence):
+def write_optimizing_log(optimizing_log, step, Ep, Ek, masses, convergence):
     try:
         if len(Ep) >= 1:
             Ep = Ep[0]
@@ -264,4 +315,4 @@ def write_searching_log(searching_log, step, Ep, Ek, masses, convergence):
     #Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)
     T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
     Et = Ek + Ep
-    searching_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'    '+str(convergence)+'\n')
+    optimizing_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'    '+str(convergence)+'\n')

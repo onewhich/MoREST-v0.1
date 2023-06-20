@@ -57,13 +57,13 @@ Scattering_incident_molecule      MoREST.str_incident # structure or trajectory 
 Scattering_R_target               1 # the final point of the incident direction vector locates on the surface of the sphere with 1 AA radius. The central point of the sphere locates at the geometric center of the target molecule.
 Scattering_R_incident             9 # the initial point of the incident direction vector locates on the surface of the sphere with 9 AA radius. The central point of the sphere locates at the geometric center of the target molecule.
 
-Structure_searching               False
-Searching_initialization          False
-Searching_starting_point          MoREST.str # The input of the structure
-Searching_convergence             1e-3 # unit in eV/AA. The convergence criteria of forces when searching.
-Searching_max_steps               100 # The maximum steps for structure searching.
-Searching_constrained             False #TODO: whether constrained optimization is used.
-Searching_method                  FIRE # CG: conjugate gradient; FIRE; dimer: for transition state.
+Structure_optimizing               False
+Optimizing_initialization          False
+Optimizing_starting_point          MoREST.str # The input of the structure
+Optimizing_convergence             1e-3 # unit in eV/AA. The convergence criteria of forces when optimizing.
+Optimizing_max_steps               100 # The maximum steps for structure optimizing.
+Optimizing_constrained             False #TODO: whether constrained optimization is used.
+Optimizing_method                  FIRE # SD_scipy: steepest descent from scipy; CG_scipy: conjugate gradient from scipy; FIRE; dimer: for transition state.
 FIRE_equal_masses                 True # Setting all the atom masses equal.
 FIRE_time_step                    1 # unit in fs
 FIRE_max_time_step                10 # unit in fs. It is usually 10 times of time step.
@@ -74,7 +74,7 @@ FIRE_f_decrease                   0.5
 FIRE_f_alpha                      0.99
 
 Enhanced_sampling                 False
-Enhanced_sampling_method          RE   # RE; ITS; pRE: parrallel running version of replica exchange; SA: simulated annealing; ST: simulated tempering; aMD: accelerated MD; Wang-Landau; NS: nested sampling; TPS: for scattering; TIS; BH: basin hopping for searching; MH: minima hopping for searching.
+Enhanced_sampling_method          RE   # RE; ITS; pRE: parrallel running version of replica exchange; SA: simulated annealing; ST: simulated tempering; aMD: accelerated MD; Wang-Landau; NS: nested sampling; TPS: for scattering; TIS; BH: basin hopping for optimizing; MH: minima hopping for optimizing.
 RE_initialization                 True  # True will remove files with the title of 'MoREST_RE_'
 RE_lower_bound_temperature        400
 RE_upper_bound_temperature        100000
