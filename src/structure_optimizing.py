@@ -209,20 +209,6 @@ class fire_velocity_Verlet(optimizing_velocity_Verlet):
                 else:
                     write_xyz_traj(self.traj_file_name, self.current_system)
 
-        if self.optimizing_parameters['optimizing_initialization']:
-            if self.log_file_name == None:
-                self.optimizing_log = open('MoREST_FIRE.log', 'w', buffering=1)
-            else:
-                self.optimizing_log = open(self.log_file_name, 'w', buffering=1)
-            self.optimizing_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), MAX atomic force (eV/A), Time step for each atom (fs)\n')   
-            self.write_FIRE_log()
-        else:
-            if self.log_file_name == None:
-                self.optimizing_log = open('MoREST_FIRE.log', 'a', buffering=1)
-            else:
-                self.optimizing_log = open(self.log_file_name, 'a', buffering=1)
-
-
         if self.fire_parameters['fire_equal_masses']:
             masses = np.ones(self.n_atom)
             self.current_system.set_masses(masses)
@@ -235,6 +221,19 @@ class fire_velocity_Verlet(optimizing_velocity_Verlet):
         self.f_decrease = self.fire_parameters['fire_f_decrease']
         self.f_alpha = self.fire_parameters['fire_f_alpha']
         self.N_negative =  np.zeros(self.n_atom, dtype=int)
+
+        if self.optimizing_parameters['optimizing_initialization']:
+            if self.log_file_name == None:
+                self.optimizing_log = open('MoREST_FIRE.log', 'w', buffering=1)
+            else:
+                self.optimizing_log = open(self.log_file_name, 'w', buffering=1)
+            self.optimizing_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), MAX atomic force (eV/A), Time step for each atom (fs)\n')   
+            self.write_FIRE_log()
+        else:
+            if self.log_file_name == None:
+                self.optimizing_log = open('MoREST_FIRE.log', 'a', buffering=1)
+            else:
+                self.optimizing_log = open(self.log_file_name, 'a', buffering=1)
                 
     def FIRE(self):
         '''
