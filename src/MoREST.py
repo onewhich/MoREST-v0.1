@@ -342,7 +342,7 @@ class morest:
             else:
                 while current_convergence >= optimizing_convergence and current_step <= optimizing_maxsteps:
                     current_convergence, current_step, current_system= self.optimizing_job.generate_new_step()
-        self.log_morest.write('Phase space sampling with molecular dynamics method is finished!\n')
+        self.log_morest.write('Structure optimization with '+self.optimizing_parameters['optimizing_method']+' method is finished!\n')
         self.mission_complete()
 
     def enhanced_sampling_re(self,simulation_maxsteps):
