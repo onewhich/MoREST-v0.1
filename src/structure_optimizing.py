@@ -63,7 +63,7 @@ class optimizing_velocity_Verlet(initialize_optimizing):
     MoREST.str_new (default name) records the current xyz structure of the system
     '''
     def __init__(self, morest_parameters, optimizing_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
-        super(fire_velocity_Verlet, self).__init__(morest_parameters, optimizing_parameters, calculator, log_morest)
+        super(optimizing_velocity_Verlet, self).__init__(morest_parameters, optimizing_parameters, calculator, log_morest)
         self.optimizing_parameters = optimizing_parameters
         self.traj_file_name = traj_file_name
         self.log_file_name = log_file_name
