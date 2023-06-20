@@ -29,6 +29,7 @@ class initialize_optimizing(initialize_calculator):
 
         self.n_atom = system.get_global_number_of_atoms()
         self.masses = system.get_masses()[:,np.newaxis]
+        self.kinetic_energy = system.get_kinetic_energy()
         self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(system)
         self.current_convergence = np.max(np.linalg.norm(self.current_forces,axis=-1))
         
@@ -140,10 +141,9 @@ class optimizing_velocity_Verlet(initialize_optimizing):
             pass
         
         self.potential_energy_list.append(self.current_system.get_potential_energy())
+        self.kinetic_energy = self.current_system.get_kinetic_energy()
         write_xyz_traj('MoREST_traj.xyz', self.current_system)
         write_xyz_file(self.optimizing_parameters['optimizing_starting_point']+'_new', self.current_system)
-        kinetic_energy = self.current_system.get_kinetic_energy()
-        write_optimizing_log(self.optimizing_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses,self.current_convergence)
         
         if self.potential_energy_list[-1] > self.potential_energy_list[0]:
             if self.potential_energy_list[-2] > self.potential_energy_list[-1]:
@@ -214,8 +214,8 @@ class fire_velocity_Verlet(optimizing_velocity_Verlet):
                 self.optimizing_log = open('MoREST_FIRE.log', 'w', buffering=1)
             else:
                 self.optimizing_log = open(self.log_file_name, 'w', buffering=1)
-            self.optimizing_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), MAX atomic force (eV/A)\n')   
-            write_optimizing_log(self.optimizing_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses, self.current_convergence)
+            self.optimizing_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), MAX atomic force (eV/A), Time step (fs)\n')   
+            self.write_FIRE_log()
         else:
             if self.log_file_name == None:
                 self.optimizing_log = open('MoREST_FIRE.log', 'a', buffering=1)
@@ -281,18 +281,24 @@ class fire_velocity_Verlet(optimizing_velocity_Verlet):
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
         self.VV_next_step(bias_forces, updated_current_system)
         self.FIRE()
+        self.write_FIRE_log()
 
         return self.current_convergence, self.current_step, self.current_system
 
-def write_optimizing_log(optimizing_log, step, Ep, Ek, masses, convergence):
-    try:
-        if len(Ep) >= 1:
-            Ep = Ep[0]
-    except:
-        pass
-    n_atom = len(masses)
-    #Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(n_atom)])
-    #Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)
-    T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
-    Et = Ek + Ep
-    optimizing_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'    '+str(convergence)+'\n')
+    def write_FIRE_log(self):
+        Ep = self.current_potential_energy
+        Ek = self.kinetic_energy
+        try:
+            if len(Ep) >= 1:
+                Ep = Ep[0]
+        except:
+            pass
+        #Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(n_atom)])
+        #Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)
+        T = 2/3 * Ek/units.kB /self.n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+        Et = Ek + Ep
+        self.optimizing_log.write(str(self.current_step)+'    '+ \
+                                  str(Ep)+'    '+str(Ek)+'    '+ \
+                                   str(T)+'    '+str(Et)+'    '+ \
+                           str(self.current_convergence)+'    '+ \
+                                    str(self.time_step/units.fs)+'\n')
