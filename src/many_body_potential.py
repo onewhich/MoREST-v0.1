@@ -45,6 +45,7 @@ class ml_potential(Calculator):
     def __init__(self, restart=None, ignore_bad_restart=False, label='ml_potential', atoms=None, command=None, **kwargs):
         Calculator.__init__(self, restart=restart, ignore_bad_restart=ignore_bad_restart, label=label, atoms=atoms, command=command, **kwargs)
 
+        self.current_step = None
         self.log_morest = kwargs['log_file']
         self.if_print_uncertainty = kwargs['ml_parameters']['ml_print_uncertainty']
         self.if_fd_forces = kwargs['ml_parameters']['ml_fd_forces']
