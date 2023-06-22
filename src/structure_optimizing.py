@@ -81,9 +81,17 @@ class steepest_descent(initialize_optimizing):
     '''
     This class implements steepest descent algorithm for structure optimization.
     '''
-    def __init__(self, morest_parameters, optimizing_parameters, calculator=None, log_morest=None):
-        super().__init__(morest_parameters, optimizing_parameters, calculator, log_morest)
-        self.optimizing_parameters = optimizing_parameters
+    def __init__(self, morest_parameters, optimizing_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
+        super().__init__(morest_parameters, optimizing_parameters, molecule, log_file_name, traj_file_name, calculator, log_morest)
+
+    def generate_new_step(self, bias_forces=None, updated_current_system=None):
+        if updated_current_system != None:
+            self.current_system = updated_current_system
+        
+        ### F(t) + bias
+        if bias_forces != None:
+            self.current_forces = self.current_forces + bias_forces
+
     
 
 class optimizing_velocity_Verlet(initialize_optimizing):
@@ -97,7 +105,8 @@ class optimizing_velocity_Verlet(initialize_optimizing):
         super(optimizing_velocity_Verlet, self).__init__(morest_parameters, optimizing_parameters, molecule, log_file_name, traj_file_name, calculator, log_morest)
 
     def VV_next_step(self, bias_forces=None, updated_current_system=None):
-        time_step = self.time_step[:,np.newaxis]
+        if type(self.time_step) != float:
+            time_step = self.time_step[:,np.newaxis]
         
         if updated_current_system != None:
             self.current_system = updated_current_system

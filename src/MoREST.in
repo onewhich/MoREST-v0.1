@@ -57,13 +57,14 @@ Scattering_incident_molecule      MoREST.str_incident # structure or trajectory 
 Scattering_R_target               1 # the final point of the incident direction vector locates on the surface of the sphere with 1 AA radius. The central point of the sphere locates at the geometric center of the target molecule.
 Scattering_R_incident             9 # the initial point of the incident direction vector locates on the surface of the sphere with 9 AA radius. The central point of the sphere locates at the geometric center of the target molecule.
 
-Structure_optimizing               False
-Optimizing_initialization          False
-Optimizing_starting_point          MoREST.str # The input of the structure
-Optimizing_convergence             5e-3 # unit in eV/AA. The convergence criteria of forces when optimizing.
-Optimizing_max_steps               100 # The maximum steps for structure optimizing.
-Optimizing_constrained             False #TODO: whether constrained optimization is used.
-Optimizing_method                  FIRE # GD: steepest descent; CG: conjugate gradient; FIRE; dimer: for transition state; SGD: stochastic gradient descent.
+Structure_optimizing              False
+Optimizing_initialization         False
+Optimizing_starting_point         MoREST.str # The input of the structure
+Optimizing_convergence            5e-3 # unit in eV/AA. The convergence criteria of forces when optimizing.
+Optimizing_max_steps              100 # The maximum steps for structure optimizing.
+Optimizing_constrained            False #TODO: whether constrained optimization is used.
+Optimizing_method                 FIRE # GD: steepest/gradient descent; CG: conjugate gradient; FIRE; dimer: for transition state; SGD: stochastic gradient descent.
+GD_step_size                      0.3 
 FIRE_equal_masses                 True # Setting all the atom masses equal.
 FIRE_time_step                    1 # unit in fs
 FIRE_max_time_step                10 # unit in fs. It is usually 10 times of time step.

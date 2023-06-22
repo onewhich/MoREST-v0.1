@@ -63,6 +63,8 @@ class read_parameters:
         self.optimizing_parameters['optimizing_convergence'] = 5e-3
         self.optimizing_parameters['optimizing_max_steps'] = 100
         self.optimizing_parameters['optimizing_constrained'] = False
+        self.gd_parameters = {}
+        self.gd_parameters['gd_step_size'] = 0.3
         self.fire_parameters = {}
         self.fire_parameters['fire_equal_masses'] = True
         self.fire_parameters['fire_time_step'] = 3
@@ -229,7 +231,7 @@ class read_parameters:
                 if 'sampling_method' in self.sampling_parameters:
                     ########################## Molecular dynamics #########################
                     if self.sampling_parameters['sampling_method'].upper() in ['MD']:
-                        self.read_MD_parameters(i_parameter)
+                        self.read_md_parameters(i_parameter)
                 
             ########################## Trajectory scattering ######################
             if self.morest_parameters['trajectory_scattering']:
@@ -239,9 +241,12 @@ class read_parameters:
             if self.morest_parameters['structure_optimizing']:
                 self.read_optimizing_parameters(i_parameter)
                 if 'optimizing_method' in self.optimizing_parameters:
+                    ########################## GD #########################################
+                    if self.optimizing_parameters['optimizing_method'].upper() in ['GD']:
+                        self.read_gd_parameters(i_parameter)
                     ########################## FIRE #######################################
                     if self.optimizing_parameters['optimizing_method'].upper() in ['FIRE']:
-                        self.read_FIRE_parameters(i_parameter)
+                        self.read_fire_parameters(i_parameter)
                 
             ########################## Enhanced sampling ##########################
             if self.morest_parameters['enhanced_sampling']:
@@ -250,10 +255,10 @@ class read_parameters:
                 if 'enhanced_sampling_method' in self.enhanced_sampling_parameters:
                     ########################## RE parameters  #############################
                     if self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['re'.upper()]:
-                        self.read_RE_parameters(i_parameter)
+                        self.read_re_parameters(i_parameter)
                     ########################## ITS parameters    ##########################
                     elif self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['its'.upper()]:
-                        self.read_ITS_parameters(i_parameter)
+                        self.read_its_parameters(i_parameter)
                 
             ########################## Wall potential #############################
             if self.morest_parameters['wall_potential']:
@@ -316,7 +321,7 @@ class read_parameters:
             elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
                 self.sampling_parameters['nvt_svr_tau'] = float(i_parameter.split()[2])
 
-    def read_MD_parameters(self, i_parameter):
+    def read_md_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'MD_time_step'.upper():
             self.md_parameters['md_time_step'] = float(i_parameter.split()[1])
         
@@ -429,8 +434,12 @@ class read_parameters:
 
         elif i_parameter.split()[0].upper() == 'Optimizing_method'.upper():
             self.optimizing_parameters['optimizing_method'] = str(i_parameter.split()[1])
+
+    def read_gd_parameters(self, i_parameter):
+        if i_parameter.split()[0].upper() == 'GD_step_size'.upper():
+            self.gd_parameters['gd_step_size'] = float(i_parameter.split()[1])
     
-    def read_FIRE_parameters(self, i_parameter):
+    def read_fire_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'FIRE_equal_masses'.upper():
             if i_parameter.split()[1].upper() == 'True'.upper():
                 self.fire_parameters['fire_equal_masses'] = True
@@ -460,7 +469,7 @@ class read_parameters:
         elif i_parameter.split()[0].upper() == 'FIRE_f_alpha'.upper():
             self.fire_parameters['fire_f_alpha'] = float(i_parameter.split()[1])
 
-    def read_RE_parameters(self, i_parameter):
+    def read_re_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'RE_initialization'.upper():
             if i_parameter.split()[1].upper() == 'True'.upper():
                 self.re_parameters['re_initialization'] = True
@@ -496,7 +505,7 @@ class read_parameters:
         elif i_parameter.split()[0].upper() == 'RE_energy_shift'.upper():
             self.re_parameters['re_energy_shift'] = float(i_parameter.split()[1])
 
-    def read_ITS_parameters(self, i_parameter):
+    def read_its_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'ITS_initialization'.upper():
             if i_parameter.split()[1].upper() == 'True'.upper():
                 self.its_parameters['its_initialization'] = True
@@ -852,6 +861,13 @@ class read_parameters:
                 log_morest.write(key+' : '+str(self.optimizing_parameters[key])+'\n')
             log_morest.write('\n')
         return self.optimizing_parameters
+    
+    def get_gd_parameters(self, log_morest=None):
+        if log_morest != None:
+            for key in self.gd_parameters:
+                log_morest.write(key+' : '+str(self.gd_parameters[key])+'\n')
+            log_morest.write('\n')
+        return self.gd_parameters
     
     def get_fire_parameters(self, log_morest=None):
         self.fire_parameters['fire_time_step'] *= units.fs
