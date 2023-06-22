@@ -1,9 +1,8 @@
 import numpy as np
-from structure import read_xyz_file, read_xyz_traj, write_xyz_traj, write_xyz_file
+from structure_io import read_xyz_file, read_xyz_traj, write_xyz_traj, write_xyz_file
 from initialization import initialize_calculator
 from ase.md.velocitydistribution import Stationary, ZeroRotation
 from ase import units
-#from copy import deepcopy
 
 class initialize_optimizing(initialize_calculator):
     def __init__(self, morest_parameters, optimizing_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):

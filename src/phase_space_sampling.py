@@ -2,16 +2,45 @@
 import numpy as np
 #import sys
 #sys.path.append('..')
-from structure import read_xyz_file, write_xyz_file, read_xyz_traj, write_xyz_traj
+from structure_io import read_xyz_file, write_xyz_file, read_xyz_traj, write_xyz_traj
 from initialization import initialize_calculator
 #from copy import deepcopy
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary, ZeroRotation
 from ase import units
 
 class initialize_sampling(initialize_calculator):
-    def __init__(self, morest_parameters, sampling_parameters, calculator=None, log_morest=None):
+    def __init__(self, morest_parameters, sampling_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
         super(initialize_sampling, self).__init__(morest_parameters, calculator, log_morest)
         self.sampling_parameters = sampling_parameters
+        self.traj_file_name = traj_file_name
+        self.log_file_name = log_file_name
+
+        if self.sampling_parameters['sampling_initialization']:
+            self.current_step = 0
+            try:
+                self.ml_calculator.get_current_step(self.current_step)
+            except:
+                pass
+            self.current_system = self.get_current_structure(molecule)
+        else:
+            try:
+                if self.traj_file_name == None:
+                    self.current_traj = read_xyz_traj('MoREST_traj.xyz')
+                else:
+                    self.current_traj = read_xyz_traj(self.traj_file_name)
+                self.current_step = (len(self.current_traj) - 1) * self.sampling_parameters['sampling_traj_interval']
+                try:
+                    self.ml_calculator.get_current_step(self.current_step)
+                except:
+                    pass
+                self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
+            except:
+                self.current_step = 0
+                try:
+                    self.ml_calculator.get_current_step(self.current_step)
+                except:
+                    pass
+                self.current_system = self.get_current_structure(molecule)
             
     def get_current_structure(self, molecule=None):
         if self.sampling_parameters['sampling_initialization']:
@@ -36,8 +65,6 @@ class initialize_sampling(initialize_calculator):
         
         self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(system)
 
-      
-
         #self.masses = system.get_masses()
         #self.current_accelerations = np.array([self.current_forces[i_atom] / self.masses[i_atom] for i_atom in range(self.n_atom)])
         
@@ -54,28 +81,21 @@ class velocity_Verlet(initialize_sampling):
     
     def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, \
                         v_rescaling=False, Berendsen_rescaling=False, Langevin_rescaling=False, sv_rescaling=False, log_morest=None):
-        super(velocity_Verlet, self).__init__(morest_parameters, sampling_parameters, calculator, log_morest)
+        super(velocity_Verlet, self).__init__(morest_parameters, sampling_parameters, molecule, log_file_name, traj_file_name, calculator, log_morest)
         self.md_parameters = md_parameters
-        self.traj_file_name = traj_file_name
-        self.log_file_name = log_file_name
         self.v_rescaling = v_rescaling
         self.b_rescaling = Berendsen_rescaling
         self.l_rescaling = Langevin_rescaling
         self.sv_rescaling = sv_rescaling
+
         if T_simulation == None:
             self.re_simulation = False
             self.T_simulation = self.md_parameters['md_temperature']
         else:
             self.re_simulation = True
             self.T_simulation = T_simulation
-        
-        if self.sampling_parameters['sampling_initialization']:
-            self.current_step = 0
-            try:
-                self.ml_calculator.get_current_step(self.current_step)
-            except:
-                pass
-            self.current_system = self.get_current_structure(molecule)
+
+        if self.current_step == 0:
             if self.T_simulation > 1e-6:
                 MaxwellBoltzmannDistribution(self.current_system, temperature_K = self.T_simulation)
             #self.current_traj = []
@@ -84,33 +104,6 @@ class velocity_Verlet(initialize_sampling):
                 write_xyz_traj('MoREST_traj.xyz', self.current_system)
             else:
                 write_xyz_traj(self.traj_file_name, self.current_system)
-        else:
-            try:
-                if self.traj_file_name == None:
-                    self.current_traj = read_xyz_traj('MoREST_traj.xyz')
-                else:
-                    self.current_traj = read_xyz_traj(self.traj_file_name)
-                self.current_step = (len(self.current_traj) - 1) * self.sampling_parameters['sampling_traj_interval']
-                try:
-                    self.ml_calculator.get_current_step(self.current_step)
-                except:
-                    pass
-                self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
-            except:
-                self.current_step = 0
-                try:
-                    self.ml_calculator.get_current_step(self.current_step)
-                except:
-                    pass
-                self.current_system = self.get_current_structure(molecule)
-                if self.T_simulation > 1e-6:
-                    MaxwellBoltzmannDistribution(self.current_system, temperature_K = self.T_simulation)
-                #self.current_traj = []
-                #self.current_traj.append(self.current_system)
-                if self.traj_file_name == None:
-                    write_xyz_traj('MoREST_traj.xyz', self.current_system)
-                else:
-                    write_xyz_traj(self.traj_file_name, self.current_system)
 
         ### kinetic energy at simulation temperature
         Nf = 3 * self.n_atom

@@ -3,7 +3,7 @@
 from read_parameters import read_parameters
 from many_body_potential import Molpro
 from initialization import initialize_calculator
-from structure import read_xyz_file
+from structure_io import read_xyz_file
 from ase.neb import NEB
 from ase.optimize import MDMin
 
