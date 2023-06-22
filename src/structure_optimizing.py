@@ -6,45 +6,8 @@ from ase import units
 #from copy import deepcopy
 
 class initialize_optimizing(initialize_calculator):
-    def __init__(self, morest_parameters, optimizing_parameters, calculator=None, log_morest=None):
-        super(initialize_optimizing, self).__init__(morest_parameters, calculator, log_morest)
-        self.optimizing_parameters = optimizing_parameters
-            
-    def get_current_structure(self, molecule=None):
-        if self.optimizing_parameters['optimizing_initialization']:
-            if molecule == None:
-                system = read_xyz_file(self.optimizing_parameters['optimizing_starting_point'])
-            else:
-                system = molecule
-        else:
-            try:
-                system = self.current_traj[-1]
-                #system = read_xyz_file('MoREST.str_new') #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
-            except:
-                self.log_morest.write('Can not read current structure, and read structure from starting point.')
-                if molecule == None:
-                    system = read_xyz_file(self.optimizing_parameters['optimizing_starting_point'])
-                else:
-                    system = molecule
-
-        self.n_atom = system.get_global_number_of_atoms()
-        self.masses = system.get_masses()[:,np.newaxis]
-        self.kinetic_energy = system.get_kinetic_energy()
-        self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(system)
-        self.current_convergence = np.max(np.linalg.norm(self.current_forces,axis=-1))
-        
-        return system
-    
-
-class optimizing_velocity_Verlet(initialize_optimizing):
-    '''
-    This class implements velocity Verlet algorithm for structure optimizing methods.
-    MoREST_traj.xyz records the trajectory in an extended xyz format
-    MoREST.str (default name) records the initial xyz structure of the system
-    MoREST.str_new (default name) records the current xyz structure of the system
-    '''
     def __init__(self, morest_parameters, optimizing_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
-        super(optimizing_velocity_Verlet, self).__init__(morest_parameters, optimizing_parameters, calculator, log_morest)
+        super(initialize_optimizing, self).__init__(morest_parameters, calculator, log_morest)
         self.optimizing_parameters = optimizing_parameters
         self.traj_file_name = traj_file_name
         self.log_file_name = log_file_name
@@ -89,6 +52,50 @@ class optimizing_velocity_Verlet(initialize_optimizing):
                     write_xyz_traj('MoREST_traj.xyz', self.current_system)
                 else:
                     write_xyz_traj(self.traj_file_name, self.current_system)
+            
+    def get_current_structure(self, molecule=None):
+        if self.optimizing_parameters['optimizing_initialization']:
+            if molecule == None:
+                system = read_xyz_file(self.optimizing_parameters['optimizing_starting_point'])
+            else:
+                system = molecule
+        else:
+            try:
+                system = self.current_traj[-1]
+                #system = read_xyz_file('MoREST.str_new') #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
+            except:
+                self.log_morest.write('Can not read current structure, and read structure from starting point.')
+                if molecule == None:
+                    system = read_xyz_file(self.optimizing_parameters['optimizing_starting_point'])
+                else:
+                    system = molecule
+
+        self.n_atom = system.get_global_number_of_atoms()
+        self.masses = system.get_masses()[:,np.newaxis]
+        self.kinetic_energy = system.get_kinetic_energy()
+        self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(system)
+        self.current_convergence = np.max(np.linalg.norm(self.current_forces,axis=-1))
+        
+        return system
+    
+class steepest_descent(initialize_optimizing):
+    '''
+    This class implements steepest descent algorithm for structure optimization.
+    '''
+    def __init__(self, morest_parameters, optimizing_parameters, calculator=None, log_morest=None):
+        super().__init__(morest_parameters, optimizing_parameters, calculator, log_morest)
+        self.optimizing_parameters = optimizing_parameters
+    
+
+class optimizing_velocity_Verlet(initialize_optimizing):
+    '''
+    This class implements velocity Verlet algorithm for structure optimizing methods.
+    MoREST_traj.xyz records the trajectory in an extended xyz format
+    MoREST.str (default name) records the initial xyz structure of the system
+    MoREST.str_new (default name) records the current xyz structure of the system
+    '''
+    def __init__(self, morest_parameters, optimizing_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
+        super(optimizing_velocity_Verlet, self).__init__(morest_parameters, optimizing_parameters, molecule, log_file_name, traj_file_name, calculator, log_morest)
 
     def VV_next_step(self, bias_forces=None, updated_current_system=None):
         time_step = self.time_step[:,np.newaxis]
@@ -163,52 +170,7 @@ class fire_velocity_Verlet(optimizing_velocity_Verlet):
     '''
     def __init__(self, morest_parameters, optimizing_parameters, fire_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
         super(fire_velocity_Verlet, self).__init__(morest_parameters, optimizing_parameters, molecule, log_file_name, traj_file_name, calculator, log_morest)
-        self.optimizing_parameters = optimizing_parameters
         self.fire_parameters = fire_parameters
-        self.traj_file_name = traj_file_name
-        self.log_file_name = log_file_name
-        self.log_morest = log_morest
-        if self.optimizing_parameters['optimizing_initialization']:
-            self.current_step = 0
-            try:
-                self.ml_calculator.get_current_step(self.current_step)
-            except:
-                pass
-            self.current_system = self.get_current_structure(molecule)
-            self.potential_energy_list = []
-            self.potential_energy_list.append(self.current_system.get_potential_energy())
-            if self.traj_file_name == None:
-                write_xyz_traj('MoREST_traj.xyz', self.current_system)
-            else:
-                write_xyz_traj(self.traj_file_name, self.current_system)
-        else:
-            try:
-                if self.traj_file_name == None:
-                    self.current_traj = read_xyz_traj('MoREST_traj.xyz')
-                else:
-                    self.current_traj = read_xyz_traj(self.traj_file_name)
-                self.current_step = len(self.current_traj) - 1
-                try:
-                    self.ml_calculator.get_current_step(self.current_step)
-                except:
-                    pass
-                self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
-                self.potential_energy_list = [i_sys.get_potential_energy() for i_sys in self.current_traj]
-                self.potential_energy_list.append(self.current_system.get_potential_energy())
-            except:
-                self.current_step = 0
-                try:
-                    self.ml_calculator.get_current_step(self.current_step)
-                except:
-                    pass
-                self.current_system = self.get_current_structure(molecule)
-                self.potential_energy_list = []
-                self.potential_energy_list.append(self.current_system.get_potential_energy())
-                if self.traj_file_name == None:
-                    write_xyz_traj('MoREST_traj.xyz', self.current_system)
-                else:
-                    write_xyz_traj(self.traj_file_name, self.current_system)
-
         if self.fire_parameters['fire_equal_masses']:
             masses = np.ones(self.n_atom)
             self.current_system.set_masses(masses)
