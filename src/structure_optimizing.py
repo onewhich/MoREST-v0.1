@@ -81,8 +81,9 @@ class steepest_descent(initialize_optimizing):
     '''
     This class implements steepest descent algorithm for structure optimization.
     '''
-    def __init__(self, morest_parameters, optimizing_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
+    def __init__(self, morest_parameters, optimizing_parameters, gd_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
         super().__init__(morest_parameters, optimizing_parameters, molecule, log_file_name, traj_file_name, calculator, log_morest)
+        self.step_size = gd_parameters['gd_step_size']
 
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
         if updated_current_system != None:
@@ -92,8 +93,21 @@ class steepest_descent(initialize_optimizing):
         if bias_forces != None:
             self.current_forces = self.current_forces + bias_forces
 
-    
+        current_coordinates = self.current_system.get_positions()
 
+        # r(k+1) = r(k) + a * F(k)
+        next_coordinates = current_coordinates + self.step_size * self.current_forces
+        self.current_system.set_positions(next_coordinates)
+
+        next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(self.current_system)
+
+        self.current_step += 1
+        self.current_forces = next_forces
+        self.current_potential_energy = next_potential_energy
+        self.current_convergence = np.max(np.linalg.norm(self.current_forces,axis=-1))
+
+        return self.current_convergence, self.current_step, self.current_system
+    
 class optimizing_velocity_Verlet(initialize_optimizing):
     '''
     This class implements velocity Verlet algorithm for structure optimizing methods.
