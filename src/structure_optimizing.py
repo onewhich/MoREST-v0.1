@@ -206,7 +206,8 @@ class conjugate_gradient(initialize_optimizing):
         print(self.current_forces)
 
         # beta(k+1) = (F(k+1).T @ (F(k+1)-F(k))) / (F(k).T @ F(k))
-        next_beta = (next_forces.T @ (next_forces-self.current_forces)) / (self.current_forces.T @ self.current_forces)
+        # F(k).T @ F(k) = ||F(k)||^2
+        next_beta = (next_forces.T @ (next_forces-self.current_forces)) / np.linalg.norm(self.current_forces)**2
 
         print(next_beta)
         print(self.p_k)
