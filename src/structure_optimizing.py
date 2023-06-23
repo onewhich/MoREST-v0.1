@@ -202,20 +202,11 @@ class conjugate_gradient(initialize_optimizing):
 
         next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(self.current_system)
 
-        print(next_forces)
-        print(self.current_forces)
-
-        # beta(k+1) = (F(k+1).T @ (F(k+1)-F(k))) / (F(k).T @ F(k))
-        # F(k).T @ F(k) = ||F(k)||^2
-        next_beta = (next_forces.T @ (next_forces-self.current_forces)) / np.linalg.norm(self.current_forces)**2
-
-        print(next_beta)
-        print(self.p_k)
+        # beta(k+1) = ||F(k+1).T @ (F(k+1)-F(k))|| / ||F(k).T @ F(k)||
+        next_beta = np.linalg.norm(next_forces.T @ (next_forces-self.current_forces)) / np.linalg.norm(self.current_forces.T @ self.current_forces)
 
         # p(k+1) = F(k+1) + beta(k+1) * p(k)
         self.p_k = next_forces + next_beta * self.p_k
-
-        print(self.p_k)
 
         self.current_step += 1
         self.current_forces = next_forces
