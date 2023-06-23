@@ -98,6 +98,19 @@ class steepest_descent(initialize_optimizing):
         super().__init__(morest_parameters, optimizing_parameters, molecule, log_file_name, traj_file_name, calculator, log_morest)
         self.step_size = gd_parameters['gd_step_size']
 
+        if self.optimizing_parameters['optimizing_initialization']:
+            if self.log_file_name == None:
+                self.optimizing_log = open('MoREST_GD.log', 'w', buffering=1)
+            else:
+                self.optimizing_log = open(self.log_file_name, 'w', buffering=1)
+            self.optimizing_log.write('# MD step, Potential energy (eV), MAX atomic force (eV/A)\n')   
+            self.write_gd_log()
+        else:
+            if self.log_file_name == None:
+                self.optimizing_log = open('MoREST_GD.log', 'a', buffering=1)
+            else:
+                self.optimizing_log = open(self.log_file_name, 'a', buffering=1)
+
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
         if updated_current_system != None:
             self.current_system = updated_current_system
@@ -124,10 +137,23 @@ class steepest_descent(initialize_optimizing):
             self.ml_calculator.get_current_step(self.current_step)
         except:
             pass
+        
+        write_xyz_traj('MoREST_traj.xyz', self.current_system)
+        write_xyz_file(self.optimizing_parameters['optimizing_starting_point']+'_new', self.current_system)
+        self.write_gd_log()
 
         self.check_divergence()
 
         return self.current_convergence, self.current_step, self.current_system
+    
+    def write_gd_log(self):
+        Ep = self.current_potential_energy
+        try:
+            if len(Ep) >= 1:
+                Ep = Ep[0]
+        except:
+            pass
+        self.optimizing_log.write(str(self.current_step)+'    '+str(Ep)+'    '+str(self.current_convergence)+'\n')
     
 
 class conjugate_gradient(initialize_optimizing):
@@ -146,6 +172,19 @@ class conjugate_gradient(initialize_optimizing):
         super().__init__(morest_parameters, optimizing_parameters, molecule, log_file_name, traj_file_name, calculator, log_morest)
         self.step_size = cg_parameters['cg_step_size']
         self.p_k = self.current_forces
+
+        if self.optimizing_parameters['optimizing_initialization']:
+            if self.log_file_name == None:
+                self.optimizing_log = open('MoREST_CG.log', 'w', buffering=1)
+            else:
+                self.optimizing_log = open(self.log_file_name, 'w', buffering=1)
+            self.optimizing_log.write('# MD step, Potential energy (eV), MAX atomic force (eV/A)\n')   
+            self.write_cg_log()
+        else:
+            if self.log_file_name == None:
+                self.optimizing_log = open('MoREST_CG.log', 'a', buffering=1)
+            else:
+                self.optimizing_log = open(self.log_file_name, 'a', buffering=1)
 
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
         if updated_current_system != None:
@@ -179,10 +218,23 @@ class conjugate_gradient(initialize_optimizing):
             self.ml_calculator.get_current_step(self.current_step)
         except:
             pass
+        
+        write_xyz_traj('MoREST_traj.xyz', self.current_system)
+        write_xyz_file(self.optimizing_parameters['optimizing_starting_point']+'_new', self.current_system)
+        self.write_cg_log()
 
         self.check_divergence()
 
         return self.current_convergence, self.current_step, self.current_system
+    
+    def write_cg_log(self):
+        Ep = self.current_potential_energy
+        try:
+            if len(Ep) >= 1:
+                Ep = Ep[0]
+        except:
+            pass
+        self.optimizing_log.write(str(self.current_step)+'    '+str(Ep)+'    '+str(self.current_convergence)+'\n')
     
     
 class optimizing_velocity_Verlet(initialize_optimizing):
@@ -278,7 +330,7 @@ class fire_velocity_Verlet(optimizing_velocity_Verlet):
             else:
                 self.optimizing_log = open(self.log_file_name, 'w', buffering=1)
             self.optimizing_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), MAX atomic force (eV/A), Time step for each atom (fs)\n')   
-            self.write_FIRE_log()
+            self.write_fire_log()
         else:
             if self.log_file_name == None:
                 self.optimizing_log = open('MoREST_FIRE.log', 'a', buffering=1)
@@ -330,12 +382,12 @@ class fire_velocity_Verlet(optimizing_velocity_Verlet):
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
         self.VV_next_step(bias_forces, updated_current_system)
         self.FIRE()
-        self.write_FIRE_log()
+        self.write_fire_log()
         self.check_divergence()
 
         return self.current_convergence, self.current_step, self.current_system
 
-    def write_FIRE_log(self):
+    def write_fire_log(self):
         Ep = self.current_potential_energy
         Ek = self.kinetic_energy
         try:
