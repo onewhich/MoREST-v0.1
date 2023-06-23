@@ -77,6 +77,19 @@ class initialize_optimizing(initialize_calculator):
         
         return system
     
+    def check_divergence(self):
+        if self.potential_energy_list[-1] > self.potential_energy_list[0]:
+            if self.potential_energy_list[-2] > self.potential_energy_list[-1]:
+                if self.potential_energy_list[-3] > self.potential_energy_list[-2]:
+                    if self.potential_energy_list[-4] > self.potential_energy_list[-3]:
+                        if self.potential_energy_list[-5] > self.potential_energy_list[-4]:
+                            try:
+                                self.log_morest.write('The optimization has an abnormal energy rise. The mission of MoREST is terminated.\n')
+                            except:
+                                pass
+                            raise Exception('The optimization has an abnormal energy rise. The mission is terminated.')
+                        
+    
 class steepest_descent(initialize_optimizing):
     '''
     This class implements steepest descent algorithm for structure optimization.
@@ -105,12 +118,76 @@ class steepest_descent(initialize_optimizing):
         self.current_forces = next_forces
         self.current_potential_energy = next_potential_energy
         self.current_convergence = np.max(np.linalg.norm(self.current_forces,axis=-1))
+        self.potential_energy_list.append(self.current_system.get_potential_energy())
+
+        try:
+            self.ml_calculator.get_current_step(self.current_step)
+        except:
+            pass
+
+        self.check_divergence()
 
         return self.current_convergence, self.current_step, self.current_system
     
+
+class conjugate_gradient(initialize_optimizing):
+    '''
+    This class implements Polak–Ribi`ere conjugate gradient algorithm for structure optimization.
+    @article{nocedal2006conjugate,
+      title={Conjugate gradient methods},
+      author={Nocedal, Jorge and Wright, Stephen J},
+      journal={Numerical optimization},
+      pages={101--134},
+      year={2006},
+      publisher={Springer}
+    }
+    '''
+    def __init__(self, morest_parameters, optimizing_parameters, cg_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
+        super().__init__(morest_parameters, optimizing_parameters, molecule, log_file_name, traj_file_name, calculator, log_morest)
+        self.step_size = cg_parameters['cg_step_size']
+        self.p_k = self.current_forces
+
+    def generate_new_step(self, bias_forces=None, updated_current_system=None):
+        if updated_current_system != None:
+            self.current_system = updated_current_system
+        
+        ### F(t) + bias
+        if bias_forces != None:
+            self.current_forces = self.current_forces + bias_forces
+
+        current_coordinates = self.current_system.get_positions()
+
+        # r(k+1) = r(k) + a * p(k)
+        next_coordinates = current_coordinates + self.step_size * self.p_k
+        self.current_system.set_positions(next_coordinates)
+
+        next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(self.current_system)
+
+        # beta(k+1) = (F(k+1)@F(k+1))/(F(k)@F(k))
+        next_beta = (next_forces @ (next_forces-self.current_forces)) / (self.current_forces @ self.current_forces)
+
+        # p(k+1) = F(k+1) + beta(k+1) * p(k)
+        self.p_k = next_forces + next_beta * self.p_k
+
+        self.current_step += 1
+        self.current_forces = next_forces
+        self.current_potential_energy = next_potential_energy
+        self.current_convergence = np.max(np.linalg.norm(self.current_forces,axis=-1))
+        self.potential_energy_list.append(self.current_system.get_potential_energy())
+
+        try:
+            self.ml_calculator.get_current_step(self.current_step)
+        except:
+            pass
+
+        self.check_divergence()
+
+        return self.current_convergence, self.current_step, self.current_system
+    
+    
 class optimizing_velocity_Verlet(initialize_optimizing):
     '''
-    This class implements velocity Verlet algorithm for structure optimizing methods.
+    This class implements velocity Verlet algorithm for structure optimization methods.
     MoREST_traj.xyz records the trajectory in an extended xyz format
     MoREST.str (default name) records the initial xyz structure of the system
     MoREST.str_new (default name) records the current xyz structure of the system
@@ -160,6 +237,8 @@ class optimizing_velocity_Verlet(initialize_optimizing):
         self.current_forces = next_forces
         self.current_potential_energy = next_potential_energy
         self.current_convergence = np.max(np.linalg.norm(self.current_forces,axis=-1))
+        self.potential_energy_list.append(self.current_system.get_potential_energy())
+        self.kinetic_energy = self.current_system.get_kinetic_energy()
 
         Stationary(self.current_system)
         #ZeroRotation(self.current_system)
@@ -169,21 +248,8 @@ class optimizing_velocity_Verlet(initialize_optimizing):
         except:
             pass
         
-        self.potential_energy_list.append(self.current_system.get_potential_energy())
-        self.kinetic_energy = self.current_system.get_kinetic_energy()
         write_xyz_traj('MoREST_traj.xyz', self.current_system)
         write_xyz_file(self.optimizing_parameters['optimizing_starting_point']+'_new', self.current_system)
-        
-        if self.potential_energy_list[-1] > self.potential_energy_list[0]:
-            if self.potential_energy_list[-2] > self.potential_energy_list[-1]:
-                if self.potential_energy_list[-3] > self.potential_energy_list[-2]:
-                    if self.potential_energy_list[-4] > self.potential_energy_list[-3]:
-                        if self.potential_energy_list[-5] > self.potential_energy_list[-4]:
-                            try:
-                                self.log_morest.write('The optimization has an abnormal energy rise. The mission of MoREST is terminated.\n')
-                            except:
-                                pass
-                            raise Exception('The optimization has an abnormal energy rise. The mission is terminated.')
         
 
 class fire_velocity_Verlet(optimizing_velocity_Verlet):
@@ -265,6 +331,7 @@ class fire_velocity_Verlet(optimizing_velocity_Verlet):
         self.VV_next_step(bias_forces, updated_current_system)
         self.FIRE()
         self.write_FIRE_log()
+        self.check_divergence()
 
         return self.current_convergence, self.current_step, self.current_system
 
