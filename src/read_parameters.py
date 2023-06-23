@@ -64,9 +64,9 @@ class read_parameters:
         self.optimizing_parameters['optimizing_max_steps'] = 100
         self.optimizing_parameters['optimizing_constrained'] = False
         self.gd_parameters = {}
-        self.gd_parameters['gd_step_size'] = 0.3
+        self.gd_parameters['gd_step_size'] = 0.05
         self.cg_parameters = {}
-        self.cg_parameters['cg_step_size'] = 0.3
+        self.cg_parameters['cg_step_size'] = 0.05
         self.fire_parameters = {}
         self.fire_parameters['fire_equal_masses'] = True
         self.fire_parameters['fire_time_step'] = 3
