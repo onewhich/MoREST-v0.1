@@ -64,7 +64,7 @@ class read_parameters:
         self.optimizing_parameters['optimizing_max_steps'] = 100
         self.optimizing_parameters['optimizing_constrained'] = False
         self.gd_parameters = {}
-        self.gd_parameters['gd_step_size'] = 0.05
+        self.gd_parameters['gd_step_size'] = 0.03
         self.cg_parameters = {}
         self.cg_parameters['cg_step_size'] = 0.05
         self.fire_parameters = {}
@@ -446,7 +446,7 @@ class read_parameters:
 
     def read_cg_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'CG_step_size'.upper():
-            self.gd_parameters['cg_step_size'] = float(i_parameter.split()[1])
+            self.cg_parameters['cg_step_size'] = float(i_parameter.split()[1])
     
     def read_fire_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'FIRE_equal_masses'.upper():
