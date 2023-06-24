@@ -154,6 +154,7 @@ class gradient_descent(initialize_optimizing):
             next_beta = [next_forces[i] @ (next_forces[i]-self.current_forces[i]) / self.current_forces[i] @ self.current_forces[i] \
                          for i in range(self.n_atom)]
             next_beta = np.array(next_beta)[:,np.newaxis]
+            print(next_beta)
 
             # p(k+1) = F(k+1) + beta(k+1) * p(k)
             self.p_k = next_forces + next_beta * self.p_k
