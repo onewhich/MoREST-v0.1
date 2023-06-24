@@ -170,7 +170,9 @@ class gradient_descent(initialize_optimizing):
                 print(np.identity(3))
                 print(s_k[i])
                 print(y_k[i])
+                print(rho_k[i])
                 print(np.outer(s_k[i], y_k[i]))
+                print(rho_k[i] @ np.outer(s_k[i], y_k[i]))
 
             next_H = [(np.identity(3) - rho_k[i] @ np.outer(s_k[i], y_k[i])) @ self.H_k[i] @ (np.identity(3) - rho_k[i] @ np.outer(y_k[i], s_k[i])) + \
               rho_k[i] @ np.outer(s_k[i], s_k[i]) for i in range(self.n_atom)]
