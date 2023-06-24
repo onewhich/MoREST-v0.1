@@ -153,7 +153,7 @@ class gradient_descent(initialize_optimizing):
             # beta(k+1) = (F(k+1).T @ (F(k+1)-F(k))) / (F(k).T @ F(k))
             next_beta = [next_forces[i] @ (next_forces[i]-self.current_forces[i]) / self.current_forces[i] @ self.current_forces[i] \
                          for i in range(self.n_atom)]
-            beta = np.array(beta)[:,np.newaxis]
+            next_beta = np.array(next_beta)[:,np.newaxis]
 
             # p(k+1) = F(k+1) + beta(k+1) * p(k)
             self.p_k = next_forces + next_beta * self.p_k
@@ -161,7 +161,7 @@ class gradient_descent(initialize_optimizing):
         if self.bfgs:
             # s(k) = r(k+1) - r(k)
             s_k = next_coordinates - current_coordinates
-            # y(k) = -(F(k+1) - F(k))
+            # y(k) = F(k+1) - F(k)
             y_k = next_forces - self.current_forces
             # rho(k) = 1/(y(k)^T @ s(k))
             rho_k = np.array([1/(y_k[i] @ s_k[i]) for i in range(self.n_atom)])
