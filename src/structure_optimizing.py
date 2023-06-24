@@ -162,14 +162,13 @@ class gradient_descent(initialize_optimizing):
             # s(k) = r(k+1) - r(k)
             s_k = next_coordinates - current_coordinates
             # y(k) = -(F(k+1) - F(k))
-            y_k = self.current_forces - next_forces
+            y_k = next_forces - self.current_forces
             # rho(k) = 1/(y(k)^T @ s(k))
             rho_k = np.array([1/(y_k[i] @ s_k[i]) for i in range(self.n_atom)])
             # H(k+1) = (I - rho(k) s(k) y(k).T) H(k) (I - rho(k) y(k) s(k).T) + rho(k) s(k) s(k).T
             next_H = [(np.identity(3) - rho_k[i] * np.outer(s_k[i], y_k[i])) @ self.H_k[i] @ (np.identity(3) - rho_k[i] * np.outer(y_k[i], s_k[i])) + \
               rho_k[i] * np.outer(s_k[i], s_k[i]) for i in range(self.n_atom)]
             
-              
             # p(k+1) = H(k+1) @ F(k+1)
             self.p_k = np.array([next_H[i] @ next_forces[i] for i in range(self.n_atom)])
 
