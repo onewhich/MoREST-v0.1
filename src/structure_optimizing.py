@@ -107,7 +107,7 @@ class gradient_descent(initialize_optimizing):
             self.step_size = gradient_parameters['cg_step_size']
         elif self.bfgs:
             self.step_size = gradient_parameters['bfgs_step_size']
-            self.H_k = np.array([np.identity(3) for i in self.n_atom])
+            self.H_k = np.array([np.identity(3) for i in range(self.n_atom)])
 
         if self.optimizing_parameters['optimizing_initialization']:
             if self.log_file_name == None:
