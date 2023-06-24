@@ -90,99 +90,45 @@ class initialize_optimizing(initialize_calculator):
                             raise Exception('The optimization has an abnormal energy rise. The mission is terminated.')
                         
     
-class steepest_descent(initialize_optimizing):
+class gradient_descent(initialize_optimizing):
     '''
     This class implements steepest descent algorithm for structure optimization.
     '''
-    def __init__(self, morest_parameters, optimizing_parameters, gd_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
+    def __init__(self, morest_parameters, optimizing_parameters, gradient_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, \
+                 steepest_descent=False, conjugate_gradient=False, bfgs=False, log_morest=None):
         super().__init__(morest_parameters, optimizing_parameters, molecule, log_file_name, traj_file_name, calculator, log_morest)
-        self.step_size = gd_parameters['gd_step_size']
-
-        if self.optimizing_parameters['optimizing_initialization']:
-            if self.log_file_name == None:
-                self.optimizing_log = open('MoREST_GD.log', 'w', buffering=1)
-            else:
-                self.optimizing_log = open(self.log_file_name, 'w', buffering=1)
-            self.optimizing_log.write('# MD step, Potential energy (eV), MAX atomic force (eV/A)\n')   
-            self.write_gd_log()
-        else:
-            if self.log_file_name == None:
-                self.optimizing_log = open('MoREST_GD.log', 'a', buffering=1)
-            else:
-                self.optimizing_log = open(self.log_file_name, 'a', buffering=1)
-
-    def generate_new_step(self, bias_forces=None, updated_current_system=None):
-        if updated_current_system != None:
-            self.current_system = updated_current_system
-        
-        ### F(t) + bias
-        if bias_forces != None:
-            self.current_forces = self.current_forces + bias_forces
-
-        current_coordinates = self.current_system.get_positions()
-
-        # r(k+1) = r(k) + a * F(k)
-        next_coordinates = current_coordinates + self.step_size * self.current_forces
-        self.current_system.set_positions(next_coordinates)
-
-        next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(self.current_system)
-
-        self.current_step += 1
-        self.current_forces = next_forces
-        self.current_potential_energy = next_potential_energy
-        self.current_convergence = np.max(np.linalg.norm(self.current_forces,axis=-1))
-        self.potential_energy_list.append(self.current_system.get_potential_energy())
-
-        try:
-            self.ml_calculator.get_current_step(self.current_step)
-        except:
-            pass
-        
-        write_xyz_traj('MoREST_traj.xyz', self.current_system)
-        write_xyz_file(self.optimizing_parameters['optimizing_starting_point']+'_new', self.current_system)
-        self.write_gd_log()
-
-        self.check_divergence()
-
-        return self.current_convergence, self.current_step, self.current_system
-    
-    def write_gd_log(self):
-        Ep = self.current_potential_energy
-        try:
-            if len(Ep) >= 1:
-                Ep = Ep[0]
-        except:
-            pass
-        self.optimizing_log.write(str(self.current_step)+'    '+str(Ep)+'    '+str(self.current_convergence)+'\n')
-    
-
-class conjugate_gradient(initialize_optimizing):
-    '''
-    This class implements Polak–Ribi`ere conjugate gradient algorithm for structure optimization.
-    @article{nocedal2006conjugate,
-      title={Conjugate gradient methods},
-      author={Nocedal, Jorge and Wright, Stephen J},
-      journal={Numerical optimization},
-      pages={101--134},
-      year={2006},
-      publisher={Springer}
-    }
-    '''
-    def __init__(self, morest_parameters, optimizing_parameters, cg_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
-        super().__init__(morest_parameters, optimizing_parameters, molecule, log_file_name, traj_file_name, calculator, log_morest)
-        self.step_size = cg_parameters['cg_step_size']
+        self.gd = steepest_descent
+        self.cg = conjugate_gradient
+        self.bfgs = bfgs
         self.p_k = self.current_forces
+        if self.gd:
+            self.step_size = gradient_parameters['gd_step_size']
+        elif self.cg:
+            self.step_size = gradient_parameters['cg_step_size']
+        elif self.bfgs:
+            self.step_size = gradient_parameters['bfgs_step_size']
+            self.H_k = np.array([np.identity(3) for i in self.n_atom])
 
         if self.optimizing_parameters['optimizing_initialization']:
             if self.log_file_name == None:
-                self.optimizing_log = open('MoREST_CG.log', 'w', buffering=1)
+                if self.gd:
+                    self.optimizing_log = open('MoREST_GD.log', 'w', buffering=1)
+                elif self.cg:
+                    self.optimizing_log = open('MoREST_CG.log', 'w', buffering=1)
+                elif self.bfgs:
+                    self.optimizing_log = open('MoREST_BFGS.log', 'w', buffering=1)
             else:
                 self.optimizing_log = open(self.log_file_name, 'w', buffering=1)
-            self.optimizing_log.write('# MD step, Potential energy (eV), MAX atomic force (eV/A)\n')   
-            self.write_cg_log()
+            self.optimizing_log.write('# MD step, Potential energy (eV), dE (eV), MAX atomic force (eV/A)\n')   
+            self.write_log()
         else:
             if self.log_file_name == None:
-                self.optimizing_log = open('MoREST_CG.log', 'a', buffering=1)
+                if self.gd:
+                    self.optimizing_log = open('MoREST_GD.log', 'a', buffering=1)
+                elif self.cg:
+                    self.optimizing_log = open('MoREST_CG.log', 'a', buffering=1)
+                elif self.bfgs:
+                    self.optimizing_log = open('MoREST_BFGS.log', 'a', buffering=1)
             else:
                 self.optimizing_log = open(self.log_file_name, 'a', buffering=1)
 
@@ -196,23 +142,44 @@ class conjugate_gradient(initialize_optimizing):
 
         current_coordinates = self.current_system.get_positions()
 
-        # r(k+1) = r(k) + a * p(k)
+        # r(k+1) = r(k) + a * p(k) 
         next_coordinates = current_coordinates + self.step_size * self.p_k
         self.current_system.set_positions(next_coordinates)
 
         next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(self.current_system)
 
-        # beta(k+1) = ||F(k+1).T @ (F(k+1)-F(k))|| / ||F(k).T @ F(k)||
-        next_beta = np.linalg.norm(next_forces.T @ (next_forces-self.current_forces)) / np.linalg.norm(self.current_forces.T @ self.current_forces)
+        # update p_k in conjugate gradient method
+        if self.cg:
+            # beta(k+1) = (F(k+1).T @ (F(k+1)-F(k))) / (F(k).T @ F(k))
+            next_beta = [next_forces[i] @ (next_forces[i]-self.current_forces[i]) / self.current_forces[i] @ self.current_forces[i] \
+                         for i in range(self.n_atom)]
+            beta = np.array(beta)[:,np.newaxis]
 
-        # p(k+1) = F(k+1) + beta(k+1) * p(k)
-        self.p_k = next_forces + next_beta * self.p_k
+            # p(k+1) = F(k+1) + beta(k+1) * p(k)
+            self.p_k = next_forces + next_beta * self.p_k
+
+        if self.bfgs:
+            # s(k) = r(k+1) - r(k)
+            s_k = next_coordinates - current_coordinates
+            # y(k) = -(F(k+1) - F(k))
+            y_k = self.current_forces - next_forces
+            # rho(k) = 1/(y(k)^T @ s(k))
+            rho_k = np.array([1/(y_k[i] @ s_k[i]) for i in self.n_atom])
+            # H(k+1) = (I - rho(k) s(k) y(k).T) H(k) (I - rho(k) y(k) s(k).T) + rho(k) s(k) s(k).T
+            next_H = [(np.identity(3) - rho_k[i] @ np.outer(s_k[i], y_k[i])) @ self.H_k[i] @ (np.identity(3) - rho_k[i] @ np.outer(y_k[i], s_k[i]) + \
+              rho_k[i] @ np.outer(s_k[i], s_k[i])) for i in self.n_atom]
+
+            # p(k+1) = H(k+1) @ F(k+1)
+            self.p_k = np.array([next_H[i] @ next_forces[i] for i in self.n_atom])
+
+            # update Hessian
+            self.H_k = next_H
 
         self.current_step += 1
         self.current_forces = next_forces
         self.current_potential_energy = next_potential_energy
         self.current_convergence = np.max(np.linalg.norm(self.current_forces,axis=-1))
-        self.potential_energy_list.append(self.current_system.get_potential_energy())
+        self.potential_energy_list.append(self.current_potential_energy)
 
         try:
             self.ml_calculator.get_current_step(self.current_step)
@@ -221,21 +188,24 @@ class conjugate_gradient(initialize_optimizing):
         
         write_xyz_traj('MoREST_traj.xyz', self.current_system)
         write_xyz_file(self.optimizing_parameters['optimizing_starting_point']+'_new', self.current_system)
-        self.write_cg_log()
+        self.write_log()
 
         self.check_divergence()
 
         return self.current_convergence, self.current_step, self.current_system
     
-    def write_cg_log(self):
-        Ep = self.current_potential_energy
+    def write_log(self):
+        Ep = self.potential_energy_list[-1]
+        dE = self.potential_energy_list[-1] - self.potential_energy_list[-2]
         try:
             if len(Ep) >= 1:
                 Ep = Ep[0]
+            if len(dE) >= 1:
+                dE = dE[0]
         except:
             pass
-        self.optimizing_log.write(str(self.current_step)+'    '+str(Ep)+'    '+str(self.current_convergence)+'\n')
-    
+        self.optimizing_log.write(str(self.current_step)+'    '+str(Ep)+'    '+str(dE)+'    '+str(self.current_convergence)+'\n')
+
     
 class optimizing_velocity_Verlet(initialize_optimizing):
     '''

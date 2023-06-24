@@ -4,7 +4,7 @@ from glob import glob
 from read_parameters import read_parameters
 from phase_space_sampling import velocity_Verlet
 from trajectory_scattering import scattering_velocity_Verlet, scattering_Runge_Kutta_4th
-from structure_optimizing import steepest_descent, conjugate_gradient, fire_velocity_Verlet
+from structure_optimizing import gradient_descent, fire_velocity_Verlet
 from enhanced_sampling import its, re
 from wall_potential import repulsive_wall
 from collective_variable import collective_variables
@@ -122,28 +122,22 @@ class morest:
         if self.morest_parameters['structure_optimizing']:
             if not self.morest_parameters['morest_load_parameters_file']:
                 self.optimizing_parameters = MoREST_parameters.get_optimizing_parameters(self.log_morest)
-                if self.optimizing_parameters['optimizing_method'].upper() in ['GD']:
-                    self.gd_parameters = MoREST_parameters.get_gd_parameters(self.log_morest)
-                elif self.optimizing_parameters['optimizing_method'].upper() in ['CG']:
-                    self.cg_parameters = MoREST_parameters.get_cg_parameters(self.log_morest)
+                if self.optimizing_parameters['optimizing_method'].upper() in ['GD','CG','BFGS']:
+                    self.gradient_parameters = MoREST_parameters.get_gradient_parameters(self.log_morest)
                 elif self.optimizing_parameters['optimizing_method'].upper() in ['FIRE']:
                     self.fire_parameters = MoREST_parameters.get_fire_parameters(self.log_morest)
             else:
                 try:
                     self.optimizing_parameters = np.load('MoREST_optimizing_parameters.npy',allow_pickle=True).item()
-                    if self.optimizing_parameters['optimizing_method'].upper() in ['GD'.upper()]:
-                        self.gd_parameters = np.load('MoREST_GD_parameters.npy',allow_pickle=True).item()
-                    elif self.optimizing_parameters['optimizing_method'].upper() in ['CG'.upper()]:
-                        self.cg_parameters = np.load('MoREST_CG_parameters.npy',allow_pickle=True).item()
-                    elif self.optimizing_parameters['optimizing_method'].upper() in ['FIRE'.upper()]:
+                    if self.optimizing_parameters['optimizing_method'].upper() in ['GD','CG','BFGS']:
+                        self.gradient_parameters = np.load('MoREST_gradient_parameters.npy',allow_pickle=True).item()
+                    elif self.optimizing_parameters['optimizing_method'].upper() in ['FIRE']:
                         self.fire_parameters = np.load('MoREST_FIRE_parameters.npy',allow_pickle=True).item()
                 except:
                     self.log_morest.write('Can not find parameters files: MoREST_optimizing_parameters.npy, MoREST_FIRE_parameters.npy\n Read parameters from input file.\n\n')
                     self.optimizing_parameters = MoREST_parameters.get_optimizing_parameters(self.log_morest)
-                    if self.optimizing_parameters['optimizing_method'].upper() in ['GD']:
-                        self.gd_parameters = MoREST_parameters.get_gd_parameters(self.log_morest)
-                    elif self.optimizing_parameters['optimizing_method'].upper() in ['CG']:
-                        self.cg_parameters = MoREST_parameters.get_cg_parameters(self.log_morest)
+                    if self.optimizing_parameters['optimizing_method'].upper() in ['GD','CG','BFGS']:
+                        self.gradient_parameters = MoREST_parameters.get_gradient_parameters(self.log_morest)
                     elif self.optimizing_parameters['optimizing_method'].upper() in ['FIRE']:
                         self.fire_parameters = MoREST_parameters.get_fire_parameters(self.log_morest)
 
@@ -157,6 +151,8 @@ class morest:
                         os.remove('MoREST_GD.log')
                     elif self.optimizing_parameters['optimizing_method'].upper() in ['CG']:
                         os.remove('MoREST_CG.log')
+                    elif self.optimizing_parameters['optimizing_method'].upper() in ['BFGS']:
+                        os.remove('MoREST_BFGS.log')
                     elif self.optimizing_parameters['optimizing_method'].upper() in ['FIRE']:
                         os.remove('MoREST_FIRE.log')
                 except:
@@ -165,9 +161,14 @@ class morest:
                 self.log_morest.write('Continue to search the stationary structure.\n\n')
                 #Method: '+str(self.sampling_parameters['sampling_method'])+'\nEnsemble: '+str(self.sampling_parameters['sampling_ensemble'])+'\n\n')
             if self.optimizing_parameters['optimizing_method'].upper() in ['GD']:
-                self.optimizing_job = steepest_descent(self.morest_parameters, self.optimizing_parameters, self.gd_parameters, calculator=calculator, log_morest=self.log_morest)
+                self.optimizing_job = gradient_descent(self.morest_parameters, self.optimizing_parameters, self.gradient_parameters, calculator=calculator, \
+                                                       steepest_descent=True, log_morest=self.log_morest)
             elif self.optimizing_parameters['optimizing_method'].upper() in ['CG']:
-                self.optimizing_job = conjugate_gradient(self.morest_parameters, self.optimizing_parameters, self.cg_parameters, calculator=calculator, log_morest=self.log_morest)
+                self.optimizing_job = gradient_descent(self.morest_parameters, self.optimizing_parameters, self.gradient_parameters, calculator=calculator, \
+                                                       conjugate_gradient=True, log_morest=self.log_morest)
+            elif self.optimizing_parameters['optimizing_method'].upper() in ['BFGS']:
+                self.optimizing_job = gradient_descent(self.morest_parameters, self.optimizing_parameters, self.gradient_parameters, calculator=calculator, \
+                                                       bfgs=True, log_morest=self.log_morest)
             elif self.optimizing_parameters['optimizing_method'].upper() in ['FIRE']:
                 self.optimizing_job = fire_velocity_Verlet(self.morest_parameters, self.optimizing_parameters, self.fire_parameters, calculator=calculator, log_morest=self.log_morest)
             else:

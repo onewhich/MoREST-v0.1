@@ -63,10 +63,10 @@ class read_parameters:
         self.optimizing_parameters['optimizing_convergence'] = 5e-3
         self.optimizing_parameters['optimizing_max_steps'] = 100
         self.optimizing_parameters['optimizing_constrained'] = False
-        self.gd_parameters = {}
-        self.gd_parameters['gd_step_size'] = 0.03
-        self.cg_parameters = {}
-        self.cg_parameters['cg_step_size'] = 0.03
+        self.gradient_parameters = {}
+        self.gradient_parameters['gd_step_size'] = 0.03
+        self.gradient_parameters['cg_step_size'] = 0.03
+        self.gradient_parameters['bfgs_step_size'] = 0.03
         self.fire_parameters = {}
         self.fire_parameters['fire_equal_masses'] = True
         self.fire_parameters['fire_time_step'] = 3
@@ -243,12 +243,9 @@ class read_parameters:
             if self.morest_parameters['structure_optimizing']:
                 self.read_optimizing_parameters(i_parameter)
                 if 'optimizing_method' in self.optimizing_parameters:
-                    ########################## GD #########################################
-                    if self.optimizing_parameters['optimizing_method'].upper() in ['GD']:
-                        self.read_gd_parameters(i_parameter)
-                    ########################## CG #########################################
-                    if self.optimizing_parameters['optimizing_method'].upper() in ['CG']:
-                        self.read_cg_parameters(i_parameter)
+                    ########################## GD CG BFGS #################################
+                    if self.optimizing_parameters['optimizing_method'].upper() in ['GD', 'CG', 'BFGS']:
+                        self.read_gradient_parameters(i_parameter)
                     ########################## FIRE #######################################
                     if self.optimizing_parameters['optimizing_method'].upper() in ['FIRE']:
                         self.read_fire_parameters(i_parameter)
@@ -440,13 +437,13 @@ class read_parameters:
         elif i_parameter.split()[0].upper() == 'Optimizing_method'.upper():
             self.optimizing_parameters['optimizing_method'] = str(i_parameter.split()[1])
 
-    def read_gd_parameters(self, i_parameter):
+    def read_gradient_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'GD_step_size'.upper():
-            self.gd_parameters['gd_step_size'] = float(i_parameter.split()[1])
-
-    def read_cg_parameters(self, i_parameter):
-        if i_parameter.split()[0].upper() == 'CG_step_size'.upper():
-            self.cg_parameters['cg_step_size'] = float(i_parameter.split()[1])
+            self.gradient_parameters['gd_step_size'] = float(i_parameter.split()[1])
+        elif i_parameter.split()[0].upper() == 'CG_step_size'.upper():
+            self.gradient_parameters['cg_step_size'] = float(i_parameter.split()[1])
+        elif i_parameter.split()[0].upper() == 'BFGS_step_size'.upper():
+            self.gradient_parameters['bfgs_step_size'] = float(i_parameter.split()[1])
     
     def read_fire_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'FIRE_equal_masses'.upper():
@@ -871,19 +868,14 @@ class read_parameters:
             log_morest.write('\n')
         return self.optimizing_parameters
     
-    def get_gd_parameters(self, log_morest=None):
+    def get_gradient_parameters(self, log_morest=None):
+        if self.morest_parameters['morest_save_parameters_file']:
+            np.save('MoREST_gradient_parameters.npy', self.fire_parameters)
         if log_morest != None:
-            for key in self.gd_parameters:
-                log_morest.write(key+' : '+str(self.gd_parameters[key])+'\n')
+            for key in self.gradient_parameters:
+                log_morest.write(key+' : '+str(self.gradient_parameters[key])+'\n')
             log_morest.write('\n')
-        return self.gd_parameters
-    
-    def get_cg_parameters(self, log_morest=None):
-        if log_morest != None:
-            for key in self.cg_parameters:
-                log_morest.write(key+' : '+str(self.cg_parameters[key])+'\n')
-            log_morest.write('\n')
-        return self.cg_parameters
+        return self.gradient_parameters
     
     def get_fire_parameters(self, log_morest=None):
         self.fire_parameters['fire_time_step'] *= units.fs
