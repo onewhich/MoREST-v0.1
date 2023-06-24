@@ -154,7 +154,7 @@ class gradient_descent(initialize_optimizing):
         # update p_k in conjugate gradient method
         if self.cg:
             # beta(k+1) = (F(k+1).T @ (F(k+1)-F(k))) / (F(k).T @ F(k))
-            next_beta = [next_forces[i] @ (next_forces[i]-self.current_forces[i]) / self.current_forces[i] @ self.current_forces[i] \
+            next_beta = [(next_forces[i] @ (next_forces[i]-self.current_forces[i])) / (self.current_forces[i] @ self.current_forces[i]) \
                          for i in range(self.n_atom)]
             next_beta = np.array(next_beta)[:,np.newaxis]
 
