@@ -196,7 +196,10 @@ class gradient_descent(initialize_optimizing):
     
     def write_log(self):
         Ep = self.potential_energy_list[-1]
-        dE = self.potential_energy_list[-1] - self.potential_energy_list[-2]
+        if len(self.potential_energy_list) < 2:
+            dE = 0.
+        else:
+            dE = self.potential_energy_list[-1] - self.potential_energy_list[-2]
         try:
             if len(Ep) >= 1:
                 Ep = Ep[0]
