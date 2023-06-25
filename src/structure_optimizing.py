@@ -168,9 +168,9 @@ class gradient_descent(initialize_optimizing):
 
         if self.bfgs:
             # s(k) = r(k+1) - r(k)
-            s_k = (next_coordinates - current_coordinates).flatten()
+            s_k = -1*(next_coordinates - current_coordinates).flatten()
             # y(k) = F(k) - F(k+1)
-            y_k = (next_forces - self.current_forces).flatten()
+            y_k = -1*(self.current_forces - next_forces).flatten()
             # rho(k) = 1/(y(k)^T @ s(k))
             #rho_k = np.array([1/(y_k[i] @ s_k[i]) for i in range(self.n_atom)])
             #rho_k = 1/(y_k @ s_k)
