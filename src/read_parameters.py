@@ -65,7 +65,7 @@ class read_parameters:
         self.optimizing_parameters['optimizing_constrained'] = False
         self.gradient_parameters = {}
         self.gradient_parameters['gd_step_size'] = 0.03
-        self.gradient_parameters['cg_step_size'] = 0.03
+        self.gradient_parameters['cg_step_size'] = 0.04
         self.gradient_parameters['bfgs_step_size'] = 0.03
         self.fire_parameters = {}
         self.fire_parameters['fire_equal_masses'] = True

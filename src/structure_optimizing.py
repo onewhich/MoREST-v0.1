@@ -148,6 +148,9 @@ class gradient_descent(initialize_optimizing):
 
         next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(self.current_system)
 
+        if bias_forces != None:
+            next_forces = next_forces + bias_forces
+
         if self.gd:
             self.p_k = next_forces
 
@@ -165,7 +168,7 @@ class gradient_descent(initialize_optimizing):
             # s(k) = r(k+1) - r(k)
             s_k = next_coordinates - current_coordinates
             # y(k) = F(k) - F(k+1)
-            y_k = next_forces - self.current_forces
+            y_k = self.current_forces - next_forces
             # rho(k) = 1/(y(k)^T @ s(k))
             rho_k = np.array([1/(y_k[i] @ s_k[i]) for i in range(self.n_atom)])
             # H(k+1) = (I - rho(k) s(k) y(k).T) H(k) (I - rho(k) y(k) s(k).T) + rho(k) s(k) s(k).T

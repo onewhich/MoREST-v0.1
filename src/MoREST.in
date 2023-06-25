@@ -65,7 +65,7 @@ Optimizing_max_steps              100 # The maximum steps for structure optimizi
 Optimizing_constrained            False #TODO: whether constrained optimization is used.
 Optimizing_method                 FIRE # GD: steepest/gradient descent; CG: conjugate gradient descent; BFGS; FIRE; dimer: for transition state; SGD: stochastic gradient descent.
 GD_step_size                      0.03
-CG_step_size                      0.03
+CG_step_size                      0.04
 BFGS_step_size                    0.03
 FIRE_equal_masses                 True # Setting all the atom masses equal.
 FIRE_time_step                    1 # unit in fs
