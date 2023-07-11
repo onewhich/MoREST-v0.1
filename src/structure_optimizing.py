@@ -183,18 +183,15 @@ class gradient_descent(initialize_optimizing):
             ## next_H = (self.I - rho_k * np.outer(s_k, y_k)) @ self.H_k @ (self.I - rho_k * np.outer(y_k, s_k)) + rho_k * np.outer(s_k, s_k)
             A1 = self.I - s_k[:, np.newaxis] * y_k[np.newaxis, :] * rho_k
             A2 = self.I - y_k[:, np.newaxis] * s_k[np.newaxis, :] * rho_k
-            next_H = np.dot(A1, np.dot(self.H_k, A2)) + (rho_k * s_k[:, np.newaxis] * s_k[np.newaxis, :])
+            self.H_k = np.dot(A1, np.dot(self.H_k, A2)) + (rho_k * s_k[:, np.newaxis] * s_k[np.newaxis, :])
             # H(k+1) = H(k) + (s(k)^T y(k) + y(k)^T H(k) y(k)) (s(k) s(k)^T) / (s(k)^T y(k))^2 - (H(k) y(k) s(k)^T + s(k) y(k)^T H(k)) / (s(k)^T y(k))
             #next_H = self.H_k + (s_k @ y_k + y_k @ self.H_k @ y_k) * (np.outer(s_k,s_k)) / (s_k @ y_k)**2 - \
             #         (self.H_k @ np.outer(y_k, s_k) + np.outer(s_k, y_k) @ self.H_k) / (s_k @ y_k)
-            self.log_morest.write(str(next_gradient)+'\n')
             # p(k+1) = H(k+1) @ F(k+1)
             #self.p_k = np.array([next_H[i] @ next_forces[i] for i in range(self.n_atom)])
             ## self.p_k = -(next_H @ next_forces.flatten()).reshape(np.shape(next_forces))
-            self.p_k = np.dot(next_H, next_gradient).reshape(np.shape(next_forces))
-
-            # update Hessian
-            self.H_k = next_H
+            self.p_k = np.dot(self.H_k, next_gradient).reshape(np.shape(next_forces))
+            self.log_morest.write(str(self.p_k)+'\n')
 
         self.current_step += 1
         self.current_forces = next_forces
