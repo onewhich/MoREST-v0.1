@@ -169,7 +169,9 @@ class gradient_descent(initialize_optimizing):
             # s(k) = r(k+1) - r(k)
             s_k = (next_coordinates - current_coordinates).flatten()
             # y(k) = F(k) - F(k+1)
-            y_k = (self.current_forces - next_forces).flatten()
+            current_gradient = -self.current_forces.flatten()
+            next_gradient = -next_forces.flatten()
+            y_k = (next_gradient - current_gradient).flatten()
             # rho(k) = 1/(y(k)^T @ s(k))
             #rho_k = np.array([1/(y_k[i] @ s_k[i]) for i in range(self.n_atom)])
             ## rho_k = 1/(y_k @ s_k)
@@ -187,7 +189,8 @@ class gradient_descent(initialize_optimizing):
             #self.log_morest.write(str(self.H_k)+'\n')
             # p(k+1) = H(k+1) @ F(k+1)
             #self.p_k = np.array([next_H[i] @ next_forces[i] for i in range(self.n_atom)])
-            self.p_k = -(next_H @ next_forces.flatten()).reshape(np.shape(next_forces))
+            ## self.p_k = -(next_H @ next_forces.flatten()).reshape(np.shape(next_forces))
+            self.p_k = -np.dot(next_H, next_gradient)
 
             # update Hessian
             self.H_k = next_H
