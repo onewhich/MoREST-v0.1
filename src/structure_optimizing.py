@@ -190,7 +190,7 @@ class gradient_descent(initialize_optimizing):
             # p(k+1) = H(k+1) @ F(k+1)
             #self.p_k = np.array([next_H[i] @ next_forces[i] for i in range(self.n_atom)])
             ## self.p_k = -(next_H @ next_forces.flatten()).reshape(np.shape(next_forces))
-            self.p_k = -np.dot(next_H, next_gradient)
+            self.p_k = -np.dot(next_H, next_gradient).reshape(np.shape(next_forces))
 
             # update Hessian
             self.H_k = next_H
