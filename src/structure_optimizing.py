@@ -188,11 +188,8 @@ class gradient_descent(initialize_optimizing):
             #         (self.H_k @ np.outer(y_k, s_k) + np.outer(s_k, y_k) @ self.H_k) / (s_k @ y_k)
             # p(k+1) = H(k+1) @ F(k+1)
             #self.p_k = np.array([next_H[i] @ next_forces[i] for i in range(self.n_atom)])
-            self.p_k = -(self.H_k @ next_forces.flatten()).reshape(np.shape(next_forces))
+            self.p_k = np.sign(rho_k)*(self.H_k @ next_forces.flatten()).reshape(np.shape(next_forces))
             ### self.p_k = np.dot(self.H_k, next_gradient).reshape(np.shape(next_forces))
-            self.log_morest.write(str(y_k)+'\n')
-            self.log_morest.write(str(rho_k.flatten())+'\n')
-            self.log_morest.write(str(self.p_k.flatten())+'\n')
 
         self.current_step += 1
         self.current_forces = next_forces
