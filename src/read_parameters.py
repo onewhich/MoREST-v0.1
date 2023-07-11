@@ -66,7 +66,7 @@ class read_parameters:
         self.gradient_parameters = {}
         self.gradient_parameters['gd_step_size'] = 0.03
         self.gradient_parameters['cg_step_size'] = 0.04
-        self.gradient_parameters['bfgs_step_size'] = 0.03
+        self.gradient_parameters['bfgs_step_size'] = 0.5
         self.fire_parameters = {}
         self.fire_parameters['fire_equal_masses'] = True
         self.fire_parameters['fire_time_step'] = 3
