@@ -173,7 +173,7 @@ class gradient_descent(initialize_optimizing):
             y_k = (self.current_forces - next_forces).flatten()
             # rho(k) = 1/(y(k)^T @ s(k))
             #rho_k = np.array([1/(y_k[i] @ s_k[i]) for i in range(self.n_atom)])
-            rho_k = 1/(y_k @ s_k)
+            rho_k = -1/(y_k @ s_k)
             # H(k+1) = (I - rho(k) s(k) y(k).T) H(k) (I - rho(k) y(k) s(k).T) + rho(k) s(k) s(k).T
             #next_H = [(np.identity(3) - rho_k * np.outer(s_k[i], y_k[i])) @ self.H_k[i] @ (np.identity(3) - rho_k * np.outer(y_k[i], s_k[i])) + \
             #  rho_k * np.outer(s_k[i], s_k[i]) for i in range(self.n_atom)]
@@ -184,7 +184,7 @@ class gradient_descent(initialize_optimizing):
             #self.log_morest.write(str(self.H_k)+'\n')
             # p(k+1) = H(k+1) @ F(k+1)
             #self.p_k = np.array([next_H[i] @ next_forces[i] for i in range(self.n_atom)])
-            self.p_k = -(next_H @ next_forces.flatten()).reshape(np.shape(next_forces))
+            self.p_k = (next_H @ next_forces.flatten()).reshape(np.shape(next_forces))
 
             # update Hessian
             self.H_k = next_H
