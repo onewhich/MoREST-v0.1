@@ -88,8 +88,7 @@ class initialize_optimizing(initialize_calculator):
                             except:
                                 pass
                             raise Exception('The optimization has an abnormal energy rise. The mission is terminated.')
-                        
-    
+
 class gradient_descent(initialize_optimizing):
     '''
     This class implements steepest descent algorithm for structure optimization.
@@ -108,7 +107,7 @@ class gradient_descent(initialize_optimizing):
         elif self.bfgs:
             self.step_size = gradient_parameters['bfgs_step_size']
             #self.H_k = np.array([np.identity(3) for i in range(self.n_atom)])
-            self.I = np.identity(3*self.n_atom)
+            self.I = np.eye(3*self.n_atom, dtype=int)
             self.H_k = self.I
 
         if self.optimizing_parameters['optimizing_initialization']:
@@ -173,18 +172,22 @@ class gradient_descent(initialize_optimizing):
             y_k = (self.current_forces - next_forces).flatten()
             # rho(k) = 1/(y(k)^T @ s(k))
             #rho_k = np.array([1/(y_k[i] @ s_k[i]) for i in range(self.n_atom)])
-            rho_k = -1/(y_k @ s_k)
+            ## rho_k = 1/(y_k @ s_k)
+            rho_k = 1. / (np.dot(y_k, s_k))
             # H(k+1) = (I - rho(k) s(k) y(k).T) H(k) (I - rho(k) y(k) s(k).T) + rho(k) s(k) s(k).T
             #next_H = [(np.identity(3) - rho_k * np.outer(s_k[i], y_k[i])) @ self.H_k[i] @ (np.identity(3) - rho_k * np.outer(y_k[i], s_k[i])) + \
             #  rho_k * np.outer(s_k[i], s_k[i]) for i in range(self.n_atom)]
-            next_H = -(self.I - rho_k * np.outer(s_k, y_k)) @ self.H_k @ (self.I - rho_k * np.outer(y_k, s_k)) + rho_k * np.outer(s_k, s_k)
+            ## next_H = (self.I - rho_k * np.outer(s_k, y_k)) @ self.H_k @ (self.I - rho_k * np.outer(y_k, s_k)) + rho_k * np.outer(s_k, s_k)
+            A1 = self.I - s_k[:, np.newaxis] * y_k[np.newaxis, :] * rho_k
+            A2 = self.I - y_k[:, np.newaxis] * s_k[np.newaxis, :] * rho_k
+            next_H = np.dot(A1, np.dot(self.H_k, A2)) + (rho_k * s_k[:, np.newaxis] * s_k[np.newaxis, :])
             # H(k+1) = H(k) + (s(k)^T y(k) + y(k)^T H(k) y(k)) (s(k) s(k)^T) / (s(k)^T y(k))^2 - (H(k) y(k) s(k)^T + s(k) y(k)^T H(k)) / (s(k)^T y(k))
             #next_H = self.H_k + (s_k @ y_k + y_k @ self.H_k @ y_k) * (np.outer(s_k,s_k)) / (s_k @ y_k)**2 - \
             #         (self.H_k @ np.outer(y_k, s_k) + np.outer(s_k, y_k) @ self.H_k) / (s_k @ y_k)
             #self.log_morest.write(str(self.H_k)+'\n')
             # p(k+1) = H(k+1) @ F(k+1)
             #self.p_k = np.array([next_H[i] @ next_forces[i] for i in range(self.n_atom)])
-            self.p_k = (next_H @ next_forces.flatten()).reshape(np.shape(next_forces))
+            self.p_k = -(next_H @ next_forces.flatten()).reshape(np.shape(next_forces))
 
             # update Hessian
             self.H_k = next_H
