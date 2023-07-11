@@ -109,6 +109,7 @@ class gradient_descent(initialize_optimizing):
             #self.H_k = np.array([np.identity(3) for i in range(self.n_atom)])
             self.I = np.eye(3*self.n_atom, dtype=int)
             self.H_k = self.I
+            self.p_k = np.dot(self.H_k, self.current_forces.flatten()).reshape(np.shape(self.current_forces))
 
         if self.optimizing_parameters['optimizing_initialization']:
             if self.log_file_name == None:
