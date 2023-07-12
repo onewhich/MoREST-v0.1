@@ -10,7 +10,6 @@ class initialize_optimizing(initialize_calculator):
         self.optimizing_parameters = optimizing_parameters
         self.traj_file_name = traj_file_name
         self.log_file_name = log_file_name
-        self.log_morest = log_morest
         if self.optimizing_parameters['optimizing_initialization']:
             self.current_step = 0
             try:
@@ -188,8 +187,10 @@ class gradient_descent(initialize_optimizing):
             #         (self.H_k @ np.outer(y_k, s_k) + np.outer(s_k, y_k) @ self.H_k) / (s_k @ y_k)
             # p(k+1) = H(k+1) @ F(k+1)
             #self.p_k = np.array([next_H[i] @ next_forces[i] for i in range(self.n_atom)])
-            self.p_k = np.sign(rho_k)*(self.H_k @ next_forces.flatten()).reshape(np.shape(next_forces))
+            self.p_k = (self.H_k @ next_forces.flatten()).reshape(np.shape(next_forces))
             ### self.p_k = np.dot(self.H_k, next_gradient).reshape(np.shape(next_forces))
+            self.log_morest.write(str(next_forces.flatten())+'\n')
+            self.log_morest.write(str(self.p_k.flatten())+'\n')
 
         self.current_step += 1
         self.current_forces = next_forces
