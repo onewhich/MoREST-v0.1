@@ -317,7 +317,7 @@ class fire_velocity_Verlet(optimizing_velocity_Verlet):
                 self.optimizing_log = open('MoREST_FIRE.log', 'w', buffering=1)
             else:
                 self.optimizing_log = open(self.log_file_name, 'w', buffering=1)
-            self.optimizing_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), MAX atomic force (eV/A), Time step for each atom (fs)\n')   
+            self.optimizing_log.write('# MD step, Potential energy (eV),  dE (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), MAX atomic force (eV/A)\n')   
             self.write_fire_log()
         else:
             if self.log_file_name == None:
@@ -394,11 +394,10 @@ class fire_velocity_Verlet(optimizing_velocity_Verlet):
         T = 2/3 * Ek/units.kB /self.n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
         Et = Ek + Ep
         self.optimizing_log.write(str(self.current_step)+'    '+ \
-                                  str(Ep)+'    '+str(Ek)+'    '+ \
-                                   str(T)+'    '+str(Et)+'    '+ \
-                           str(self.current_convergence)+'    '+ \
-                                   str(dE))
+                                  str(Ep)+'    '+str(dE)+'    '+ \
+                                   str(Ek)+'    '+str(T)+'    '+ \
+            str(Et)+'    '+str(self.current_convergence)+'    '+'\n')
         #for i in range(self.n_atom):
         #    self.optimizing_log.write(str(self.time_step[i]/units.fs)+'    ')
-        self.optimizing_log.write('\n')
+        #self.optimizing_log.write('\n')
         
