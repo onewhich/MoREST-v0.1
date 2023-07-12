@@ -377,10 +377,16 @@ class fire_velocity_Verlet(optimizing_velocity_Verlet):
 
     def write_fire_log(self):
         Ep = self.current_potential_energy
+        if len(self.potential_energy_list) < 2:
+            dE = 0.
+        else:
+            dE = self.potential_energy_list[-1] - self.potential_energy_list[-2]
         Ek = self.kinetic_energy
         try:
             if len(Ep) >= 1:
                 Ep = Ep[0]
+            if len(dE) >= 1:
+                dE = dE[0]
         except:
             pass
         #Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(n_atom)])
@@ -390,8 +396,9 @@ class fire_velocity_Verlet(optimizing_velocity_Verlet):
         self.optimizing_log.write(str(self.current_step)+'    '+ \
                                   str(Ep)+'    '+str(Ek)+'    '+ \
                                    str(T)+'    '+str(Et)+'    '+ \
-                           str(self.current_convergence)+'    ')
-        for i in range(self.n_atom):
-            self.optimizing_log.write(str(self.time_step[i]/units.fs)+'    ')
+                           str(self.current_convergence)+'    '+ \
+                                   str(dE))
+        #for i in range(self.n_atom):
+        #    self.optimizing_log.write(str(self.time_step[i]/units.fs)+'    ')
         self.optimizing_log.write('\n')
         
