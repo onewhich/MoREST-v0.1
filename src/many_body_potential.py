@@ -101,7 +101,12 @@ class ml_potential(Calculator):
                 self.trained_ml_potential = kwargs['ml_parameters']['ml_potential_model']
                 self.ml_potential = pickle.load(open(self.trained_ml_potential, 'rb'))
             except:
-                raise Exception('ML model can not be read. Please specify the name.')
+                if 'ml_training_set' in kwargs['ml_parameters']:
+                    self.training_set = kwargs['ml_parameters']['ml_training_set']
+                    self.log_morest.write('Trained ML model has not beed indicated. The ML model will be trained from training set.\n')
+                    self.ml_potential = self.train_ml_potential()
+                else:
+                    raise Exception('ML model or training set can not be read. Please specify the name.')
 
     def calculate(self, *args, **kwargs):
         Calculator.calculate(self, *args, **kwargs)
