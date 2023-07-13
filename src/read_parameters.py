@@ -64,9 +64,9 @@ class read_parameters:
         self.optimizing_parameters['optimizing_max_steps'] = 100
         self.optimizing_parameters['optimizing_constrained'] = False
         self.gradient_parameters = {}
-        self.gradient_parameters['gd_step_size'] = 0.03
-        self.gradient_parameters['cg_step_size'] = 0.04
-        self.gradient_parameters['bfgs_step_size'] = 0.03
+        self.gradient_parameters['gd_step_size'] = 3 # This value will multiply by 1e-2 for real using.
+        self.gradient_parameters['cg_step_size'] = 3 # This value will multiply by 1e-2 for real using.
+        self.gradient_parameters['bfgs_step_size'] = 3 # This value will multiply by 1e-2 for real using.
         self.fire_parameters = {}
         self.fire_parameters['fire_equal_masses'] = True
         self.fire_parameters['fire_time_step'] = 3
@@ -439,11 +439,11 @@ class read_parameters:
 
     def read_gradient_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'GD_step_size'.upper():
-            self.gradient_parameters['gd_step_size'] = float(i_parameter.split()[1])
+            self.gradient_parameters['gd_step_size'] = 1e-2 * float(i_parameter.split()[1])
         elif i_parameter.split()[0].upper() == 'CG_step_size'.upper():
-            self.gradient_parameters['cg_step_size'] = float(i_parameter.split()[1])
+            self.gradient_parameters['cg_step_size'] = 1e-2 * float(i_parameter.split()[1])
         elif i_parameter.split()[0].upper() == 'BFGS_step_size'.upper():
-            self.gradient_parameters['bfgs_step_size'] = float(i_parameter.split()[1])
+            self.gradient_parameters['bfgs_step_size'] = 1e-2 * float(i_parameter.split()[1])
     
     def read_fire_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'FIRE_equal_masses'.upper():
