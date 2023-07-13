@@ -4,7 +4,7 @@ from glob import glob
 from read_parameters import read_parameters
 from phase_space_sampling import velocity_Verlet
 from trajectory_scattering import scattering_velocity_Verlet, scattering_Runge_Kutta_4th
-from structure_optimizing import gradient_descent, fire_velocity_Verlet
+from structure_searching import gradient_descent, fire_velocity_Verlet
 from enhanced_sampling import its, re
 from wall_potential import repulsive_wall
 from collective_variable import collective_variables
@@ -62,21 +62,9 @@ class morest:
                 self.log_morest.write('Continue to sample the phase space\n\n')
                 #Method: '+str(self.sampling_parameters['sampling_method'])+'\nEnsemble: '+str(self.sampling_parameters['sampling_ensemble'])+'\n\n')
             if self.sampling_parameters['sampling_method'].upper() in ['MD']:
-                if self.sampling_parameters['sampling_ensemble'].upper() in ['NVE_VV']:
+                if self.sampling_parameters['sampling_ensemble'].upper() in ['NVE_VV', 'NVT_VR', 'NVT_Berendsen'.upper(), 'NVT_Langevin'.upper(),'NVT_SVR']:
                     self.sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator, \
-                                                        log_morest=self.log_morest)
-                elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_VR']:
-                    self.sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator, v_rescaling=True, \
-                                                        log_morest=self.log_morest)
-                elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_Berendsen'.upper()]:
-                    self.sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator, Berendsen_rescaling=True, \
-                                                        log_morest=self.log_morest)
-                elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_Langevin'.upper()]:
-                    self.sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator, Langevin_rescaling=True, \
-                                                        log_morest=self.log_morest)
-                elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
-                    self.sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=calculator, sv_rescaling=True, \
-                                                        log_morest=self.log_morest)
+                                                        ensemble=self.sampling_parameters['sampling_ensemble'], log_morest=self.log_morest)
                 else:
                     self.log_morest.write('It is not clear which ensemble will be used.\n')
                     self.log_morest.close()
@@ -118,63 +106,49 @@ class morest:
                 self.log_morest.close()
                 raise Exception('Which scattering method will you use?')
 
-        #################### Structure optimizing initialization ###############################
-        if self.morest_parameters['structure_optimizing']:
+        #################### Structure searching initialization ###############################
+        if self.morest_parameters['structure_searching']:
             if not self.morest_parameters['morest_load_parameters_file']:
-                self.optimizing_parameters = MoREST_parameters.get_optimizing_parameters(self.log_morest)
-                if self.optimizing_parameters['optimizing_method'].upper() in ['GD','CG','BFGS']:
+                self.searching_parameters = MoREST_parameters.get_searching_parameters(self.log_morest)
+                if self.searching_parameters['searching_method'].upper() in ['GD','CG','BFGS']:
                     self.gradient_parameters = MoREST_parameters.get_gradient_parameters(self.log_morest)
-                elif self.optimizing_parameters['optimizing_method'].upper() in ['FIRE']:
+                elif self.searching_parameters['searching_method'].upper() in ['FIRE']:
                     self.fire_parameters = MoREST_parameters.get_fire_parameters(self.log_morest)
             else:
                 try:
-                    self.optimizing_parameters = np.load('MoREST_optimizing_parameters.npy',allow_pickle=True).item()
-                    if self.optimizing_parameters['optimizing_method'].upper() in ['GD','CG','BFGS']:
+                    self.searching_parameters = np.load('MoREST_searching_parameters.npy',allow_pickle=True).item()
+                    if self.searching_parameters['searching_method'].upper() in ['GD','CG','BFGS']:
                         self.gradient_parameters = np.load('MoREST_gradient_parameters.npy',allow_pickle=True).item()
-                    elif self.optimizing_parameters['optimizing_method'].upper() in ['FIRE']:
+                    elif self.searching_parameters['searching_method'].upper() in ['FIRE']:
                         self.fire_parameters = np.load('MoREST_FIRE_parameters.npy',allow_pickle=True).item()
                 except:
-                    self.log_morest.write('Can not find parameters files: MoREST_optimizing_parameters.npy, MoREST_FIRE_parameters.npy\n Read parameters from input file.\n\n')
-                    self.optimizing_parameters = MoREST_parameters.get_optimizing_parameters(self.log_morest)
-                    if self.optimizing_parameters['optimizing_method'].upper() in ['GD','CG','BFGS']:
+                    self.log_morest.write('Can not find parameters files: MoREST_searching_parameters.npy, MoREST_FIRE_parameters.npy\n Read parameters from input file.\n\n')
+                    self.searching_parameters = MoREST_parameters.get_searching_parameters(self.log_morest)
+                    if self.searching_parameters['searching_method'].upper() in ['GD','CG','BFGS']:
                         self.gradient_parameters = MoREST_parameters.get_gradient_parameters(self.log_morest)
-                    elif self.optimizing_parameters['optimizing_method'].upper() in ['FIRE']:
+                    elif self.searching_parameters['searching_method'].upper() in ['FIRE']:
                         self.fire_parameters = MoREST_parameters.get_fire_parameters(self.log_morest)
 
-            if self.optimizing_parameters['optimizing_initialization']:
+            if self.searching_parameters['searching_initialization']:
                 self.log_morest.write('Start to search the stationary structure.\n\n')
                 #Method: '+str(self.sampling_parameters['sampling_method'])+'\nEnsemble: '+str(self.sampling_parameters['sampling_ensemble'])+'\n\n')
                 try:
                     #os.remove('MoREST.str_new')
                     os.remove('MoREST_traj.xyz')
-                    if self.optimizing_parameters['optimizing_method'].upper() in ['GD']:
-                        os.remove('MoREST_GD.log')
-                    elif self.optimizing_parameters['optimizing_method'].upper() in ['CG']:
-                        os.remove('MoREST_CG.log')
-                    elif self.optimizing_parameters['optimizing_method'].upper() in ['BFGS']:
-                        os.remove('MoREST_BFGS.log')
-                    elif self.optimizing_parameters['optimizing_method'].upper() in ['FIRE']:
-                        os.remove('MoREST_FIRE.log')
+                    os.remove('MoREST_'+self.searching_parameters['searching_method'].upper()+'.log')
                 except:
                     pass
             else:
                 self.log_morest.write('Continue to search the stationary structure.\n\n')
-                #Method: '+str(self.sampling_parameters['sampling_method'])+'\nEnsemble: '+str(self.sampling_parameters['sampling_ensemble'])+'\n\n')
-            if self.optimizing_parameters['optimizing_method'].upper() in ['GD']:
-                self.optimizing_job = gradient_descent(self.morest_parameters, self.optimizing_parameters, self.gradient_parameters, calculator=calculator, \
-                                                       steepest_descent=True, log_morest=self.log_morest)
-            elif self.optimizing_parameters['optimizing_method'].upper() in ['CG']:
-                self.optimizing_job = gradient_descent(self.morest_parameters, self.optimizing_parameters, self.gradient_parameters, calculator=calculator, \
-                                                       conjugate_gradient=True, log_morest=self.log_morest)
-            elif self.optimizing_parameters['optimizing_method'].upper() in ['BFGS']:
-                self.optimizing_job = gradient_descent(self.morest_parameters, self.optimizing_parameters, self.gradient_parameters, calculator=calculator, \
-                                                       bfgs=True, log_morest=self.log_morest)
-            elif self.optimizing_parameters['optimizing_method'].upper() in ['FIRE']:
-                self.optimizing_job = fire_velocity_Verlet(self.morest_parameters, self.optimizing_parameters, self.fire_parameters, calculator=calculator, log_morest=self.log_morest)
+            if self.searching_parameters['searching_method'].upper() in ['GD', 'CG', 'BFGS']:
+                self.searching_job = gradient_descent(self.morest_parameters, self.searching_parameters, self.gradient_parameters, calculator=calculator, \
+                                                       method=self.searching_parameters['searching_method'], log_morest=self.log_morest)
+            elif self.searching_parameters['searching_method'].upper() in ['FIRE']:
+                self.searching_job = fire_velocity_Verlet(self.morest_parameters, self.searching_parameters, self.fire_parameters, calculator=calculator, log_morest=self.log_morest)
             else:
-                self.log_morest.write('It is not clear which optimizing method will be used.\n')
+                self.log_morest.write('It is not clear which searching method will be used.\n')
                 self.log_morest.close()
-                raise Exception('Will you use the structure optimizing method?')
+                raise Exception('Will you use the structure searching method?')
     
         #################### Enhanced sampling initialization #################################
         if self.morest_parameters['enhanced_sampling']:
@@ -224,26 +198,15 @@ class morest:
                 self.sampling_job = []
                 for i,T in enumerate(self.re_parameters['re_replica_temperatures']):
                     if self.sampling_parameters['sampling_method'].upper() in ['MD']:
-                        if self.sampling_parameters['sampling_ensemble'].upper() in ['NVE_VV']:
+                        if self.sampling_parameters['sampling_ensemble'].upper() in ['NVE_VV', \
+                                                                                     'NVT_VR', 'NVT_Berendsen'.upper(), 'NVT_Langevin'.upper(),'NVT_SVR']:
                             tmp_sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, \
                                                                 molecules[i], log_file_name[i], traj_file_name[i], T, calculator=calculator, \
-                                                                log_file=self.log_morest)
-                        elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_VR']:
-                            tmp_sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, \
-                                                                molecules[i], log_file_name[i], traj_file_name[i], T, calculator=calculator, v_rescaling=True, \
-                                                                log_file=self.log_morest)
-                        elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_Berendsen'.upper()]:
-                            tmp_sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, \
-                                                                molecules[i], log_file_name[i], traj_file_name[i], T, calculator=calculator, Berendsen_rescaling=True, \
-                                                                log_file=self.log_morest)
-                        elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_Langevin'.upper()]:
-                            tmp_sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, \
-                                                                molecules[i], log_file_name[i], traj_file_name[i], T, calculator=calculator, Langevin_rescaling=True, \
-                                                                log_file=self.log_morest)
-                        elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
-                            tmp_sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, \
-                                                                molecules[i], log_file_name[i], traj_file_name[i], T, calculator=calculator, sv_rescaling=True, \
-                                                                log_file=self.log_morest)
+                                                                ensemble=self.sampling_parameters['sampling_ensemble'], log_morest=self.log_morest)
+                        else:
+                            self.log_morest.write('It is not clear which ensemble will be used.\n')
+                            self.log_morest.close()
+                            raise Exception('Which ensemble will you use?')
                     self.sampling_job.append(tmp_sampling_job)
                     self.log_morest.write('Replica '+str(i)+' at '+str(T)+' K is ready.\n\n')
                 self.log_morest.write('\n')
@@ -342,28 +305,28 @@ class morest:
         self.log_morest.write('Trajectory scattering with molecular dynamics method is finished!\n')
         self.mission_complete()
 
-    def structure_optimizing(self):
+    def structure_searching(self):
         '''
-        This function is called to excute structure optimizing method.
+        This function is called to excute structure searching method.
         --------
         INPUT:
             calculator: The same as the calculator in ASE. It is required, when many body potential is specified as 'on_the_fly'.
         '''
-        optimizing_convergence = self.optimizing_parameters['optimizing_convergence']
-        optimizing_maxsteps = self.optimizing_parameters['optimizing_max_steps']
+        searching_convergence = self.searching_parameters['searching_convergence']
+        searching_maxsteps = self.searching_parameters['searching_max_steps']
         if self.morest_parameters['enhanced_sampling']:
             self.morest_parameters['enhanced_sampling'] = False # TODO: enhanced sampling method for trajectory scattering
         else:
-            current_convergence, current_step, current_system = self.optimizing_job.current_convergence, self.optimizing_job.current_step, self.optimizing_job.current_system
+            current_convergence, current_step, current_system = self.searching_job.current_convergence, self.searching_job.current_step, self.searching_job.current_system
             if self.morest_parameters['wall_potential']:
-                while current_convergence >= optimizing_convergence and current_step <= optimizing_maxsteps:
+                while current_convergence >= searching_convergence and current_step <= searching_maxsteps:
                     general_coordinate = current_system.get_positions()
                     bias_forces = self.wall_potential(general_coordinate)
-                    current_convergence, current_step, current_system= self.optimizing_job.generate_new_step(bias_forces)
+                    current_convergence, current_step, current_system= self.searching_job.generate_new_step(bias_forces)
             else:
-                while current_convergence >= optimizing_convergence and current_step <= optimizing_maxsteps:
-                    current_convergence, current_step, current_system= self.optimizing_job.generate_new_step()
-        self.log_morest.write('Structure optimization with '+self.optimizing_parameters['optimizing_method']+' method is finished!\n')
+                while current_convergence >= searching_convergence and current_step <= searching_maxsteps:
+                    current_convergence, current_step, current_system= self.searching_job.generate_new_step()
+        self.log_morest.write('Structure optimization with '+self.searching_parameters['searching_method']+' method is finished!\n')
         self.mission_complete()
 
     def enhanced_sampling_re(self,simulation_maxsteps):

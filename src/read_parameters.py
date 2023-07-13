@@ -41,7 +41,7 @@ class read_parameters:
         self.morest_parameters['ml_energy_uncertainty_tolerance'] = 0.01
         self.morest_parameters['phase_space_sampling'] = False
         self.morest_parameters['trajectory_scattering'] = False
-        self.morest_parameters['structure_optimizing'] = False
+        self.morest_parameters['structure_searching'] = False
         self.morest_parameters['enhanced_sampling'] = False
         self.morest_parameters['wall_potential'] = False
         self.sampling_parameters = {}
@@ -57,16 +57,14 @@ class read_parameters:
         self.scattering_parameters['scattering_traj_length'] = None
         self.scattering_parameters['scattering_target_molecule'] = 'MoREST.str_target'
         self.scattering_parameters['scattering_incident_molecule'] = 'MoREST.str_incident'
-        self.optimizing_parameters = {}
-        self.optimizing_parameters['optimizing_initialization'] = False
-        self.optimizing_parameters['optimizing_starting_point'] = 'MoREST.str'
-        self.optimizing_parameters['optimizing_convergence'] = 5e-3
-        self.optimizing_parameters['optimizing_max_steps'] = 100
-        self.optimizing_parameters['optimizing_constrained'] = False
+        self.searching_parameters = {}
+        self.searching_parameters['searching_initialization'] = False
+        self.searching_parameters['searching_starting_point'] = 'MoREST.str'
+        self.searching_parameters['searching_convergence'] = 5e-3
+        self.searching_parameters['searching_max_steps'] = 100
+        self.searching_parameters['searching_constrained'] = False
         self.gradient_parameters = {}
-        self.gradient_parameters['gd_step_size'] = 3 # This value will multiply by 1e-2 for real using.
-        self.gradient_parameters['cg_step_size'] = 3 # This value will multiply by 1e-2 for real using.
-        self.gradient_parameters['bfgs_step_size'] = 3 # This value will multiply by 1e-2 for real using.
+        self.gradient_parameters['gradient_step_size'] = 3 # This value will multiply by 1e-2 for real using.
         self.fire_parameters = {}
         self.fire_parameters['fire_equal_masses'] = True
         self.fire_parameters['fire_time_step'] = 3
@@ -199,13 +197,13 @@ class read_parameters:
                 else:
                     raise Exception('It is not clear whether the scattering method will be used.')
                 
-            elif i_parameter.split()[0].upper() == 'Structure_optimizing'.upper():
+            elif i_parameter.split()[0].upper() == 'Structure_searching'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():
-                    self.morest_parameters['structure_optimizing'] = True
+                    self.morest_parameters['structure_searching'] = True
                 elif i_parameter.split()[1].upper() == 'False'.upper():
-                    self.morest_parameters['structure_optimizing'] = False
+                    self.morest_parameters['structure_searching'] = False
                 else:
-                    raise Exception('It is not clear whether the optimizing method will be used.')
+                    raise Exception('It is not clear whether the searching method will be used.')
 
             elif i_parameter.split()[0].upper() == 'Enhanced_sampling'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():
@@ -239,15 +237,15 @@ class read_parameters:
             if self.morest_parameters['trajectory_scattering']:
                 self.read_scattering_parameters(i_parameter)
 
-            ########################## Structure optimizing ########################
-            if self.morest_parameters['structure_optimizing']:
-                self.read_optimizing_parameters(i_parameter)
-                if 'optimizing_method' in self.optimizing_parameters:
+            ########################## Structure searching ########################
+            if self.morest_parameters['structure_searching']:
+                self.read_searching_parameters(i_parameter)
+                if 'searching_method' in self.searching_parameters:
                     ########################## GD CG BFGS #################################
-                    if self.optimizing_parameters['optimizing_method'].upper() in ['GD', 'CG', 'BFGS']:
+                    if self.searching_parameters['searching_method'].upper() in ['GD', 'CG', 'BFGS']:
                         self.read_gradient_parameters(i_parameter)
                     ########################## FIRE #######################################
-                    if self.optimizing_parameters['optimizing_method'].upper() in ['FIRE']:
+                    if self.searching_parameters['searching_method'].upper() in ['FIRE']:
                         self.read_fire_parameters(i_parameter)
                 
             ########################## Enhanced sampling ##########################
@@ -408,42 +406,38 @@ class read_parameters:
         elif i_parameter.split()[0].upper() == 'Scattering_R_incident'.upper():
             self.scattering_parameters['scattering_R_incident'] = float(i_parameter.split()[1])
 
-    def read_optimizing_parameters(self, i_parameter):
-        if i_parameter.split()[0].upper() == 'Optimizing_initialization'.upper():
+    def read_searching_parameters(self, i_parameter):
+        if i_parameter.split()[0].upper() == 'Searching_initialization'.upper():
             if i_parameter.split()[1].upper() == 'True'.upper():
-                self.optimizing_parameters['optimizing_initialization'] = True
+                self.searching_parameters['searching_initialization'] = True
             elif i_parameter.split()[1].upper() == 'False'.upper():
-                self.optimizing_parameters['optimizing_initialization'] = False
+                self.searching_parameters['searching_initialization'] = False
             else:
-                raise Exception('It is not clear whether the structure optimizing will be initialized.')
+                raise Exception('It is not clear whether the structure searching will be initialized.')
 
-        elif i_parameter.split()[0].upper() == 'Optimizing_starting_point'.upper():
-            self.optimizing_parameters['optimizing_starting_point'] = str(i_parameter.split()[1])
+        elif i_parameter.split()[0].upper() == 'Searching_starting_point'.upper():
+            self.searching_parameters['searching_starting_point'] = str(i_parameter.split()[1])
 
-        elif i_parameter.split()[0].upper() == 'Optimizing_convergence'.upper():
-            self.optimizing_parameters['optimizing_convergence'] = float(i_parameter.split()[1])
+        elif i_parameter.split()[0].upper() == 'Searching_convergence'.upper():
+            self.searching_parameters['searching_convergence'] = float(i_parameter.split()[1])
 
-        elif i_parameter.split()[0].upper() == 'Optimizing_max_steps'.upper():
-            self.optimizing_parameters['optimizing_max_steps'] = int(i_parameter.split()[1])
+        elif i_parameter.split()[0].upper() == 'Searching_max_steps'.upper():
+            self.searching_parameters['searching_max_steps'] = int(i_parameter.split()[1])
             
-        elif i_parameter.split()[0].upper() == 'Optimizing_constrained'.upper():
+        elif i_parameter.split()[0].upper() == 'Searching_constrained'.upper():
             if i_parameter.split()[1].upper() == 'True'.upper():
-                self.optimizing_parameters['optimizing_constrained'] = True
+                self.searching_parameters['searching_constrained'] = True
             elif i_parameter.split()[1].upper() == 'False'.upper():
-                self.optimizing_parameters['optimizing_constrained'] = False
+                self.searching_parameters['searching_constrained'] = False
             else:
-                raise Exception('It is not clear whether the contrained optimizing will be used.')
+                raise Exception('It is not clear whether the contrained searching will be used.')
 
-        elif i_parameter.split()[0].upper() == 'Optimizing_method'.upper():
-            self.optimizing_parameters['optimizing_method'] = str(i_parameter.split()[1])
+        elif i_parameter.split()[0].upper() == 'Searching_method'.upper():
+            self.searching_parameters['searching_method'] = str(i_parameter.split()[1])
 
     def read_gradient_parameters(self, i_parameter):
-        if i_parameter.split()[0].upper() == 'GD_step_size'.upper():
-            self.gradient_parameters['gd_step_size'] = 1e-2 * float(i_parameter.split()[1])
-        elif i_parameter.split()[0].upper() == 'CG_step_size'.upper():
-            self.gradient_parameters['cg_step_size'] = 1e-2 * float(i_parameter.split()[1])
-        elif i_parameter.split()[0].upper() == 'BFGS_step_size'.upper():
-            self.gradient_parameters['bfgs_step_size'] = 1e-2 * float(i_parameter.split()[1])
+        if i_parameter.split()[0].upper() == 'Gradient_step_size'.upper():
+            self.gradient_parameters['gradient_step_size'] = 1e-2 * float(i_parameter.split()[1])
     
     def read_fire_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'FIRE_equal_masses'.upper():
@@ -857,16 +851,16 @@ class read_parameters:
             log_morest.write('\n')
         return self.scattering_parameters
     
-    def get_optimizing_parameters(self, log_morest=None):
+    def get_searching_parameters(self, log_morest=None):
         if self.morest_parameters['morest_initialization'] == True:
-           self.optimizing_parameters['optimizing_initialization'] = True
+           self.searching_parameters['searching_initialization'] = True
         if self.morest_parameters['morest_save_parameters_file']:
-            np.save('MoREST_optimizing_parameters.npy', self.optimizing_parameters)
+            np.save('MoREST_searching_parameters.npy', self.searching_parameters)
         if log_morest != None:
-            for key in self.optimizing_parameters:
-                log_morest.write(key+' : '+str(self.optimizing_parameters[key])+'\n')
+            for key in self.searching_parameters:
+                log_morest.write(key+' : '+str(self.searching_parameters[key])+'\n')
             log_morest.write('\n')
-        return self.optimizing_parameters
+        return self.searching_parameters
     
     def get_gradient_parameters(self, log_morest=None):
         if self.morest_parameters['morest_save_parameters_file']:

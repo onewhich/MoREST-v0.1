@@ -6,6 +6,7 @@ MoREST_load_parameters_file       False # Read parameters from the file
 Many_body_potential               ML_potential  # ML_potential: machine learning potential with finite difference forces; on_the_fly: using QC, DFT package (molpro is added) via ASE to calculate potential and forces; molpro: using home-made molpro API to run molpro
 ###Input_file                     gjf.com #TODO: read QC,DFT parameters from input file
 ML_potential_model                ../../../fhicloud-wang/Al2F2/gpr_AlF_dimer_potential_from_test11 # It can be not offered when active learning is used.
+ML_representation                 inverse_r_exp_r # TODO 
 #ML_add_features_number            2 # The number of additional features (setted in ML_additional_features) which will be added into the representation.
 #ML_additional_features            inverse_r_exp_r 1,2 3,4 inverse_r_exp_r 1,4 2,3 # min_distance: calculte the minimum distance between atoms / atom groups (group1: 1,2; group2: 3,4; group3: 1,4; group4: 2,3). max_distance: caluclate the maximum distance between atoms / atom groups.
 ML_features_min_number            2 # The number of features calculated for checking the minimum value in ML_additional_features_min
@@ -57,16 +58,14 @@ Scattering_incident_molecule      MoREST.str_incident # structure or trajectory 
 Scattering_R_target               1 # the final point of the incident direction vector locates on the surface of the sphere with 1 AA radius. The central point of the sphere locates at the geometric center of the target molecule.
 Scattering_R_incident             9 # the initial point of the incident direction vector locates on the surface of the sphere with 9 AA radius. The central point of the sphere locates at the geometric center of the target molecule.
 
-Structure_optimizing              False
-Optimizing_initialization         False
-Optimizing_starting_point         MoREST.str # The input of the structure
-Optimizing_convergence            5e-3 # unit in eV/AA. The convergence criteria of forces when optimizing.
-Optimizing_max_steps              100 # The maximum steps for structure optimizing.
-Optimizing_constrained            False #TODO: whether constrained optimization is used.
-Optimizing_method                 FIRE # GD: steepest/gradient descent; CG: conjugate gradient descent; BFGS; FIRE; dimer: for transition state; SGD: stochastic gradient descent.
-GD_step_size                      0.03
-CG_step_size                      0.04
-BFGS_step_size                    0.03
+Structure_searching               False
+Searching_initialization         False
+Searching_starting_point         MoREST.str # The input of the structure
+Searching_convergence            5e-3 # unit in eV/AA. The convergence criteria of forces when searching.
+Searching_max_steps              100 # The maximum steps for structure searching.
+Searching_constrained            False #TODO: whether constrained optimization is used.
+Searching_method                 FIRE # GD: steepest/gradient descent; CG: conjugate gradient descent; BFGS; FIRE; dimer: for transition state; SGD: stochastic gradient descent.
+Gradient_step_size                3
 FIRE_equal_masses                 True # Setting all the atom masses equal.
 FIRE_time_step                    1 # unit in fs
 FIRE_max_time_step                10 # unit in fs. It is usually 10 times of time step.
@@ -77,7 +76,7 @@ FIRE_f_decrease                   0.5
 FIRE_f_alpha                      0.99
 
 Enhanced_sampling                 False
-Enhanced_sampling_method          RE   # RE; ITS; pRE: parrallel running version of replica exchange; SA: simulated annealing; ST: simulated tempering; aMD: accelerated MD; Wang-Landau; NS: nested sampling; TPS: for scattering; TIS; BH: basin hopping for optimizing; MH: minima hopping for optimizing.
+Enhanced_sampling_method          RE   # RE; ITS; pRE: parrallel running version of replica exchange; SA: simulated annealing; ST: simulated tempering; aMD: accelerated MD; Wang-Landau; NS: nested sampling; TPS: for scattering; TIS; BH: basin hopping for searching; MH: minima hopping for searching.
 RE_initialization                 True  # True will remove files with the title of 'MoREST_RE_'
 RE_lower_bound_temperature        400
 RE_upper_bound_temperature        100000

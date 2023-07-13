@@ -80,13 +80,10 @@ class velocity_Verlet(initialize_sampling):
     '''
     
     def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, \
-                        v_rescaling=False, Berendsen_rescaling=False, Langevin_rescaling=False, sv_rescaling=False, log_morest=None):
+                        ensemble=None, log_morest=None):
         super(velocity_Verlet, self).__init__(morest_parameters, sampling_parameters, molecule, log_file_name, traj_file_name, calculator, log_morest)
         self.md_parameters = md_parameters
-        self.v_rescaling = v_rescaling
-        self.b_rescaling = Berendsen_rescaling
-        self.l_rescaling = Langevin_rescaling
-        self.sv_rescaling = sv_rescaling
+        self.ensemble = ensemble.upper()
 
         if T_simulation == None:
             self.re_simulation = False
@@ -109,9 +106,9 @@ class velocity_Verlet(initialize_sampling):
         Nf = 3 * self.n_atom
         self.K_simulation = Nf/2 * units.kB * self.T_simulation # Ek = 1/2 m v^2 = 3/2 kB T for each particle
         
-        if self.v_rescaling:
+        if self.ensemble == 'NVT_VR':
             self.velocity_rescaling()
-        elif self.b_rescaling:
+        elif self.ensemble == 'NVT_Berendsen'.upper():
             self.Berendsen_rescaling()
         
         if self.sampling_parameters['sampling_initialization']:
@@ -119,10 +116,10 @@ class velocity_Verlet(initialize_sampling):
                 self.MD_log = open('MoREST_MD.log', 'w', buffering=1)
             else:
                 self.MD_log = open(self.log_file_name, 'w', buffering=1)
-            if self.l_rescaling:
+            if self.ensemble == 'NVT_Langevin'.upper():
                 self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), Effective energy (eV)\n')   
                 self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses, self.K_simulation, self.md_parameters['md_time_step'], 1/(2*self.sampling_parameters['nvt_langevin_gamma']), 0, 0)
-            elif self.sv_rescaling:
+            elif self.ensemble == 'NVT_SVR':
                 self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), Effective energy (eV)\n')   
                 self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses, self.K_simulation, self.md_parameters['md_time_step'], self.sampling_parameters['nvt_svr_tau'], 0, 0)
             else:
@@ -133,7 +130,7 @@ class velocity_Verlet(initialize_sampling):
                 self.MD_log = open('MoREST_MD.log', 'a', buffering=1)
             else:
                 self.MD_log = open(self.log_file_name, 'a', buffering=1)
-            if self.sv_rescaling:
+            if self.ensemble == 'NVT_SVR':
                 self.d_Ee = 0
                 self.Wt =  0
         
@@ -183,13 +180,13 @@ class velocity_Verlet(initialize_sampling):
         except:
             pass
         
-        if self.v_rescaling:
+        if self.ensemble == 'NVT_VR':
             self.velocity_rescaling()
-        elif self.b_rescaling:
+        elif self.ensemble == 'NVT_Berendsen'.upper():
             self.Berendsen_rescaling()
-        elif self.l_rescaling:
+        elif self.ensemble == 'NVT_Langevin'.upper():
             R_t = self.stochastic_velocity_rescaling(Nf = 1, tau = 1/(2*self.sampling_parameters['nvt_langevin_gamma']))
-        elif self.sv_rescaling:
+        elif self.ensemble == 'NVT_SVR':
             R_t = self.stochastic_velocity_rescaling(Nf = 3*self.n_atom, tau = self.sampling_parameters['nvt_svr_tau'])
         
         if self.md_parameters['md_clean_translation']:
@@ -213,10 +210,10 @@ class velocity_Verlet(initialize_sampling):
             else:
                 write_xyz_traj(self.traj_file_name, self.current_system)
             self.kinetic_energy = self.current_system.get_kinetic_energy()
-            if self.l_rescaling:
+            if self.ensemble == 'NVT_Langevin'.upper():
                 #self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses, self.K_simulation, time_step, self.sampling_parameters['nvt_svr_tau'], self.d_Ee, self.Wt+R_t)
                 self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses, self.K_simulation, time_step, 1/(2*self.sampling_parameters['nvt_langevin_gamma']), self.d_Ee, R_t)
-            elif self.sv_rescaling:
+            elif self.ensemble == 'NVT_SVR':
                 #self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses, self.K_simulation, time_step, self.sampling_parameters['nvt_svr_tau'], self.d_Ee, self.Wt+R_t)
                 self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses, self.K_simulation, time_step, self.sampling_parameters['nvt_svr_tau'], self.d_Ee, R_t)
             else:

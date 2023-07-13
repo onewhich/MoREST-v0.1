@@ -4,13 +4,13 @@ from initialization import initialize_calculator
 from ase.md.velocitydistribution import Stationary, ZeroRotation
 from ase import units
 
-class initialize_optimizing(initialize_calculator):
-    def __init__(self, morest_parameters, optimizing_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
-        super(initialize_optimizing, self).__init__(morest_parameters, calculator, log_morest)
-        self.optimizing_parameters = optimizing_parameters
+class initialize_searching(initialize_calculator):
+    def __init__(self, morest_parameters, searching_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
+        super(initialize_searching, self).__init__(morest_parameters, calculator, log_morest)
+        self.searching_parameters = searching_parameters
         self.traj_file_name = traj_file_name
         self.log_file_name = log_file_name
-        if self.optimizing_parameters['optimizing_initialization']:
+        if self.searching_parameters['searching_initialization']:
             self.current_step = 0
             try:
                 self.ml_calculator.get_current_step(self.current_step)
@@ -52,9 +52,9 @@ class initialize_optimizing(initialize_calculator):
                     write_xyz_traj(self.traj_file_name, self.current_system)
             
     def get_current_structure(self, molecule=None):
-        if self.optimizing_parameters['optimizing_initialization']:
+        if self.searching_parameters['searching_initialization']:
             if molecule == None:
-                system = read_xyz_file(self.optimizing_parameters['optimizing_starting_point'])
+                system = read_xyz_file(self.searching_parameters['searching_starting_point'])
             else:
                 system = molecule
         else:
@@ -64,7 +64,7 @@ class initialize_optimizing(initialize_calculator):
             except:
                 self.log_morest.write('Can not read current structure, and read structure from starting point.')
                 if molecule == None:
-                    system = read_xyz_file(self.optimizing_parameters['optimizing_starting_point'])
+                    system = read_xyz_file(self.searching_parameters['searching_starting_point'])
                 else:
                     system = molecule
 
@@ -88,50 +88,34 @@ class initialize_optimizing(initialize_calculator):
                                 pass
                             raise Exception('The optimization has an abnormal energy rise. The mission is terminated.')
 
-class gradient_descent(initialize_optimizing):
+class gradient_descent(initialize_searching):
     '''
     This class implements steepest descent algorithm for structure optimization.
     '''
-    def __init__(self, morest_parameters, optimizing_parameters, gradient_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, \
-                 steepest_descent=False, conjugate_gradient=False, bfgs=False, log_morest=None):
-        super().__init__(morest_parameters, optimizing_parameters, molecule, log_file_name, traj_file_name, calculator, log_morest)
-        self.gd = steepest_descent
-        self.cg = conjugate_gradient
-        self.bfgs = bfgs
+    def __init__(self, morest_parameters, searching_parameters, gradient_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, \
+                 method=None, log_morest=None):
+        super().__init__(morest_parameters, searching_parameters, molecule, log_file_name, traj_file_name, calculator, log_morest)
+        self.method = method.upper()
+        self.step_size = gradient_parameters['gradient_step_size']
         self.p_k = self.current_forces
-        if self.gd:
-            self.step_size = gradient_parameters['gd_step_size']
-        elif self.cg:
-            self.step_size = gradient_parameters['cg_step_size']
-        elif self.bfgs:
-            self.step_size = gradient_parameters['bfgs_step_size']
+        if self.method == 'BFGS':
             #self.H_k = np.array([np.identity(3) for i in range(self.n_atom)])
             self.I = np.eye(3*self.n_atom, dtype=int)
             self.H_k = self.I
             #self.p_k = np.dot(self.H_k, self.current_forces.flatten()).reshape(np.shape(self.current_forces))
 
-        if self.optimizing_parameters['optimizing_initialization']:
+        if self.searching_parameters['searching_initialization']:
             if self.log_file_name == None:
-                if self.gd:
-                    self.optimizing_log = open('MoREST_GD.log', 'w', buffering=1)
-                elif self.cg:
-                    self.optimizing_log = open('MoREST_CG.log', 'w', buffering=1)
-                elif self.bfgs:
-                    self.optimizing_log = open('MoREST_BFGS.log', 'w', buffering=1)
+                self.searching_log = open('MoREST_'+self.method+'.log', 'w', buffering=1)
             else:
-                self.optimizing_log = open(self.log_file_name, 'w', buffering=1)
-            self.optimizing_log.write('# MD step, Potential energy (eV), dE (eV), MAX atomic force (eV/A)\n')   
+                self.searching_log = open(self.log_file_name, 'w', buffering=1)
+            self.searching_log.write('# MD step, Potential energy (eV), dE (eV), MAX atomic force (eV/A)\n')   
             self.write_log()
         else:
             if self.log_file_name == None:
-                if self.gd:
-                    self.optimizing_log = open('MoREST_GD.log', 'a', buffering=1)
-                elif self.cg:
-                    self.optimizing_log = open('MoREST_CG.log', 'a', buffering=1)
-                elif self.bfgs:
-                    self.optimizing_log = open('MoREST_BFGS.log', 'a', buffering=1)
+                self.searching_log = open('MoREST_'+self.method+'.log', 'a', buffering=1)
             else:
-                self.optimizing_log = open(self.log_file_name, 'a', buffering=1)
+                self.searching_log = open(self.log_file_name, 'a', buffering=1)
 
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
         if updated_current_system != None:
@@ -152,11 +136,11 @@ class gradient_descent(initialize_optimizing):
         if bias_forces != None:
             next_forces = next_forces + bias_forces
 
-        if self.gd:
+        if self.method == 'GD':
             self.p_k = next_forces
 
         # update p_k in conjugate gradient method
-        if self.cg:
+        elif self.method == 'CG':
             # beta(k+1) = (F(k+1).T @ (F(k+1)-F(k))) / (F(k).T @ F(k))
             next_beta = [(next_forces[i] @ (next_forces[i]-self.current_forces[i])) / (self.current_forces[i] @ self.current_forces[i]) \
                          for i in range(self.n_atom)]
@@ -165,7 +149,7 @@ class gradient_descent(initialize_optimizing):
             # p(k+1) = F(k+1) + beta(k+1) * p(k)
             self.p_k = next_forces + next_beta * self.p_k
 
-        if self.bfgs:
+        elif self.method == 'BFGS':
             # s(k) = r(k+1) - r(k)
             s_k = (next_coordinates - current_coordinates).flatten()
             # y(k) = F(k) - F(k+1)
@@ -202,7 +186,7 @@ class gradient_descent(initialize_optimizing):
             pass
         
         write_xyz_traj('MoREST_traj.xyz', self.current_system)
-        write_xyz_file(self.optimizing_parameters['optimizing_starting_point']+'_new', self.current_system)
+        write_xyz_file(self.searching_parameters['searching_starting_point']+'_new', self.current_system)
         self.write_log()
 
         #self.check_divergence()
@@ -222,18 +206,18 @@ class gradient_descent(initialize_optimizing):
                 dE = dE[0]
         except:
             pass
-        self.optimizing_log.write(str(self.current_step)+'    '+str(Ep)+'    '+str(dE)+'    '+str(self.current_convergence)+'\n')
+        self.searching_log.write(str(self.current_step)+'    '+str(Ep)+'    '+str(dE)+'    '+str(self.current_convergence)+'\n')
 
     
-class optimizing_velocity_Verlet(initialize_optimizing):
+class searching_velocity_Verlet(initialize_searching):
     '''
     This class implements velocity Verlet algorithm for structure optimization methods.
     MoREST_traj.xyz records the trajectory in an extended xyz format
     MoREST.str (default name) records the initial xyz structure of the system
     MoREST.str_new (default name) records the current xyz structure of the system
     '''
-    def __init__(self, morest_parameters, optimizing_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
-        super(optimizing_velocity_Verlet, self).__init__(morest_parameters, optimizing_parameters, molecule, log_file_name, traj_file_name, calculator, log_morest)
+    def __init__(self, morest_parameters, searching_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
+        super(searching_velocity_Verlet, self).__init__(morest_parameters, searching_parameters, molecule, log_file_name, traj_file_name, calculator, log_morest)
 
     def VV_next_step(self, bias_forces=None, updated_current_system=None):
         if type(self.time_step) != float:
@@ -289,15 +273,15 @@ class optimizing_velocity_Verlet(initialize_optimizing):
             pass
         
         write_xyz_traj('MoREST_traj.xyz', self.current_system)
-        write_xyz_file(self.optimizing_parameters['optimizing_starting_point']+'_new', self.current_system)
+        write_xyz_file(self.searching_parameters['searching_starting_point']+'_new', self.current_system)
         
 
-class fire_velocity_Verlet(optimizing_velocity_Verlet):
+class fire_velocity_Verlet(searching_velocity_Verlet):
     '''
     This class implements FIRE structure optimization algorithm based on velocity Verlet integrator.
     '''
-    def __init__(self, morest_parameters, optimizing_parameters, fire_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
-        super(fire_velocity_Verlet, self).__init__(morest_parameters, optimizing_parameters, molecule, log_file_name, traj_file_name, calculator, log_morest)
+    def __init__(self, morest_parameters, searching_parameters, fire_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
+        super(fire_velocity_Verlet, self).__init__(morest_parameters, searching_parameters, molecule, log_file_name, traj_file_name, calculator, log_morest)
         self.fire_parameters = fire_parameters
         if self.fire_parameters['fire_equal_masses']:
             masses = np.ones(self.n_atom)
@@ -312,18 +296,18 @@ class fire_velocity_Verlet(optimizing_velocity_Verlet):
         self.f_alpha = self.fire_parameters['fire_f_alpha']
         self.N_negative =  np.zeros(self.n_atom, dtype=int)
 
-        if self.optimizing_parameters['optimizing_initialization']:
+        if self.searching_parameters['searching_initialization']:
             if self.log_file_name == None:
-                self.optimizing_log = open('MoREST_FIRE.log', 'w', buffering=1)
+                self.searching_log = open('MoREST_FIRE.log', 'w', buffering=1)
             else:
-                self.optimizing_log = open(self.log_file_name, 'w', buffering=1)
-            self.optimizing_log.write('# MD step, Potential energy (eV),  dE (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), MAX atomic force (eV/A)\n')   
+                self.searching_log = open(self.log_file_name, 'w', buffering=1)
+            self.searching_log.write('# MD step, Potential energy (eV),  dE (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), MAX atomic force (eV/A)\n')   
             self.write_fire_log()
         else:
             if self.log_file_name == None:
-                self.optimizing_log = open('MoREST_FIRE.log', 'a', buffering=1)
+                self.searching_log = open('MoREST_FIRE.log', 'a', buffering=1)
             else:
-                self.optimizing_log = open(self.log_file_name, 'a', buffering=1)
+                self.searching_log = open(self.log_file_name, 'a', buffering=1)
                 
     def FIRE(self):
         '''
@@ -393,11 +377,11 @@ class fire_velocity_Verlet(optimizing_velocity_Verlet):
         #Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)
         T = 2/3 * Ek/units.kB /self.n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
         Et = Ek + Ep
-        self.optimizing_log.write(str(self.current_step)+'    '+ \
+        self.searching_log.write(str(self.current_step)+'    '+ \
                                   str(Ep)+'    '+str(dE)+'    '+ \
                                    str(Ek)+'    '+str(T)+'    '+ \
             str(Et)+'    '+str(self.current_convergence)+'    '+'\n')
         #for i in range(self.n_atom):
-        #    self.optimizing_log.write(str(self.time_step[i]/units.fs)+'    ')
-        #self.optimizing_log.write('\n')
+        #    self.searching_log.write(str(self.time_step[i]/units.fs)+'    ')
+        #self.searching_log.write('\n')
         
