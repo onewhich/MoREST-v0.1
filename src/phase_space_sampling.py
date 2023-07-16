@@ -109,7 +109,7 @@ class velocity_Verlet(initialize_sampling):
         if self.ensemble == 'NVT_VR':
             self.velocity_rescaling()
         elif self.ensemble == 'NVT_Berendsen'.upper():
-            self.Berendsen_rescaling()
+            self.Berendsen_velocity_rescaling()
         
         if self.sampling_parameters['sampling_initialization']:
             if self.log_file_name == None:
@@ -183,7 +183,7 @@ class velocity_Verlet(initialize_sampling):
         if self.ensemble == 'NVT_VR':
             self.velocity_rescaling()
         elif self.ensemble == 'NVT_Berendsen'.upper():
-            self.Berendsen_rescaling()
+            self.Berendsen_velocity_rescaling()
         elif self.ensemble == 'NVT_Langevin'.upper():
             R_t = self.stochastic_velocity_rescaling(Nf = 1, tau = 1/(2*self.sampling_parameters['nvt_langevin_gamma']))
         elif self.ensemble == 'NVT_SVR':
@@ -232,7 +232,7 @@ class velocity_Verlet(initialize_sampling):
             factor = np.sqrt(self.T_simulation / Ti)
             self.current_system.set_velocities(factor * velocities)
 
-    def Berendsen_rescaling(self):
+    def Berendsen_velocity_rescaling(self):
         tau = self.sampling_parameters['nvt_berendsen_tau']
         time_step = self.md_parameters['md_time_step']
         Ek = self.current_system.get_kinetic_energy()

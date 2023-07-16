@@ -28,12 +28,20 @@ Sampling_initialization           False   # Overwrite or append the trajectory i
 Sampling_molecule                 MoREST.str # The input of the structure.
 Sampling_traj_interval            10    # Record sampling every Traj_interval steps
 Sampling_method                   MD    # MD, MC, LD, PIMD
-Sampling_ensemble                 NVT_SVR  10   # Choose the ensemble, e.g. NVE_VV: velocity Verlet; NVT_VR 10: velocity Verlet with velocity rescaling, with parameter NVT_VR_dT=10; NVT_Berendsen 10: Berendsen thermostat with NVT_Berendsen_tau=10; NVT_Langevin 0.05: Langevin thermostat with NVT_Langevin_gamma=0.05 ; NVT_SVR 10: BDP stochastic velocity rescaling thermostat, with parameter NVT_SVR_tau=10; NPT_SVR.
+Sampling_ensemble                 NVT_SVR  10   # Choose the ensemble, e.g. NVE_VV: velocity Verlet;
+                                                #                           NVT_VR 10: velocity Verlet with velocity rescaling, with parameter NVT_VR_dT=10;
+                                                #                           NVT_Berendsen 10: Berendsen thermostat with NVT_Berendsen_tau=10;
+                                                #                           NVT_Langevin 0.05: Langevin thermostat with NVT_Langevin_gamma=0.05;
+                                                #                           NVT_SVR 10: BDP stochastic velocity rescaling thermostat, with parameter NVT_SVR_tau=10; NPT_SVR.
+                                                #                           NPT_Berendsen 10 50: Berendsen isothermal-isobaric sampling with NPT_Berendsen_tau_T=10, NPT_Berendsen_tau_P=50;
+                                                #                           NPT_Langevin    TODO
+                                                #                           NPT_SVR         TODO
 MD_clean_translation              True
 MD_clean_rotation                 True
 MD_time_step                      1   # unit in fs
 MD_simulation_time                100000   # unit in fs
 MD_temperature                    1000
+MD_pressure                       1 # unit: Bar (10^5 Pa)
 
 Trajectory_scattering             False
 Scattering_initialization         False

@@ -135,6 +135,9 @@ class read_parameters:
                 
             elif i_parameter.split()[0].upper() == 'ML_potential_model'.upper():
                 self.morest_parameters['ml_potential_model'] = str(i_parameter.split()[1])
+                
+            elif i_parameter.split()[0].upper() == 'ML_representation'.upper():
+                self.morest_parameters['ml_representation'] = str(i_parameter.split()[1])
 
             elif i_parameter.split()[0].upper() == 'ML_add_features_number'.upper():
                 self.morest_parameters['ml_add_features_number'] = int(i_parameter.split()[1])
@@ -330,6 +333,9 @@ class read_parameters:
         
         elif i_parameter.split()[0].upper() == 'MD_temperature'.upper():
             self.md_parameters['md_temperature'] = float(i_parameter.split()[1])
+        
+        elif i_parameter.split()[0].upper() == 'MD_pressure'.upper():
+            self.md_parameters['md_pressure'] = float(i_parameter.split()[1])
         
         elif i_parameter.split()[0].upper() == 'MD_clean_rotation'.upper():
             if i_parameter.split()[1].upper() == 'True'.upper():
@@ -741,6 +747,7 @@ class read_parameters:
     def get_md_parameters(self, log_morest=None):
         self.md_parameters['md_time_step'] *= units.fs
         self.md_parameters['md_simulation_time'] *= units.fs
+        self.md_parameters['md_pressure'] *= units.bar
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_MD_parameters.npy', self.md_parameters)
         if log_morest != None:
