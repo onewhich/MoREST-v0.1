@@ -340,6 +340,7 @@ class read_parameters:
             elif self.sampling_parameters['sampling_ensemble'].upper() in ['NPT_Berendsen'.upper()]:
                 self.sampling_parameters['npt_Berendsen_tau_t'] = float(i_parameter.split()[2])
                 self.sampling_parameters['npt_Berendsen_tau_p'] = float(i_parameter.split()[3])
+                self.sampling_parameters['npt_Berendsen_compressibility'] = float(i_parameter.split()[4])
 
     def read_md_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'MD_time_step'.upper():
