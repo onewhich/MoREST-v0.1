@@ -13,9 +13,11 @@ class initialize_scattering(initialize_calculator):
     The incident momenta directs from the mass center of incident molecule to the point on a spherical surface closely covering the target molecule and centered at original point.
     The target molecule is in the front of the incident molecule in the combined scattering system.
     '''
-    def __init__(self, morest_parameters, scattering_parameters, calculator=None, log_morest=None):
+    def __init__(self, morest_parameters, scattering_parameters, calculator=None, i_traj=0, log_morest=None):
         super(initialize_scattering, self).__init__(morest_parameters, calculator, log_morest)
         self.scattering_parameters = scattering_parameters
+        traj_filename = 'MoREST_traj_'+str(i_traj)+'.xyz'
+        log_filename = 'MoREST_log_'+str(i_traj)+'.log'
             
         ### kinetic energy at simulation temperature
         Nf = 3 * self.n_atom
@@ -27,24 +29,24 @@ class initialize_scattering(initialize_calculator):
             self.current_system = self.get_current_structure()
             #self.current_traj = []
             #self.current_traj.append(self.current_system)
-            write_xyz_traj('MoREST_traj.xyz', self.current_system)
-            self.MD_log = open('MoREST_MD.log', 'w', buffering=1)
+            write_xyz_traj(traj_filename, self.current_system)
+            self.MD_log = open(log_filename, 'w', buffering=1)
             self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
             write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
         else:
             try:
-                self.current_traj = read_xyz_traj('MoREST_traj.xyz')
+                self.current_traj = read_xyz_traj(traj_filename)
                 self.current_step = len(self.current_traj) - 1
                 self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
-                self.MD_log = open('MoREST_MD.log', 'a', buffering=1)
+                self.MD_log = open(log_filename, 'a', buffering=1)
             except:
                 self.generate_scattering_system()
                 self.current_step = 0
                 self.current_system = self.get_current_structure()
                 #self.current_traj = []
                 #self.current_traj.append(self.current_system)
-                write_xyz_traj('MoREST_traj.xyz', self.current_system)
-                self.MD_log = open('MoREST_MD.log', 'w', buffering=1)
+                write_xyz_traj(traj_filename, self.current_system)
+                self.MD_log = open(log_filename, 'w', buffering=1)
                 self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
                 write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
         
@@ -104,8 +106,8 @@ class scattering_velocity_Verlet(initialize_scattering):
     This class implements velocity Verlet algorithm to do microcanonical ensemble (NVE) dynamics.
     '''
     
-    def __init__(self, morest_parameters, scattering_parameters, calculator=None, log_morest=None):
-        super(scattering_velocity_Verlet, self).__init__(morest_parameters, scattering_parameters, calculator, log_morest)
+    def __init__(self, morest_parameters, scattering_parameters, calculator=None, i_traj=0, log_morest=None):
+        super(scattering_velocity_Verlet, self).__init__(morest_parameters, scattering_parameters, calculator, i_traj, log_morest)
         
     def generate_new_step(self, bias_forces=None):
         time_step = self.scattering_parameters['scattering_time_step']
@@ -142,7 +144,7 @@ class scattering_velocity_Verlet(initialize_scattering):
             pass
         
         #self.current_traj.append(self.current_system)
-        write_xyz_traj('MoREST_traj.xyz', self.current_system)
+        write_xyz_traj(traj_filename, self.current_system)
         kinetic_energy = self.current_system.get_kinetic_energy()
         write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses)
         
@@ -153,8 +155,8 @@ class scattering_Runge_Kutta_4th(initialize_scattering):
     This class implements Runge-Kutta 4th order algorithm to do microcanonical ensemble (NVE) dynamics.
     '''
     
-    def __init__(self, morest_parameters, scattering_parameters, calculator=None, log_file=None):
-        super(scattering_Runge_Kutta_4th, self).__init__(morest_parameters, scattering_parameters, calculator, log_file)
+    def __init__(self, morest_parameters, scattering_parameters, calculator=None, i_traj=0, log_file=None):
+        super(scattering_Runge_Kutta_4th, self).__init__(morest_parameters, scattering_parameters, calculator, i_traj, log_file)
         
     def generate_new_step(self, bias_forces=None):
         '''
@@ -214,13 +216,13 @@ class scattering_Runge_Kutta_4th(initialize_scattering):
             pass
         
         #self.current_traj.append(self.current_system)
-        write_xyz_traj('MoREST_traj.xyz', self.current_system)
+        write_xyz_traj(traj_filename, self.current_system)
         kinetic_energy = self.current_system.get_kinetic_energy()
         write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses)
         
         return self.current_step, self.current_system
  
- # Discarded: the following method is not energy preseved.
+# Discarded: the following method is not energy preseved.
 class scattering_Runge_Kutta_4th_a(initialize_scattering):
     '''
     This class implements Runge-Kutta 4th order algorithm to do microcanonical ensemble (NVE) dynamics.
@@ -285,7 +287,7 @@ class scattering_Runge_Kutta_4th_a(initialize_scattering):
             pass
         
         #self.current_traj.append(self.current_system)
-        write_xyz_traj('MoREST_traj.xyz', self.current_system)
+        write_xyz_traj(traj_filename, self.current_system)
         kinetic_energy = self.current_system.get_kinetic_energy()
         write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses)
         
