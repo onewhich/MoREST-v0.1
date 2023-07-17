@@ -90,8 +90,10 @@ class morest:
                 self.log_morest.write('Start to sample the trajectories\n\n')
                 try:
                     #os.remove('MoREST.str')
-                    os.remove('MoREST_traj.xyz')
-                    os.remove('MoREST_MD.log')
+                    for scattering_file in glob('./MoREST_traj_*.xyz'):
+                        os.remove(scattering_file)
+                    for scattering_file in glob('./MoREST_MD_*.log'):
+                        os.remove(scattering_file)
                 except:
                     pass
             else:
