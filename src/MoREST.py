@@ -290,18 +290,21 @@ class morest:
         '''
         current_step, current_system = self.scattering_job.current_step, self.scattering_job.current_system
         simulation_maxsteps = self.scattering_parameters['scattering_traj_length']
-        while current_step <= simulation_maxsteps:
-            if self.morest_parameters['enhanced_sampling']:
-                self.morest_parameters['enhanced_sampling'] = False # TODO: enhanced sampling method for trajectory scattering
-            else:
-                if self.morest_parameters['wall_potential']:
-                    general_coordinate = current_system.get_positions()
-                    bias_forces = self.wall_potential(general_coordinate)
-                    current_step, current_system= self.scattering_job.generate_new_step(bias_forces)
+        n_traj = 0
+        while n_traj < self.scattering_parameters['scattering_traj_number']:
+            while current_step <= simulation_maxsteps:
+                if self.morest_parameters['enhanced_sampling']:
+                    self.morest_parameters['enhanced_sampling'] = False # TODO: enhanced sampling method for trajectory scattering
                 else:
-                    current_step, current_system= self.scattering_job.generate_new_step()
-            if self.stop_condition.check_CVs_one(current_system):
-                break
+                    if self.morest_parameters['wall_potential']:
+                        general_coordinate = current_system.get_positions()
+                        bias_forces = self.wall_potential(general_coordinate)
+                        current_step, current_system= self.scattering_job.generate_new_step(bias_forces)
+                    else:
+                        current_step, current_system= self.scattering_job.generate_new_step()
+                if self.stop_condition.check_CVs_one(current_system):
+                    break
+            n_traj += 1
         self.log_morest.write('Trajectory scattering with molecular dynamics method is finished!\n')
         self.mission_complete()
 
