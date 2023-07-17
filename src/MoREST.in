@@ -27,7 +27,7 @@ Phase_space_sampling              False
 Sampling_initialization           False   # Overwrite or append the trajectory in MoREST_traj.xyz file, read structure from MoREST.str or MoREST.str_new
 Sampling_molecule                 MoREST.str # The input of the structure.
 Sampling_traj_interval            10    # Record sampling every Traj_interval steps
-Sampling_method                   MD    # MD, MC, LD, PIMD
+Sampling_method                   MD    # MD, MC, PIMD
 Sampling_ensemble                 NVT_SVR  10   # Choose the ensemble, e.g. NVE_VV: velocity Verlet;
                                                 #                           NVT_VR 10: velocity Verlet with velocity rescaling, with parameter NVT_VR_dT=10;
                                                 #                           NVT_Berendsen 10: Berendsen thermostat with NVT_Berendsen_tau=10;
