@@ -40,8 +40,19 @@ MD_clean_translation              True
 MD_clean_rotation                 True
 MD_time_step                      1   # unit in fs
 MD_simulation_time                100000   # unit in fs
-MD_temperature                    1000
-MD_pressure                       1 # unit: Bar (10^5 Pa)
+MD_temperature                    1000 # unit: K
+NPT_number                        1 # Pressure control in NPT is implemented by controling the size of wall potential.
+NPT_pressure                      1 # unit: Bar (10^5 Pa)
+NPT_space_shape                   sphere # sphere: spherical space for barostat; cuboid: cuboidal space for barostat; plane: planar wall for barostat used in periodic system.
+NPT_space_type                    gas # gas: only change the size of the barostat; condensed: change both the size of barostat and the positions of atoms.
+NPT_action_atoms                  all # all; 1 ; 0,2,4,7.  Indicating the atoms acffected by the wall potential.
+NPT_sphere_center                 0 0 0 # This point and radius determine the parameter b in the spherical wall. 
+NPT_shpere_radius                 # The radius and center point determine the parameter b in the spherical wall. It is calculated from the pressure.
+NPT_cuboid_center                 0 0 0 # This point and normal vector determine the parameter b of six planar walls of the cube.
+NPT_cuboid_normal_vector          0 0 5 # The normal vector does not have to be a unit vector. It will be normalized after reading.
+NPT_cuboid_length_ratio           4 5 6 # The length on each side of the cuboid. The last number (6) is the length along the normal vector. The actual lengths are calculated from the pressure.
+NPT_plane_point                   0 0 3 # This point and normal vector determine the parameter b in the planar wall.
+NPT_plane_normal_vector           0 0 -5 # The normal vector does not have to be a unit vector. It will be normalized after reading.
 
 Trajectory_scattering             False
 Scattering_initialization         False
@@ -114,7 +125,7 @@ Wall_shape                        spherical    # planar, spherical, dot, linear,
 Wall_type                         power_wall  -1  # opaque_wall, translucent_wall, power_wall 1: power_wall acts on (b dot norm_vec) > 0, -1: power_wall acts on (b dot norm_vec) < 0.
 Wall_scaling                      0.1      # This is parameter a in the potential
 Wall_scope                        10      # This is parameter c in the potential
-Wall_action_atoms                 all    #TODO all, 1 , 0 2 4 7.  Indicating the atoms acffected by the wall potential.
+Wall_action_atoms                 all    #TODO all; 1 ; 0,2,4,7.  Indicating the atoms acffected by the wall potential.
 Spherical_wall_center             0 0 0 # This point and radius determine the parameter b in the spherical potential.
 Spherical_wall_radius             20 # The radius and center point determine the parameter b in the spherical potential.
 Planar_wall_point                 0 0 3 # This point and normal vector determine the parameter b in the planar potential.

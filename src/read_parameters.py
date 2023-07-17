@@ -50,6 +50,18 @@ class read_parameters:
         self.md_parameters = {}
         self.md_parameters['md_clean_translation'] = True
         self.md_parameters['md_clean_rotation'] = False
+        self.md_parameters['npt_number'] = 1
+        self.md_parameters['npt_pressure'] = []
+        self.md_parameters['npt_space_shape'] = []
+        self.md_parameters['npt_space_type'] = []
+        self.md_parameters['npt_action_atoms'] = []
+        self.md_parameters['npt_sphere_center'] = []
+        self.md_parameters['npt_shpere_radius'] = []
+        self.md_parameters['npt_cuboid_center'] = []
+        self.md_parameters['npt_cuboid_normal_vector'] = []
+        self.md_parameters['npt_cuboid_length_ratio'] = []
+        self.md_parameters['npt_plane_point'] = []
+        self.md_parameters['npt_plane_normal_vector'] = []
         self.scattering_parameters = {}
         self.scattering_parameters['scattering_initialization'] = False
         self.scattering_parameters['scattering_pre_thermolized'] = False
@@ -135,7 +147,17 @@ class read_parameters:
                 
             elif i_parameter.split()[0].upper() == 'ML_potential_model'.upper():
                 self.morest_parameters['ml_potential_model'] = str(i_parameter.split()[1])
-                
+
+            elif i_parameter.split()[0].upper() == 'ML_training_set'.upper():
+                self.morest_parameters['ml_training_set'] = str(i_parameter.split()[1])
+
+            elif i_parameter.split()[0].upper() == 'ML_GPR_noise_level_bounds'.upper():
+                noise_level_bounds = i_parameter.split()
+                try:
+                    self.morest_parameters['ml_gpr_noise_level_bounds'] = np.array([float(noise_level_bounds[1]),float(noise_level_bounds[2])])
+                except:
+                    self.morest_parameters['ml_gpr_noise_level_bounds'] = float(noise_level_bounds[1])
+
             elif i_parameter.split()[0].upper() == 'ML_representation'.upper():
                 self.morest_parameters['ml_representation'] = str(i_parameter.split()[1])
 
@@ -235,6 +257,8 @@ class read_parameters:
                     ########################## Molecular dynamics #########################
                     if self.sampling_parameters['sampling_method'].upper() in ['MD']:
                         self.read_md_parameters(i_parameter)
+                    if self.sampling_parameters['sampling_ensemble'].upper() in ['NPT_Berendsen', 'NPT_Langevin', 'NPT_SVR']:
+                        self.read_md_npt_parameters(i_parameter)
                 
             ########################## Trajectory scattering ######################
             if self.morest_parameters['trajectory_scattering']:
@@ -275,11 +299,8 @@ class read_parameters:
         
     ########################### read parameters ##################################################################
 
-    def read_active_learning_parameters(self, i_parameter):                
-        if i_parameter.split()[0].upper() == 'ML_training_set'.upper():
-            self.morest_parameters['ml_training_set'] = str(i_parameter.split()[1])
-
-        elif i_parameter.split()[0].upper() == 'ML_energy_uncertainty_tolerance'.upper():
+    def read_active_learning_parameters(self, i_parameter):
+        if i_parameter.split()[0].upper() == 'ML_energy_uncertainty_tolerance'.upper():
             self.morest_parameters['ml_energy_uncertainty_tolerance'] = float(i_parameter.split()[1])
 
         elif i_parameter.split()[0].upper() == 'ML_appending_set_number'.upper():
@@ -287,13 +308,6 @@ class read_parameters:
 
         elif i_parameter.split()[0].upper() == 'ML_appending_sampling_steps'.upper():
             self.morest_parameters['ml_appending_sampling_steps'] = int(i_parameter.split()[1])
-
-        elif i_parameter.split()[0].upper() == 'ML_GPR_noise_level_bounds'.upper():
-            noise_level_bounds = i_parameter.split()
-            try:
-                self.morest_parameters['ml_gpr_noise_level_bounds'] = np.array([float(noise_level_bounds[1]),float(noise_level_bounds[2])])
-            except:
-                self.morest_parameters['ml_gpr_noise_level_bounds'] = float(noise_level_bounds[1])
     
     def read_sampling_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'Sampling_initialization'.upper():
@@ -323,6 +337,9 @@ class read_parameters:
                 self.sampling_parameters['nvt_langevin_gamma'] = float(i_parameter.split()[2])
             elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
                 self.sampling_parameters['nvt_svr_tau'] = float(i_parameter.split()[2])
+            elif self.sampling_parameters['sampling_ensemble'].upper() in ['NPT_Berendsen'.upper()]:
+                self.sampling_parameters['npt_Berendsen_tau_t'] = float(i_parameter.split()[2])
+                self.sampling_parameters['npt_Berendsen_tau_p'] = float(i_parameter.split()[3])
 
     def read_md_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'MD_time_step'.upper():
@@ -352,6 +369,60 @@ class read_parameters:
                 self.md_parameters['md_clean_translation'] = False
             else:
                 raise Exception('It is not clear whether the translation will be removed.')
+
+    def read_md_npt_parameters(self, i_parameter):
+        if i_parameter.split()[0].upper() == 'NPT_number'.upper():
+            self.md_parameters['npt_number'] = int(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'NPT_pressure'.upper():
+            self.md_parameters['npt_pressure'].append(float(i_parameter.split()[1]))
+
+        elif i_parameter.split()[0].upper() == 'NPT_space_shape'.upper():
+            self.md_parameters['npt_space_shape'].append(str(i_parameter.split()[1]))
+
+        elif i_parameter.split()[0].upper() == 'NPT_space_type'.upper():
+            self.md_parameters['npt_space_type'].append(str(i_parameter.split()[1]))
+
+        elif i_parameter.split()[0].upper() == 'NPT_action_atoms'.upper():
+            self.md_parameters['npt_action_atoms'].append(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'NPT_sphere_center'.upper():
+            tmp_center = []
+            for i in range(3):
+                tmp_center.append(float(i_parameter.split()[i+1]))
+            self.md_parameters['npt_sphere_center'].append(np.array(tmp_center))
+
+        elif i_parameter.split()[0].upper() == 'NPT_cuboid_center'.upper():
+            tmp_center = []
+            for i in range(3):
+                tmp_center.append(float(i_parameter.split()[i+1]))
+            self.md_parameters['npt_cuboid_center'].append(np.array(tmp_center))
+        
+        elif i_parameter.split()[0].upper() == 'NPT_cuboid_normal_vector'.upper():
+            tmp_normal_vector = []
+            for i in range(3):
+                tmp_normal_vector.append(float(i_parameter.split()[i+1]))
+            tmp_normal_vector = np.array(tmp_normal_vector)
+            self.md_parameters['npt_cuboid_normal_vector'].append(tmp_normal_vector / np.linalg.norm(tmp_normal_vector))
+
+        elif i_parameter.split()[0].upper() == 'NPT_cuboid_length_ratio'.upper():
+            tmp_center = []
+            for i in range(3):
+                tmp_center.append(float(i_parameter.split()[i+1]))
+            self.md_parameters['npt_cuboid_length_ratio'].append(np.array(tmp_center))
+
+        elif i_parameter.split()[0].upper() == 'NPT_plane_point'.upper():
+            tmp_center = []
+            for i in range(3):
+                tmp_center.append(float(i_parameter.split()[i+1]))
+            self.md_parameters['npt_plane_point'].append(np.array(tmp_center))
+        
+        elif i_parameter.split()[0].upper() == 'NPT_plane_normal_vector'.upper():
+            tmp_normal_vector = []
+            for i in range(3):
+                tmp_normal_vector.append(float(i_parameter.split()[i+1]))
+            tmp_normal_vector = np.array(tmp_normal_vector)
+            self.md_parameters['npt_plane_normal_vector'].append(tmp_normal_vector / np.linalg.norm(tmp_normal_vector))
 
     def read_scattering_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'Scattering_initialization'.upper():
@@ -721,7 +792,7 @@ class read_parameters:
         else:
             raise Exception('It is not clear which features will be added.')
         return additional_features, i_loc
-
+    
     def get_sampling_parameters(self, log_morest=None):
         if self.morest_parameters['morest_initialization'] == True:
            self.sampling_parameters['sampling_initialization'] = True
