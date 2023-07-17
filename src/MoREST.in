@@ -34,7 +34,6 @@ Sampling_ensemble                 NVT_SVR  10   # Choose the ensemble, e.g. NVE_
                                                 #                           NVT_Langevin 0.05: Langevin thermostat with NVT_Langevin_gamma=0.05;
                                                 #                           NVT_SVR 10: BDP stochastic velocity rescaling thermostat, with parameter NVT_SVR_tau=10; NPT_SVR.
                                                 #                           NPT_Berendsen 10 50: Berendsen isothermal-isobaric sampling with NPT_Berendsen_tau_T=10, NPT_Berendsen_tau_P=50;
-                                                #                           NPT_Langevin    TODO
                                                 #                           NPT_SVR         TODO
 MD_clean_translation              True
 MD_clean_rotation                 True

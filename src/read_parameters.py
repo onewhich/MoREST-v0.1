@@ -257,7 +257,7 @@ class read_parameters:
                     ########################## Molecular dynamics #########################
                     if self.sampling_parameters['sampling_method'].upper() in ['MD']:
                         self.read_md_parameters(i_parameter)
-                    if self.sampling_parameters['sampling_ensemble'].upper() in ['NPT_Berendsen', 'NPT_Langevin', 'NPT_SVR']:
+                    if self.sampling_parameters['sampling_ensemble'].upper() in ['NPT_Berendsen', 'NPT_SVR']:
                         self.read_md_npt_parameters(i_parameter)
                 
             ########################## Trajectory scattering ######################
