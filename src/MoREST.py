@@ -19,6 +19,7 @@ class morest:
         '''
         Calculator is required, when many body potential is specified as 'on_the_fly'.
         '''
+        self.calculator = calculator
         MoREST_parameters = read_parameters(parameter_file=parameter_file)
         self.morest_parameters = MoREST_parameters.get_morest_parameters()
 
@@ -95,16 +96,6 @@ class morest:
                     pass
             else:
                 self.log_morest.write('Continue to sample the trajectories\n\n')
-                
-            self.stop_condition = collective_variables(from_CVs_file=False, CVs_list=self.scattering_parameters['scattering_traj_stop'])
-            if self.scattering_parameters['scattering_method'].upper() in ['VV']:
-                self.scattering_job = scattering_velocity_Verlet(self.morest_parameters, self.scattering_parameters, calculator=calculator, log_morest=self.log_morest)
-            elif self.scattering_parameters['scattering_method'].upper() in ['RK4']:
-                self.scattering_job = scattering_Runge_Kutta_4th(self.morest_parameters, self.scattering_parameters, calculator=calculator, log_morest=self.log_morest)
-            else:
-                self.log_morest.write('It is not clear which scattering method will be used.\n')
-                self.log_morest.close()
-                raise Exception('Which scattering method will you use?')
 
         #################### Structure searching initialization ###############################
         if self.morest_parameters['structure_searching']:
@@ -288,10 +279,19 @@ class morest:
         INPUT:
             calculator: The same as the calculator in ASE. It is required, when many body potential is specified as 'on_the_fly'.
         '''
-        current_step, current_system = self.scattering_job.current_step, self.scattering_job.current_system
         simulation_maxsteps = self.scattering_parameters['scattering_traj_length']
-        n_traj = 0
-        while n_traj < self.scattering_parameters['scattering_traj_number']:
+        self.stop_condition = collective_variables(from_CVs_file=False, CVs_list=self.scattering_parameters['scattering_traj_stop'])
+        i_traj = 0
+        while i_traj < self.scattering_parameters['scattering_traj_number']:
+            if self.scattering_parameters['scattering_method'].upper() in ['VV']:
+                self.scattering_job = scattering_velocity_Verlet(self.morest_parameters, self.scattering_parameters, calculator=self.calculator, i_traj=i_traj, log_morest=self.log_morest)
+            elif self.scattering_parameters['scattering_method'].upper() in ['RK4']:
+                self.scattering_job = scattering_Runge_Kutta_4th(self.morest_parameters, self.scattering_parameters, calculator=self.calculator, i_traj=i_traj, log_morest=self.log_morest)
+            else:
+                self.log_morest.write('It is not clear which scattering method will be used.\n')
+                self.log_morest.close()
+                raise Exception('Which scattering method will you use?')
+            current_step, current_system = self.scattering_job.current_step, self.scattering_job.current_system
             while current_step <= simulation_maxsteps:
                 if self.morest_parameters['enhanced_sampling']:
                     self.morest_parameters['enhanced_sampling'] = False # TODO: enhanced sampling method for trajectory scattering
@@ -304,7 +304,7 @@ class morest:
                         current_step, current_system= self.scattering_job.generate_new_step()
                 if self.stop_condition.check_CVs_one(current_system):
                     break
-            n_traj += 1
+            i_traj += 1
         self.log_morest.write('Trajectory scattering with molecular dynamics method is finished!\n')
         self.mission_complete()
 
