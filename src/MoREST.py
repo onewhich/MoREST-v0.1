@@ -3,7 +3,6 @@ import numpy as np
 from glob import glob
 from initialization import initialize_modules
 from read_parameters import read_parameters
-from trajectory_scattering import scattering_velocity_Verlet, scattering_Runge_Kutta_4th
 from collective_variable import collective_variables
 
 
@@ -90,16 +89,17 @@ class morest:
         '''
         simulation_maxsteps = self.scattering_parameters['scattering_traj_length']
         self.stop_condition = collective_variables(from_CVs_file=False, CVs_list=self.scattering_parameters['scattering_traj_stop'])
-        i_traj = 0
-        for i_traj in range(self.scattering_parameters['scattering_traj_number']):
-            if self.scattering_parameters['scattering_method'].upper() in ['VV']:
-                self.scattering_job = scattering_velocity_Verlet(self.morest_parameters, self.scattering_parameters, calculator=self.calculator, i_traj=i_traj, log_morest=self.log_morest)
-            elif self.scattering_parameters['scattering_method'].upper() in ['RK4']:
-                self.scattering_job = scattering_Runge_Kutta_4th(self.morest_parameters, self.scattering_parameters, calculator=self.calculator, i_traj=i_traj, log_morest=self.log_morest)
-            else:
-                self.log_morest.write('It is not clear which scattering method will be used.\n')
-                self.log_morest.close()
-                raise Exception('Which scattering method will you use?')
+        # Find current traj number
+        traj_number_list = []
+        for traj_log in glob('./MoREST_traj_*.log'):
+            traj_number_list.append(int(traj_log.split('MoREST_traj_')[1].split('.log')[0]))
+        if len(traj_number_list) == 0:
+            current_traj = 0
+        else:
+            current_traj = np.sort(traj_number_list)[-1]
+        # Start to run the calculation
+        for i_traj in range(current_traj, self.scattering_parameters['scattering_traj_number']):
+            self.scattering_job.generate_new_traj(i_traj)
             current_step, current_system = self.scattering_job.current_step, self.scattering_job.current_system
             while current_step <= simulation_maxsteps:
                 if self.morest_parameters['enhanced_sampling']:
@@ -113,6 +113,7 @@ class morest:
                         current_step, current_system= self.scattering_job.generate_new_step()
                 if self.stop_condition.check_CVs_one(current_system):
                     break
+            self.log_morest.write('Trajectory number '+str(i_traj)+' has been finished.\n')
         self.log_morest.write('Trajectory scattering with molecular dynamics method is finished!\n')
         self.mission_complete()
 
@@ -126,7 +127,7 @@ class morest:
         searching_convergence = self.searching_parameters['searching_convergence']
         searching_maxsteps = self.searching_parameters['searching_max_steps']
         if self.morest_parameters['enhanced_sampling']:
-            self.morest_parameters['enhanced_sampling'] = False # TODO: enhanced sampling method for trajectory scattering
+            self.morest_parameters['enhanced_sampling'] = False # TODO: enhanced sampling method for structure searching.
         else:
             current_convergence, current_step, current_system = self.searching_job.current_convergence, self.searching_job.current_step, self.searching_job.current_system
             if self.morest_parameters['wall_potential']:
