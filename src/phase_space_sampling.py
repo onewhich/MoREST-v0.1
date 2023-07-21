@@ -242,7 +242,11 @@ class velocity_Verlet(initialize_sampling):
 
     def Berendsen_position_rescaling(self, tau):
         time_step = self.md_parameters['md_time_step']
-
+        beta = self.sampling_parameters['npt_Berendsen_compressibility']
+        Ek = self.current_system.get_kinetic_energy()
+        forces = self.current_forces
+        coordinates = self.current_system.get_positions()
+        internal_virial = np.sum([(coordinates[i]-coordinates[j]) @ forces[i] for i in range(self.n_atom-1) for j in range(i+1,self.n_atom)])
         
     def stochastic_velocity_rescaling(self, Nf, tau):
         '''

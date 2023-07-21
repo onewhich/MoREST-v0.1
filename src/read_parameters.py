@@ -352,9 +352,6 @@ class read_parameters:
         elif i_parameter.split()[0].upper() == 'MD_temperature'.upper():
             self.md_parameters['md_temperature'] = float(i_parameter.split()[1])
         
-        elif i_parameter.split()[0].upper() == 'MD_pressure'.upper():
-            self.md_parameters['md_pressure'] = float(i_parameter.split()[1])
-        
         elif i_parameter.split()[0].upper() == 'MD_clean_rotation'.upper():
             if i_parameter.split()[1].upper() == 'True'.upper():
                 self.md_parameters['md_clean_rotation'] = True
@@ -803,6 +800,10 @@ class read_parameters:
             self.sampling_parameters['nvt_langevin_gamma'] /= units.fs
         elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
             self.sampling_parameters['nvt_svr_tau'] *= units.fs
+        elif self.sampling_parameters['sampling_ensemble'].upper() in ['NPT_Berendsen'.upper()]:
+            self.sampling_parameters['npt_Berendsen_tau_t'] *= units.fs
+            self.sampling_parameters['npt_Berendsen_tau_p'] *= units.fs
+            self.sampling_parameters['npt_Berendsen_compressibility'] /= units.bar
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_sampling_parameters.npy', self.sampling_parameters)
         if log_morest != None:
@@ -820,6 +821,12 @@ class read_parameters:
         self.md_parameters['md_time_step'] *= units.fs
         self.md_parameters['md_simulation_time'] *= units.fs
         self.md_parameters['md_pressure'] *= units.bar
+        for key in ['npt_pressure', 'npt_space_shape', 'npt_space_type', 'npt_action_atoms', \
+                    'npt_sphere_center', \
+                    'npt_cuboid_center', 'npt_cuboid_normal_vector', 'npt_cuboid_length_ratio', \
+                    'npt_plane_point', 'npt_plane_normal_vector']:
+            self.md_parameters[key] = self.md_parameters[key]\
+                [:self.md_parameters['npt_number']]
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_MD_parameters.npy', self.md_parameters)
         if log_morest != None:
