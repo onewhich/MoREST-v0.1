@@ -2,7 +2,7 @@ import os
 from glob import glob
 import numpy as np
 from many_body_potential import ml_potential, on_the_fly, molpro_calculator
-from phase_space_sampling import velocity_Verlet
+from phase_space_sampling import NVE_VV, NVT_VR, NVT_Berendsen, NVT_Langevin, NVT_SVR, NPT_Berendsen, NPT_Langevin, NPT_SVR
 from trajectory_scattering import scattering_velocity_Verlet, scattering_Runge_Kutta_4th
 from structure_searching import gradient_descent, fire_velocity_Verlet
 from enhanced_sampling import its, re
@@ -73,9 +73,22 @@ class initialize_modules:
             self.log_morest.write('Continue to sample the phase space\n\n')
             #Method: '+str(self.sampling_parameters['sampling_method'])+'\nEnsemble: '+str(self.sampling_parameters['sampling_ensemble'])+'\n\n')
         if self.sampling_parameters['sampling_method'].upper() in ['MD']:
-            if self.sampling_parameters['sampling_ensemble'].upper() in ['NVE_VV', 'NVT_VR', 'NVT_Berendsen'.upper(), 'NVT_Langevin'.upper(),'NVT_SVR']:
-                self.sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=self.calculator, \
-                                                    ensemble=self.sampling_parameters['sampling_ensemble'], log_morest=self.log_morest)
+            if self.sampling_parameters['sampling_ensemble'].upper()  in ['NVT_SVR']:
+                self.sampling_job = NVT_SVR(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=self.calculator, log_morest=self.log_morest)
+            elif self.sampling_parameters['sampling_ensemble'].upper()  in ['NPT_SVR']:
+                self.sampling_job = NPT_SVR(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=self.calculator, log_morest=self.log_morest)
+            elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVE_VV']:
+                self.sampling_job = NVE_VV(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=self.calculator, log_morest=self.log_morest)
+            elif self.sampling_parameters['sampling_ensemble'].upper()  in ['NVT_Langevin'.upper()]:
+                self.sampling_job = NVT_Langevin(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=self.calculator, log_morest=self.log_morest)
+            elif self.sampling_parameters['sampling_ensemble'].upper()  in ['NPT_Langevin'.upper()]:
+                self.sampling_job = NPT_Langevin(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=self.calculator, log_morest=self.log_morest)
+            elif self.sampling_parameters['sampling_ensemble'].upper()  in ['NVT_Berendsen'.upper()]:
+                self.sampling_job = NVT_Berendsen(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=self.calculator, log_morest=self.log_morest)
+            elif self.sampling_parameters['sampling_ensemble'].upper()  in ['NPT_Berendsen'.upper()]:
+                self.sampling_job = NPT_Berendsen(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=self.calculator, log_morest=self.log_morest)
+            elif self.sampling_parameters['sampling_ensemble'].upper()  in ['NVT_VR']:
+                self.sampling_job = NVT_VR(self.morest_parameters, self.sampling_parameters, self.md_parameters, calculator=self.calculator, log_morest=self.log_morest)
             else:
                 self.log_morest.write('It is not clear which ensemble will be used.\n')
                 self.log_morest.close()
@@ -207,11 +220,30 @@ class initialize_modules:
             self.sampling_job = []
             for i,T in enumerate(self.re_parameters['re_replica_temperatures']):
                 if self.sampling_parameters['sampling_method'].upper() in ['MD']:
-                    if self.sampling_parameters['sampling_ensemble'].upper() in ['NVE_VV', \
-                                                                                 'NVT_VR', 'NVT_Berendsen'.upper(), 'NVT_Langevin'.upper(),'NVT_SVR']:
-                        tmp_sampling_job = velocity_Verlet(self.morest_parameters, self.sampling_parameters, self.md_parameters, \
-                                                            molecules[i], log_file_name[i], traj_file_name[i], T, calculator=self.calculator, \
-                                                            ensemble=self.sampling_parameters['sampling_ensemble'], log_morest=self.log_morest)
+                    if self.sampling_parameters['sampling_ensemble'].upper()  in ['NVT_SVR']:
+                        tmp_sampling_job = NVT_SVR(self.morest_parameters, self.sampling_parameters, self.md_parameters, molecules[i], \
+                                                    log_file_name[i], traj_file_name[i], T, calculator=self.calculator, log_morest=self.log_morest)
+                    elif self.sampling_parameters['sampling_ensemble'].upper()  in ['NPT_SVR']:
+                        tmp_sampling_job = NPT_SVR(self.morest_parameters, self.sampling_parameters, self.md_parameters, molecules[i], \
+                                                    log_file_name[i], traj_file_name[i], T, calculator=self.calculator, log_morest=self.log_morest)
+                    elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVE_VV']:
+                        tmp_sampling_job = NVE_VV(self.morest_parameters, self.sampling_parameters, self.md_parameters, molecules[i], \
+                                                   log_file_name[i], traj_file_name[i], T, calculator=self.calculator, log_morest=self.log_morest)
+                    elif self.sampling_parameters['sampling_ensemble'].upper()  in ['NVT_Langevin'.upper()]:
+                        tmp_sampling_job = NVT_Langevin(self.morest_parameters, self.sampling_parameters, self.md_parameters, molecules[i], \
+                                                         log_file_name[i], traj_file_name[i], T, calculator=self.calculator, log_morest=self.log_morest)
+                    elif self.sampling_parameters['sampling_ensemble'].upper()  in ['NPT_Langevin'.upper()]:
+                        tmp_sampling_job = NPT_Langevin(self.morest_parameters, self.sampling_parameters, self.md_parameters, molecules[i], \
+                                                         log_file_name[i], traj_file_name[i], T, calculator=self.calculator, log_morest=self.log_morest)
+                    elif self.sampling_parameters['sampling_ensemble'].upper()  in ['NVT_Berendsen'.upper()]:
+                        tmp_sampling_job = NVT_Berendsen(self.morest_parameters, self.sampling_parameters, self.md_parameters, molecules[i], \
+                                                          log_file_name[i], traj_file_name[i], T, calculator=self.calculator, log_morest=self.log_morest)
+                    elif self.sampling_parameters['sampling_ensemble'].upper()  in ['NPT_Berendsen'.upper()]:
+                        tmp_sampling_job = NPT_Berendsen(self.morest_parameters, self.sampling_parameters, self.md_parameters, molecules[i], \
+                                                          log_file_name[i], traj_file_name[i], T, calculator=self.calculator, log_morest=self.log_morest)
+                    elif self.sampling_parameters['sampling_ensemble'].upper()  in ['NVT_VR']:
+                        tmp_sampling_job = NVT_VR(self.morest_parameters, self.sampling_parameters, self.md_parameters, molecules[i], \
+                                                   log_file_name[i], traj_file_name[i], T, calculator=self.calculator, log_morest=self.log_morest)
                     else:
                         self.log_morest.write('It is not clear which ensemble will be used.\n')
                         self.log_morest.close()

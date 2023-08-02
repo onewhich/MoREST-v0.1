@@ -189,7 +189,7 @@ class gradient_descent(initialize_searching):
         write_xyz_file(self.searching_parameters['searching_starting_point']+'_new', self.current_system)
         self.write_log()
 
-        #self.check_divergence()
+        self.check_divergence()
 
         return self.current_convergence, self.current_step, self.current_system
     
