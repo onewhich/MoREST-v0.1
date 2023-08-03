@@ -69,6 +69,69 @@ class initialize_sampling(initialize_calculator):
         
         return system
     
+    @staticmethod
+    def clean_translation(velocities):
+        total_velocity = np.sum(velocities, axis=0)/len(velocities)
+        velocities = velocities - total_velocity
+        return velocities
+        
+    @staticmethod
+    def clean_rotation(velocities, coordinates, masses):
+        '''
+        L = r x p = r x (m v) = r x (omega x (m r)) = m r^2 omega = I omega
+        L : angular momentum
+        omega: angular velocity
+        I : moment of inertia
+        '''
+        v_vector = velocities
+        #center_of_mass = np.sum([masses[i]*coordinates[i] for i in range(len(masses))], axis=0)/np.sum(masses)
+        center_of_mass = np.sum(masses*coordinates, axis=0)/np.sum(masses)
+        r_vector = coordinates - center_of_mass
+        # r_cross_v : angular velocities
+        # omega = (r x v) / |r|^2
+        r_cross_v = np.cross(r_vector, v_vector)
+        r_2 = np.linalg.norm(r_vector, axis=1)**2
+        omega = np.array([r_cross_v[i]/r_2[i] for i in range(4)])
+        # Rv = omega/n_atom : system total angular velocity
+        rotat_vector = np.sum(omega, axis=0)/len(masses)
+        v_tang = np.cross(rotat_vector, r_vector)
+        velocities = v_vector - v_tang
+            
+        return velocities
+            
+    @staticmethod
+    def write_MD_log(MD_log, step, Ep, Ek, masses):
+        try:
+            if len(Ep) >= 1:
+                Ep = Ep[0]
+        except:
+            pass
+        n_atom = len(masses)
+        #Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(n_atom)])
+        #Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)
+        T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+        Et = Ek + Ep
+        MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'\n')
+        
+    @staticmethod
+    def write_SVR_MD_log(MD_log, step, Ep, Ek, masses, K_simulation, time_step, tau, d_Ee, Wt):
+        try:
+            if len(Ep) >= 1:
+                Ep = Ep[0]
+        except:
+            pass
+        n_atom = len(masses)
+        Nf = 3 * n_atom
+        #Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(n_atom)])
+        #Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)
+        T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+        Et = Ek + Ep
+        d_Ee = d_Ee + (K_simulation - Ek)*time_step/tau + 2*np.sqrt(Ek*K_simulation/Nf/tau)*Wt
+        Ee = Et - d_Ee
+        MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'    '+str(Ee)+'\n')
+        return d_Ee, Wt
+
+        
 class velocity_Verlet(initialize_sampling):
     '''
     This class implements velocity Verlet algorithm to do microcanonical ensemble (NVE MD) sampling, and (stochestic) velocity rescaling method to constrain the kinetic energy in a NVT MD system.
@@ -144,164 +207,6 @@ class velocity_Verlet(initialize_sampling):
         except:
             pass
 
-class NVE_VV(velocity_Verlet):
-    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
-        super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
-        if log_file_name == None:
-            self.log_file_name = 'MoREST_MD.log'
-        else:
-            self.log_file_name = log_file_name
-
-        if self.sampling_parameters['sampling_initialization']:
-            self.MD_log = open(self.log_file_name, 'w', buffering=1)
-            self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
-            write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
-        else:
-            self.MD_log = open(self.log_file_name, 'a', buffering=1)
-
-    def generate_new_step(self, bias_forces=None, updated_current_system=None):
-        self.VV_next_step(bias_forces, updated_current_system)
-
-        if self.md_parameters['md_clean_translation']:
-            #next_velocities = clean_translation(next_velocities)
-            Stationary(self.current_system)
-        if self.md_parameters['md_clean_rotation']:
-            #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
-            ZeroRotation(self.current_system)
-        
-        if not self.re_simulation:
-            write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
-        else:
-            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.str_new', self.current_system)
-        
-        if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
-            #print(next_coordinates) #DEGUB
-            #print(next_forces)    #DEBUG
-            #self.current_traj.append(self.current_system)
-            write_xyz_traj(self.traj_file_name, self.current_system)
-            self.kinetic_energy = self.current_system.get_kinetic_energy()
-            write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses)
-        
-        return self.current_step, self.current_system
-
-class NVT_VR(velocity_Verlet):
-    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
-        super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
-
-
-class NVT_Berendsen(velocity_Verlet):
-    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
-        super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
-
-
-class NVT_Langevin(velocity_Verlet):
-    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
-        super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
-
-
-class NVT_SVR(velocity_Verlet):
-    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
-        super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
-
-
-class NPT_Berendsen(velocity_Verlet):
-    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
-        super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
-
-
-class NPT_Langevin(velocity_Verlet):
-    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
-        super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
-
-
-class NPT_SVR(velocity_Verlet):
-    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
-        super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
-
-
-class velocity_Verlet(initialize_sampling):
-    '''
-    This class implements velocity Verlet algorithm to do microcanonical ensemble (NVE MD) sampling, and (stochestic) velocity rescaling method to constrain the kinetic energy in a NVT MD system.
-    MoREST_traj.xyz records the trajectory in an extended xyz format
-    MoREST.str (default name) records the initial xyz structure of the system
-    MoREST.str_new (default name) records the current xyz structure of the system
-    '''
-    
-    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, \
-                    log_morest=None):
-
-
-        if self.ensemble == 'NVT_VR':
-            self.velocity_rescaling()
-        elif self.ensemble == 'NVT_Berendsen'.upper():
-            self.Berendsen_velocity_rescaling(tau = self.sampling_parameters['nvt_berendsen_tau'])
-        
-        if self.sampling_parameters['sampling_initialization']:
-            if self.log_file_name == None:
-                self.MD_log = open('MoREST_MD.log', 'w', buffering=1)
-            else:
-                self.MD_log = open(self.log_file_name, 'w', buffering=1)
-            if self.ensemble == 'NVT_Langevin'.upper():
-                self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), Effective energy (eV)\n')   
-                self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses, self.K_simulation, self.md_parameters['md_time_step'], 1/(2*self.sampling_parameters['nvt_langevin_gamma']), 0, 0)
-            elif self.ensemble == 'NVT_SVR':
-                self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), Effective energy (eV)\n')   
-                self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses, self.K_simulation, self.md_parameters['md_time_step'], self.sampling_parameters['nvt_svr_tau'], 0, 0)
-            else:
-                self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
-                write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
-        else:
-            if self.log_file_name == None:
-                self.MD_log = open('MoREST_MD.log', 'a', buffering=1)
-            else:
-                self.MD_log = open(self.log_file_name, 'a', buffering=1)
-            if self.ensemble == 'NVT_SVR':
-                self.d_Ee = 0
-                self.Wt =  0
-        
-    def generate_new_step(self, bias_forces=None, updated_current_system=None):
-        
-        if self.ensemble == 'NVT_VR':
-            self.velocity_rescaling()
-        elif self.ensemble == 'NVT_Berendsen'.upper():
-            self.Berendsen_velocity_rescaling(tau = self.sampling_parameters['nvt_berendsen_tau'])
-        elif self.ensemble == 'NVT_Langevin'.upper():
-            R_t = self.stochastic_velocity_rescaling(Nf = 1, tau = 1/(2*self.sampling_parameters['nvt_langevin_gamma']))
-        elif self.ensemble == 'NVT_SVR':
-            R_t = self.stochastic_velocity_rescaling(Nf = 3*self.n_atom, tau = self.sampling_parameters['nvt_svr_tau'])
-        
-        if self.md_parameters['md_clean_translation']:
-            #next_velocities = clean_translation(next_velocities)
-            Stationary(self.current_system)
-        if self.md_parameters['md_clean_rotation']:
-            #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
-            ZeroRotation(self.current_system)
-        
-        if not self.re_simulation:
-            write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
-        else:
-            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.str_new', self.current_system)
-        
-        if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
-            #print(next_coordinates) #DEGUB
-            #print(next_forces)    #DEBUG
-            #self.current_traj.append(self.current_system)
-            if self.traj_file_name == None:
-                write_xyz_traj('MoREST_traj.xyz', self.current_system)
-            else:
-                write_xyz_traj(self.traj_file_name, self.current_system)
-            self.kinetic_energy = self.current_system.get_kinetic_energy()
-            if self.ensemble == 'NVT_Langevin'.upper():
-                #self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses, self.K_simulation, time_step, self.sampling_parameters['nvt_svr_tau'], self.d_Ee, self.Wt+R_t)
-                self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses, self.K_simulation, self.time_step, 1/(2*self.sampling_parameters['nvt_langevin_gamma']), self.d_Ee, R_t)
-            elif self.ensemble == 'NVT_SVR':
-                #self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses, self.K_simulation, time_step, self.sampling_parameters['nvt_svr_tau'], self.d_Ee, self.Wt+R_t)
-                self.d_Ee, self.Wt = write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses, self.K_simulation, self.time_step, self.sampling_parameters['nvt_svr_tau'], self.d_Ee, R_t)
-            else:
-                write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses)
-        
-        return self.current_step, self.current_system
-    
     def velocity_rescaling(self):
         dT = self.sampling_parameters['nvt_vr_dt']
         lower_T = self.T_simulation - dT
@@ -369,61 +274,252 @@ class velocity_Verlet(initialize_sampling):
     def internal_virial(self, coordinates, forces):
         return np.sum([(coordinates[i]-coordinates[j]) @ forces[i] for i in range(self.n_atom-1) for j in range(i+1,self.n_atom)])
     
-def clean_translation(velocities):
-    total_velocity = np.sum(velocities, axis=0)/len(velocities)
-    velocities = velocities - total_velocity
-    return velocities
-    
-def clean_rotation(velocities, coordinates, masses):
-    '''
-    L = r x p = r x (m v) = r x (omega x (m r)) = m r^2 omega = I omega
-    L : angular momentum
-    omega: angular velocity
-    I : moment of inertia
-    '''
-    v_vector = velocities
-    #center_of_mass = np.sum([masses[i]*coordinates[i] for i in range(len(masses))], axis=0)/np.sum(masses)
-    center_of_mass = np.sum(masses*coordinates, axis=0)/np.sum(masses)
-    r_vector = coordinates - center_of_mass
-    # r_cross_v : angular velocities
-    # omega = (r x v) / |r|^2
-    r_cross_v = np.cross(r_vector, v_vector)
-    r_2 = np.linalg.norm(r_vector, axis=1)**2
-    omega = np.array([r_cross_v[i]/r_2[i] for i in range(4)])
-    # Rv = omega/n_atom : system total angular velocity
-    rotat_vector = np.sum(omega, axis=0)/len(masses)
-    v_tang = np.cross(rotat_vector, r_vector)
-    velocities = v_vector - v_tang
+
+class NVE_VV(velocity_Verlet):
+    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
+        super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
+        if log_file_name == None:
+            self.log_file_name = 'MoREST_MD.log'
+        else:
+            self.log_file_name = log_file_name
+
+        if self.sampling_parameters['sampling_initialization']:
+            self.MD_log = open(self.log_file_name, 'w', buffering=1)
+            self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
+            self.write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
+        else:
+            self.MD_log = open(self.log_file_name, 'a', buffering=1)
+
+    def generate_new_step(self, bias_forces=None, updated_current_system=None):
+        self.VV_next_step(bias_forces, updated_current_system)
+
+        if self.md_parameters['md_clean_translation']:
+            #next_velocities = clean_translation(next_velocities)
+            Stationary(self.current_system)
+        if self.md_parameters['md_clean_rotation']:
+            #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
+            ZeroRotation(self.current_system)
         
-    return velocities
+        if not self.re_simulation:
+            write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
+        else:
+            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.str_new', self.current_system)
         
-def write_MD_log(MD_log, step, Ep, Ek, masses):
-    try:
-        if len(Ep) >= 1:
-            Ep = Ep[0]
-    except:
-        pass
-    n_atom = len(masses)
-    #Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(n_atom)])
-    #Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)
-    T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
-    Et = Ek + Ep
-    MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'\n')
-    
-def write_SVR_MD_log(MD_log, step, Ep, Ek, masses, K_simulation, time_step, tau, d_Ee, Wt):
-    try:
-        if len(Ep) >= 1:
-            Ep = Ep[0]
-    except:
-        pass
-    n_atom = len(masses)
-    Nf = 3 * n_atom
-    #Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(n_atom)])
-    #Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)
-    T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
-    Et = Ek + Ep
-    d_Ee = d_Ee + (K_simulation - Ek)*time_step/tau + 2*np.sqrt(Ek*K_simulation/Nf/tau)*Wt
-    Ee = Et - d_Ee
-    MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'    '+str(Ee)+'\n')
-    return d_Ee, Wt
-    
+        if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
+            #print(next_coordinates) #DEGUB
+            #print(next_forces)    #DEBUG
+            #self.current_traj.append(self.current_system)
+            write_xyz_traj(self.traj_file_name, self.current_system)
+            self.kinetic_energy = self.current_system.get_kinetic_energy()
+            self.write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses)
+        
+        return self.current_step, self.current_system
+
+class NVT_VR(velocity_Verlet):
+    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
+        super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
+        if log_file_name == None:
+            self.log_file_name = 'MoREST_MD.log'
+        else:
+            self.log_file_name = log_file_name
+
+        self.velocity_rescaling()
+
+        if self.sampling_parameters['sampling_initialization']:
+            self.MD_log = open(self.log_file_name, 'w', buffering=1)
+            self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
+            self.write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
+        else:
+            self.MD_log = open(self.log_file_name, 'a', buffering=1)
+
+    def generate_new_step(self, bias_forces=None, updated_current_system=None):
+        self.VV_next_step(bias_forces, updated_current_system)
+        self.velocity_rescaling()
+
+        if self.md_parameters['md_clean_translation']:
+            #next_velocities = clean_translation(next_velocities)
+            Stationary(self.current_system)
+        if self.md_parameters['md_clean_rotation']:
+            #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
+            ZeroRotation(self.current_system)
+        
+        if not self.re_simulation:
+            write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
+        else:
+            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.str_new', self.current_system)
+        
+        if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
+            #print(next_coordinates) #DEGUB
+            #print(next_forces)    #DEBUG
+            #self.current_traj.append(self.current_system)
+            write_xyz_traj(self.traj_file_name, self.current_system)
+            self.kinetic_energy = self.current_system.get_kinetic_energy()
+            self.write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses)
+        
+        return self.current_step, self.current_system
+
+
+class NVT_Berendsen(velocity_Verlet):
+    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
+        super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
+        if log_file_name == None:
+            self.log_file_name = 'MoREST_MD.log'
+        else:
+            self.log_file_name = log_file_name
+
+        self.Berendsen_velocity_rescaling(tau = self.sampling_parameters['nvt_berendsen_tau'])
+
+        if self.sampling_parameters['sampling_initialization']:
+            self.MD_log = open(self.log_file_name, 'w', buffering=1)
+            self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
+            self.write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
+        else:
+            self.MD_log = open(self.log_file_name, 'a', buffering=1)
+
+    def generate_new_step(self, bias_forces=None, updated_current_system=None):
+        self.VV_next_step(bias_forces, updated_current_system)
+        self.Berendsen_velocity_rescaling(tau = self.sampling_parameters['nvt_berendsen_tau'])
+
+        if self.md_parameters['md_clean_translation']:
+            #next_velocities = clean_translation(next_velocities)
+            Stationary(self.current_system)
+        if self.md_parameters['md_clean_rotation']:
+            #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
+            ZeroRotation(self.current_system)
+        
+        if not self.re_simulation:
+            write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
+        else:
+            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.str_new', self.current_system)
+        
+        if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
+            #print(next_coordinates) #DEGUB
+            #print(next_forces)    #DEBUG
+            #self.current_traj.append(self.current_system)
+            write_xyz_traj(self.traj_file_name, self.current_system)
+            self.kinetic_energy = self.current_system.get_kinetic_energy()
+            self.write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses)
+        
+        return self.current_step, self.current_system
+
+
+class NVT_Langevin(velocity_Verlet):
+    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
+        super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
+        if log_file_name == None:
+            self.log_file_name = 'MoREST_MD.log'
+        else:
+            self.log_file_name = log_file_name
+
+        if self.sampling_parameters['sampling_initialization']:
+            self.MD_log = open(self.log_file_name, 'w', buffering=1)
+            self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), Effective energy (eV)\n')   
+            self.d_Ee, self.Wt = self.write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), \
+                                                       self.masses, self.K_simulation, self.md_parameters['md_time_step'], 1/(2*self.sampling_parameters['nvt_langevin_gamma']), 0, 0)
+        else:
+            self.MD_log = open(self.log_file_name, 'a', buffering=1)
+            self.d_Ee = 0
+            self.Wt =  0
+
+    def generate_new_step(self, bias_forces=None, updated_current_system=None):
+        self.VV_next_step(bias_forces, updated_current_system)
+        R_t = self.stochastic_velocity_rescaling(Nf = 1, tau = 1/(2*self.sampling_parameters['nvt_langevin_gamma']))
+
+        if self.md_parameters['md_clean_translation']:
+            #next_velocities = clean_translation(next_velocities)
+            Stationary(self.current_system)
+        if self.md_parameters['md_clean_rotation']:
+            #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
+            ZeroRotation(self.current_system)
+        
+        if not self.re_simulation:
+            write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
+        else:
+            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.str_new', self.current_system)
+        
+        if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
+            #print(next_coordinates) #DEGUB
+            #print(next_forces)    #DEBUG
+            #self.current_traj.append(self.current_system)
+            write_xyz_traj(self.traj_file_name, self.current_system)
+            self.kinetic_energy = self.current_system.get_kinetic_energy()
+            self.d_Ee, self.Wt = self.write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses, \
+                                                       self.K_simulation, self.time_step, 1/(2*self.sampling_parameters['nvt_langevin_gamma']), self.d_Ee, R_t)
+            
+        return self.current_step, self.current_system
+
+
+class NVT_SVR(velocity_Verlet):
+    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
+        super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
+        if log_file_name == None:
+            self.log_file_name = 'MoREST_MD.log'
+        else:
+            self.log_file_name = log_file_name
+
+        if self.sampling_parameters['sampling_initialization']:
+            self.MD_log = open(self.log_file_name, 'w', buffering=1)
+            self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), Effective energy (eV)\n')   
+            self.d_Ee, self.Wt = self.write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), \
+                                                       self.masses, self.K_simulation, self.md_parameters['md_time_step'], self.sampling_parameters['nvt_svr_tau'], 0, 0)
+        else:
+            self.MD_log = open(self.log_file_name, 'a', buffering=1)
+            self.d_Ee = 0
+            self.Wt =  0
+
+    def generate_new_step(self, bias_forces=None, updated_current_system=None):
+        self.VV_next_step(bias_forces, updated_current_system)
+        R_t = self.stochastic_velocity_rescaling(Nf = 3*self.n_atom, tau = self.sampling_parameters['nvt_svr_tau'])
+
+        if self.md_parameters['md_clean_translation']:
+            #next_velocities = clean_translation(next_velocities)
+            Stationary(self.current_system)
+        if self.md_parameters['md_clean_rotation']:
+            #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
+            ZeroRotation(self.current_system)
+        
+        if not self.re_simulation:
+            write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
+        else:
+            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.str_new', self.current_system)
+        
+        if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
+            #print(next_coordinates) #DEGUB
+            #print(next_forces)    #DEBUG
+            #self.current_traj.append(self.current_system)
+            write_xyz_traj(self.traj_file_name, self.current_system)
+            self.kinetic_energy = self.current_system.get_kinetic_energy()
+            self.d_Ee, self.Wt = self.write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses, \
+                                                       self.K_simulation, self.time_step, self.sampling_parameters['nvt_svr_tau'], self.d_Ee, R_t)
+            
+        return self.current_step, self.current_system
+
+
+class NPT_Berendsen(velocity_Verlet):
+    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
+        super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
+        if log_file_name == None:
+            self.log_file_name = 'MoREST_MD.log'
+        else:
+            self.log_file_name = log_file_name
+
+
+class NPT_Langevin(velocity_Verlet):
+    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
+        super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
+        if log_file_name == None:
+            self.log_file_name = 'MoREST_MD.log'
+        else:
+            self.log_file_name = log_file_name
+
+
+class NPT_SVR(velocity_Verlet):
+    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
+        super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
+        if log_file_name == None:
+            self.log_file_name = 'MoREST_MD.log'
+        else:
+            self.log_file_name = log_file_name
+
+
+
