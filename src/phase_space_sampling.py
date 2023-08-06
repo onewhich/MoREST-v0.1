@@ -351,11 +351,15 @@ class velocity_Verlet(initialize_sampling):
         self.NPT_space_wall.update_wall_parameters(self.npt_space_wall_parameters)
 
     def get_NPT_space_bias_forces(self):
-        coordinates = self.current_system.get_positions()
+        all_coordinates = self.current_system.get_positions()
         NPT_bias_forces = np.ones((self.md_parameters['npt_number'],3))
         for i in range(self.md_parameters['npt_number']):
             index = self.md_parameters['npt_action_atoms'][i]
-            tmp_bias = np.array([self.NPT_space_wall.get_repulsive_wall_force(i_coordinate) for i_coordinate in coordinates[index]])
+            if index == 'all':
+                coordinates = all_coordinates
+            else:
+                coordinates = all_coordinates[index]
+            tmp_bias = np.array([self.NPT_space_wall.get_repulsive_wall_force(i_coordinate) for i_coordinate in coordinates])
             for j, j_bias in enumerate(tmp_bias):
                 NPT_bias_forces[index[j]] *= j_bias
         return NPT_bias_forces

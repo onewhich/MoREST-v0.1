@@ -222,12 +222,17 @@ class morest:
             wall_forces:            The forces of the wall potential on the atoms
         '''
         #self.log_morest.write('Debug: In wall potential \n')
-        wall_forces = []
-        wall_potential = []
-        for i_coordinate in general_coordinate:
-            i_wall_force, i_wall_potential = self.wall.get_repulsive_wall_force_potential(i_coordinate)
-            wall_forces.append(i_wall_force)
-            wall_potential.append(i_wall_potential)
+        wall_forces = np.ones((self.wall_potential_parameters['wall_number'],3))
+        for i in range(self.wall_potential_parameters['wall_number']):
+            index = self.wall_potential_parameters['wall_action_atoms'][i]
+            if index == 'all':
+                coordinates = general_coordinate
+            else:
+                coordinates = general_coordinate[index]
+            tmp_bias = np.array([self.wall.get_repulsive_wall_force(i_coordinate) for i_coordinate in coordinates])
+            for j, j_bias in enumerate(tmp_bias):
+                wall_forces[index[j]] *= j_bias
+        
         return np.array(wall_forces)
 
 
