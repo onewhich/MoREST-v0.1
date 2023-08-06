@@ -42,6 +42,7 @@ MD_time_step                      1   # unit in fs
 MD_simulation_time                100000   # unit in fs
 MD_temperature                    1000 # unit: K
 NPT_number                        1 # Pressure control in NPT is implemented by controling the size of wall potential.
+NPT_collective_variable           False
 NPT_pressure                      1 # unit: Bar (10^5 Pa)
 NPT_space_shape                   sphere # sphere: spherical space for barostat; cuboid: cuboidal space for barostat; plane: planar wall for barostat used in periodic system.
 NPT_space_type                    gas # gas: only change the size of the barostat; condensed: change both the size of barostat and the positions of atoms.

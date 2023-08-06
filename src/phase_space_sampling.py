@@ -7,6 +7,7 @@ from initialization import initialize_calculator
 #from copy import deepcopy
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary, ZeroRotation
 from ase import units
+from wall_potential import repulsive_wall
 
 class initialize_sampling(initialize_calculator):
     def __init__(self, morest_parameters, sampling_parameters, molecule=None, traj_file_name=None, calculator=None, log_morest=None):
@@ -303,13 +304,61 @@ class velocity_Verlet(initialize_sampling):
     def get_volume(self, i_space):
         if self.md_parameters['npt_space_shape'][i_space].upper() == 'sphere'.upper():
             volume =  4./3. * np.pi * self.md_parameters['npt_space_size'][i_space]**3 # V = 4/3 * Pi * r^3
-        
+        elif self.md_parameters['npt_space_shape'][i_space].upper() == 'cuboid'.upper():
+            raise Exception('Cuboid space has not been implemented yet.')
         return volume
 
     def get_atom_kinetic_energies(self):
         v = np.linalg.norm(self.current_system.get_velocities(), axis=-1)[:,np.newaxis]
         Eks = 0.5 * self.masses * v**2
         return Eks
+    
+    def initialize_NPT_space_wall(self):
+        self.npt_space_wall_parameters = {}
+        self.npt_space_wall_parameters['wall_number'] = 0
+        self.npt_space_wall_parameters['wall_collective_variable'] = []
+        self.npt_space_wall_parameters['wall_shape'] = []
+        self.npt_space_wall_parameters['wall_type'] = []
+        self.npt_space_wall_parameters['power_wall_direction'] = []
+        self.npt_space_wall_parameters['wall_scaling'] = []
+        self.npt_space_wall_parameters['wall_scope'] = []
+        self.npt_space_wall_parameters['wall_action_atoms'] = []
+        self.npt_space_wall_parameters['wall_shape_parameters'] = []
+        for i, npt_space in enumerate(self.md_parameters['npt_space_parameters']):
+            if self.md_parameters['npt_space_shape'][i].upper() == 'sphere'.upper():
+                self.npt_space_wall_parameters['wall_number'] += 1
+                self.npt_space_wall_parameters['wall_collective_variable'].append(self.md_parameters['npt_collective_variable'][i])
+                self.npt_space_wall_parameters['wall_shape'].append('spherical')
+                self.npt_space_wall_parameters['wall_type'].append('power_wall')
+                self.npt_space_wall_parameters['power_wall_direction'].append(-1)
+                self.npt_space_wall_parameters['wall_scaling'].append(1)
+                self.npt_space_wall_parameters['wall_scope'].append(2)
+                self.npt_space_wall_parameters['wall_action_atoms'].append(self.md_parameters['npt_number'][i])
+                tmp_parameters = {}
+                tmp_parameters['spherical_wall_center'] = npt_space['npt_sphere_center']
+                tmp_parameters['spherical_wall_radius'] = self.md_parameters['npt_space_size'][i]
+                self.npt_space_wall_parameters['wall_shape_parameters'].append(tmp_parameters)
+            elif self.md_parameters['npt_space_shape'][i].upper() == 'cuboid'.upper():
+                self.npt_space_wall_parameters['wall_number'] += 6
+                raise Exception('Cuboid space has not been implemented yet.')
+            
+        self.NPT_space_wall = repulsive_wall(self.npt_space_wall_parameters)
+
+    def update_NPT_space_wall(self):
+        for i, npt_space in enumerate(self.md_parameters['npt_space_parameters']):
+            if self.md_parameters['npt_space_shape'][i].upper() == 'sphere'.upper():
+                self.npt_space_wall_parameters['wall_shape_parameters'][i]['spherical_wall_radius'] = self.md_parameters['npt_space_size'][i]
+        self.NPT_space_wall.update_wall_parameters(self.npt_space_wall_parameters)
+
+    def get_NPT_space_bias_forces(self):
+        coordinates = self.current_system.get_positions()
+        NPT_bias_forces = np.ones((self.md_parameters['npt_number'],3))
+        for i in range(self.md_parameters['npt_number']):
+            index = self.md_parameters['npt_action_atoms'][i]
+            tmp_bias = np.array([self.NPT_space_wall.get_repulsive_wall_force(i_coordinate) for i_coordinate in coordinates[index]])
+            for j, j_bias in enumerate(tmp_bias):
+                NPT_bias_forces[index[j]] *= j_bias
+        return NPT_bias_forces
 
 class NVE_VV(velocity_Verlet):
     def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
@@ -540,6 +589,7 @@ class NPT_Berendsen(velocity_Verlet):
             self.log_file_name = log_file_name
 
         self.initialize_NPT_space_size()
+        self.initialize_NPT_space_wall()
 
         self.P_simulation = self.md_parameters['npt_pressure']
         self.tau_T = self.sampling_parameters['npt_Berendsen_tau_t']
@@ -549,6 +599,7 @@ class NPT_Berendsen(velocity_Verlet):
 
         self.Berendsen_velocity_rescaling(tau=self.tau_T)
         self.miu = self.Berendsen_position_rescaling(tau_P=self.tau_P, beta=self.beta, factor=init_miu)
+        self.update_NPT_space_wall()
 
         if self.sampling_parameters['sampling_initialization']:
             self.MD_log = open(self.log_file_name, 'w', buffering=1)
@@ -558,9 +609,16 @@ class NPT_Berendsen(velocity_Verlet):
             self.MD_log = open(self.log_file_name, 'a', buffering=1)
 
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
+        NPT_bias_forces = self.get_NPT_space_bias_forces()
+        if bias_forces != None:
+            bias_forces += NPT_bias_forces
+        else:
+            bias_forces = NPT_bias_forces
+
         self.VV_next_step(bias_forces, updated_current_system)
         self.Berendsen_velocity_rescaling(self.tau_T)
         self.miu = self.Berendsen_position_rescaling(self.tau_P, self.beta, factor=self.miu)
+        self.update_NPT_space_wall()
 
         if self.md_parameters['md_clean_translation']:
             #next_velocities = clean_translation(next_velocities)

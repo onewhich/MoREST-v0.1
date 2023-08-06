@@ -51,6 +51,7 @@ class read_parameters:
         self.md_parameters['md_clean_translation'] = True
         self.md_parameters['md_clean_rotation'] = False
         self.md_parameters['npt_number'] = 1
+        self.md_parameters['npt_collective_variable'] = []
         self.md_parameters['npt_pressure'] = []
         self.md_parameters['npt_space_shape'] = []
         self.md_parameters['npt_space_type'] = []
