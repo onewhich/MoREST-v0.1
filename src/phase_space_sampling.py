@@ -226,14 +226,28 @@ class velocity_Verlet(initialize_sampling):
         velocities = self.current_system.get_velocities()
         self.current_system.set_velocities(factor * velocities)
 
-    def Berendsen_position_rescaling(self, tau):
+    def Berendsen_position_rescaling(self, tau_P, beta, factor):
         time_step = self.md_parameters['md_time_step']
-        beta = self.sampling_parameters['npt_Berendsen_compressibility']
-        Ek = self.current_system.get_kinetic_energy()
+        Eks = self.get_atom_kinetic_energies()
+        next_factor = []
         forces = self.current_forces
         coordinates = self.current_system.get_positions()
-        internal_virial = internal_virial(coordinates, forces)
-        current_pressure = 
+        for i in range(self.md_parameters['npt_number']):
+            index = self.md_parameters['npt_action_atoms'][i]
+            internal_virial = self.get_internal_virial(coordinates[index], forces[index])
+            current_pressure = (Eks[i] - internal_virial)/(3.*self.get_volume(i))
+            tmp_factor = np.power(1+(time_step/tau_P)*beta*(current_pressure-self.P_simulation),1./3.)
+            next_factor.append(tmp_factor)
+
+            if self.md_parameters['npt_space_type'][i].upper() == 'gas'.upper():
+                self.md_parameters['npt_space_size'][i] *= factor[i]
+            elif self.md_parameters['npt_space_type'][i].upper() == 'condensed'.upper():
+                self.md_parameters['npt_space_size'][i] *= factor[i]
+                coordinates[index] *= factor[i]
+
+        self.current_system.set_positions(coordinates)
+
+        return np.array(next_factor)
         
     def stochastic_velocity_rescaling(self, Nf, tau):
         '''
@@ -271,9 +285,31 @@ class velocity_Verlet(initialize_sampling):
         
         return R_t
     
-    def internal_virial(self, coordinates, forces):
+    def get_internal_virial(self, coordinates, forces):
         return np.sum([(coordinates[i]-coordinates[j]) @ forces[i] for i in range(self.n_atom-1) for j in range(i+1,self.n_atom)])
     
+    def get_volume(self, i_space):
+        if self.md_parameters['npt_space_shape'][i_space].upper() == 'sphere'.upper():
+            volume =  4./3. * np.pi * self.md_parameters['npt_space_size'][i_space]**3 # V = 4/3 * Pi * r^3
+        
+        return volume
+    
+    def initialize_NPT_space_size(self):
+        Eks = self.get_atom_kinetic_energies()
+        forces = self.current_forces
+        coordinates = self.current_system.get_positions()
+        for i in range(self.md_parameters['npt_number']):
+            index = self.md_parameters['npt_action_atoms'][i]
+            internal_virial = self.get_internal_virial(coordinates[index], forces[index])
+            volume = (Eks[i] - internal_virial)/(3.*self.P_simulation)
+            if self.md_parameters['npt_space_shape'][i].upper() == 'sphere'.upper():
+                self.md_parameters['npt_space_size'].append(np.pow((3/4 * volume / np.pi), 1./3.))  # V = 4/3 * Pi * r^3; r = (3/4 * V/Pi)^(1/3)
+        return self.md_parameters['npt_space_size']
+
+    def get_atom_kinetic_energies(self):
+        v = np.linalg.norm(self.current_system.get_velocities(), axis=-1)[:,np.newaxis]
+        Eks = 0.5 * self.masses * v**2
+        return Eks
 
 class NVE_VV(velocity_Verlet):
     def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
@@ -502,6 +538,50 @@ class NPT_Berendsen(velocity_Verlet):
             self.log_file_name = 'MoREST_MD.log'
         else:
             self.log_file_name = log_file_name
+
+        self.P_simulation = self.md_parameters['npt_pressure']
+        self.tau_T = self.sampling_parameters['npt_Berendsen_tau_t']
+        self.tau_P = self.sampling_parameters['npt_Berendsen_tau_p']
+        self.beta = self.sampling_parameters['npt_Berendsen_compressibility']
+        init_miu = np.ones(self.md_parameters['npt_number']) # the first rescaling factor should be one for each NPT space
+
+        self.initialize_NPT_space_size()
+        self.Berendsen_velocity_rescaling(tau=self.tau_T)
+        self.miu = self.Berendsen_position_rescaling(tau_P=self.tau_P, beta=self.beta, factor=init_miu)
+
+        if self.sampling_parameters['sampling_initialization']:
+            self.MD_log = open(self.log_file_name, 'w', buffering=1)
+            self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
+            self.write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
+        else:
+            self.MD_log = open(self.log_file_name, 'a', buffering=1)
+
+    def generate_new_step(self, bias_forces=None, updated_current_system=None):
+        self.VV_next_step(bias_forces, updated_current_system)
+        self.Berendsen_velocity_rescaling(self.tau_T)
+        self.miu = self.Berendsen_position_rescaling(self.tau_P, self.beta, factor=self.miu)
+
+        if self.md_parameters['md_clean_translation']:
+            #next_velocities = clean_translation(next_velocities)
+            Stationary(self.current_system)
+        if self.md_parameters['md_clean_rotation']:
+            #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
+            ZeroRotation(self.current_system)
+        
+        if not self.re_simulation:
+            write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
+        else:
+            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.str_new', self.current_system)
+        
+        if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
+            #print(next_coordinates) #DEGUB
+            #print(next_forces)    #DEBUG
+            #self.current_traj.append(self.current_system)
+            write_xyz_traj(self.traj_file_name, self.current_system)
+            self.kinetic_energy = self.current_system.get_kinetic_energy()
+            self.write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses)
+        
+        return self.current_step, self.current_system
 
 
 class NPT_Langevin(velocity_Verlet):

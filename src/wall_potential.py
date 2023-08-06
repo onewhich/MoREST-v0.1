@@ -41,21 +41,22 @@ class repulsive_wall:
             return self.get_dot_wall_gc_b(i_wall)
 
     def get_planar_wall_gc_b(self, i_wall):
-        vec_gc_b = np.dot((self.xyz_coordinate - self.wall_potential_parameters['planar_wall_point'][i_wall]), \
-                self.wall_potential_parameters['planar_wall_normal_vector'][i_wall]) * \
-                    self.wall_potential_parameters['planar_wall_normal_vector'][i_wall]
+        vec_gc_b = np.dot((self.xyz_coordinate - self.wall_potential_parameters['wall_shape_parameters'][i_wall]['planar_wall_point']), \
+                self.wall_potential_parameters['wall_shape_parameters'][i_wall]['planar_wall_normal_vector']) * \
+                    self.wall_potential_parameters['wall_shape_parameters'][i_wall]['planar_wall_normal_vector']
         norm_gc_b = np.linalg.norm(vec_gc_b)
         return vec_gc_b, norm_gc_b
 
     def get_spherical_wall_gc_b(self, i_wall):
-        vec_direction = self.wall_potential_parameters['spherical_wall_center'][i_wall] - self.xyz_coordinate
+        vec_direction = self.wall_potential_parameters['wall_shape_parameters'][i_wall]['spherical_wall_center'] - self.xyz_coordinate
         norm_direction = np.linalg.norm(vec_direction)
-        vec_gc_b = vec_direction / norm_direction * (self.wall_potential_parameters['spherical_wall_radius'][i_wall] - norm_direction)
+        vec_gc_b = vec_direction / norm_direction * \
+                   (self.wall_potential_parameters['wall_shape_parameters'][i_wall]['spherical_wall_radius'] - norm_direction)
         norm_gc_b = np.linalg.norm(vec_gc_b)
         return vec_gc_b, norm_gc_b
 
     def get_dot_wall_gc_b(self, i_wall):
-        vec_gc_b = self.xyz_coordinate - self.wall_potential_parameters['dot_wall_position'][i_wall]
+        vec_gc_b = self.xyz_coordinate - self.wall_potential_parameters['wall_shape_parameters'][i_wall]['dot_wall_position']
         norm_gc_b = np.linalg.norm(vec_gc_b)
         return vec_gc_b, norm_gc_b
 
@@ -90,14 +91,14 @@ class repulsive_wall:
         wall_force = -1 * a * c * norm_gc_b**(c-1) * vec_gc_b/norm_gc_b
         wall_potential = a * norm_gc_b**c
         if self.wall_potential_parameters['wall_shape'][i_wall] == 'planar':
-            if np.dot(norm_gc_b,self.wall_potential_parameters['planar_wall_normal_vector'][i_wall]) * \
+            if np.dot(norm_gc_b,self.wall_potential_parameters['wall_shape_parameters'][i_wall]['planar_wall_normal_vector']) * \
                 self.wall_potential_parameters['power_wall_direction'][i_wall] <= 0:
                 return np.zeros(np.shape(vec_gc_b)), 0.
             else:
                 return wall_force, wall_potential
         elif self.wall_potential_parameters['wall_shape'][i_wall] == 'spherical':
-            if (np.linalg.norm(self.xyz_coordinate - self.wall_potential_parameters['spherical_wall_center'][i_wall]) \
-                - self.wall_potential_parameters['spherical_wall_radius'][i_wall]) \
+            if (np.linalg.norm(self.xyz_coordinate - self.wall_potential_parameters['wall_shape_parameters'][i_wall]['spherical_wall_center']) \
+                - self.wall_potential_parameters['wall_shape_parameters'][i_wall]['spherical_wall_radius']) \
                     * self.wall_potential_parameters['power_wall_direction'][i_wall] <= 0:
                 return np.zeros(np.shape(vec_gc_b)), 0.
             else:

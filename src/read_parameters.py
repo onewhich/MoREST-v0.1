@@ -54,14 +54,9 @@ class read_parameters:
         self.md_parameters['npt_pressure'] = []
         self.md_parameters['npt_space_shape'] = []
         self.md_parameters['npt_space_type'] = []
+        self.md_parameters['npt_space_size'] = []
         self.md_parameters['npt_action_atoms'] = []
-        self.md_parameters['npt_sphere_center'] = []
-        self.md_parameters['npt_shpere_radius'] = []
-        self.md_parameters['npt_cuboid_center'] = []
-        self.md_parameters['npt_cuboid_normal_vector'] = []
-        self.md_parameters['npt_cuboid_length_ratio'] = []
-        self.md_parameters['npt_plane_point'] = []
-        self.md_parameters['npt_plane_normal_vector'] = []
+        self.md_parameters['npt_space_parameters'] = []
         self.scattering_parameters = {}
         self.scattering_parameters['scattering_initialization'] = False
         self.scattering_parameters['scattering_pre_thermolized'] = False
@@ -104,11 +99,7 @@ class read_parameters:
         self.wall_potential_parameters['wall_scaling'] = []
         self.wall_potential_parameters['wall_scope'] = []
         self.wall_potential_parameters['wall_action_atoms'] = []
-        self.wall_potential_parameters['planar_wall_point'] = []
-        self.wall_potential_parameters['planar_wall_normal_vector'] = []
-        self.wall_potential_parameters['spherical_wall_center'] = []
-        self.wall_potential_parameters['spherical_wall_radius'] = []
-        self.wall_potential_parameters['dot_wall_position'] = []
+        self.wall_potential_parameters['wall_shape_parameters'] = []
 
         for i_parameter in __parameters:
             if len(i_parameter.split()) < 2:
@@ -376,51 +367,61 @@ class read_parameters:
             self.md_parameters['npt_pressure'].append(float(i_parameter.split()[1]))
 
         elif i_parameter.split()[0].upper() == 'NPT_space_shape'.upper():
+            try:
+                self.md_parameters['npt_space_parameters'].append(tmp_space_parameter)
+            except:
+                pass
+            tmp_space_parameter = {} # It is used to record the parameters and saved in 'npt_space_parameters'
             self.md_parameters['npt_space_shape'].append(str(i_parameter.split()[1]))
 
         elif i_parameter.split()[0].upper() == 'NPT_space_type'.upper():
             self.md_parameters['npt_space_type'].append(str(i_parameter.split()[1]))
 
         elif i_parameter.split()[0].upper() == 'NPT_action_atoms'.upper():
-            self.md_parameters['npt_action_atoms'].append(i_parameter.split()[1])
+            tmp_atoms = str(i_parameter.split()[1])
+            if tmp_atoms.upper() == 'all'.upper():
+                tmp_atoms = 'all'
+            else:
+                tmp_atoms = np.array(tmp_atoms.split(','), dtype='int')
+            self.md_parameters['npt_action_atoms'].append(tmp_atoms)
 
         elif i_parameter.split()[0].upper() == 'NPT_sphere_center'.upper():
             tmp_center = []
             for i in range(3):
                 tmp_center.append(float(i_parameter.split()[i+1]))
-            self.md_parameters['npt_sphere_center'].append(np.array(tmp_center))
+            tmp_space_parameter['npt_sphere_center'] = np.array(tmp_center)
 
         elif i_parameter.split()[0].upper() == 'NPT_cuboid_center'.upper():
             tmp_center = []
             for i in range(3):
                 tmp_center.append(float(i_parameter.split()[i+1]))
-            self.md_parameters['npt_cuboid_center'].append(np.array(tmp_center))
+            tmp_space_parameter['npt_cuboid_center'] = np.array(tmp_center)
         
         elif i_parameter.split()[0].upper() == 'NPT_cuboid_normal_vector'.upper():
             tmp_normal_vector = []
             for i in range(3):
                 tmp_normal_vector.append(float(i_parameter.split()[i+1]))
             tmp_normal_vector = np.array(tmp_normal_vector)
-            self.md_parameters['npt_cuboid_normal_vector'].append(tmp_normal_vector / np.linalg.norm(tmp_normal_vector))
+            tmp_space_parameter['npt_cuboid_normal_vector'] = tmp_normal_vector / np.linalg.norm(tmp_normal_vector)
 
         elif i_parameter.split()[0].upper() == 'NPT_cuboid_length_ratio'.upper():
             tmp_center = []
             for i in range(3):
                 tmp_center.append(float(i_parameter.split()[i+1]))
-            self.md_parameters['npt_cuboid_length_ratio'].append(np.array(tmp_center))
+            tmp_space_parameter['npt_cuboid_length_ratio'] = np.array(tmp_center)
 
         elif i_parameter.split()[0].upper() == 'NPT_plane_point'.upper():
             tmp_center = []
             for i in range(3):
                 tmp_center.append(float(i_parameter.split()[i+1]))
-            self.md_parameters['npt_plane_point'].append(np.array(tmp_center))
+            tmp_space_parameter['npt_plane_point'] = np.array(tmp_center)
         
         elif i_parameter.split()[0].upper() == 'NPT_plane_normal_vector'.upper():
             tmp_normal_vector = []
             for i in range(3):
                 tmp_normal_vector.append(float(i_parameter.split()[i+1]))
             tmp_normal_vector = np.array(tmp_normal_vector)
-            self.md_parameters['npt_plane_normal_vector'].append(tmp_normal_vector / np.linalg.norm(tmp_normal_vector))
+            tmp_space_parameter['npt_plane_normal_vector'] = tmp_normal_vector / np.linalg.norm(tmp_normal_vector)
 
     def read_scattering_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'Scattering_initialization'.upper():
@@ -644,6 +645,11 @@ class read_parameters:
                 raise Exception('It is not clear whether the collective variable will be used.')
             
         elif i_parameter.split()[0].upper() == 'Wall_shape'.upper():
+            try:
+                self.wall_potential_parameters['wall_shape_parameters'].append(tmp_wall_parameter)
+            except:
+                pass
+            tmp_wall_parameter = {} # It is used to record the shape parameters and saved in 'wall_shape_parameters'
             self.wall_potential_parameters['wall_shape'].append(str(i_parameter.split()[1]).lower())
             
         elif i_parameter.split()[0].upper() == 'Wall_type'.upper():
@@ -660,7 +666,12 @@ class read_parameters:
             self.wall_potential_parameters['wall_scope'].append(float(i_parameter.split()[1]))
             
         elif i_parameter.split()[0].upper() == 'Wall_action_atoms'.upper():
-            self.wall_potential_parameters['wall_action_atoms'].append(i_parameter.split()[1:])
+            tmp_atoms = str(i_parameter.split()[1])
+            if tmp_atoms.upper() == 'all'.upper():
+                tmp_atoms = 'all'
+            else:
+                tmp_atoms = np.array(tmp_atoms.split(','), dtype='int')
+            self.wall_potential_parameters['wall_action_atoms'].append(tmp_atoms)
             
         ########################## Planar wall #################################
 
@@ -668,14 +679,14 @@ class read_parameters:
             tmp_wall_point = []
             for i in range(3):
                 tmp_wall_point.append(float(i_parameter.split()[i+1]))
-            self.wall_potential_parameters['planar_wall_point'].append(np.array(tmp_wall_point))
+            tmp_wall_parameter['planar_wall_point'] = np.array(tmp_wall_point)
         
         elif i_parameter.split()[0].upper() == 'Planar_wall_normal_vector'.upper():
             tmp_wall_normal_vector = []
             for i in range(3):
                 tmp_wall_normal_vector.append(float(i_parameter.split()[i+1]))
             tmp_wall_normal_vector = np.array(tmp_wall_normal_vector)
-            self.wall_potential_parameters['planar_wall_normal_vector'].append(tmp_wall_normal_vector / np.linalg.norm(tmp_wall_normal_vector))
+            tmp_wall_parameter['planar_wall_normal_vector'] = tmp_wall_normal_vector / np.linalg.norm(tmp_wall_normal_vector)
             
         ########################## Spherical wall #############################
 
@@ -683,10 +694,10 @@ class read_parameters:
             tmp_wall_center = []
             for i in range(3):
                 tmp_wall_center.append(float(i_parameter.split()[i+1]))
-            self.wall_potential_parameters['spherical_wall_center'].append(np.array(tmp_wall_center))
+            tmp_wall_parameter['spherical_wall_center'] = np.array(tmp_wall_center)
         
         elif i_parameter.split()[0].upper() == 'Spherical_wall_radius'.upper():
-            self.wall_potential_parameters['spherical_wall_radius'].append(float(i_parameter.split()[1]))
+            tmp_wall_parameter['spherical_wall_radius'] = float(i_parameter.split()[1])
 
         ########################## dot wall ###################################
 
@@ -694,7 +705,7 @@ class read_parameters:
             tmp_wall_center = []
             for i in range(3):
                 tmp_wall_center.append(float(i_parameter.split()[i+1]))
-            self.wall_potential_parameters['dot_wall_position'].append(np.array(tmp_wall_center))
+            tmp_wall_parameter['dot_wall_position'] = np.array(tmp_wall_center)
 
     ########################### output parameters ##################################################################
 
