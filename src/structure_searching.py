@@ -136,43 +136,27 @@ class gradient_descent(initialize_searching):
         if bias_forces != None:
             next_forces = next_forces + bias_forces
 
-        if self.method == 'GD':
-            self.p_k = next_forces
-
-        # update p_k in conjugate gradient method
-        elif self.method == 'CG':
-            # beta(k+1) = (F(k+1).T @ (F(k+1)-F(k))) / (F(k).T @ F(k))
-            next_beta = [(next_forces[i] @ (next_forces[i]-self.current_forces[i])) / (self.current_forces[i] @ self.current_forces[i]) \
-                         for i in range(self.n_atom)]
-            next_beta = np.array(next_beta)[:,np.newaxis]
-
-            # p(k+1) = F(k+1) + beta(k+1) * p(k)
-            self.p_k = next_forces + next_beta * self.p_k
-
-        elif self.method == 'BFGS':
+        if self.method == 'BFGS':
             # s(k) = r(k+1) - r(k)
             s_k = (next_coordinates - current_coordinates).flatten()
             # y(k) = F(k) - F(k+1)
             y_k = (self.current_forces - next_forces).flatten()
             # rho(k) = 1/(y(k)^T @ s(k))
-            #rho_k = np.array([1/(y_k[i] @ s_k[i]) for i in range(self.n_atom)])
             rho_k = 1/(y_k @ s_k)
-            ### rho_k = 1. / (np.dot(y_k, s_k))
             # H(k+1) = (I - rho(k) s(k) y(k).T) H(k) (I - rho(k) y(k) s(k).T) + rho(k) s(k) s(k).T
-            #next_H = [(np.identity(3) - rho_k * np.outer(s_k[i], y_k[i])) @ self.H_k[i] @ (np.identity(3) - rho_k * np.outer(y_k[i], s_k[i])) + \
-            #  rho_k * np.outer(s_k[i], s_k[i]) for i in range(self.n_atom)]
             self.H_k = (self.I - rho_k * np.outer(s_k, y_k)) @ self.H_k @ (self.I - rho_k * np.outer(y_k, s_k)) + rho_k * np.outer(s_k, s_k)
-            # scipy H(k+1)
-            ### A1 = self.I - s_k[:, np.newaxis] * y_k[np.newaxis, :] * rho_k
-            ### A2 = self.I - y_k[:, np.newaxis] * s_k[np.newaxis, :] * rho_k
-            ### self.H_k = np.dot(A1, np.dot(self.H_k, A2)) + (rho_k * s_k[:, np.newaxis] * s_k[np.newaxis, :])
-            # H(k+1) = H(k) + (s(k)^T y(k) + y(k)^T H(k) y(k)) (s(k) s(k)^T) / (s(k)^T y(k))^2 - (H(k) y(k) s(k)^T + s(k) y(k)^T H(k)) / (s(k)^T y(k))
-            #next_H = self.H_k + (s_k @ y_k + y_k @ self.H_k @ y_k) * (np.outer(s_k,s_k)) / (s_k @ y_k)**2 - \
-            #         (self.H_k @ np.outer(y_k, s_k) + np.outer(s_k, y_k) @ self.H_k) / (s_k @ y_k)
-            # p(k+1) = H(k+1) @ F(k+1)
-            #self.p_k = np.array([next_H[i] @ next_forces[i] for i in range(self.n_atom)])
+            # p(k+1) = F(k+1) + H(k+1) @ F(k+1)
             self.p_k = next_forces + (self.H_k @ next_forces.flatten()).reshape(np.shape(next_forces))
             ### self.p_k = next_forces + np.dot(self.H_k, next_gradient).reshape(np.shape(next_forces))
+        elif self.method == 'CG':
+            # beta(k+1) = (F(k+1).T @ (F(k+1)-F(k))) / (F(k).T @ F(k))
+            next_beta = [(next_forces[i] @ (next_forces[i]-self.current_forces[i])) / (self.current_forces[i] @ self.current_forces[i]) \
+                         for i in range(self.n_atom)]
+            next_beta = np.array(next_beta)[:,np.newaxis]
+            # p(k+1) = F(k+1) + beta(k+1) * p(k)
+            self.p_k = next_forces + next_beta * self.p_k
+        elif self.method == 'GD':
+            self.p_k = next_forces
 
         self.current_step += 1
         self.current_forces = next_forces
