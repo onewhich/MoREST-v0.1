@@ -2,11 +2,6 @@ import os
 from glob import glob
 import numpy as np
 from many_body_potential import ml_potential, on_the_fly, molpro_calculator
-from phase_space_sampling import NVE_VV, NVT_VR, NVT_Berendsen, NVT_Langevin, NVT_SVR, NPT_Berendsen, NPT_Langevin, NPT_SVR
-from trajectory_scattering import scattering_velocity_Verlet, scattering_Runge_Kutta_4th
-from structure_searching import gradient_descent, fire_velocity_Verlet
-from enhanced_sampling import its, re
-from wall_potential import repulsive_wall
 
 class initialize_calculator:
     def __init__(self, morest_parameters, calculator=None, log_morest=None):
@@ -37,6 +32,12 @@ class initialize_calculator:
         
     def get_current_calculator(self):
         return self.calculator
+    
+from phase_space_sampling import NVE_VV, NVT_VR, NVT_Berendsen, NVT_Langevin, NVT_SVR, NPT_Berendsen, NPT_Langevin, NPT_SVR
+from trajectory_scattering import scattering_velocity_Verlet, scattering_Runge_Kutta_4th
+from structure_searching import gradient_descent, fire_velocity_Verlet
+from enhanced_sampling import its, re
+from wall_potential import repulsive_wall
             
 class initialize_modules:
     def __init__(self, morest_parameters, calculator, log_morest):
