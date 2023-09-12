@@ -6,14 +6,14 @@ from read_parameters import read_parameters
 from collective_variable import collective_variables
 
 
-class morest:
+class morest(initialize_modules):
     '''
     The Molecular Reaction Simulation Toolkits module. 
     '''
 
     def __init__(self, parameter_file='MoREST.in', calculator=None):
         '''
-        Calculator is required, when many body potential is specified as 'on_the_fly'.
+        Calculator is required, when many body potential is specified as 'on_the_fly' or active learning is specified.
         '''
         self.calculator = calculator
         MoREST_parameters = read_parameters(parameter_file=parameter_file)
@@ -29,27 +29,27 @@ class morest:
         MoREST_parameters.write_morest_parameters(self.log_morest)
         self.log_morest.write('\n')
 
-        super(morest, self).__init__(self.morest_parameters, self.calculator, MoREST_parameters)
+        super(morest, self).__init__(self.morest_parameters, self.calculator, self.log_morest)
 
         #################### Phase space sampling initialization ##############################
         if self.morest_parameters['phase_space_sampling']:
-            initialize_modules.initialize_phase_space_sampling(MoREST_parameters)
+            self.initialize_phase_space_sampling(MoREST_parameters)
     
         #################### Trajectory scattering initialization #############################
         if self.morest_parameters['trajectory_scattering']:
-            initialize_modules.initialize_trajectory_scattering(MoREST_parameters)
+            self.initialize_trajectory_scattering(MoREST_parameters)
 
         #################### Structure searching initialization ###############################
         if self.morest_parameters['structure_searching']:
-            initialize_modules.initialize_structure_searching(MoREST_parameters)
+            self.initialize_structure_searching(MoREST_parameters)
     
         #################### Enhanced sampling initialization #################################
         if self.morest_parameters['enhanced_sampling']:
-            initialize_modules.initialize_enhanced_sampling(MoREST_parameters)
+            self.initialize_enhanced_sampling(MoREST_parameters)
 
         #################### Wall potential initialization ####################################
         if self.morest_parameters['wall_potential']:
-            initialize_modules.initialize_wall_potential(MoREST_parameters)
+            self.initialize_wall_potential(MoREST_parameters)
 
         #MoREST_parameters.write_parameters(self.log_morest)
 
