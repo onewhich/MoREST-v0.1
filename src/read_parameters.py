@@ -848,19 +848,21 @@ class read_parameters:
     def get_md_parameters(self, log_morest=None):
         self.md_parameters['md_time_step'] *= units.fs
         self.md_parameters['md_simulation_time'] *= units.fs
-        self.md_parameters['md_pressure'] *= units.bar
-        for key in ['npt_pressure', 'npt_space_shape', 'npt_space_type', 'npt_action_atoms', \
-                    'npt_sphere_center', \
-                    'npt_cuboid_center', 'npt_cuboid_normal_vector', 'npt_cuboid_length_ratio', \
-                    'npt_plane_point', 'npt_plane_normal_vector']:
-            self.md_parameters[key] = self.md_parameters[key]\
-                [:self.md_parameters['npt_number']]
+        if 'npt_pressure' in self.md_parameters:
+            for key in ['npt_pressure', 'npt_space_shape', 'npt_space_type', 'npt_action_atoms', \
+                        'npt_sphere_center', \
+                        'npt_cuboid_center', 'npt_cuboid_normal_vector', 'npt_cuboid_length_ratio', \
+                        'npt_plane_point', 'npt_plane_normal_vector']:
+                self.md_parameters[key] = self.md_parameters[key][:self.md_parameters['npt_number']]
+            self.md_parameters['npt_pressure'] = np.array(self.md_parameters['npt_pressure']) * units.bar
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_MD_parameters.npy', self.md_parameters)
         if log_morest != None:
             for key in self.md_parameters:
                 if key in ['md_time_step','md_simulation_time']:
                     log_morest.write(key+' : '+str(self.md_parameters[key]/units.fs)+'\n')
+                elif key in ['npt_pressure']:
+                    log_morest.write(key+' : '+str(self.md_parameters[key]/units.bar)+'\n')
                 else:
                     log_morest.write(key+' : '+str(self.md_parameters[key])+'\n')
             log_morest.write('\n')
