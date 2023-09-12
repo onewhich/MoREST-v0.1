@@ -849,12 +849,11 @@ class read_parameters:
         self.md_parameters['md_time_step'] *= units.fs
         self.md_parameters['md_simulation_time'] *= units.fs
         if 'npt_pressure' in self.md_parameters:
-            for key in ['npt_pressure', 'npt_space_shape', 'npt_space_type', 'npt_action_atoms', \
-                        'npt_sphere_center', \
-                        'npt_cuboid_center', 'npt_cuboid_normal_vector', 'npt_cuboid_length_ratio', \
-                        'npt_plane_point', 'npt_plane_normal_vector']:
+            self.md_parameters['npt_pressure'] = np.array(self.md_parameters['npt_pressure'][:self.md_parameters['npt_number']]) * units.bar
+            self.md_parameters['npt_space_parameters'] = self.md_parameters['npt_space_parameters'][:self.md_parameters['npt_number']]
+        for key in ['npt_space_shape', 'npt_space_type', 'npt_action_atoms']:
+            if key in self.md_parameters:
                 self.md_parameters[key] = self.md_parameters[key][:self.md_parameters['npt_number']]
-            self.md_parameters['npt_pressure'] = np.array(self.md_parameters['npt_pressure']) * units.bar
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_MD_parameters.npy', self.md_parameters)
         if log_morest != None:
@@ -1094,12 +1093,8 @@ class read_parameters:
             
     def get_wall_potential_parameters(self, log_morest=None):
         for key in ['wall_collective_variable', 'wall_shape', 'wall_type', 'power_wall_direction', \
-            'wall_scaling', 'wall_scope', 'wall_action_atoms', \
-            'planar_wall_point', 'planar_wall_normal_vector', \
-            'spherical_wall_center', 'spherical_wall_radius', \
-            'dot_wall_position']:
-            self.wall_potential_parameters[key] = self.wall_potential_parameters[key]\
-                [:self.wall_potential_parameters['wall_number']]
+            'wall_scaling', 'wall_scope', 'wall_action_atoms', 'wall_shape_parameters']:
+            self.wall_potential_parameters[key] = self.wall_potential_parameters[key][:self.wall_potential_parameters['wall_number']]
         for i_wall,i_wall_type in enumerate(self.wall_potential_parameters['wall_type']):
             if i_wall_type.upper() in ['power_wall'.upper()]:
                 try:
