@@ -657,6 +657,7 @@ class read_parameters:
                 raise Exception('It is not clear whether the collective variable will be used.')
             
         elif i_parameter.split()[0].upper() == 'Wall_shape'.upper():
+            print('tmp_wall_parameter')
             tmp_wall_parameter = {} # It is used to record the shape parameters and saved in 'wall_shape_parameters'
             self.wall_potential_parameters['wall_shape'].append(str(i_parameter.split()[1]).lower())
             
