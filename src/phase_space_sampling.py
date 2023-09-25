@@ -165,7 +165,7 @@ class velocity_Verlet(initialize_sampling):
         self.K_simulation = Nf/2 * units.kB * self.T_simulation # Ek = 1/2 m v^2 = 3/2 kB T for each particle
         
     def VV_next_step(self, bias_forces=None, updated_current_system=None):
-        if updated_current_system != None:
+        if type(updated_current_system) != type(None):
             self.current_system = updated_current_system
         
         ### F(t) + bias
@@ -235,6 +235,8 @@ class velocity_Verlet(initialize_sampling):
         coordinates = self.current_system.get_positions()
         for i in range(self.md_parameters['npt_number']):
             index = self.md_parameters['npt_action_atoms'][i]
+            if index == 'all':
+                index = np.arange(self.n_atom)
             internal_virial = self.get_internal_virial(coordinates[index], forces[index])
             current_pressure = (Eks[i] - internal_virial)/(3.*self.get_volume(i))
             tmp_factor = np.power(1+(time_step/tau_P)*beta*(current_pressure-self.P_simulation),1./3.)
@@ -614,7 +616,7 @@ class NPT_Berendsen(velocity_Verlet):
 
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
         NPT_bias_forces = self.get_NPT_space_bias_forces()
-        if bias_forces != None:
+        if type(bias_forces) != type(None):
             bias_forces += NPT_bias_forces
         else:
             bias_forces = NPT_bias_forces

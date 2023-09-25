@@ -222,12 +222,12 @@ class morest(initialize_modules):
             wall_forces:            The forces of the wall potential on the atoms
         '''
         #self.log_morest.write('Debug: In wall potential \n')
-        n_atoms = len(general_coordinate)
-        wall_forces = np.zeros((n_atoms,3))
+        n_atom = len(general_coordinate)
+        wall_forces = np.zeros((n_atom,3))
         for i in range(self.wall_potential_parameters['wall_number']):
             index = self.wall_potential_parameters['wall_action_atoms'][i]
             if index == 'all':
-                index = np.arange(n_atoms)
+                index = np.arange(n_atom)
                 coordinates = general_coordinate
             else:
                 index = np.array(index)
