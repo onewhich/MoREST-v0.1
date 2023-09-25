@@ -169,7 +169,7 @@ class velocity_Verlet(initialize_sampling):
             self.current_system = updated_current_system
         
         ### F(t) + bias
-        if bias_forces != None:
+        if type(bias_forces) != type(None):
             self.current_forces = self.current_forces + bias_forces
         
         ### x(t), v(t) = p(t) / m
