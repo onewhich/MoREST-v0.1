@@ -47,9 +47,11 @@ class read_parameters:
         self.sampling_parameters = {}
         self.sampling_parameters['sampling_initialization'] = False
         self.sampling_parameters['sampling_molecule'] = 'MoREST.str'
+        self.sampling_parameters['sampling_pre_thermalized'] = False
         self.md_parameters = {}
         self.md_parameters['md_clean_translation'] = True
         self.md_parameters['md_clean_rotation'] = False
+        self.md_parameters['md_temperature'] = 0
         self.md_parameters['npt_number'] = 1
         self.md_parameters['npt_collective_variable'] = []
         self.md_parameters['npt_pressure'] = []
@@ -319,6 +321,18 @@ class read_parameters:
                 
         elif i_parameter.split()[0].upper() == 'Sampling_method'.upper():
             self.sampling_parameters['sampling_method'] = str(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'Sampling_pre_thermalized'.upper():
+            if i_parameter.split()[1].upper() == 'True'.upper():
+                self.sampling_parameters['sampling_pre_thermalized'] = True
+            elif i_parameter.split()[1].upper() == 'False'.upper():
+                self.sampling_parameters['sampling_pre_thermalized'] = False
+
+        elif i_parameter.split()[0].upper() == 'Sampling_initial_T'.upper():
+            self.md_parameters['sampling_initial_T'] = float(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'Sampling_initial_E'.upper():
+            self.md_parameters['sampling_initial_E'] = float(i_parameter.split()[1])
                 
         elif i_parameter.split()[0].upper() == 'Sampling_ensemble'.upper():
             self.sampling_parameters['sampling_ensemble'] = str(i_parameter.split()[1])

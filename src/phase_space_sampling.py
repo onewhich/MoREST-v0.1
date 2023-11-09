@@ -154,8 +154,16 @@ class velocity_Verlet(initialize_sampling):
             self.T_simulation = T_simulation
 
         if self.current_step == 0:
-            if self.T_simulation > 1e-6:
+            if self.sampling_parameters['sampling_pre_thermalized']:
+                if 'sampling_initial_E' in self.sampling_parameters:
+                    T_thermalized = 2/3 * self.md_parameters['sampling_initial_E']/units.kB /self.n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+                else:
+                    T_thermalized = self.md_parameters['sampling_initial_T']
+                MaxwellBoltzmannDistribution(self.current_system, temperature_K = T_thermalized)
+                self.pre_thermalization(T_thermalized)
+            elif self.T_simulation > 1e-5:
                 MaxwellBoltzmannDistribution(self.current_system, temperature_K = self.T_simulation)
+            
             #self.current_traj = []
             #self.current_traj.append(self.current_system)
             write_xyz_traj(self.traj_file_name, self.current_system)
@@ -207,6 +215,13 @@ class velocity_Verlet(initialize_sampling):
             self.ml_calculator.get_current_step(self.current_step)
         except:
             pass
+
+    def pre_thermalization(self, Tf=None):
+        Ek_i = self.current_system.get_kinetic_energy()
+        Ti = 2/3 * Ek_i/units.kB /self.n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+        velocities = self.current_system.get_velocities()
+        factor = np.sqrt(Tf / Ti)
+        self.current_system.set_velocities(factor * velocities)
 
     def velocity_rescaling(self):
         dT = self.sampling_parameters['nvt_vr_dt']

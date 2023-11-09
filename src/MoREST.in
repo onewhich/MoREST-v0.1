@@ -15,7 +15,7 @@ ML_additional_features_min        inverse_r_exp_r 1,2 3,4 inverse_r_exp_r 1,4 2,
 #ML_additional_features_max        inverse_r_exp_r 1,2 3,4 inverse_r_exp_r 1,4 2,3 # Only the feature with the maximum value will be added into the representation.
 ML_print_uncertainty              False
 ML_FD_forces                      False  # Use numerical forces calculation or read forces from the ML model.
-FD_displacement                   0.0025 # Parameter for finite difference forces calculation. Default value is 0.0025 \AA
+FD_displacement                   0.0025 # unit in \AA. Parameter for finite difference forces calculation. Default value is 0.0025 \AA
 ML_active_learning                True
 ML_training_set                   training_set.xyz # the xyz trajectory for the training set.
 ML_energy_uncertainty_tolerance   0.01 # Check if ab initio calculator will involve based on the difference between ML prediction and the QC calculation. It is the energy std for GPR.
@@ -28,6 +28,9 @@ Sampling_initialization           False   # Overwrite or append the trajectory i
 Sampling_molecule                 MoREST.str # The input of the structure.
 Sampling_traj_interval            10    # Record sampling every Traj_interval steps
 Sampling_method                   MD    # MD, MC, PIMD
+Sampling_pre_thermalized          False # True: initialize the kinetic energy of the molecule as a specific value.
+Sampling_initial_T                20 # unit in K. The initial instantanous temperature of the molecule.
+Sampling_initial_E                1 # unit in eV. The initial kinetic energy of the molecule. "Sampling_initial_T" will be ignored, if "Sampling_initial_E" is defined.
 Sampling_ensemble                 NVT_SVR  10   # Choose the ensemble, e.g. NVE_VV: velocity Verlet;
                                                 #                           NVT_VR 10: velocity Verlet with velocity rescaling, with parameter NVT_VR_dT=10;
                                                 #                           NVT_Berendsen 10: Berendsen thermostat with NVT_Berendsen_tau=10;
