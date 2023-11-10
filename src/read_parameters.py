@@ -47,7 +47,7 @@ class read_parameters:
         self.sampling_parameters = {}
         self.sampling_parameters['sampling_initialization'] = False
         self.sampling_parameters['sampling_molecule'] = 'MoREST.str'
-        self.sampling_parameters['sampling_pre_thermalized'] = False
+        self.sampling_parameters['sampling_pre_thermalized'] = True
         self.md_parameters = {}
         self.md_parameters['md_clean_translation'] = True
         self.md_parameters['md_clean_rotation'] = False
