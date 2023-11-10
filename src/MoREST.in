@@ -38,7 +38,7 @@ Sampling_ensemble                 NVT_SVR  10   # Choose the ensemble, e.g. NVE_
                                                 #                           NVT_SVR 10: BDP stochastic velocity rescaling thermostat, with parameter NVT_SVR_tau=10; NPT_SVR.
                                                 #                           NPT_Berendsen 10 50 1: Berendsen isothermal-isobaric sampling with NPT_Berendsen_tau_T=10 fs, NPT_Berendsen_tau_P=50 fs, NPT_Berendsen_compressibility=1 bar^-1;
                                                 #                           NPT_Langevin    TODO
-                                                #                           NPT_SVR         TODO
+                                                #                           NPT_BZP         TODO
 MD_clean_translation              True
 MD_clean_rotation                 True
 MD_time_step                      1   # unit in fs

@@ -675,7 +675,7 @@ class NPT_Langevin(velocity_Verlet):
         self.initialize_NPT_space_size()
 
 
-class NPT_SVR(velocity_Verlet):
+class NPT_BZP(velocity_Verlet):
     def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
         super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
         if log_file_name == None:
