@@ -127,7 +127,8 @@ class initialize_sampling(initialize_calculator):
         #Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)
         T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
         Et = Ek + Ep
-        d_Ee = d_Ee + (K_simulation - Ek)*time_step/tau + 2*np.sqrt(Ek*K_simulation/Nf/tau)*Wt
+        #d_Ee = d_Ee + (K_simulation - Ek)*time_step/tau + 2*np.sqrt(Ek*K_simulation/Nf/tau)*Wt
+        d_Ee = (K_simulation - Ek)*time_step/tau + 2*np.sqrt(Ek*K_simulation/Nf/tau)*Wt
         Ee = Et - d_Ee
         MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'    '+str(Ee)+'\n')
         return d_Ee, Wt
@@ -244,7 +245,7 @@ class velocity_Verlet(initialize_sampling):
         velocities = self.current_system.get_velocities()
         self.current_system.set_velocities(factor * velocities)
 
-    def Berendsen_position_rescaling(self, tau_P, beta, factor):
+    def Berendsen_volume_rescaling(self, tau_P, beta, factor):
         time_step = self.md_parameters['md_time_step']
         Eks = self.get_atom_kinetic_energies()
         next_factor = []
@@ -278,9 +279,9 @@ class velocity_Verlet(initialize_sampling):
         ### degree of freedom
         # Nf = 1                # for Langevin thermostat
         # Nf = 3 * self.n_atom  # for SVR thermostat
-        #if self.sampling_parameters['sampling_clean_translation']:
+        #if self.md_parameters['md_clean_translation']:
         #    Nf = Nf - 3
-        #if self.sampling_parameters['sampling_clean_rotation']:
+        #if self.md_parameters['md_clean_rotation']:
         #Nf = Nf - 3
             
         ### Gaussian random number R(t)
@@ -359,7 +360,10 @@ class velocity_Verlet(initialize_sampling):
                 self.npt_space_wall_parameters['wall_shape_parameters'].append(tmp_parameters)
             elif self.md_parameters['npt_space_shape'][i].upper() == 'cuboid'.upper():
                 self.npt_space_wall_parameters['wall_number'] += 6
-                raise Exception('Cuboid space has not been implemented yet.')
+                raise Exception('Cuboidal space has not been implemented yet.')
+            elif self.md_parameters['npt_space_shape'][i].upper() == 'plane'.upper():
+                self.npt_space_wall_parameters['wall_number'] += 1
+                raise Exception('Planar space has not been implemented yet.')
             
         self.NPT_space_wall = repulsive_wall(self.npt_space_wall_parameters)
 
@@ -621,7 +625,7 @@ class NPT_Berendsen(velocity_Verlet):
         init_miu = np.ones(self.md_parameters['npt_number']) # the first rescaling factor should be one for each NPT space
 
         self.Berendsen_velocity_rescaling(tau=self.tau_T)
-        self.miu = self.Berendsen_position_rescaling(tau_P=self.tau_P, beta=self.beta, factor=init_miu)
+        self.miu = self.Berendsen_volume_rescaling(tau_P=self.tau_P, beta=self.beta, factor=init_miu)
         self.update_NPT_space_wall()
 
         if self.sampling_parameters['sampling_initialization']:
@@ -640,7 +644,7 @@ class NPT_Berendsen(velocity_Verlet):
 
         self.VV_next_step(bias_forces, updated_current_system)
         self.Berendsen_velocity_rescaling(self.tau_T)
-        self.miu = self.Berendsen_position_rescaling(self.tau_P, self.beta, factor=self.miu)
+        self.miu = self.Berendsen_volume_rescaling(self.tau_P, self.beta, factor=self.miu)
         self.update_NPT_space_wall()
 
         if self.md_parameters['md_clean_translation']:
@@ -677,7 +681,7 @@ class NPT_Langevin(velocity_Verlet):
         self.initialize_NPT_space_size()
 
 
-class NPT_BZP(velocity_Verlet):
+class NPT_SVR(velocity_Verlet):
     def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
         super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
         if log_file_name == None:
