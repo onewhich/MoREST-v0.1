@@ -115,7 +115,7 @@ class initialize_sampling(initialize_calculator):
         MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'\n')
         
     @staticmethod
-    def write_SVR_MD_log(MD_log, step, Ep, Ek, masses, Ee=None, d_Ee=0):
+    def write_SVR_MD_log(MD_log, step, Ep, Ek, masses, Ee=0, d_Ee=0):
         try:
             if len(Ep) >= 1:
                 Ep = Ep[0]
@@ -126,8 +126,6 @@ class initialize_sampling(initialize_calculator):
         #Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)
         T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
         Et = Ek + Ep
-        if Ee == None:
-            Ee = Et
         Ee += d_Ee
         MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'    '+str(Ee)+'\n')
         return Ee, d_Ee
