@@ -115,7 +115,25 @@ class initialize_sampling(initialize_calculator):
         MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'\n')
         
     @staticmethod
-    def write_SVR_MD_log(MD_log, step, Ep, Ek, masses, K_simulation, time_step, tau, d_Ee, Wt):
+    def write_SVR_MD_log(MD_log, step, Ep, Ek, masses, Ee=None, d_Ee=0):
+        try:
+            if len(Ep) >= 1:
+                Ep = Ep[0]
+        except:
+            pass
+        n_atom = len(masses)
+        #Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(n_atom)])
+        #Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)
+        T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+        Et = Ek + Ep
+        if Ee == None:
+            Ee = Et
+        Ee += d_Ee
+        MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'    '+str(Ee)+'\n')
+        return Ee, d_Ee
+    
+    @staticmethod
+    def write_SVR_MD_log_old(MD_log, step, Ep, Ek, masses, K_simulation, time_step, tau, d_Ee, Wt):
         try:
             if len(Ep) >= 1:
                 Ep = Ep[0]
@@ -127,8 +145,7 @@ class initialize_sampling(initialize_calculator):
         #Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)
         T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
         Et = Ek + Ep
-        #d_Ee = d_Ee + (K_simulation - Ek)*time_step/tau + 2*np.sqrt(Ek*K_simulation/Nf/tau)*Wt
-        d_Ee = (K_simulation - Ek)*time_step/tau + 2*np.sqrt(Ek*K_simulation/Nf/tau)*Wt
+        d_Ee = d_Ee + (K_simulation - Ek)*time_step/tau + 2*np.sqrt(Ek*K_simulation/Nf/tau)*Wt
         Ee = Et - d_Ee
         MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'    '+str(Ee)+'\n')
         return d_Ee, Wt
@@ -304,7 +321,7 @@ class velocity_Verlet(initialize_sampling):
         velocities = self.current_system.get_velocities()
         self.current_system.set_velocities(alpha * velocities)
         
-        return R_t
+        return K_t*(1-alpha**2)
     
     def initialize_NPT_space_size(self):
         Eks = self.get_atom_kinetic_energies()
@@ -526,16 +543,17 @@ class NVT_Langevin(velocity_Verlet):
         if self.sampling_parameters['sampling_initialization']:
             self.MD_log = open(self.log_file_name, 'w', buffering=1)
             self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), Effective energy (eV)\n')   
-            self.d_Ee, self.Wt = self.write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), \
-                                                       self.masses, self.K_simulation, self.md_parameters['md_time_step'], 1/(2*self.sampling_parameters['nvt_langevin_gamma']), 0, 0)
+            #self.d_Ee, self.Wt = self.write_SVR_MD_log_old(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), \
+            #                                           self.masses, self.K_simulation, self.md_parameters['md_time_step'], 1/(2*self.sampling_parameters['nvt_langevin_gamma']), 0, 0)
+            self.Ee, self.d_Ee = self.write_SVR_MD_log_old(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
         else:
             self.MD_log = open(self.log_file_name, 'a', buffering=1)
-            self.d_Ee = 0
-            self.Wt =  0
+            #self.d_Ee = 0
+            #self.Wt =  0
 
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
         self.VV_next_step(bias_forces, updated_current_system)
-        R_t = self.stochastic_velocity_rescaling(Nf = 1, tau = 1/(2*self.sampling_parameters['nvt_langevin_gamma']))
+        self.d_Ee = self.stochastic_velocity_rescaling(Nf = 1, tau = 1/(2*self.sampling_parameters['nvt_langevin_gamma']))
 
         if self.md_parameters['md_clean_translation']:
             #next_velocities = clean_translation(next_velocities)
@@ -555,8 +573,9 @@ class NVT_Langevin(velocity_Verlet):
             #self.current_traj.append(self.current_system)
             write_xyz_traj(self.traj_file_name, self.current_system)
             self.kinetic_energy = self.current_system.get_kinetic_energy()
-            self.d_Ee, self.Wt = self.write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses, \
-                                                       self.K_simulation, self.time_step, 1/(2*self.sampling_parameters['nvt_langevin_gamma']), self.d_Ee, R_t)
+            #self.d_Ee, self.Wt = self.write_SVR_MD_log_old(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses, \
+            #                                           self.K_simulation, self.time_step, 1/(2*self.sampling_parameters['nvt_langevin_gamma']), self.d_Ee, R_t)
+            self.Ee, self.d_Ee = self.write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses, self.Ee, self.d_Ee)
             
         return self.current_step, self.current_system
 
@@ -572,16 +591,17 @@ class NVT_SVR(velocity_Verlet):
         if self.sampling_parameters['sampling_initialization']:
             self.MD_log = open(self.log_file_name, 'w', buffering=1)
             self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), Effective energy (eV)\n')   
-            self.d_Ee, self.Wt = self.write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), \
-                                                       self.masses, self.K_simulation, self.md_parameters['md_time_step'], self.sampling_parameters['nvt_svr_tau'], 0, 0)
+            #self.d_Ee, self.Wt = self.write_SVR_MD_log_old(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), \
+            #                                           self.masses, self.K_simulation, self.md_parameters['md_time_step'], self.sampling_parameters['nvt_svr_tau'], 0, 0)
+            self.Ee, self.d_Ee = self.write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
         else:
             self.MD_log = open(self.log_file_name, 'a', buffering=1)
-            self.d_Ee = 0
-            self.Wt =  0
+            #self.d_Ee = 0
+            #self.Wt =  0
 
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
         self.VV_next_step(bias_forces, updated_current_system)
-        R_t = self.stochastic_velocity_rescaling(Nf = 3*self.n_atom, tau = self.sampling_parameters['nvt_svr_tau'])
+        self.d_Ee = self.stochastic_velocity_rescaling(Nf = 3*self.n_atom, tau = self.sampling_parameters['nvt_svr_tau'])
 
         if self.md_parameters['md_clean_translation']:
             #next_velocities = clean_translation(next_velocities)
@@ -601,8 +621,9 @@ class NVT_SVR(velocity_Verlet):
             #self.current_traj.append(self.current_system)
             write_xyz_traj(self.traj_file_name, self.current_system)
             self.kinetic_energy = self.current_system.get_kinetic_energy()
-            self.d_Ee, self.Wt = self.write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses, \
-                                                       self.K_simulation, self.time_step, self.sampling_parameters['nvt_svr_tau'], self.d_Ee, R_t)
+            #self.d_Ee, self.Wt = self.write_SVR_MD_log_old(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses, \
+            #                                           self.K_simulation, self.time_step, self.sampling_parameters['nvt_svr_tau'], self.d_Ee, R_t)
+            self.Ee, self.d_Ee = self.write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses, self.Ee, self.d_Ee)
             
         return self.current_step, self.current_system
 
