@@ -7,7 +7,8 @@ from initialization import initialize_calculator
 #from copy import deepcopy
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary, ZeroRotation
 from ase import units
-from wall_potential import repulsive_wall
+from thermostat import velocity_rescaling, Berendsen_velocity_rescaling, stochastic_velocity_rescaling
+from barostat import 
 
 class initialize_sampling(initialize_calculator):
     def __init__(self, morest_parameters, sampling_parameters, molecule=None, traj_file_name=None, calculator=None, log_morest=None):
@@ -71,36 +72,6 @@ class initialize_sampling(initialize_calculator):
         return system
     
     @staticmethod
-    def clean_translation(velocities):
-        total_velocity = np.sum(velocities, axis=0)/len(velocities)
-        velocities = velocities - total_velocity
-        return velocities
-        
-    @staticmethod
-    def clean_rotation(velocities, coordinates, masses):
-        '''
-        L = r x p = r x (m v) = r x (omega x (m r)) = m r^2 omega = I omega
-        L : angular momentum
-        omega: angular velocity
-        I : moment of inertia
-        '''
-        v_vector = velocities
-        #center_of_mass = np.sum([masses[i]*coordinates[i] for i in range(len(masses))], axis=0)/np.sum(masses)
-        center_of_mass = np.sum(masses*coordinates, axis=0)/np.sum(masses)
-        r_vector = coordinates - center_of_mass
-        # r_cross_v : angular velocities
-        # omega = (r x v) / |r|^2
-        r_cross_v = np.cross(r_vector, v_vector)
-        r_2 = np.linalg.norm(r_vector, axis=1)**2
-        omega = np.array([r_cross_v[i]/r_2[i] for i in range(4)])
-        # Rv = omega/n_atom : system total angular velocity
-        rotat_vector = np.sum(omega, axis=0)/len(masses)
-        v_tang = np.cross(rotat_vector, r_vector)
-        velocities = v_vector - v_tang
-            
-        return velocities
-            
-    @staticmethod
     def write_MD_log(MD_log, step, Ep, Ek, masses):
         try:
             if len(Ep) >= 1:
@@ -147,8 +118,39 @@ class initialize_sampling(initialize_calculator):
         Ee = Et - d_Ee
         MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'    '+str(Ee)+'\n')
         return d_Ee, Wt
-
+    
+    @staticmethod
+    def clean_translation(velocities):
+        total_velocity = np.sum(velocities, axis=0)/len(velocities)
+        velocities = velocities - total_velocity
         
+        return velocities
+        
+    @staticmethod
+    def clean_rotation(velocities, coordinates, masses):
+        '''
+        L = r x p = r x (m v) = r x (omega x (m r)) = m r^2 omega = I omega
+        L : angular momentum
+        omega: angular velocity
+        I : moment of inertia
+        '''
+        v_vector = velocities
+        #center_of_mass = np.sum([masses[i]*coordinates[i] for i in range(len(masses))], axis=0)/np.sum(masses)
+        center_of_mass = np.sum(masses*coordinates, axis=0)/np.sum(masses)
+        r_vector = coordinates - center_of_mass
+        # r_cross_v : angular velocities
+        # omega = (r x v) / |r|^2
+        r_cross_v = np.cross(r_vector, v_vector)
+        r_2 = np.linalg.norm(r_vector, axis=1)**2
+        omega = np.array([r_cross_v[i]/r_2[i] for i in range(4)])
+        # Rv = omega/n_atom : system total angular velocity
+        rotat_vector = np.sum(omega, axis=0)/len(masses)
+        v_tang = np.cross(rotat_vector, r_vector)
+        velocities = v_vector - v_tang
+            
+        return velocities
+            
+
 class velocity_Verlet(initialize_sampling):
     '''
     This class implements velocity Verlet algorithm to do microcanonical ensemble (NVE MD) sampling, and (stochestic) velocity rescaling method to constrain the kinetic energy in a NVT MD system.
@@ -241,172 +243,6 @@ class velocity_Verlet(initialize_sampling):
         factor = np.sqrt(Tf / Ti)
         self.current_system.set_velocities(factor * velocities)
 
-    def velocity_rescaling(self):
-        dT = self.sampling_parameters['nvt_vr_dt']
-        lower_T = self.T_simulation - dT
-        upper_T = self.T_simulation + dT
-        Ek = self.current_system.get_kinetic_energy()
-        Ti = 2/3 * Ek/units.kB /self.n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
-        velocities = self.current_system.get_velocities()
-        if Ti > upper_T or Ti < lower_T:
-            factor = np.sqrt(self.T_simulation / Ti)
-            self.current_system.set_velocities(factor * velocities)
-
-    def Berendsen_velocity_rescaling(self, tau):
-        time_step = self.md_parameters['md_time_step']
-        Ek = self.current_system.get_kinetic_energy()
-        Ti = 2/3 * Ek/units.kB /self.n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
-        factor = np.sqrt(1 + time_step/tau * (self.T_simulation/Ti -1))
-        velocities = self.current_system.get_velocities()
-        self.current_system.set_velocities(factor * velocities)
-
-    def Berendsen_volume_rescaling(self, tau_P, beta, factor):
-        time_step = self.md_parameters['md_time_step']
-        Eks = self.get_atom_kinetic_energies()
-        next_factor = []
-        forces = self.current_forces
-        coordinates = self.current_system.get_positions()
-        for i in range(self.md_parameters['npt_number']):
-            index = self.md_parameters['npt_action_atoms'][i]
-            if index == 'all':
-                index = np.arange(self.n_atom)
-            internal_virial = self.get_internal_virial(coordinates[index], forces[index])
-            current_pressure = (Eks[i] - internal_virial)*2/(3.*self.get_volume(i))
-            tmp_factor = np.power(1+(time_step/tau_P)*beta*(current_pressure-self.P_simulation),1./3.)
-            next_factor.append(tmp_factor)
-
-            if self.md_parameters['npt_space_type'][i].upper() == 'gas'.upper():
-                self.md_parameters['npt_space_size'][i] *= factor[i]
-            elif self.md_parameters['npt_space_type'][i].upper() == 'condensed'.upper():
-                self.md_parameters['npt_space_size'][i] *= factor[i]
-                coordinates[index] *= factor[i]
-
-        self.current_system.set_positions(coordinates)
-
-        return np.array(next_factor)
-        
-    def stochastic_velocity_rescaling(self, Nf, tau):
-        '''
-        This function implements stochastic velocity rescaling algorithm (Bussi, Donadio and Parrinello, JCP (2007); Bussi, Parrinello, CPC (2008)) to do canonical ensenmble sampling (NVT MD).
-        '''
-        time_step = self.md_parameters['md_time_step']
-        
-        ### degree of freedom
-        # Nf = 1                # for Langevin thermostat
-        # Nf = 3 * self.n_atom  # for SVR thermostat
-        #if self.md_parameters['md_clean_translation']:
-        #    Nf = Nf - 3
-        #if self.md_parameters['md_clean_rotation']:
-        #Nf = Nf - 3
-            
-        ### Gaussian random number R(t)
-        R = np.random.normal(size=Nf)
-        R_t = R[0]
-        S_Nf_1 = np.sum(R[1:]**2)
-        
-        ### c = exp(- time_step / tau)
-        c = np.exp(-1 * time_step / tau )
-        
-        ### kinetic energy K
-        K_t = self.current_system.get_kinetic_energy()
-        factor = self.K_simulation / K_t / Nf
-        
-        ### alpha
-        alpha2 = np.abs(c + (1-c)*(S_Nf_1 + R_t**2)*factor + 2*R_t*np.sqrt(c*(1-c)*factor))
-        sign = np.sign(R_t + np.sqrt(c/(1-c)/factor))
-        alpha = np.sqrt(alpha2) * sign
-        
-        velocities = self.current_system.get_velocities()
-        self.current_system.set_velocities(alpha * velocities)
-
-        #d_Ee = -1*((self.K_simulation - K_t)*time_step/tau + 2*np.sqrt(K_t*self.K_simulation/Nf/tau)*R_t)
-        d_Ee = K_t*(1-alpha2)
-        
-        return d_Ee
-    
-    def initialize_NPT_space_size(self):
-        Eks = self.get_atom_kinetic_energies()
-        forces = self.current_forces
-        coordinates = self.current_system.get_positions()
-        for i in range(self.md_parameters['npt_number']):
-            index = self.md_parameters['npt_action_atoms'][i]
-            internal_virial = self.get_internal_virial(coordinates[index], forces[index])
-            volume = (Eks[i] - internal_virial)/(3.*self.P_simulation)
-            if self.md_parameters['npt_space_shape'][i].upper() == 'sphere'.upper():
-                self.md_parameters['npt_space_size'].append(np.pow((3/4 * volume / np.pi), 1./3.))  # V = 4/3 * Pi * r^3; r = (3/4 * V/Pi)^(1/3)
-        return self.md_parameters['npt_space_size']
-    
-    def get_internal_virial(self, coordinates, forces):
-        return -np.sum([(coordinates[i]-coordinates[j]) @ forces[i] for i in range(self.n_atom-1) for j in range(i+1,self.n_atom)])/2
-    
-    def get_volume(self, i_space):
-        if self.md_parameters['npt_space_shape'][i_space].upper() == 'sphere'.upper():
-            volume =  4./3. * np.pi * self.md_parameters['npt_space_size'][i_space]**3 # V = 4/3 * Pi * r^3
-        elif self.md_parameters['npt_space_shape'][i_space].upper() == 'cuboid'.upper():
-            raise Exception('Cuboid space has not been implemented yet.')
-        elif self.md_parameters['npt_space_shape'][i_space].upper() == 'plane'.upper():
-            raise Exception('Planar space has not been implemented yet.')
-        return volume
-
-    def get_atom_kinetic_energies(self):
-        v = np.linalg.norm(self.current_system.get_velocities(), axis=-1)[:,np.newaxis]
-        Eks = 0.5 * self.masses * v**2
-        return Eks
-    
-    def initialize_NPT_space_wall(self):
-        self.npt_space_wall_parameters = {}
-        self.npt_space_wall_parameters['wall_number'] = 0
-        self.npt_space_wall_parameters['wall_collective_variable'] = []
-        self.npt_space_wall_parameters['wall_shape'] = []
-        self.npt_space_wall_parameters['wall_type'] = []
-        self.npt_space_wall_parameters['power_wall_direction'] = []
-        self.npt_space_wall_parameters['wall_scaling'] = []
-        self.npt_space_wall_parameters['wall_scope'] = []
-        self.npt_space_wall_parameters['wall_action_atoms'] = []
-        self.npt_space_wall_parameters['wall_shape_parameters'] = []
-        for i, npt_space in enumerate(self.md_parameters['npt_space_parameters']):
-            if self.md_parameters['npt_space_shape'][i].upper() == 'sphere'.upper():
-                self.npt_space_wall_parameters['wall_number'] += 1
-                self.npt_space_wall_parameters['wall_collective_variable'].append(self.md_parameters['npt_collective_variable'][i])
-                self.npt_space_wall_parameters['wall_shape'].append('spherical')
-                self.npt_space_wall_parameters['wall_type'].append('power_wall')
-                self.npt_space_wall_parameters['power_wall_direction'].append(-1)
-                self.npt_space_wall_parameters['wall_scaling'].append(1)
-                self.npt_space_wall_parameters['wall_scope'].append(2)
-                self.npt_space_wall_parameters['wall_action_atoms'].append(self.md_parameters['npt_number'][i])
-                tmp_parameters = {}
-                tmp_parameters['spherical_wall_center'] = npt_space['npt_sphere_center']
-                tmp_parameters['spherical_wall_radius'] = self.md_parameters['npt_space_size'][i]
-                self.npt_space_wall_parameters['wall_shape_parameters'].append(tmp_parameters)
-            elif self.md_parameters['npt_space_shape'][i].upper() == 'cuboid'.upper():
-                self.npt_space_wall_parameters['wall_number'] += 6
-                raise Exception('Cuboidal space has not been implemented yet.')
-            elif self.md_parameters['npt_space_shape'][i].upper() == 'plane'.upper():
-                self.npt_space_wall_parameters['wall_number'] += 1
-                raise Exception('Planar space has not been implemented yet.')
-            
-        self.NPT_space_wall = repulsive_wall(self.npt_space_wall_parameters)
-
-    def update_NPT_space_wall(self):
-        for i, npt_space in enumerate(self.md_parameters['npt_space_parameters']):
-            if self.md_parameters['npt_space_shape'][i].upper() == 'sphere'.upper():
-                self.npt_space_wall_parameters['wall_shape_parameters'][i]['spherical_wall_radius'] = self.md_parameters['npt_space_size'][i]
-        self.NPT_space_wall.update_wall_parameters(self.npt_space_wall_parameters)
-
-    def get_NPT_space_bias_forces(self):
-        all_coordinates = self.current_system.get_positions()
-        NPT_bias_forces = np.ones((self.md_parameters['npt_number'],3))
-        for i in range(self.md_parameters['npt_number']):
-            index = self.md_parameters['npt_action_atoms'][i]
-            if index == 'all':
-                coordinates = all_coordinates
-            else:
-                coordinates = all_coordinates[index]
-            tmp_bias = np.array([self.NPT_space_wall.get_repulsive_wall_force(i_coordinate) for i_coordinate in coordinates])
-            for j, j_bias in enumerate(tmp_bias):
-                NPT_bias_forces[index[j]] *= j_bias
-        return NPT_bias_forces
-
 class NVE_VV(velocity_Verlet):
     def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
         super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
@@ -455,7 +291,9 @@ class NVT_VR(velocity_Verlet):
         else:
             self.log_file_name = log_file_name
 
-        self.velocity_rescaling()
+        new_velocities = velocity_rescaling(self.sampling_parameters['nvt_vr_dt'], self.T_simulation, self.current_system.get_kinetic_energy(), \
+                                        self.n_atom, self.current_system.get_velocities())
+        self.current_system.set_velocities(new_velocities)
 
         if self.sampling_parameters['sampling_initialization']:
             self.MD_log = open(self.log_file_name, 'w', buffering=1)
@@ -466,7 +304,9 @@ class NVT_VR(velocity_Verlet):
 
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
         self.VV_next_step(bias_forces, updated_current_system)
-        self.velocity_rescaling()
+        new_velocities = velocity_rescaling(self.sampling_parameters['nvt_vr_dt'], self.T_simulation, self.current_system.get_kinetic_energy(), \
+                                        self.n_atom, self.current_system.get_velocities())
+        self.current_system.set_velocities(new_velocities)
 
         if self.md_parameters['md_clean_translation']:
             #next_velocities = clean_translation(next_velocities)
@@ -499,7 +339,9 @@ class NVT_Berendsen(velocity_Verlet):
         else:
             self.log_file_name = log_file_name
 
-        self.Berendsen_velocity_rescaling(tau = self.sampling_parameters['nvt_berendsen_tau'])
+        new_velocities = Berendsen_velocity_rescaling(self.md_parameters['md_time_step'], self.current_system.get_kinetic_energy(), self.n_atom, \
+                                                      self.T_simulation, self.sampling_parameters['nvt_berendsen_tau'], self.current_system.get_velocities())
+        self.current_system.set_velocities(new_velocities)
 
         if self.sampling_parameters['sampling_initialization']:
             self.MD_log = open(self.log_file_name, 'w', buffering=1)
@@ -510,7 +352,9 @@ class NVT_Berendsen(velocity_Verlet):
 
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
         self.VV_next_step(bias_forces, updated_current_system)
-        self.Berendsen_velocity_rescaling(tau = self.sampling_parameters['nvt_berendsen_tau'])
+        new_velocities = Berendsen_velocity_rescaling(self.md_parameters['md_time_step'], self.current_system.get_kinetic_energy(), self.n_atom, \
+                                                      self.T_simulation, self.sampling_parameters['nvt_berendsen_tau'], self.current_system.get_velocities())
+        self.current_system.set_velocities(new_velocities)
 
         if self.md_parameters['md_clean_translation']:
             #next_velocities = clean_translation(next_velocities)
@@ -556,7 +400,9 @@ class NVT_Langevin(velocity_Verlet):
 
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
         self.VV_next_step(bias_forces, updated_current_system)
-        self.d_Ee = self.stochastic_velocity_rescaling(Nf = 1, tau = 1/(2*self.sampling_parameters['nvt_langevin_gamma']))
+        new_velocities, self.d_Ee = stochastic_velocity_rescaling(self.md_parameters['md_time_step'], self.current_system.get_kinetic_energy(), self.K_simulation, \
+                                                                  1, 1/(2*self.sampling_parameters['nvt_langevin_gamma']), self.current_system.get_velocities())
+        self.current_system.set_velocities(new_velocities)
 
         if self.md_parameters['md_clean_translation']:
             #next_velocities = clean_translation(next_velocities)
@@ -604,7 +450,9 @@ class NVT_SVR(velocity_Verlet):
 
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
         self.VV_next_step(bias_forces, updated_current_system)
-        self.d_Ee = self.stochastic_velocity_rescaling(Nf = 3*self.n_atom, tau = self.sampling_parameters['nvt_svr_tau'])
+        new_velocities, self.d_Ee = stochastic_velocity_rescaling(self.md_parameters['md_time_step'], self.current_system.get_kinetic_energy(), self.K_simulation, \
+                                                                  3*self.n_atom, self.sampling_parameters['nvt_svr_tau'], self.current_system.get_velocities())
+        self.current_system.set_velocities(new_velocities)
 
         if self.md_parameters['md_clean_translation']:
             #next_velocities = clean_translation(next_velocities)
@@ -639,8 +487,8 @@ class NPT_Berendsen(velocity_Verlet):
         else:
             self.log_file_name = log_file_name
 
-        self.initialize_NPT_space_size()
-        self.initialize_NPT_space_wall()
+        initialize_NPT_space_size()
+        initialize_NPT_space_wall()
 
         self.P_simulation = self.md_parameters['npt_pressure']
         self.tau_T = self.sampling_parameters['npt_Berendsen_tau_t']
@@ -648,9 +496,9 @@ class NPT_Berendsen(velocity_Verlet):
         self.beta = self.sampling_parameters['npt_Berendsen_compressibility']
         init_miu = np.ones(self.md_parameters['npt_number']) # the first rescaling factor should be one for each NPT space
 
-        self.Berendsen_velocity_rescaling(tau=self.tau_T)
-        self.miu = self.Berendsen_volume_rescaling(tau_P=self.tau_P, beta=self.beta, factor=init_miu)
-        self.update_NPT_space_wall()
+        Berendsen_velocity_rescaling(tau=self.tau_T)
+        self.miu = Berendsen_volume_rescaling(tau_P=self.tau_P, beta=self.beta, factor=init_miu)
+        update_NPT_space_wall()
 
         if self.sampling_parameters['sampling_initialization']:
             self.MD_log = open(self.log_file_name, 'w', buffering=1)
@@ -660,16 +508,16 @@ class NPT_Berendsen(velocity_Verlet):
             self.MD_log = open(self.log_file_name, 'a', buffering=1)
 
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
-        NPT_bias_forces = self.get_NPT_space_bias_forces()
+        NPT_bias_forces = get_NPT_space_bias_forces()
         if type(bias_forces) != type(None):
             bias_forces += NPT_bias_forces
         else:
             bias_forces = NPT_bias_forces
 
         self.VV_next_step(bias_forces, updated_current_system)
-        self.Berendsen_velocity_rescaling(self.tau_T)
-        self.miu = self.Berendsen_volume_rescaling(self.tau_P, self.beta, factor=self.miu)
-        self.update_NPT_space_wall()
+        Berendsen_velocity_rescaling(self.tau_T)
+        self.miu = Berendsen_volume_rescaling(self.tau_P, self.beta, factor=self.miu)
+        update_NPT_space_wall()
 
         if self.md_parameters['md_clean_translation']:
             #next_velocities = clean_translation(next_velocities)
@@ -702,7 +550,7 @@ class NPT_Langevin(velocity_Verlet):
         else:
             self.log_file_name = log_file_name
 
-        self.initialize_NPT_space_size()
+        initialize_NPT_space_size()
 
 
 class NPT_SVR(velocity_Verlet):
@@ -713,7 +561,7 @@ class NPT_SVR(velocity_Verlet):
         else:
             self.log_file_name = log_file_name
 
-        self.initialize_NPT_space_size()
+        initialize_NPT_space_size()
 
 
 
