@@ -329,10 +329,10 @@ class read_parameters:
                 self.sampling_parameters['sampling_pre_thermalized'] = False
 
         elif i_parameter.split()[0].upper() == 'Sampling_initial_T'.upper():
-            self.md_parameters['sampling_initial_T'] = float(i_parameter.split()[1])
+            self.sampling_parameters['sampling_initial_T'] = float(i_parameter.split()[1])
 
         elif i_parameter.split()[0].upper() == 'Sampling_initial_E'.upper():
-            self.md_parameters['sampling_initial_E'] = float(i_parameter.split()[1])
+            self.sampling_parameters['sampling_initial_E'] = float(i_parameter.split()[1])
                 
         elif i_parameter.split()[0].upper() == 'Sampling_ensemble'.upper():
             self.sampling_parameters['sampling_ensemble'] = str(i_parameter.split()[1])
