@@ -172,11 +172,11 @@ class velocity_Verlet(initialize_sampling):
         if self.current_step == 0:
             if self.sampling_parameters['sampling_pre_thermalized']:
                 if 'sampling_initial_E' in self.sampling_parameters:
-                    T_thermalized = 2/3 * self.md_parameters['sampling_initial_E']/units.kB /self.n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+                    T_thermalized = 2/3 * self.sampling_parameters['sampling_initial_E']/units.kB /self.n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
                     MaxwellBoltzmannDistribution(self.current_system, temperature_K = T_thermalized)
                     self.pre_thermalization(T_thermalized)
                 elif 'sampling_initial_T' in self.sampling_parameters:
-                    T_thermalized = self.md_parameters['sampling_initial_T']
+                    T_thermalized = self.sampling_parameters['sampling_initial_T']
                     MaxwellBoltzmannDistribution(self.current_system, temperature_K = T_thermalized)
                     self.pre_thermalization(T_thermalized)
                 elif self.T_simulation > 1e-3:
