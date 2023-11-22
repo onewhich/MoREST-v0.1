@@ -179,7 +179,7 @@ class velocity_Verlet(initialize_sampling):
                     T_thermalized = self.md_parameters['sampling_initial_T']
                     MaxwellBoltzmannDistribution(self.current_system, temperature_K = T_thermalized)
                     self.pre_thermalization(T_thermalized)
-                elif self.T_simulation > 1:
+                elif self.T_simulation > 1e-3:
                     MaxwellBoltzmannDistribution(self.current_system, temperature_K = self.T_simulation)
             
             #self.current_traj = []
@@ -234,7 +234,7 @@ class velocity_Verlet(initialize_sampling):
         except:
             pass
 
-    def pre_thermalization(self, Tf=None):
+    def pre_thermalization(self, Tf):
         Ek_i = self.current_system.get_kinetic_energy()
         Ti = 2/3 * Ek_i/units.kB /self.n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
         velocities = self.current_system.get_velocities()
@@ -271,7 +271,7 @@ class velocity_Verlet(initialize_sampling):
             if index == 'all':
                 index = np.arange(self.n_atom)
             internal_virial = self.get_internal_virial(coordinates[index], forces[index])
-            current_pressure = (Eks[i] - internal_virial)/(3.*self.get_volume(i))
+            current_pressure = (Eks[i] - internal_virial)*2/(3.*self.get_volume(i))
             tmp_factor = np.power(1+(time_step/tau_P)*beta*(current_pressure-self.P_simulation),1./3.)
             next_factor.append(tmp_factor)
 
@@ -334,13 +334,15 @@ class velocity_Verlet(initialize_sampling):
         return self.md_parameters['npt_space_size']
     
     def get_internal_virial(self, coordinates, forces):
-        return np.sum([(coordinates[i]-coordinates[j]) @ forces[i] for i in range(self.n_atom-1) for j in range(i+1,self.n_atom)])
+        return -np.sum([(coordinates[i]-coordinates[j]) @ forces[i] for i in range(self.n_atom-1) for j in range(i+1,self.n_atom)])/2
     
     def get_volume(self, i_space):
         if self.md_parameters['npt_space_shape'][i_space].upper() == 'sphere'.upper():
             volume =  4./3. * np.pi * self.md_parameters['npt_space_size'][i_space]**3 # V = 4/3 * Pi * r^3
         elif self.md_parameters['npt_space_shape'][i_space].upper() == 'cuboid'.upper():
             raise Exception('Cuboid space has not been implemented yet.')
+        elif self.md_parameters['npt_space_shape'][i_space].upper() == 'plane'.upper():
+            raise Exception('Planar space has not been implemented yet.')
         return volume
 
     def get_atom_kinetic_energies(self):
