@@ -39,25 +39,25 @@ Sampling_ensemble                 NVT_SVR  10   # Choose the ensemble, e.g. NVE_
                                                 #                           NVT_SVR 10: BDP stochastic velocity rescaling thermostat, with parameter NVT_SVR_tau=10; NPT_SVR.
                                                 #                           NPT_Berendsen 10 50 1: Berendsen isothermal-isobaric sampling with NPT_Berendsen_tau_T=10 fs, NPT_Berendsen_tau_P=50 fs, NPT_Berendsen_compressibility=1 bar^-1;
                                                 #                           NPT_Langevin    TODO: Langevin isothermal-isobaric sampling
-                                                #                           NPT_SVR         TODO: BZP BZP stochastic velocity/volume rescaling thermostat and barostat.
+                                                #                           NPT_SVR         TODO: BZP stochastic velocity-volume rescaling thermostat and barostat.
 MD_clean_translation              True
 MD_clean_rotation                 True
 MD_time_step                      1   # unit in fs
 MD_simulation_time                100000   # unit in fs
 MD_temperature                    1000 # unit: K
-NPT_number                        1 # Pressure control in NPT is implemented by controling the size of wall potential.
-NPT_collective_variable           False
-NPT_pressure                      1 # unit: Bar (10^5 Pa)
-NPT_space_shape                   sphere # sphere: spherical space for barostat; cuboid: cuboidal space for barostat; plane: planar wall for barostat used in periodic system.
-NPT_space_type                    gas # gas: only change the size of the barostat; condensed: change both the size of barostat and the positions of atoms.
-NPT_action_atoms                  all # all; 1 ; 0,2,4,7.  Indicating the atoms acffected by the wall potential.
-NPT_sphere_center                 0 0 0 # This point and radius determine the parameter b in the spherical wall. 
-#NPT_shpere_radius                 # The radius and center point determine the parameter b in the spherical wall. It is calculated from the pressure.
-NPT_cuboid_center                 0 0 0 # This point and normal vector determine the parameter b of six planar walls of the cube.
-NPT_cuboid_normal_vector          0 0 5 # The normal vector does not have to be a unit vector. It will be normalized after reading.
-NPT_cuboid_length_ratio           4 5 6 # The length on each side of the cuboid. The last number (6) is the length along the normal vector. The actual lengths are calculated from the pressure.
-NPT_plane_point                   0 0 3 # This point and normal vector determine the parameter b in the planar wall.
-NPT_plane_normal_vector           0 0 -5 # The normal vector does not have to be a unit vector. It will be normalized after reading.
+Barostat_number                   1 # Pressure control in NPT is implemented by controling the size of wall potential.
+Barostat_collective_variable      False
+Barostat_pressure                 1 # unit: Bar (10^5 Pa)
+Barostat_space_shape              sphere # sphere: spherical space for barostat; cuboid: cuboidal space for barostat; plane: planar wall for barostat used in periodic system.
+Barostat_space_type               gas # gas: only change the size of the barostat; condensed: change both the size of barostat and the positions of atoms.
+Barostat_action_atoms             all # all; 1 ; 0,2,4,7.  Indicating the atoms acffected by the wall potential.
+Barostat_sphere_center            0 0 0 # This point and radius determine the parameter b in the spherical wall. 
+#Barostat_shpere_radius            # The radius and center point determine the parameter b in the spherical wall. It is calculated from the pressure.
+Barostat_cuboid_center            0 0 0 # This point and normal vector determine the parameter b of six planar walls of the cube.
+Barostat_cuboid_normal_vector     0 0 5 # The normal vector does not have to be a unit vector. It will be normalized after reading.
+Barostat_cuboid_length_ratio      4 5 6 # The length on each side of the cuboid. The last number (6) is the length along the normal vector. The actual lengths are calculated from the pressure.
+Barostat_plane_point              0 0 3 # This point and normal vector determine the parameter b in the planar wall.
+Barostat_plane_normal_vector      0 0 -5 # The normal vector does not have to be a unit vector. It will be normalized after reading.
 
 Trajectory_scattering             False
 Scattering_initialization         False

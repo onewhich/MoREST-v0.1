@@ -52,14 +52,15 @@ class read_parameters:
         self.md_parameters['md_clean_translation'] = True
         self.md_parameters['md_clean_rotation'] = False
         self.md_parameters['md_temperature'] = 0
-        self.md_parameters['npt_number'] = 1
-        self.md_parameters['npt_collective_variable'] = []
-        self.md_parameters['npt_pressure'] = []
-        self.md_parameters['npt_space_shape'] = []
-        self.md_parameters['npt_space_type'] = []
-        self.md_parameters['npt_space_size'] = []
-        self.md_parameters['npt_action_atoms'] = []
-        self.md_parameters['npt_space_parameters'] = []
+        self.barostat_parameters = {}
+        self.barostat_parameters['barostat_number'] = 1
+        self.barostat_parameters['barostat_collective_variable'] = []
+        self.barostat_parameters['barostat_pressure'] = []
+        self.barostat_parameters['barostat_space_shape'] = []
+        self.barostat_parameters['barostat_space_type'] = []
+        self.barostat_parameters['barostat_space_size'] = []
+        self.barostat_parameters['barostat_action_atoms'] = []
+        self.barostat_parameters['barostat_space_parameters'] = []
         self.scattering_parameters = {}
         self.scattering_parameters['scattering_initialization'] = False
         self.scattering_parameters['scattering_pre_thermolized'] = False
@@ -252,8 +253,9 @@ class read_parameters:
                     if self.sampling_parameters['sampling_method'].upper() in ['MD']:
                         self.read_md_parameters(i_parameter)
                     if 'sampling_ensemble' in self.sampling_parameters:
-                        if self.sampling_parameters['sampling_ensemble'].upper() in ['NPT_Berendsen'.upper(), 'NPT_Langevin'.upper(), 'NPT_SVR']:
-                            self.read_md_npt_parameters(i_parameter)
+                        if self.sampling_parameters['sampling_ensemble'].upper() in ['NPT_Berendsen'.upper(), 'NPT_Langevin'.upper(), \
+                                                                                     'NPH_SVR', 'NPT_SVR']:
+                            self.read_barostat_parameters(i_parameter)
                 
             ########################## Trajectory scattering ######################
             if self.morest_parameters['trajectory_scattering']:
@@ -341,7 +343,7 @@ class read_parameters:
             elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_Berendsen'.upper()]:
                 self.sampling_parameters['nvt_berendsen_tau'] = float(i_parameter.split()[2])
             elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_Langevin'.upper()]:
-                self.sampling_parameters['nvt_langevin_gamma'] = float(i_parameter.split()[2])
+                self.sampling_parameters['nvt_Langevin_gamma'] = float(i_parameter.split()[2])
             elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
                 self.sampling_parameters['nvt_svr_tau'] = float(i_parameter.split()[2])
             elif self.sampling_parameters['sampling_ensemble'].upper() in ['NPT_Berendsen'.upper()]:
@@ -375,79 +377,79 @@ class read_parameters:
             else:
                 raise Exception('It is not clear whether the translation will be removed.')
 
-    def read_md_npt_parameters(self, i_parameter):
-        if i_parameter.split()[0].upper() == 'NPT_number'.upper():
-            self.md_parameters['npt_number'] = int(i_parameter.split()[1])
+    def read_barostat_parameters(self, i_parameter):
+        if i_parameter.split()[0].upper() == 'Barostat_number'.upper():
+            self.barostat_parameters['barostat_number'] = int(i_parameter.split()[1])
 
-        elif i_parameter.split()[0].upper() == 'NPT_pressure'.upper():
-            self.md_parameters['npt_pressure'].append(float(i_parameter.split()[1]))
+        elif i_parameter.split()[0].upper() == 'Barostat_pressure'.upper():
+            self.barostat_parameters['barostat_pressure'].append(float(i_parameter.split()[1]))
 
-        elif i_parameter.split()[0].upper() == 'NPT_space_shape'.upper():
-            self.tmp_space_parameter = {} # It is used to record the parameters and saved in 'npt_space_parameters'
-            self.md_parameters['npt_space_shape'].append(str(i_parameter.split()[1]))
+        elif i_parameter.split()[0].upper() == 'Barostat_space_shape'.upper():
+            tmp_space_parameter = {} # It is used to record the parameters and saved in 'barostat_space_parameters'
+            self.barostat_parameters['barostat_space_shape'].append(str(i_parameter.split()[1]))
 
-        elif i_parameter.split()[0].upper() == 'NPT_space_type'.upper():
-            self.md_parameters['npt_space_type'].append(str(i_parameter.split()[1]))
+        elif i_parameter.split()[0].upper() == 'Barostat_space_type'.upper():
+            self.barostat_parameters['barostat_space_type'].append(str(i_parameter.split()[1]))
 
-        elif i_parameter.split()[0].upper() == 'NPT_action_atoms'.upper():
+        elif i_parameter.split()[0].upper() == 'Barostat_action_atoms'.upper():
             tmp_atoms = str(i_parameter.split()[1])
             if tmp_atoms.upper() == 'all'.upper():
                 tmp_atoms = 'all'
             else:
                 tmp_atoms = np.array(tmp_atoms.split(','), dtype='int')
-            self.md_parameters['npt_action_atoms'].append(tmp_atoms)
+            self.barostat_parameters['barostat_action_atoms'].append(tmp_atoms)
 
         ########################## spherical space ##################################
-        elif i_parameter.split()[0].upper() == 'NPT_sphere_center'.upper():
+        elif i_parameter.split()[0].upper() == 'Barostat_sphere_center'.upper():
             tmp_center = []
             for i in range(3):
                 tmp_center.append(float(i_parameter.split()[i+1]))
-            self.tmp_space_parameter['npt_sphere_center'] = np.array(tmp_center)
-            self.md_parameters['npt_space_parameters'].append(self.tmp_space_parameter)
+            tmp_space_parameter['barostat_sphere_center'] = np.array(tmp_center)
+            self.barostat_parameters['barostat_space_parameters'].append(tmp_space_parameter)
         
         ########################## cuboidal space ###################################
-        elif i_parameter.split()[0].upper() == 'NPT_cuboid_center'.upper():
+        elif i_parameter.split()[0].upper() == 'Barostat_cuboid_center'.upper():
             tmp_center = []
             for i in range(3):
                 tmp_center.append(float(i_parameter.split()[i+1]))
-            self.tmp_space_parameter['npt_cuboid_center'] = np.array(tmp_center)
-            if 'npt_cuboid_normal_vector' in self.tmp_space_parameter and 'npt_cuboid_length_ratio' in self.tmp_space_parameter:
-                self.md_parameters['npt_space_parameters'].append(self.tmp_space_parameter)
+            tmp_space_parameter['barostat_cuboid_center'] = np.array(tmp_center)
+            if 'barostat_cuboid_normal_vector' in tmp_space_parameter and 'barostat_cuboid_length_ratio' in tmp_space_parameter:
+                self.barostat_parameters['barostat_space_parameters'].append(tmp_space_parameter)
         
-        elif i_parameter.split()[0].upper() == 'NPT_cuboid_normal_vector'.upper():
+        elif i_parameter.split()[0].upper() == 'Barostat_cuboid_normal_vector'.upper():
             tmp_normal_vector = []
             for i in range(3):
                 tmp_normal_vector.append(float(i_parameter.split()[i+1]))
             tmp_normal_vector = np.array(tmp_normal_vector)
-            self.tmp_space_parameter['npt_cuboid_normal_vector'] = tmp_normal_vector / np.linalg.norm(tmp_normal_vector)
-            if 'npt_cuboid_center' in self.tmp_space_parameter and  'npt_cuboid_length_ratio' in self.tmp_space_parameter:
-                self.md_parameters['npt_space_parameters'].append(self.tmp_space_parameter)
+            tmp_space_parameter['barostat_cuboid_normal_vector'] = tmp_normal_vector / np.linalg.norm(tmp_normal_vector)
+            if 'barostat_cuboid_center' in tmp_space_parameter and  'barostat_cuboid_length_ratio' in tmp_space_parameter:
+                self.barostat_parameters['barostat_space_parameters'].append(tmp_space_parameter)
 
-        elif i_parameter.split()[0].upper() == 'NPT_cuboid_length_ratio'.upper():
+        elif i_parameter.split()[0].upper() == 'Barostat_cuboid_length_ratio'.upper():
             tmp_center = []
             for i in range(3):
                 tmp_center.append(float(i_parameter.split()[i+1]))
-            self.tmp_space_parameter['npt_cuboid_length_ratio'] = np.array(tmp_center)
-            if 'npt_cuboid_center' in self.tmp_space_parameter and 'npt_cuboid_normal_vector' in self.tmp_space_parameter:
-                self.md_parameters['npt_space_parameters'].append(self.tmp_space_parameter)
+            tmp_space_parameter['barostat_cuboid_length_ratio'] = np.array(tmp_center)
+            if 'barostat_cuboid_center' in tmp_space_parameter and 'barostat_cuboid_normal_vector' in tmp_space_parameter:
+                self.barostat_parameters['barostat_space_parameters'].append(tmp_space_parameter)
 
         ########################## plane wall #######################################
-        elif i_parameter.split()[0].upper() == 'NPT_plane_point'.upper():
+        elif i_parameter.split()[0].upper() == 'Barostat_plane_point'.upper():
             tmp_center = []
             for i in range(3):
                 tmp_center.append(float(i_parameter.split()[i+1]))
-            self.tmp_space_parameter['npt_plane_point'] = np.array(tmp_center)
-            if 'npt_plane_normal_vector' in self.tmp_space_parameter:
-                self.md_parameters['npt_space_parameters'].append(self.tmp_space_parameter)
+            tmp_space_parameter['barostat_plane_point'] = np.array(tmp_center)
+            if 'barostat_plane_normal_vector' in tmp_space_parameter:
+                self.barostat_parameters['barostat_space_parameters'].append(tmp_space_parameter)
         
-        elif i_parameter.split()[0].upper() == 'NPT_plane_normal_vector'.upper():
+        elif i_parameter.split()[0].upper() == 'Barostat_plane_normal_vector'.upper():
             tmp_normal_vector = []
             for i in range(3):
                 tmp_normal_vector.append(float(i_parameter.split()[i+1]))
             tmp_normal_vector = np.array(tmp_normal_vector)
-            self.tmp_space_parameter['npt_plane_normal_vector'] = tmp_normal_vector / np.linalg.norm(tmp_normal_vector)
-            if 'npt_plane_point' in self.tmp_space_parameter:
-                self.md_parameters['npt_space_parameters'].append(self.tmp_space_parameter)
+            tmp_space_parameter['barostat_plane_normal_vector'] = tmp_normal_vector / np.linalg.norm(tmp_normal_vector)
+            if 'barostat_plane_point' in tmp_space_parameter:
+                self.barostat_parameters['barostat_space_parameters'].append(tmp_space_parameter)
 
     def read_scattering_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'Scattering_initialization'.upper():
@@ -671,7 +673,7 @@ class read_parameters:
                 raise Exception('It is not clear whether the collective variable will be used.')
             
         elif i_parameter.split()[0].upper() == 'Wall_shape'.upper():
-            self.tmp_wall_parameter = {} # It is used to record the shape parameters and saved in 'wall_shape_parameters'
+            tmp_wall_parameter = {} # It is used to record the shape parameters and saved in 'wall_shape_parameters'
             self.wall_potential_parameters['wall_shape'].append(str(i_parameter.split()[1]).lower())
             
         elif i_parameter.split()[0].upper() == 'Wall_type'.upper():
@@ -701,18 +703,18 @@ class read_parameters:
             tmp_wall_point = []
             for i in range(3):
                 tmp_wall_point.append(float(i_parameter.split()[i+1]))
-            self.tmp_wall_parameter['planar_wall_point'] = np.array(tmp_wall_point)
-            if 'planar_wall_normal_vector' in self.tmp_wall_parameter:
-                self.wall_potential_parameters['wall_shape_parameters'].append(self.tmp_wall_parameter)
+            tmp_wall_parameter['planar_wall_point'] = np.array(tmp_wall_point)
+            if 'planar_wall_normal_vector' in tmp_wall_parameter:
+                self.wall_potential_parameters['wall_shape_parameters'].append(tmp_wall_parameter)
         
         elif i_parameter.split()[0].upper() == 'Planar_wall_normal_vector'.upper():
             tmp_wall_normal_vector = []
             for i in range(3):
                 tmp_wall_normal_vector.append(float(i_parameter.split()[i+1]))
             tmp_wall_normal_vector = np.array(tmp_wall_normal_vector)
-            self.tmp_wall_parameter['planar_wall_normal_vector'] = tmp_wall_normal_vector / np.linalg.norm(tmp_wall_normal_vector)
-            if 'planar_wall_point' in self.tmp_wall_parameter:
-                self.wall_potential_parameters['wall_shape_parameters'].append(self.tmp_wall_parameter)
+            tmp_wall_parameter['planar_wall_normal_vector'] = tmp_wall_normal_vector / np.linalg.norm(tmp_wall_normal_vector)
+            if 'planar_wall_point' in tmp_wall_parameter:
+                self.wall_potential_parameters['wall_shape_parameters'].append(tmp_wall_parameter)
             
         ########################## Spherical wall #############################
 
@@ -720,14 +722,14 @@ class read_parameters:
             tmp_wall_center = []
             for i in range(3):
                 tmp_wall_center.append(float(i_parameter.split()[i+1]))
-            self.tmp_wall_parameter['spherical_wall_center'] = np.array(tmp_wall_center)
-            if 'spherical_wall_radius' in self.tmp_wall_parameter:
-                self.wall_potential_parameters['wall_shape_parameters'].append(self.tmp_wall_parameter)
+            tmp_wall_parameter['spherical_wall_center'] = np.array(tmp_wall_center)
+            if 'spherical_wall_radius' in tmp_wall_parameter:
+                self.wall_potential_parameters['wall_shape_parameters'].append(tmp_wall_parameter)
         
         elif i_parameter.split()[0].upper() == 'Spherical_wall_radius'.upper():
-            self.tmp_wall_parameter['spherical_wall_radius'] = float(i_parameter.split()[1])
-            if 'spherical_wall_center' in self.tmp_wall_parameter:
-                self.wall_potential_parameters['wall_shape_parameters'].append(self.tmp_wall_parameter)
+            tmp_wall_parameter['spherical_wall_radius'] = float(i_parameter.split()[1])
+            if 'spherical_wall_center' in tmp_wall_parameter:
+                self.wall_potential_parameters['wall_shape_parameters'].append(tmp_wall_parameter)
 
         ########################## dot wall ###################################
 
@@ -735,8 +737,8 @@ class read_parameters:
             tmp_wall_center = []
             for i in range(3):
                 tmp_wall_center.append(float(i_parameter.split()[i+1]))
-            self.tmp_wall_parameter['dot_wall_position'] = np.array(tmp_wall_center)
-            self.wall_potential_parameters['wall_shape_parameters'].append(self.tmp_wall_parameter)
+            tmp_wall_parameter['dot_wall_position'] = np.array(tmp_wall_center)
+            self.wall_potential_parameters['wall_shape_parameters'].append(tmp_wall_parameter)
 
     ########################### output parameters ##################################################################
 
@@ -839,7 +841,7 @@ class read_parameters:
         if self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_Berendsen'.upper()]:
             self.sampling_parameters['nvt_berendsen_tau'] *= units.fs
         elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_Langevin'.upper()]:
-            self.sampling_parameters['nvt_langevin_gamma'] /= units.fs
+            self.sampling_parameters['nvt_Langevin_gamma'] /= units.fs
         elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
             self.sampling_parameters['nvt_svr_tau'] *= units.fs
         elif self.sampling_parameters['sampling_ensemble'].upper() in ['NPT_Berendsen'.upper()]:
@@ -852,7 +854,7 @@ class read_parameters:
             for key in self.sampling_parameters:
                 if key in ['nvt_berendsen_tau','nvt_svr_tau']:
                     log_morest.write(key+' : '+str(self.sampling_parameters[key]/units.fs)+'\n')
-                elif key in ['nvt_langevin_gamma']:
+                elif key in ['nvt_Langevin_gamma']:
                     log_morest.write(key+' : '+str(self.sampling_parameters[key]*units.fs)+'\n')
                 else:
                     log_morest.write(key+' : '+str(self.sampling_parameters[key])+'\n')
@@ -862,24 +864,28 @@ class read_parameters:
     def get_md_parameters(self, log_morest=None):
         self.md_parameters['md_time_step'] *= units.fs
         self.md_parameters['md_simulation_time'] *= units.fs
-        if 'npt_pressure' in self.md_parameters:
-            self.md_parameters['npt_pressure'] = np.array(self.md_parameters['npt_pressure'][:self.md_parameters['npt_number']]) * units.bar
-            self.md_parameters['npt_space_parameters'] = self.md_parameters['npt_space_parameters'][:self.md_parameters['npt_number']]
-        for key in ['npt_space_shape', 'npt_space_type', 'npt_action_atoms']:
-            if key in self.md_parameters:
-                self.md_parameters[key] = self.md_parameters[key][:self.md_parameters['npt_number']]
+        if self.sampling_parameters['sampling_ensemble'].upper() in ['NPT_Berendsen'.upper(), 'NPT_Langevin'.upper(), \
+                                                                     'NPH_SVR', 'NPT_SVR']:
+            self.get_barostat_parameters()
+            self.md_parameters.update(self.barostat_parameters) # Merge barostat parameters into MD parameters
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_MD_parameters.npy', self.md_parameters)
         if log_morest != None:
             for key in self.md_parameters:
                 if key in ['md_time_step','md_simulation_time']:
                     log_morest.write(key+' : '+str(self.md_parameters[key]/units.fs)+'\n')
-                elif key in ['npt_pressure']:
+                elif key in ['barostat_pressure']:
                     log_morest.write(key+' : '+str(self.md_parameters[key]/units.bar)+'\n')
                 else:
                     log_morest.write(key+' : '+str(self.md_parameters[key])+'\n')
             log_morest.write('\n')
         return self.md_parameters
+    
+    def get_barostat_parameters(self):
+        self.barostat_parameters['barostat_pressure'] = \
+            np.array(self.barostat_parameters['barostat_pressure'][:self.barostat_parameters['barostat_number']]) * units.bar
+        for key in ['barostat_space_parameters', 'barostat_space_shape', 'barostat_space_type', 'barostat_action_atoms']:
+            self.barostat_parameters[key] = self.barostat_parameters[key][:self.barostat_parameters['barostat_number']]
 
     def get_scattering_parameters(self, log_morest=None):
         if self.morest_parameters['morest_initialization'] == True:

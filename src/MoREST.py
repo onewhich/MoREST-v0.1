@@ -228,10 +228,7 @@ class morest(initialize_modules):
             index = self.wall_potential_parameters['wall_action_atoms'][i]
             if index == 'all':
                 index = np.arange(n_atom)
-                coordinates = general_coordinate
-            else:
-                index = np.array(index)
-                coordinates = general_coordinate[index]
+            coordinates = general_coordinate[index]
             tmp_bias = np.array([self.wall.get_repulsive_wall_force(i_coordinate) for i_coordinate in coordinates])
             for j, j_bias in enumerate(tmp_bias):
                 wall_forces[index[j]] += j_bias
