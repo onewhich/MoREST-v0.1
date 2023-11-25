@@ -338,7 +338,7 @@ class read_parameters:
                 
         elif i_parameter.split()[0].upper() == 'Sampling_ensemble'.upper():
             self.sampling_parameters['sampling_ensemble'] = str(i_parameter.split()[1])
-            if self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_VR']:
+            if self.sampling_parameters['sampling_ensemble'].upper() in ['NVK_VR']:
                 self.sampling_parameters['nvt_vr_dt'] = float(i_parameter.split()[2])
             elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_Berendsen'.upper()]:
                 self.sampling_parameters['nvt_berendsen_tau'] = float(i_parameter.split()[2])
@@ -346,10 +346,15 @@ class read_parameters:
                 self.sampling_parameters['nvt_Langevin_gamma'] = float(i_parameter.split()[2])
             elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
                 self.sampling_parameters['nvt_svr_tau'] = float(i_parameter.split()[2])
+            elif self.sampling_parameters['sampling_ensemble'].upper() in ['NPH_SVR']:
+                self.sampling_parameters['nph_svr_tau'] = float(i_parameter.split()[2])
             elif self.sampling_parameters['sampling_ensemble'].upper() in ['NPT_Berendsen'.upper()]:
                 self.sampling_parameters['npt_Berendsen_tau_t'] = float(i_parameter.split()[2])
                 self.sampling_parameters['npt_Berendsen_tau_p'] = float(i_parameter.split()[3])
                 self.sampling_parameters['npt_Berendsen_compressibility'] = float(i_parameter.split()[4])
+            elif self.sampling_parameters['sampling_ensemble'].upper() in ['NPT_SVR'.upper()]:
+                self.sampling_parameters['npt_svr_tau_t'] = float(i_parameter.split()[2])
+                self.sampling_parameters['npt_svr_tau_p'] = float(i_parameter.split()[3])
 
     def read_md_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'MD_time_step'.upper():

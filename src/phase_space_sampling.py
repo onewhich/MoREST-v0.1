@@ -8,7 +8,7 @@ from initialization import initialize_calculator
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary, ZeroRotation
 from ase import units
 from thermostat import velocity_rescaling, Berendsen_velocity_rescaling, stochastic_velocity_rescaling
-from barostat import barostat_space, Berendsen_volume_rescaling
+from barostat import barostat_space, Berendsen_volume_rescaling, stochastic_velocity_volume_rescaling
 
 class initialize_sampling(initialize_calculator):
     def __init__(self, morest_parameters, sampling_parameters, molecule=None, traj_file_name=None, calculator=None, log_morest=None):
@@ -192,12 +192,15 @@ class velocity_Verlet(initialize_sampling):
         Nf = 3 * self.n_atom
         self.K_simulation = Nf/2 * units.kB * self.T_simulation # Ek = 1/2 m v^2 = 3/2 kB T for each particle
         
-    def VV_next_step(self, bias_forces=None, updated_current_system=None):
-        if type(updated_current_system) != type(None):
+    def VV_next_step(self, time_step=None, bias_forces=None, updated_current_system=None):
+        if time_step == None:
+            time_step = self.time_step
+
+        if updated_current_system != None:
             self.current_system = updated_current_system
         
         ### F(t) + bias
-        if type(bias_forces) != type(None):
+        if bias_forces != None:
             self.current_forces = self.current_forces + bias_forces
         
         ### x(t), v(t) = p(t) / m
@@ -207,11 +210,11 @@ class velocity_Verlet(initialize_sampling):
         
         ### x(t+dt) = x(t) + v(t)*dt + 0.5*F(t)*dt^2/m
         #next_coordinates = current_coordinates + current_velocities * time_step + 0.5 * self.current_accelerations * time_step**2
-        next_coordinates = current_coordinates + (current_momenta * self.time_step + 0.5 * self.current_forces * self.time_step**2) / self.masses
+        next_coordinates = current_coordinates + (current_momenta * time_step + 0.5 * self.current_forces * time_step**2) / self.masses
         self.current_system.set_positions(next_coordinates)
         
         ### v(t+0.5dt) = p(t+0.5dt) / m; p(t+0.5dt) = p(t) + 0.5 * F(t) * dt
-        momenta_half = current_momenta + 0.5 * self.current_forces * self.time_step
+        momenta_half = current_momenta + 0.5 * self.current_forces * time_step
         
         ### F(t+dt)
         next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(self.current_system)
@@ -222,7 +225,7 @@ class velocity_Verlet(initialize_sampling):
         #self.current_system.set_velocities(next_velocities)
         
         ### p(t+dt) = p(t+0.5dt) + 0.5 * F(t+dt) * dt
-        next_momenta = momenta_half + 0.5 * next_forces * self.time_step
+        next_momenta = momenta_half + 0.5 * next_forces * time_step
         self.current_system.set_momenta(next_momenta)
         
         #next_velocities = next_system.get_velocities()
@@ -242,6 +245,10 @@ class velocity_Verlet(initialize_sampling):
         velocities = self.current_system.get_velocities()
         factor = np.sqrt(Tf / Ti)
         self.current_system.set_velocities(factor * velocities)
+
+    @staticmethod
+    def get_temperature(Ek, n_atom):
+        return 2/3 * Ek/units.kB /n_atom
 
 
 class NVE_VV(velocity_Verlet):
@@ -284,7 +291,7 @@ class NVE_VV(velocity_Verlet):
         
         return self.current_step, self.current_system
 
-class NVT_VR(velocity_Verlet):
+class NVK_VR(velocity_Verlet):
     def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
         super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
         if log_file_name == None:
@@ -292,7 +299,7 @@ class NVT_VR(velocity_Verlet):
         else:
             self.log_file_name = log_file_name
 
-        new_velocities = velocity_rescaling(self.sampling_parameters['nvt_vr_dt'], self.T_simulation, self.current_system.get_kinetic_energy(), \
+        new_velocities = velocity_rescaling(self.sampling_parameters['nvk_vr_dt'], self.T_simulation, self.current_system.get_kinetic_energy(), \
                                         self.n_atom, self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
 
@@ -305,7 +312,7 @@ class NVT_VR(velocity_Verlet):
 
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
         self.VV_next_step(bias_forces, updated_current_system)
-        new_velocities = velocity_rescaling(self.sampling_parameters['nvt_vr_dt'], self.T_simulation, self.current_system.get_kinetic_energy(), \
+        new_velocities = velocity_rescaling(self.sampling_parameters['nvk_vr_dt'], self.T_simulation, self.current_system.get_kinetic_energy(), \
                                         self.n_atom, self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
 
@@ -340,7 +347,7 @@ class NVT_Berendsen(velocity_Verlet):
         else:
             self.log_file_name = log_file_name
 
-        new_velocities = Berendsen_velocity_rescaling(self.md_parameters['md_time_step'], self.current_system.get_kinetic_energy(), self.n_atom, \
+        new_velocities = Berendsen_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.n_atom, \
                                                       self.T_simulation, self.sampling_parameters['nvt_berendsen_tau'], self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
 
@@ -353,7 +360,7 @@ class NVT_Berendsen(velocity_Verlet):
 
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
         self.VV_next_step(bias_forces, updated_current_system)
-        new_velocities = Berendsen_velocity_rescaling(self.md_parameters['md_time_step'], self.current_system.get_kinetic_energy(), self.n_atom, \
+        new_velocities = Berendsen_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.n_atom, \
                                                       self.T_simulation, self.sampling_parameters['nvt_berendsen_tau'], self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
 
@@ -392,7 +399,7 @@ class NVT_Langevin(velocity_Verlet):
             self.MD_log = open(self.log_file_name, 'w', buffering=1)
             self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), Effective energy (eV)\n')   
             #self.d_Ee, self.Wt = self.write_SVR_MD_log_old(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), \
-            #                                           self.masses, self.K_simulation, self.md_parameters['md_time_step'], 1/(2*self.sampling_parameters['nvt_Langevin_gamma']), 0, 0)
+            #                                           self.masses, self.K_simulation, self.time_step, 1/(2*self.sampling_parameters['nvt_Langevin_gamma']), 0, 0)
             self.Ee = self.write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
         else:
             self.MD_log = open(self.log_file_name, 'a', buffering=1)
@@ -401,7 +408,7 @@ class NVT_Langevin(velocity_Verlet):
 
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
         self.VV_next_step(bias_forces, updated_current_system)
-        new_velocities, self.d_Ee = stochastic_velocity_rescaling(self.md_parameters['md_time_step'], self.current_system.get_kinetic_energy(), self.K_simulation, \
+        new_velocities, self.d_Ee, alpha = stochastic_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.K_simulation, \
                                                                   1, 1/(2*self.sampling_parameters['nvt_Langevin_gamma']), self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
 
@@ -442,7 +449,7 @@ class NVT_SVR(velocity_Verlet):
             self.MD_log = open(self.log_file_name, 'w', buffering=1)
             self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), Effective energy (eV)\n')   
             #self.d_Ee, self.Wt = self.write_SVR_MD_log_old(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), \
-            #                                           self.masses, self.K_simulation, self.md_parameters['md_time_step'], self.sampling_parameters['nvt_svr_tau'], 0, 0)
+            #                                           self.masses, self.K_simulation, self.time_step, self.sampling_parameters['nvt_svr_tau'], 0, 0)
             self.Ee = self.write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
         else:
             self.MD_log = open(self.log_file_name, 'a', buffering=1)
@@ -451,10 +458,84 @@ class NVT_SVR(velocity_Verlet):
 
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
         self.VV_next_step(bias_forces, updated_current_system)
-        new_velocities, self.d_Ee = stochastic_velocity_rescaling(self.md_parameters['md_time_step'], self.current_system.get_kinetic_energy(), self.K_simulation, \
+        new_velocities, self.d_Ee, alpha = stochastic_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.K_simulation, \
                                                                   3*self.n_atom, self.sampling_parameters['nvt_svr_tau'], self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
 
+        if self.md_parameters['md_clean_translation']:
+            #next_velocities = clean_translation(next_velocities)
+            Stationary(self.current_system)
+        if self.md_parameters['md_clean_rotation']:
+            #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
+            ZeroRotation(self.current_system)
+        
+        if not self.re_simulation:
+            write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
+        else:
+            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.str_new', self.current_system)
+        
+        if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
+            #print(next_coordinates) #DEGUB
+            #print(next_forces)    #DEBUG
+            #self.current_traj.append(self.current_system)
+            write_xyz_traj(self.traj_file_name, self.current_system)
+            self.kinetic_energy = self.current_system.get_kinetic_energy()
+            #self.d_Ee, self.Wt = self.write_SVR_MD_log_old(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses, \
+            #                                           self.K_simulation, self.time_step, self.sampling_parameters['nvt_svr_tau'], self.d_Ee, R_t)
+            self.Ee = self.write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses, self.Ee, self.d_Ee)
+            
+        return self.current_step, self.current_system
+
+
+class NPH_SVR(velocity_Verlet):
+    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
+        super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
+        if log_file_name == None:
+            self.log_file_name = 'MoREST_MD.log'
+        else:
+            self.log_file_name = log_file_name
+
+        self.NPH_space = barostat_space(md_parameters, self.current_system)
+
+        self.P_simulation = self.md_parameters['barostat_pressure']
+        self.tau_P = self.sampling_parameters['nph_svr_tau']
+        self.eta = np.zeros(self.md_parameters['barostat_number']) # initialize the velocity of the barostat
+        # N_f = 3 * N - 3 + 1, remove the center of mass DOF, add the barostat volume DOF
+        self.Nf = 3*self.n_atom - 2
+        self.half_time_step = self.time_step/2
+        T_current = self.get_temperature(self.current_system.get_kinetic_energy(), self.n_atom)
+        self.W_barostat = self.Nf * units.kB * T_current * self.tau_P**2
+
+        if self.sampling_parameters['sampling_initialization']:
+            self.MD_log = open(self.log_file_name, 'w', buffering=1)
+            self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), Effective energy (eV)\n')   
+            #self.d_Ee, self.Wt = self.write_SVR_MD_log_old(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), \
+            #                                           self.masses, self.K_simulation, self.time_step, self.sampling_parameters['nvt_svr_tau'], 0, 0)
+            self.Ee = self.write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
+        else:
+            self.MD_log = open(self.log_file_name, 'a', buffering=1)
+
+    def generate_new_step(self, bias_forces=None, updated_current_system=None):
+        
+        NPT_bias_forces = self.NPH_space.get_barostat_space_bias_forces()
+        if type(bias_forces) != type(None):
+            bias_forces += NPT_bias_forces
+        else:
+            bias_forces = NPT_bias_forces
+
+        self.VV_next_step(bias_forces, updated_current_system)
+
+        T_current = self.get_temperature(self.current_system.get_kinetic_energy(), self.n_atom)
+        # stage 2: propagate 1/2 time step velocities
+        # stage 3: propagate time step positions and velocities
+        # stage 4: propagate 1/2 time step velocities
+        new_coordinates, new_momenta, self.eta, P_current = stochastic_velocity_volume_rescaling(self.md_parameters, self.time_step, self.half_time_step, \
+                                                            self.current_system.get_positions(), self.current_system.get_forces(), self.current_system.get_velocities(), \
+                                                            self.eta, self.current_system.get_momenta(), self.masses, self.W_barostat, T_current, self.P_simulation)
+        self.current_system.set_positions(new_coordinates)
+        self.current_system.set_momenta(new_momenta)
+        self.NPH_space.update_barostat_space_wall()
+        
         if self.md_parameters['md_clean_translation']:
             #next_velocities = clean_translation(next_velocities)
             Stationary(self.current_system)
@@ -494,14 +575,14 @@ class NPT_Berendsen(velocity_Verlet):
         self.tau_T = self.sampling_parameters['npt_Berendsen_tau_t']
         self.tau_P = self.sampling_parameters['npt_Berendsen_tau_p']
         self.beta = self.sampling_parameters['npt_Berendsen_compressibility']
-        init_miu = np.ones(self.md_parameters['npt_number']) # the first rescaling factor should be one for each NPT space
+        init_miu = np.ones(self.md_parameters['barostat_number']) # the first rescaling factor should be one for each barostat space
 
-        new_velocities = Berendsen_velocity_rescaling(self.md_parameters['md_time_step'], self.current_system.get_kinetic_energy(), self.n_atom, \
+        new_velocities = Berendsen_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.n_atom, \
                                                       self.T_simulation, self.tau_T, self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
-        new_coordinates, self.miu = Berendsen_volume_rescaling(md_parameters, self.current_system.get_forces(), self.current_system.get_positions(), \
-                                                               self.P_simulation, self.tau_P, self.beta, init_miu)
-        self.current_system.set_positions(new_coordinates)
+        next_coordinates, self.miu, P_current = Berendsen_volume_rescaling(self.md_parameters, self.time_step, self.current_system.get_positions(), \
+                                                               self.current_system.get_forces(), new_velocities, self.masses, self.P_simulation, self.tau_P, self.beta, init_miu)
+        self.current_system.set_positions(next_coordinates)
         self.NPT_space.update_barostat_space_wall()
 
         if self.sampling_parameters['sampling_initialization']:
@@ -519,12 +600,12 @@ class NPT_Berendsen(velocity_Verlet):
             bias_forces = NPT_bias_forces
 
         self.VV_next_step(bias_forces, updated_current_system)
-        new_velocities = Berendsen_velocity_rescaling(self.md_parameters['md_time_step'], self.current_system.get_kinetic_energy(), self.n_atom, \
+        new_velocities = Berendsen_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.n_atom, \
                                                       self.T_simulation, self.tau_T, self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
-        new_coordinates, self.miu = Berendsen_volume_rescaling(self.md_parameters, self.current_system.get_forces(), self.current_system.get_positions(), \
-                                                               self.P_simulation, self.tau_P, self.beta, self.miu)
-        self.current_system.set_positions(new_coordinates)
+        next_coordinates, self.miu, P_current = Berendsen_volume_rescaling(self.md_parameters, self.time_step, self.current_system.get_positions(), \
+                                                               self.current_system.get_forces(), new_velocities, self.masses, self.P_simulation, self.tau_P, self.beta, self.miu)
+        self.current_system.set_positions(next_coordinates)
         self.NPT_space.update_barostat_space_wall()
 
         if self.md_parameters['md_clean_translation']:
@@ -571,5 +652,78 @@ class NPT_SVR(velocity_Verlet):
 
         self.NPT_space = barostat_space(md_parameters, self.current_system)
 
+        self.P_simulation = self.md_parameters['barostat_pressure']
+        self.tau_T = self.sampling_parameters['npt_svr_tau_t']
+        self.tau_P = self.sampling_parameters['npt_svr_tau_p']
+        self.eta = np.zeros(self.md_parameters['barostat_number']) # initialize the velocity of the barostat
+        # N_f = 3 * N - 3 + 1, remove the center of mass DOF, add the barostat volume DOF
+        self.Nf = 3*self.n_atom - 2
+        self.half_time_step = self.time_step/2
+        T_current = self.get_temperature(self.current_system.get_kinetic_energy(), self.n_atom)
+        self.W_barostat = self.Nf * units.kB * T_current * self.tau_P**2
 
+        if self.sampling_parameters['sampling_initialization']:
+            self.MD_log = open(self.log_file_name, 'w', buffering=1)
+            self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), Effective energy (eV)\n')   
+            #self.d_Ee, self.Wt = self.write_SVR_MD_log_old(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), \
+            #                                           self.masses, self.K_simulation, self.time_step, self.sampling_parameters['nvt_svr_tau'], 0, 0)
+            self.Ee = self.write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
+        else:
+            self.MD_log = open(self.log_file_name, 'a', buffering=1)
 
+    def generate_new_step(self, bias_forces=None, updated_current_system=None):
+        
+        NPT_bias_forces = self.NPT_space.get_barostat_space_bias_forces()
+        if type(bias_forces) != type(None):
+            bias_forces += NPT_bias_forces
+        else:
+            bias_forces = NPT_bias_forces
+
+        self.VV_next_step(bias_forces, updated_current_system)
+
+        # stage 1: propagate 1/2 time step thermostat
+        new_velocities, self.d_Ee, alpha = stochastic_velocity_rescaling(self.time_step/2, self.current_system.get_kinetic_energy(), self.K_simulation, \
+                                                                  self.Nf, self.tau_T, self.current_system.get_velocities())
+        self.current_system.set_velocities(new_velocities)
+        self.eta *= alpha
+        
+        # stage 2: propagate 1/2 time step velocities
+        # stage 3: propagate time step positions and velocities
+        # stage 4: propagate 1/2 time step velocities
+        T_current = self.get_temperature(self.current_system.get_kinetic_energy(), self.n_atom)
+        new_coordinates, new_momenta, self.eta, P_current = stochastic_velocity_volume_rescaling(self.md_parameters, self.time_step, self.half_time_step, \
+                                                            self.current_system.get_positions(), self.current_system.get_forces(), new_velocities, self.eta, self.current_system.get_momenta(), \
+                                                            self.masses, self.W_barostat, T_current, self.P_simulation)
+        self.current_system.set_positions(new_coordinates)
+        self.current_system.set_momenta(new_momenta)
+        self.NPT_space.update_barostat_space_wall()
+
+        # stage 5: propagate 1/2 time step thermostat
+        new_velocities, self.d_Ee, alpha = stochastic_velocity_rescaling(self.time_step/2, self.current_system.get_kinetic_energy(), self.K_simulation, \
+                                                                  self.Nf, self.tau_T, self.current_system.get_velocities())
+        self.current_system.set_velocities(new_velocities)
+        self.eta *= alpha
+
+        if self.md_parameters['md_clean_translation']:
+            #next_velocities = clean_translation(next_velocities)
+            Stationary(self.current_system)
+        if self.md_parameters['md_clean_rotation']:
+            #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
+            ZeroRotation(self.current_system)
+        
+        if not self.re_simulation:
+            write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
+        else:
+            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.str_new', self.current_system)
+        
+        if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
+            #print(next_coordinates) #DEGUB
+            #print(next_forces)    #DEBUG
+            #self.current_traj.append(self.current_system)
+            write_xyz_traj(self.traj_file_name, self.current_system)
+            self.kinetic_energy = self.current_system.get_kinetic_energy()
+            #self.d_Ee, self.Wt = self.write_SVR_MD_log_old(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses, \
+            #                                           self.K_simulation, self.time_step, self.sampling_parameters['nvt_svr_tau'], self.d_Ee, R_t)
+            self.Ee = self.write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses, self.Ee, self.d_Ee)
+            
+        return self.current_step, self.current_system

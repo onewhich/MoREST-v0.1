@@ -45,11 +45,11 @@ def stochastic_velocity_rescaling(time_step, Ek_t, K_simulation, Nf, tau, veloci
     ### alpha
     alpha2 = np.abs(c + (1-c)*(S_Nf_1 + R_t**2)*factor + 2*R_t*np.sqrt(c*(1-c)*factor))
     sign = np.sign(R_t + np.sqrt(c/(1-c)/factor))
-    alpha = np.sqrt(alpha2) * sign
+    alpha = sign * np.sqrt(alpha2)
     
     new_velocities = alpha * velocities
 
     #d_Ee = -1*((self.K_simulation - K_t)*time_step/tau + 2*np.sqrt(K_t*self.K_simulation/Nf/tau)*R_t)
     d_Ee = Ek_t*(1-alpha2)
     
-    return new_velocities, d_Ee
+    return new_velocities, d_Ee, alpha
