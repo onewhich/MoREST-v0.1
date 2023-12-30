@@ -14,7 +14,7 @@ class initialize_sampling(initialize_calculator):
     def __init__(self, morest_parameters, sampling_parameters, molecule=None, traj_file_name=None, calculator=None, log_morest=None):
         super(initialize_sampling, self).__init__(morest_parameters, calculator, log_morest)
         self.sampling_parameters = sampling_parameters
-        if traj_file_name == None:
+        if type(traj_file_name) == type(None):
             self.traj_file_name = 'MoREST_traj.xyz'
         else:
             self.traj_file_name = traj_file_name
@@ -45,7 +45,7 @@ class initialize_sampling(initialize_calculator):
             
     def get_current_structure(self, molecule=None):
         if self.sampling_parameters['sampling_initialization']:
-            if molecule == None:
+            if type(molecule) == type(None):
                 system = read_xyz_file(self.sampling_parameters['sampling_molecule'])
             else:
                 system = molecule
@@ -55,7 +55,7 @@ class initialize_sampling(initialize_calculator):
                 #system = read_xyz_file('MoREST.str_new') #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
             except:
                 self.log_morest.write('Can not read current structure, and read structure from starting point.')
-                if molecule == None:
+                if type(molecule) == type(None):
                     system = read_xyz_file(self.sampling_parameters['sampling_molecule'])
                 else:
                     system = molecule
@@ -164,7 +164,7 @@ class velocity_Verlet(initialize_sampling):
         self.md_parameters = md_parameters
         self.time_step = self.md_parameters['md_time_step']
         
-        if T_simulation == None:
+        if type(T_simulation) == type(None):
             self.re_simulation = False
             self.T_simulation = self.md_parameters['md_temperature']
         else:
@@ -193,14 +193,14 @@ class velocity_Verlet(initialize_sampling):
         self.K_simulation = Nf/2 * units.kB * self.T_simulation # Ek = 1/2 m v^2 = 3/2 kB T for each particle
         
     def VV_next_step(self, time_step=None, bias_forces=None, updated_current_system=None):
-        if time_step == None:
+        if type(time_step) == type(None):
             time_step = self.time_step
 
-        if updated_current_system != None:
+        if type(updated_current_system) != type(None):
             self.current_system = updated_current_system
         
         ### F(t) + bias
-        if bias_forces != None:
+        if type(bias_forces) != type(None):
             self.current_forces = self.current_forces + bias_forces
         
         ### x(t), v(t) = p(t) / m
@@ -254,7 +254,7 @@ class velocity_Verlet(initialize_sampling):
 class NVE_VV(velocity_Verlet):
     def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
         super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
-        if log_file_name == None:
+        if type(log_file_name) == type(None):
             self.log_file_name = 'MoREST_MD.log'
         else:
             self.log_file_name = log_file_name
@@ -294,7 +294,7 @@ class NVE_VV(velocity_Verlet):
 class NVK_VR(velocity_Verlet):
     def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
         super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
-        if log_file_name == None:
+        if type(log_file_name) == type(None):
             self.log_file_name = 'MoREST_MD.log'
         else:
             self.log_file_name = log_file_name
@@ -342,7 +342,7 @@ class NVK_VR(velocity_Verlet):
 class NVT_Berendsen(velocity_Verlet):
     def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
         super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
-        if log_file_name == None:
+        if type(log_file_name) == type(None):
             self.log_file_name = 'MoREST_MD.log'
         else:
             self.log_file_name = log_file_name
@@ -390,7 +390,7 @@ class NVT_Berendsen(velocity_Verlet):
 class NVT_Langevin(velocity_Verlet):
     def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
         super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
-        if log_file_name == None:
+        if type(log_file_name) == type(None):
             self.log_file_name = 'MoREST_MD.log'
         else:
             self.log_file_name = log_file_name
@@ -440,7 +440,7 @@ class NVT_Langevin(velocity_Verlet):
 class NVT_SVR(velocity_Verlet):
     def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
         super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
-        if log_file_name == None:
+        if type(log_file_name) == type(None):
             self.log_file_name = 'MoREST_MD.log'
         else:
             self.log_file_name = log_file_name
@@ -490,7 +490,7 @@ class NVT_SVR(velocity_Verlet):
 class NPH_SVR(velocity_Verlet):
     def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
         super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
-        if log_file_name == None:
+        if type(log_file_name) == type(None):
             self.log_file_name = 'MoREST_MD.log'
         else:
             self.log_file_name = log_file_name
@@ -564,7 +564,7 @@ class NPH_SVR(velocity_Verlet):
 class NPT_Berendsen(velocity_Verlet):
     def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
         super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
-        if log_file_name == None:
+        if type(log_file_name) == type(None):
             self.log_file_name = 'MoREST_MD.log'
         else:
             self.log_file_name = log_file_name
@@ -634,7 +634,7 @@ class NPT_Berendsen(velocity_Verlet):
 class NPT_Langevin(velocity_Verlet):
     def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
         super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
-        if log_file_name == None:
+        if type(log_file_name) == type(None):
             self.log_file_name = 'MoREST_MD.log'
         else:
             self.log_file_name = log_file_name
@@ -645,7 +645,7 @@ class NPT_Langevin(velocity_Verlet):
 class NPT_SVR(velocity_Verlet):
     def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
         super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
-        if log_file_name == None:
+        if type(log_file_name) == type(None):
             self.log_file_name = 'MoREST_MD.log'
         else:
             self.log_file_name = log_file_name
