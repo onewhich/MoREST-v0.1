@@ -267,7 +267,7 @@ class NVE_VV(velocity_Verlet):
             self.MD_log = open(self.log_file_name, 'a', buffering=1)
 
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
-        self.VV_next_step(bias_forces, updated_current_system)
+        self.VV_next_step(bias_forces=bias_forces, updated_current_system=updated_current_system)
 
         if self.md_parameters['md_clean_translation']:
             #next_velocities = clean_translation(next_velocities)
@@ -311,7 +311,7 @@ class NVK_VR(velocity_Verlet):
             self.MD_log = open(self.log_file_name, 'a', buffering=1)
 
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
-        self.VV_next_step(bias_forces, updated_current_system)
+        self.VV_next_step(bias_forces=bias_forces, updated_current_system=updated_current_system)
         new_velocities = velocity_rescaling(self.sampling_parameters['nvk_vr_dt'], self.T_simulation, self.current_system.get_kinetic_energy(), \
                                         self.n_atom, self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
@@ -359,7 +359,7 @@ class NVT_Berendsen(velocity_Verlet):
             self.MD_log = open(self.log_file_name, 'a', buffering=1)
 
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
-        self.VV_next_step(bias_forces, updated_current_system)
+        self.VV_next_step(bias_forces=bias_forces, updated_current_system=updated_current_system)
         new_velocities = Berendsen_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.n_atom, \
                                                       self.T_simulation, self.sampling_parameters['nvt_berendsen_tau'], self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
@@ -407,7 +407,7 @@ class NVT_Langevin(velocity_Verlet):
             #self.Wt =  0
 
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
-        self.VV_next_step(bias_forces, updated_current_system)
+        self.VV_next_step(bias_forces=bias_forces, updated_current_system=updated_current_system)
         new_velocities, self.d_Ee, alpha = stochastic_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.K_simulation, \
                                                                   1, 1/(2*self.sampling_parameters['nvt_Langevin_gamma']), self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
@@ -457,7 +457,7 @@ class NVT_SVR(velocity_Verlet):
             #self.Wt =  0
 
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
-        self.VV_next_step(bias_forces, updated_current_system)
+        self.VV_next_step(bias_forces=bias_forces, updated_current_system=updated_current_system)
         new_velocities, self.d_Ee, alpha = stochastic_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.K_simulation, \
                                                                   3*self.n_atom, self.sampling_parameters['nvt_svr_tau'], self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
@@ -523,7 +523,7 @@ class NPH_SVR(velocity_Verlet):
         else:
             bias_forces = NPT_bias_forces
 
-        self.VV_next_step(bias_forces, updated_current_system)
+        self.VV_next_step(bias_forces=bias_forces, updated_current_system=updated_current_system)
 
         T_current = self.get_temperature(self.current_system.get_kinetic_energy(), self.n_atom)
         # stage 2: propagate 1/2 time step velocities
@@ -599,7 +599,7 @@ class NPT_Berendsen(velocity_Verlet):
         else:
             bias_forces = NPT_bias_forces
 
-        self.VV_next_step(bias_forces, updated_current_system)
+        self.VV_next_step(bias_forces=bias_forces, updated_current_system=updated_current_system)
         new_velocities = Berendsen_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.n_atom, \
                                                       self.T_simulation, self.tau_T, self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
@@ -679,7 +679,7 @@ class NPT_SVR(velocity_Verlet):
         else:
             bias_forces = NPT_bias_forces
 
-        self.VV_next_step(bias_forces, updated_current_system)
+        self.VV_next_step(bias_forces=bias_forces, updated_current_system=updated_current_system)
 
         # stage 1: propagate 1/2 time step thermostat
         new_velocities, self.d_Ee, alpha = stochastic_velocity_rescaling(self.time_step/2, self.current_system.get_kinetic_energy(), self.K_simulation, \
