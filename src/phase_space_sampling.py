@@ -403,6 +403,7 @@ class NVT_Langevin(velocity_Verlet):
             self.Ee = self.write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
         else:
             self.MD_log = open(self.log_file_name, 'a', buffering=1)
+            self.Ee = 0
             #self.d_Ee = 0
             #self.Wt =  0
 
@@ -453,6 +454,7 @@ class NVT_SVR(velocity_Verlet):
             self.Ee = self.write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
         else:
             self.MD_log = open(self.log_file_name, 'a', buffering=1)
+            self.Ee = 0
             #self.d_Ee = 0
             #self.Wt =  0
 
@@ -514,6 +516,7 @@ class NPH_SVR(velocity_Verlet):
             self.Ee = self.write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
         else:
             self.MD_log = open(self.log_file_name, 'a', buffering=1)
+            self.Ee = 0
 
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
         
@@ -670,6 +673,7 @@ class NPT_SVR(velocity_Verlet):
             self.Ee = self.write_SVR_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
         else:
             self.MD_log = open(self.log_file_name, 'a', buffering=1)
+            self.Ee = 0
 
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
         
