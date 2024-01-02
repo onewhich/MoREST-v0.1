@@ -171,7 +171,9 @@ class ml_potential(Calculator):
             energy_list, energy_std_list = self.get_ml_potential(system_list)
             #print("Energy:", energy_list)
             #print("Energy std:", energy_std_list)
-            energy_0 = energy_list[0][0]
+            if len(np.shape(energy_list)) == 2:
+                energy_list = energy_list.flatten()
+            energy_0 = energy_list[0]
             energy_std_0 = energy_std_list[0]
             # Determine if the energy need to be calculated on the fly
             if self.if_active_learning and (energy_std_0 > self.energy_uncertainty_tolerance):
