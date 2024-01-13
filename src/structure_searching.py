@@ -8,8 +8,12 @@ class initialize_searching(initialize_calculator):
     def __init__(self, morest_parameters, searching_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
         super(initialize_searching, self).__init__(morest_parameters, calculator, log_morest)
         self.searching_parameters = searching_parameters
-        self.traj_file_name = traj_file_name
         self.log_file_name = log_file_name
+        if type(traj_file_name) == type(None):
+            self.traj_file_name = 'MoREST_searching_traj.xyz'
+        else:
+            self.traj_file_name = traj_file_name
+
         if self.searching_parameters['searching_initialization']:
             self.current_step = 0
             try:
@@ -19,16 +23,10 @@ class initialize_searching(initialize_calculator):
             self.current_system = self.get_current_structure(molecule)
             self.potential_energy_list = []
             self.potential_energy_list.append(self.current_system.get_potential_energy())
-            if self.traj_file_name == None:
-                write_xyz_traj('MoREST_traj.xyz', self.current_system)
-            else:
-                write_xyz_traj(self.traj_file_name, self.current_system)
+            write_xyz_traj(self.traj_file_name, self.current_system)
         else:
             try:
-                if self.traj_file_name == None:
-                    self.current_traj = read_xyz_traj('MoREST_traj.xyz')
-                else:
-                    self.current_traj = read_xyz_traj(self.traj_file_name)
+                self.current_traj = read_xyz_traj(self.traj_file_name)
                 self.current_step = len(self.current_traj) - 1
                 try:
                     self.ml_calculator.get_current_step(self.current_step)
@@ -46,10 +44,7 @@ class initialize_searching(initialize_calculator):
                 self.current_system = self.get_current_structure(molecule)
                 self.potential_energy_list = []
                 self.potential_energy_list.append(self.current_system.get_potential_energy())
-                if self.traj_file_name == None:
-                    write_xyz_traj('MoREST_traj.xyz', self.current_system)
-                else:
-                    write_xyz_traj(self.traj_file_name, self.current_system)
+                write_xyz_traj(self.traj_file_name, self.current_system)
             
     def get_current_structure(self, molecule=None):
         if self.searching_parameters['searching_initialization']:

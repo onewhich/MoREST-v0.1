@@ -15,7 +15,7 @@ class initialize_sampling(initialize_calculator):
         super(initialize_sampling, self).__init__(morest_parameters, calculator, log_morest)
         self.sampling_parameters = sampling_parameters
         if type(traj_file_name) == type(None):
-            self.traj_file_name = 'MoREST_traj.xyz'
+            self.traj_file_name = 'MoREST_sampling_traj.xyz'
         else:
             self.traj_file_name = traj_file_name
 

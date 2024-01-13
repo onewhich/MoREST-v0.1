@@ -56,8 +56,8 @@ class initialize_scattering(initialize_calculator):
         write_xyz_file('MoREST.str', scattering_system)
 
     def generate_new_traj(self, i_traj):
-        self.traj_filename = 'MoREST_traj_'+str(i_traj)+'.xyz'
-        log_filename = 'MoREST_traj_'+str(i_traj)+'.log'
+        self.traj_filename = 'MoREST_scattering_traj_'+str(i_traj)+'.xyz'
+        log_filename = 'MoREST_scattering_traj_'+str(i_traj)+'.log'
         
         if self.scattering_parameters['scattering_initialization']:
             self.generate_scattering_system()
@@ -73,7 +73,7 @@ class initialize_scattering(initialize_calculator):
             try:
                 self.current_traj = read_xyz_traj(self.traj_filename)
                 self.current_step = len(self.current_traj) - 1
-                self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
+                self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_scattering_traj.xyz
                 self.MD_log = open(log_filename, 'a', buffering=1)
             except:
                 self.generate_scattering_system()
