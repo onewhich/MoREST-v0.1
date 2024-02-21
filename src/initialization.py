@@ -114,9 +114,9 @@ class initialize_modules:
             self.log_morest.write('Start to sample the trajectories\n\n')
             try:
                 #os.remove('MoREST.str')
-                for scattering_file in glob('./MoREST_traj_*.xyz'):
+                for scattering_file in glob('./MoREST_scattering_traj_*.xyz'):
                     os.remove(scattering_file)
-                for scattering_file in glob('./MoREST_traj_*.log'):
+                for scattering_file in glob('./MoREST_scattering_traj_*.log'):
                     os.remove(scattering_file)
             except:
                 pass
