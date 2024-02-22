@@ -2,150 +2,14 @@
 import numpy as np
 #import sys
 #sys.path.append('..')
-from structure_io import read_xyz_file, write_xyz_file, read_xyz_traj, write_xyz_traj
-from initialization import initialize_calculator
+from structure_io import write_xyz_file, write_xyz_traj
 #from copy import deepcopy
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary, ZeroRotation
 from ase import units
+from phase_space_sampling import initialize_sampling
 from thermostat import velocity_rescaling, Berendsen_velocity_rescaling, stochastic_velocity_rescaling
 from barostat import barostat_space, Berendsen_volume_rescaling, stochastic_velocity_volume_rescaling
 
-class initialize_sampling(initialize_calculator):
-    def __init__(self, morest_parameters, sampling_parameters, molecule=None, traj_file_name=None, calculator=None, log_morest=None):
-        super(initialize_sampling, self).__init__(morest_parameters, calculator, log_morest)
-        self.sampling_parameters = sampling_parameters
-
-        if self.sampling_parameters['sampling_initialization']:
-            self.current_step = 0
-            try:
-                self.ml_calculator.get_current_step(self.current_step)
-            except:
-                pass
-            self.current_system = self.get_current_structure(molecule)
-        else:
-            try:
-                self.current_traj = read_xyz_traj(self.traj_file_name)
-                self.current_step = (len(self.current_traj) - 1) * self.sampling_parameters['sampling_traj_interval']
-                try:
-                    self.ml_calculator.get_current_step(self.current_step)
-                except:
-                    pass
-                self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
-            except:
-                self.current_step = 0
-                try:
-                    self.ml_calculator.get_current_step(self.current_step)
-                except:
-                    pass
-                self.current_system = self.get_current_structure(molecule)
-            
-    def get_current_structure(self, molecule=None):
-        if self.sampling_parameters['sampling_initialization']:
-            if type(molecule) == type(None):
-                system = read_xyz_file(self.sampling_parameters['sampling_molecule'])
-            else:
-                system = molecule
-        else:
-            try:
-                system = self.current_traj[-1]
-                #system = read_xyz_file('MoREST.str_new') #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
-            except:
-                self.log_morest.write('Can not read current structure, and read structure from starting point.')
-                if type(molecule) == type(None):
-                    system = read_xyz_file(self.sampling_parameters['sampling_molecule'])
-                else:
-                    system = molecule
-
-        self.n_atom = system.get_global_number_of_atoms()
-        self.masses = system.get_masses()[:,np.newaxis]
-        #self.current_accelerations = self.current_forces / self.masses
-        
-        self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(system)
-
-        #self.masses = system.get_masses()
-        #self.current_accelerations = np.array([self.current_forces[i_atom] / self.masses[i_atom] for i_atom in range(self.n_atom)])
-        
-        return system
-    
-    @staticmethod
-    def write_MD_log(MD_log, step, Ep, Ek, masses):
-        try:
-            if len(Ep) >= 1:
-                Ep = Ep[0]
-        except:
-            pass
-        n_atom = len(masses)
-        #Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(n_atom)])
-        #Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)
-        T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
-        Et = Ek + Ep
-        MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'\n')
-        
-    @staticmethod
-    def write_SVR_MD_log(MD_log, step, Ep, Ek, masses, Ee=0, d_Ee=0):
-        try:
-            if len(Ep) >= 1:
-                Ep = Ep[0]
-        except:
-            pass
-        n_atom = len(masses)
-        #Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(n_atom)])
-        #Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)
-        T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
-        Et = Ek + Ep
-        Ee += d_Ee
-        MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'    '+str(Ee)+'\n')
-        return Ee
-    
-    @staticmethod
-    def write_SVR_MD_log_old(MD_log, step, Ep, Ek, masses, K_simulation, time_step, tau, d_Ee, Wt):
-        try:
-            if len(Ep) >= 1:
-                Ep = Ep[0]
-        except:
-            pass
-        n_atom = len(masses)
-        Nf = 3 * n_atom
-        #Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(n_atom)])
-        #Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)
-        T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
-        Et = Ek + Ep
-        d_Ee = d_Ee + (K_simulation - Ek)*time_step/tau + 2*np.sqrt(Ek*K_simulation/Nf/tau)*Wt
-        Ee = Et - d_Ee
-        MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'    '+str(Ee)+'\n')
-        return d_Ee, Wt
-    
-    @staticmethod
-    def clean_translation(velocities):
-        total_velocity = np.sum(velocities, axis=0)/len(velocities)
-        velocities = velocities - total_velocity
-        
-        return velocities
-        
-    @staticmethod
-    def clean_rotation(velocities, coordinates, masses):
-        '''
-        L = r x p = r x (m v) = r x (omega x (m r)) = m r^2 omega = I omega
-        L : angular momentum
-        omega: angular velocity
-        I : moment of inertia
-        '''
-        v_vector = velocities
-        #center_of_mass = np.sum([masses[i]*coordinates[i] for i in range(len(masses))], axis=0)/np.sum(masses)
-        center_of_mass = np.sum(masses*coordinates, axis=0)/np.sum(masses)
-        r_vector = coordinates - center_of_mass
-        # r_cross_v : angular velocities
-        # omega = (r x v) / |r|^2
-        r_cross_v = np.cross(r_vector, v_vector)
-        r_2 = np.linalg.norm(r_vector, axis=1)**2
-        omega = np.array([r_cross_v[i]/r_2[i] for i in range(4)])
-        # Rv = omega/n_atom : system total angular velocity
-        rotat_vector = np.sum(omega, axis=0)/len(masses)
-        v_tang = np.cross(rotat_vector, r_vector)
-        velocities = v_vector - v_tang
-            
-        return velocities
-            
 
 class velocity_Verlet(initialize_sampling):
     '''
@@ -245,6 +109,85 @@ class velocity_Verlet(initialize_sampling):
     @staticmethod
     def get_temperature(Ek, n_atom):
         return 2/3 * Ek/units.kB /n_atom
+    
+    @staticmethod
+    def write_MD_log(MD_log, step, Ep, Ek, masses):
+        try:
+            if len(Ep) >= 1:
+                Ep = Ep[0]
+        except:
+            pass
+        n_atom = len(masses)
+        #Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(n_atom)])
+        #Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)
+        T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+        Et = Ek + Ep
+        MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'\n')
+        
+    @staticmethod
+    def write_SVR_MD_log(MD_log, step, Ep, Ek, masses, Ee=0, d_Ee=0):
+        try:
+            if len(Ep) >= 1:
+                Ep = Ep[0]
+        except:
+            pass
+        n_atom = len(masses)
+        #Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(n_atom)])
+        #Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)
+        T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+        Et = Ek + Ep
+        Ee += d_Ee
+        MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'    '+str(Ee)+'\n')
+        return Ee
+    
+    @staticmethod
+    def write_SVR_MD_log_old(MD_log, step, Ep, Ek, masses, K_simulation, time_step, tau, d_Ee, Wt):
+        try:
+            if len(Ep) >= 1:
+                Ep = Ep[0]
+        except:
+            pass
+        n_atom = len(masses)
+        Nf = 3 * n_atom
+        #Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(n_atom)])
+        #Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)
+        T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+        Et = Ek + Ep
+        d_Ee = d_Ee + (K_simulation - Ek)*time_step/tau + 2*np.sqrt(Ek*K_simulation/Nf/tau)*Wt
+        Ee = Et - d_Ee
+        MD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'    '+str(Ee)+'\n')
+        return d_Ee, Wt
+    
+    @staticmethod
+    def clean_translation(velocities):
+        total_velocity = np.sum(velocities, axis=0)/len(velocities)
+        velocities = velocities - total_velocity
+        
+        return velocities
+        
+    @staticmethod
+    def clean_rotation(velocities, coordinates, masses):
+        '''
+        L = r x p = r x (m v) = r x (omega x (m r)) = m r^2 omega = I omega
+        L : angular momentum
+        omega: angular velocity
+        I : moment of inertia
+        '''
+        v_vector = velocities
+        #center_of_mass = np.sum([masses[i]*coordinates[i] for i in range(len(masses))], axis=0)/np.sum(masses)
+        center_of_mass = np.sum(masses*coordinates, axis=0)/np.sum(masses)
+        r_vector = coordinates - center_of_mass
+        # r_cross_v : angular velocities
+        # omega = (r x v) / |r|^2
+        r_cross_v = np.cross(r_vector, v_vector)
+        r_2 = np.linalg.norm(r_vector, axis=1)**2
+        omega = np.array([r_cross_v[i]/r_2[i] for i in range(4)])
+        # Rv = omega/n_atom : system total angular velocity
+        rotat_vector = np.sum(omega, axis=0)/len(masses)
+        v_tang = np.cross(rotat_vector, r_vector)
+        velocities = v_vector - v_tang
+            
+        return velocities
 
 
 class NVE_VV(velocity_Verlet):
