@@ -75,7 +75,7 @@ class read_parameters:
         self.searching_parameters['searching_max_steps'] = 100
         self.searching_parameters['searching_constrained'] = False
         self.gradient_parameters = {}
-        self.gradient_parameters['gradient_step_size'] = 3 # This value will multiply by 1e-2 for real using.
+        self.gradient_parameters['gradient_step_size'] = 3 # This value will multiply by 1e-2 in actual using.
         self.fire_parameters = {}
         self.fire_parameters['fire_equal_masses'] = True
         self.fire_parameters['fire_time_step'] = 3
@@ -94,6 +94,8 @@ class read_parameters:
         self.its_parameters['its_replica_arrange'] = 0
         self.its_parameters['its_weight_pk'] = 1e-4
         self.its_parameters['its_energy_shift'] = 0
+        self.rp_parameters = {}
+        self.rp_parameters['rp_initialization'] =False
         self.wall_potential_parameters = {}
         self.wall_potential_parameters['wall_number'] = 1
         self.wall_potential_parameters['wall_collective_variable'] = []
@@ -283,6 +285,9 @@ class read_parameters:
                     ########################## ITS parameters    ##########################
                     elif self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['its'.upper()]:
                         self.read_its_parameters(i_parameter)
+                    ########################## RP parameters  #############################
+                    if self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['rp'.upper()]:
+                        self.read_rp_parameters(i_parameter)
                 
             ########################## Wall potential #############################
             if self.morest_parameters['wall_potential']:
@@ -294,7 +299,9 @@ class read_parameters:
             log_morest.write(key+' : '+str(self.morest_parameters[key])+'\n')
         log_morest.write('\n')
         
+    ##############################################################################################################
     ########################### read parameters ##################################################################
+    ##############################################################################################################
 
     def read_active_learning_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'ML_energy_uncertainty_tolerance'.upper():
@@ -665,6 +672,18 @@ class read_parameters:
         elif i_parameter.split()[0].upper() == 'ITS_energy_shift'.upper():
             self.its_parameters['its_energy_shift'] = float(i_parameter.split()[1])
 
+    def read_rp_parameters(self, i_parameter):
+        if i_parameter.split()[0].upper() == 'RP_initialization'.upper():
+            if i_parameter.split()[1].upper() == 'True'.upper():
+                self.rp_parameters['rp_initialization'] = True
+            elif i_parameter.split()[1].upper() == 'False'.upper():
+                self.rp_parameters['rp_initialization'] = False
+            else:
+                raise Exception('It is not clear whether the ring polymer sampling will be initialized.')
+            
+        elif i_parameter.split()[0].upper() == 'RP_number_of_beads'.upper():
+            self.rp_parameters['rp_number_of_beads'] = int(i_parameter.split()[1])
+            
     def read_wall_potential_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'Wall_number'.upper():
             self.wall_potential_parameters['wall_number'] = int(i_parameter.split()[1])
@@ -745,7 +764,9 @@ class read_parameters:
             self.tmp_wall_parameter['dot_wall_position'] = np.array(tmp_wall_center)
             self.wall_potential_parameters['wall_shape_parameters'].append(self.tmp_wall_parameter)
 
+    ################################################################################################################
     ########################### output parameters ##################################################################
+    ################################################################################################################
 
     def get_morest_parameters(self):
         if self.morest_parameters['morest_save_parameters_file']:
@@ -1115,6 +1136,17 @@ class read_parameters:
                 log_morest.write(key+' : '+str(self.its_parameters[key])+'\n')
             log_morest.write('\n')
         return self.its_parameters
+        
+    def get_rp_parameters(self, log_morest=None):
+        if self.morest_parameters['morest_initialization'] == True:
+           self.rp_parameters['rp_initialization'] = True
+        if self.morest_parameters['morest_save_parameters_file']:
+            np.save('MoREST_RE_parameters.npy',self.rp_parameters)
+        if log_morest != None:
+            for key in self.rp_parameters:
+                log_morest.write(key+' : '+str(self.rp_parameters[key])+'\n')
+            log_morest.write('\n')
+        return self.rp_parameters
             
     def get_wall_potential_parameters(self, log_morest=None):
         for key in ['wall_collective_variable', 'wall_shape', 'wall_type', 'power_wall_direction', \

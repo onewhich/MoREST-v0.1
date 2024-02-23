@@ -27,7 +27,7 @@ Phase_space_sampling              False
 Sampling_initialization           False   # Overwrite or append the trajectory in MoREST_traj.xyz file, read structure from MoREST.str or MoREST.str_new
 Sampling_molecule                 MoREST.str # The input of the structure.
 Sampling_traj_interval            10    # Record sampling every Traj_interval steps
-Sampling_method                   MD    # MD, MC, PIMD
+Sampling_method                   MD    # MD, MC
 Sampling_pre_thermalized          False # True: initialize the kinetic energy of the molecule as a specific value.
 Sampling_initial_T                20 # unit in K. The initial instantanous temperature of the molecule.
 Sampling_initial_E                1 # unit in eV. The initial kinetic energy of the molecule. "Sampling_initial_T" will be ignored, if "Sampling_initial_E" is defined.
@@ -100,7 +100,7 @@ FIRE_f_decrease                   0.5
 FIRE_f_alpha                      0.99
 
 Enhanced_sampling                 False
-Enhanced_sampling_method          RE   # RE; ITS; pRE: parrallel running version of replica exchange; SA: simulated annealing; ST: simulated tempering; aMD: accelerated MD; Wang-Landau; NS: nested sampling; TPS: for scattering; TIS; BH: basin hopping for searching; MH: minima hopping for searching.
+Enhanced_sampling_method          RE   # RE; ITS; RP: ring polymer; pRE: parrallel running version of replica exchange; SA: simulated annealing; ST: simulated tempering; aMD: accelerated MD; Wang-Landau; NS: nested sampling; TPS: for scattering; TIS; BH: basin hopping for searching; MH: minima hopping for searching.
 RE_initialization                 True  # True will remove files with the title of 'MoREST_RE_'
 RE_lower_bound_temperature        400
 RE_upper_bound_temperature        100000
@@ -122,6 +122,8 @@ ITS_trial_MD_steps                10
 ITS_delta_pk                      1e-2   # The criteria of p_k SCF convergence
 ITS_weight_pk                     0.1   # The weight of p^0/p_k or sqrt(p^0/p_k) in ITS-SCF iteration
 ITS_energy_shift                  0
+RP_initialization                 True # True will remove files with the title of 'MoREST_RP_'
+RP_number_of_beads                32 # The number of beads in ring polymer
 
 Wall_potential                    False
 Wall_number                       1    # the number of walls added in the simulation
