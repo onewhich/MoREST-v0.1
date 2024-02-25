@@ -58,10 +58,13 @@ Barostat_cuboid_normal_vector     0 0 5 # The normal vector does not have to be 
 Barostat_cuboid_length_ratio      4 5 6 # The length on each side of the cuboid. The last number (6) is the length along the normal vector. The actual lengths are calculated from the pressure.
 Barostat_plane_point              0 0 3 # This point and normal vector determine the parameter b in the planar wall.
 Barostat_plane_normal_vector      0 0 -5 # The normal vector does not have to be a unit vector. It will be normalized after reading.
-RPMD_initialization               True # True will remove files with the title of 'MoREST_RP_'
 RPMD_number_of_beads              32 # The number of beads in ring polymer
-RPMD_temperature                  10 # unit: K
 RPMD_beads_file                   MoREST_RPMD_beads.xyz # The file includes the coordinates of beads.
+RPMD_clean_translation            True
+RPMD_clean_rotation               True
+RPMD_time_step                    0.5  # unit in fs
+RPMD_simulation_time              10000   # unit in fs
+RPMD_temperature                  10 # unit: K
 
 Trajectory_scattering             False
 Scattering_initialization         False

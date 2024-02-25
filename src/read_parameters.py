@@ -462,23 +462,37 @@ class read_parameters:
             if 'barostat_plane_point' in tmp_space_parameter:
                 self.barostat_parameters['barostat_space_parameters'].append(tmp_space_parameter)
 
-    def read_RPMD_parameters(self, i_parameter):
-        if i_parameter.split()[0].upper() == 'RPMD_initialization'.upper():
-            if i_parameter.split()[1].upper() == 'True'.upper():
-                self.RPMD_parameters['rpmd_initialization'] = True
-            elif i_parameter.split()[1].upper() == 'False'.upper():
-                self.RPMD_parameters['rpmd_initialization'] = False
-            else:
-                raise Exception('It is not clear whether the ring polymer sampling will be initialized.')
-            
-        elif i_parameter.split()[0].upper() == 'RPMD_number_of_beads'.upper():
+    def read_RPMD_parameters(self, i_parameter):            
+        if i_parameter.split()[0].upper() == 'RPMD_number_of_beads'.upper():
             self.RPMD_parameters['rpmd_number_of_beads'] = int(i_parameter.split()[1])
-            
-        elif i_parameter.split()[0].upper() == 'RPMD_temperature'.upper():
-            self.RPMD_parameters['rpmd_temperature'] = float(i_parameter.split()[1])
             
         elif i_parameter.split()[0].upper() == 'RPMD_beads_file'.upper():
             self.RPMD_parameters['rpmd_beads_file'] = i_parameter.split()[1]
+
+        elif i_parameter.split()[0].upper() == 'RPMD_time_step'.upper():
+            self.RPMD_parameters['rpmd_time_step'] = float(i_parameter.split()[1])
+        
+        elif i_parameter.split()[0].upper() == 'RPMD_simulation_time'.upper():
+            self.RPMD_parameters['rpmd_simulation_time'] = float(i_parameter.split()[1])
+        
+        elif i_parameter.split()[0].upper() == 'RPMD_temperature'.upper():
+            self.RPMD_parameters['rpmd_temperature'] = float(i_parameter.split()[1])
+        
+        elif i_parameter.split()[0].upper() == 'RPMD_clean_rotation'.upper():
+            if i_parameter.split()[1].upper() == 'True'.upper():
+                self.RPMD_parameters['rpmd_clean_rotation'] = True
+            elif i_parameter.split()[1].upper() == 'False'.upper():
+                self.RPMD_parameters['rpmd_clean_rotation'] = False
+            else:
+                raise Exception('It is not clear whether the rotation will be removed.')
+                
+        elif i_parameter.split()[0].upper() == 'RPMD_clean_translation'.upper():
+            if i_parameter.split()[1].upper() == 'True'.upper():
+                self.RPMD_parameters['rpmd_clean_translation'] = True
+            elif i_parameter.split()[1].upper() == 'False'.upper():
+                self.RPMD_parameters['rpmd_clean_translation'] = False
+            else:
+                raise Exception('It is not clear whether the translation will be removed.')
 
     def read_scattering_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'Scattering_initialization'.upper():
