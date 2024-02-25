@@ -254,24 +254,24 @@ class searching_velocity_Verlet(initialize_searching):
         write_xyz_file(self.searching_parameters['searching_starting_point']+'_new', self.current_system)
         
 
-class fire_velocity_Verlet(searching_velocity_Verlet):
+class FIRE_velocity_Verlet(searching_velocity_Verlet):
     '''
     This class implements FIRE structure optimization algorithm based on velocity Verlet integrator.
     '''
-    def __init__(self, morest_parameters, searching_parameters, fire_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
-        super(fire_velocity_Verlet, self).__init__(morest_parameters, searching_parameters, molecule, log_file_name, traj_file_name, calculator, log_morest)
-        self.fire_parameters = fire_parameters
-        if self.fire_parameters['fire_equal_masses']:
+    def __init__(self, morest_parameters, searching_parameters, FIRE_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
+        super(FIRE_velocity_Verlet, self).__init__(morest_parameters, searching_parameters, molecule, log_file_name, traj_file_name, calculator, log_morest)
+        self.FIRE_parameters = FIRE_parameters
+        if self.FIRE_parameters['fire_equal_masses']:
             masses = np.ones(self.n_atom)
             self.current_system.set_masses(masses)
             self.masses = masses[:,np.newaxis]
-        self.time_step = self.fire_parameters['fire_time_step'] * np.ones(self.n_atom)
-        self.max_time_step = self.fire_parameters['fire_max_time_step']
-        self.alpha = self.fire_parameters['fire_alpha_init'] * np.ones(self.n_atom)
-        self.N_min = self.fire_parameters['fire_N_min']
-        self.f_increase = self.fire_parameters['fire_f_increase']
-        self.f_decrease = self.fire_parameters['fire_f_decrease']
-        self.f_alpha = self.fire_parameters['fire_f_alpha']
+        self.time_step = self.FIRE_parameters['fire_time_step'] * np.ones(self.n_atom)
+        self.max_time_step = self.FIRE_parameters['fire_max_time_step']
+        self.alpha = self.FIRE_parameters['fire_alpha_init'] * np.ones(self.n_atom)
+        self.N_min = self.FIRE_parameters['fire_N_min']
+        self.f_increase = self.FIRE_parameters['fire_f_increase']
+        self.f_decrease = self.FIRE_parameters['fire_f_decrease']
+        self.f_alpha = self.FIRE_parameters['fire_f_alpha']
         self.N_negative =  np.zeros(self.n_atom, dtype=int)
 
         if self.searching_parameters['searching_initialization']:
@@ -280,7 +280,7 @@ class fire_velocity_Verlet(searching_velocity_Verlet):
             else:
                 self.searching_log = open(self.log_file_name, 'w', buffering=1)
             self.searching_log.write('# MD step, Potential energy (eV),  dE (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), MAX atomic force (eV/A)\n')   
-            self.write_fire_log()
+            self.write_FIRE_log()
         else:
             if self.log_file_name == None:
                 self.searching_log = open('MoREST_FIRE.log', 'a', buffering=1)
@@ -323,7 +323,7 @@ class fire_velocity_Verlet(searching_velocity_Verlet):
                 self.N_negative[i] += 1
                 self.time_step[i] *= self.f_decrease
                 i_next_velocity *= 0
-                self.alpha[i] = self.fire_parameters['fire_alpha_init']
+                self.alpha[i] = self.FIRE_parameters['fire_alpha_init']
 
             next_velocities.append(i_next_velocity)
             #print(self.current_step, P, self.N_negative[i], self.time_step[i] / units.fs, self.alpha[i], i_next_velocity)
@@ -332,12 +332,12 @@ class fire_velocity_Verlet(searching_velocity_Verlet):
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
         self.VV_next_step(bias_forces, updated_current_system)
         self.FIRE()
-        self.write_fire_log()
+        self.write_FIRE_log()
         self.check_divergence()
 
         return self.current_convergence, self.current_step, self.current_system
 
-    def write_fire_log(self):
+    def write_FIRE_log(self):
         Ep = self.current_potential_energy
         if len(self.potential_energy_list) < 2:
             dE = 0.

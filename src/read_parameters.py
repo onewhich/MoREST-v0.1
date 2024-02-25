@@ -16,7 +16,7 @@ class read_parameters:
         parameter_file: parameter file name. Default name is 'MoREST.parameter' in current directory.
     --------
     Enhanced sampling parameters are stored in dictionary named 'enhanced_sampling_parameters'.
-    ITS parameters are stored in dictionary named 'its_parameters'.
+    ITS parameters are stored in dictionary named 'ITS_parameters'.
     Wall potential parameters are stored in dictionary named 'wall_potential_parameters'.
     '''
     
@@ -47,10 +47,10 @@ class read_parameters:
         self.sampling_parameters['sampling_initialization'] = False
         self.sampling_parameters['sampling_molecule'] = 'MoREST_sampling.xyz'
         self.sampling_parameters['sampling_pre_thermalized'] = True
-        self.md_parameters = {}
-        self.md_parameters['md_clean_translation'] = True
-        self.md_parameters['md_clean_rotation'] = False
-        self.md_parameters['md_temperature'] = 0
+        self.MD_parameters = {}
+        self.MD_parameters['md_clean_translation'] = True
+        self.MD_parameters['md_clean_rotation'] = False
+        self.MD_parameters['md_temperature'] = 0
         self.barostat_parameters = {}
         self.barostat_parameters['barostat_number'] = 1
         self.barostat_parameters['barostat_collective_variable'] = []
@@ -60,8 +60,8 @@ class read_parameters:
         self.barostat_parameters['barostat_space_size'] = []
         self.barostat_parameters['barostat_action_atoms'] = []
         self.barostat_parameters['barostat_space_parameters'] = []
-        self.rpmd_parameters = {}
-        self.rpmd_parameters['rpmd_initialization'] =False
+        self.RPMD_parameters = {}
+        self.RPMD_parameters['rpmd_initialization'] =False
         self.scattering_parameters = {}
         self.scattering_parameters['scattering_initialization'] = False
         self.scattering_parameters['scattering_pre_thermolized'] = False
@@ -77,24 +77,24 @@ class read_parameters:
         self.searching_parameters['searching_constrained'] = False
         self.gradient_parameters = {}
         self.gradient_parameters['gradient_step_size'] = 3 # This value will multiply by 1e-2 in actual using.
-        self.fire_parameters = {}
-        self.fire_parameters['fire_equal_masses'] = True
-        self.fire_parameters['fire_time_step'] = 3
-        self.fire_parameters['fire_alpha_init'] = 0.1
-        self.fire_parameters['fire_N_min'] = 5
-        self.fire_parameters['fire_f_increase'] = 1.1
-        self.fire_parameters['fire_f_decrease'] = 0.5
-        self.fire_parameters['fire_f_alpha'] = 0.99
+        self.FIRE_parameters = {}
+        self.FIRE_parameters['fire_equal_masses'] = True
+        self.FIRE_parameters['fire_time_step'] = 3
+        self.FIRE_parameters['fire_alpha_init'] = 0.1
+        self.FIRE_parameters['fire_N_min'] = 5
+        self.FIRE_parameters['fire_f_increase'] = 1.1
+        self.FIRE_parameters['fire_f_decrease'] = 0.5
+        self.FIRE_parameters['fire_f_alpha'] = 0.99
         self.enhanced_sampling_parameters = {}
-        self.re_parameters = {}
-        self.re_parameters['re_initialization'] = False
-        self.re_parameters['re_replica_arrange'] = 0
-        self.re_parameters['re_energy_shift'] = 0
-        self.its_parameters = {}
-        self.its_parameters['its_initialization'] = False
-        self.its_parameters['its_replica_arrange'] = 0
-        self.its_parameters['its_weight_pk'] = 1e-4
-        self.its_parameters['its_energy_shift'] = 0
+        self.RE_parameters = {}
+        self.RE_parameters['re_initialization'] = False
+        self.RE_parameters['re_replica_arrange'] = 0
+        self.RE_parameters['re_energy_shift'] = 0
+        self.ITS_parameters = {}
+        self.ITS_parameters['its_initialization'] = False
+        self.ITS_parameters['its_replica_arrange'] = 0
+        self.ITS_parameters['its_weight_pk'] = 1e-4
+        self.ITS_parameters['its_energy_shift'] = 0
         self.wall_potential_parameters = {}
         self.wall_potential_parameters['wall_number'] = 1
         self.wall_potential_parameters['wall_collective_variable'] = []
@@ -252,14 +252,14 @@ class read_parameters:
                 if 'sampling_method' in self.sampling_parameters:
                     ########################## Molecular dynamics #########################
                     if self.sampling_parameters['sampling_method'].upper() in ['MD']:
-                        self.read_md_parameters(i_parameter)
+                        self.read_MD_parameters(i_parameter)
                     if 'sampling_ensemble' in self.sampling_parameters:
                         if self.sampling_parameters['sampling_ensemble'].upper() in ['NPT_Berendsen'.upper(), 'NPT_Langevin'.upper(), \
                                                                                      'NPH_SVR', 'NPT_SVR']:
                             self.read_barostat_parameters(i_parameter)
                     ########################## Ring Polymer MD ############################
                     if self.sampling_parameters['sampling_method'].upper() in ['RPMD']:
-                        self.read_rpmd_parameters(i_parameter)
+                        self.read_RPMD_parameters(i_parameter)
                 
             ########################## Trajectory scattering ######################
             if self.morest_parameters['trajectory_scattering']:
@@ -274,7 +274,7 @@ class read_parameters:
                         self.read_gradient_parameters(i_parameter)
                     ########################## FIRE #######################################
                     if self.searching_parameters['searching_method'].upper() in ['FIRE']:
-                        self.read_fire_parameters(i_parameter)
+                        self.read_FIRE_parameters(i_parameter)
                 
             ########################## Enhanced sampling ##########################
             if self.morest_parameters['enhanced_sampling']:
@@ -283,10 +283,10 @@ class read_parameters:
                 if 'enhanced_sampling_method' in self.enhanced_sampling_parameters:
                     ########################## RE parameters  #############################
                     if self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['re'.upper()]:
-                        self.read_re_parameters(i_parameter)
+                        self.read_RE_parameters(i_parameter)
                     ########################## ITS parameters    ##########################
                     if self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['its'.upper()]:
-                        self.read_its_parameters(i_parameter)
+                        self.read_ITS_parameters(i_parameter)
                 
             ########################## Wall potential #############################
             if self.morest_parameters['wall_potential']:
@@ -362,29 +362,29 @@ class read_parameters:
                 self.sampling_parameters['npt_svr_tau_t'] = float(i_parameter.split()[2])
                 self.sampling_parameters['npt_svr_tau_p'] = float(i_parameter.split()[3])
 
-    def read_md_parameters(self, i_parameter):
+    def read_MD_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'MD_time_step'.upper():
-            self.md_parameters['md_time_step'] = float(i_parameter.split()[1])
+            self.MD_parameters['md_time_step'] = float(i_parameter.split()[1])
         
         elif i_parameter.split()[0].upper() == 'MD_simulation_time'.upper():
-            self.md_parameters['md_simulation_time'] = float(i_parameter.split()[1])
+            self.MD_parameters['md_simulation_time'] = float(i_parameter.split()[1])
         
         elif i_parameter.split()[0].upper() == 'MD_temperature'.upper():
-            self.md_parameters['md_temperature'] = float(i_parameter.split()[1])
+            self.MD_parameters['md_temperature'] = float(i_parameter.split()[1])
         
         elif i_parameter.split()[0].upper() == 'MD_clean_rotation'.upper():
             if i_parameter.split()[1].upper() == 'True'.upper():
-                self.md_parameters['md_clean_rotation'] = True
+                self.MD_parameters['md_clean_rotation'] = True
             elif i_parameter.split()[1].upper() == 'False'.upper():
-                self.md_parameters['md_clean_rotation'] = False
+                self.MD_parameters['md_clean_rotation'] = False
             else:
                 raise Exception('It is not clear whether the rotation will be removed.')
                 
         elif i_parameter.split()[0].upper() == 'MD_clean_translation'.upper():
             if i_parameter.split()[1].upper() == 'True'.upper():
-                self.md_parameters['md_clean_translation'] = True
+                self.MD_parameters['md_clean_translation'] = True
             elif i_parameter.split()[1].upper() == 'False'.upper():
-                self.md_parameters['md_clean_translation'] = False
+                self.MD_parameters['md_clean_translation'] = False
             else:
                 raise Exception('It is not clear whether the translation will be removed.')
 
@@ -462,23 +462,23 @@ class read_parameters:
             if 'barostat_plane_point' in tmp_space_parameter:
                 self.barostat_parameters['barostat_space_parameters'].append(tmp_space_parameter)
 
-    def read_rpmd_parameters(self, i_parameter):
+    def read_RPMD_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'RPMD_initialization'.upper():
             if i_parameter.split()[1].upper() == 'True'.upper():
-                self.rpmd_parameters['rpmd_initialization'] = True
+                self.RPMD_parameters['rpmd_initialization'] = True
             elif i_parameter.split()[1].upper() == 'False'.upper():
-                self.rpmd_parameters['rpmd_initialization'] = False
+                self.RPMD_parameters['rpmd_initialization'] = False
             else:
                 raise Exception('It is not clear whether the ring polymer sampling will be initialized.')
             
         elif i_parameter.split()[0].upper() == 'RPMD_number_of_beads'.upper():
-            self.rpmd_parameters['rpmd_number_of_beads'] = int(i_parameter.split()[1])
+            self.RPMD_parameters['rpmd_number_of_beads'] = int(i_parameter.split()[1])
             
         elif i_parameter.split()[0].upper() == 'RPMD_temperature'.upper():
-            self.rpmd_parameters['rpmd_temperature'] = float(i_parameter.split()[1])
+            self.RPMD_parameters['rpmd_temperature'] = float(i_parameter.split()[1])
             
         elif i_parameter.split()[0].upper() == 'RPMD_beads_file'.upper():
-            self.rpmd_parameters['rpmd_beads_file'] = i_parameter.split()[1]
+            self.RPMD_parameters['rpmd_beads_file'] = i_parameter.split()[1]
 
     def read_scattering_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'Scattering_initialization'.upper():
@@ -572,122 +572,122 @@ class read_parameters:
         if i_parameter.split()[0].upper() == 'Gradient_step_size'.upper():
             self.gradient_parameters['gradient_step_size'] = 1e-2 * float(i_parameter.split()[1])
     
-    def read_fire_parameters(self, i_parameter):
+    def read_FIRE_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'FIRE_equal_masses'.upper():
             if i_parameter.split()[1].upper() == 'True'.upper():
-                self.fire_parameters['fire_equal_masses'] = True
+                self.FIRE_parameters['fire_equal_masses'] = True
             elif i_parameter.split()[1].upper() == 'False'.upper():
-                self.fire_parameters['fire_equal_masses'] = False
+                self.FIRE_parameters['fire_equal_masses'] = False
             else:
                 raise Exception('It is not clear whether the atom masses will be equal.')
 
         elif i_parameter.split()[0].upper() == 'FIRE_time_step'.upper():
-            self.fire_parameters['fire_time_step'] = float(i_parameter.split()[1])
+            self.FIRE_parameters['fire_time_step'] = float(i_parameter.split()[1])
 
         elif i_parameter.split()[0].upper() == 'FIRE_max_time_step'.upper():
-            self.fire_parameters['fire_max_time_step'] = float(i_parameter.split()[1])
+            self.FIRE_parameters['fire_max_time_step'] = float(i_parameter.split()[1])
 
         elif i_parameter.split()[0].upper() == 'FIRE_alpha_init'.upper():
-            self.fire_parameters['fire_alpha_init'] = float(i_parameter.split()[1])
+            self.FIRE_parameters['fire_alpha_init'] = float(i_parameter.split()[1])
 
         elif i_parameter.split()[0].upper() == 'FIRE_N_min'.upper():
-            self.fire_parameters['fire_N_min'] = int(i_parameter.split()[1])
+            self.FIRE_parameters['fire_N_min'] = int(i_parameter.split()[1])
 
         elif i_parameter.split()[0].upper() == 'FIRE_f_increase'.upper():
-            self.fire_parameters['fire_f_increase'] = float(i_parameter.split()[1])
+            self.FIRE_parameters['fire_f_increase'] = float(i_parameter.split()[1])
 
         elif i_parameter.split()[0].upper() == 'FIRE_f_decrease'.upper():
-            self.fire_parameters['fire_f_decrease'] = float(i_parameter.split()[1])
+            self.FIRE_parameters['fire_f_decrease'] = float(i_parameter.split()[1])
 
         elif i_parameter.split()[0].upper() == 'FIRE_f_alpha'.upper():
-            self.fire_parameters['fire_f_alpha'] = float(i_parameter.split()[1])
+            self.FIRE_parameters['fire_f_alpha'] = float(i_parameter.split()[1])
 
-    def read_re_parameters(self, i_parameter):
+    def read_RE_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'RE_initialization'.upper():
             if i_parameter.split()[1].upper() == 'True'.upper():
-                self.re_parameters['re_initialization'] = True
+                self.RE_parameters['re_initialization'] = True
             elif i_parameter.split()[1].upper() == 'False'.upper():
-                self.re_parameters['re_initialization'] = False
+                self.RE_parameters['re_initialization'] = False
             else:
                 raise Exception('It is not clear whether the replica exchange sampling will be initialized.')
             
         elif i_parameter.split()[0].upper() == 'RE_lower_bound_temperature'.upper():
-            self.re_parameters['re_lower_bound_temperature'] = float(i_parameter.split()[1])
+            self.RE_parameters['re_lower_bound_temperature'] = float(i_parameter.split()[1])
             
         elif i_parameter.split()[0].upper() == 'RE_upper_bound_temperature'.upper():
-            self.re_parameters['re_upper_bound_temperature'] = float(i_parameter.split()[1])
+            self.RE_parameters['re_upper_bound_temperature'] = float(i_parameter.split()[1])
             
         elif i_parameter.split()[0].upper() == 'RE_number_of_replica'.upper():
-            self.re_parameters['re_number_of_replica'] = int(i_parameter.split()[1])
+            self.RE_parameters['re_number_of_replica'] = int(i_parameter.split()[1])
             
         elif i_parameter.split()[0].upper() == 'RE_replica_arrange'.upper():
-            self.re_parameters['re_replica_arrange'] = float(i_parameter.split()[1])
+            self.RE_parameters['re_replica_arrange'] = float(i_parameter.split()[1])
             
         elif i_parameter.split()[0].upper() == 'RE_replica_temperatures'.upper():
             tmp_temperatures = []
-            for i in range(self.re_parameters['re_number_of_replica']):
+            for i in range(self.RE_parameters['re_number_of_replica']):
                 tmp_temperatures.append(float(i_parameter.split()[i+1]))
-            self.re_parameters['re_replica_temperatures'] = np.array(tmp_temperatures)
+            self.RE_parameters['re_replica_temperatures'] = np.array(tmp_temperatures)
             
         elif i_parameter.split()[0].upper() == 'RE_swap_interval'.upper():
-            self.re_parameters['re_swap_interval'] = int(i_parameter.split()[1])
+            self.RE_parameters['re_swap_interval'] = int(i_parameter.split()[1])
             
         elif i_parameter.split()[0].upper() == 'RE_init_structures_list'.upper():
-            self.re_parameters['re_init_structures_list'] = str(i_parameter.split()[1])
+            self.RE_parameters['re_init_structures_list'] = str(i_parameter.split()[1])
             
         elif i_parameter.split()[0].upper() == 'RE_energy_shift'.upper():
-            self.re_parameters['re_energy_shift'] = float(i_parameter.split()[1])
+            self.RE_parameters['re_energy_shift'] = float(i_parameter.split()[1])
 
-    def read_its_parameters(self, i_parameter):
+    def read_ITS_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'ITS_initialization'.upper():
             if i_parameter.split()[1].upper() == 'True'.upper():
-                self.its_parameters['its_initialization'] = True
+                self.ITS_parameters['its_initialization'] = True
             elif i_parameter.split()[1].upper() == 'False'.upper():
-                self.its_parameters['its_initialization'] = False
+                self.ITS_parameters['its_initialization'] = False
             else:
                 raise Exception('It is not clear whether the integrated tempering sampling will be initialized.')
             
         elif i_parameter.split()[0].upper() == 'ITS_lower_bound_temperature'.upper():
-            self.its_parameters['its_lower_bound_temperature'] = float(i_parameter.split()[1])
+            self.ITS_parameters['its_lower_bound_temperature'] = float(i_parameter.split()[1])
             
         elif i_parameter.split()[0].upper() == 'ITS_upper_bound_temperature'.upper():
-            self.its_parameters['its_upper_bound_temperature'] = float(i_parameter.split()[1])
+            self.ITS_parameters['its_upper_bound_temperature'] = float(i_parameter.split()[1])
             
         elif i_parameter.split()[0].upper() == 'ITS_number_of_replica'.upper():
-            self.its_parameters['its_number_of_replica'] = int(i_parameter.split()[1])
+            self.ITS_parameters['its_number_of_replica'] = int(i_parameter.split()[1])
             
         elif i_parameter.split()[0].upper() == 'ITS_replica_arrange'.upper():
-            self.its_parameters['its_replica_arrange'] = float(i_parameter.split()[1])
+            self.ITS_parameters['its_replica_arrange'] = float(i_parameter.split()[1])
             
         elif i_parameter.split()[0].upper() == 'ITS_replica_temperatures'.upper():
             tmp_temperatures = []
-            for i in range(self.its_parameters['its_number_of_replica']):
+            for i in range(self.ITS_parameters['its_number_of_replica']):
                 tmp_temperatures.append(float(i_parameter.split()[i+1]))
-            self.its_parameters['its_replica_temperatures'] = np.array(tmp_temperatures)
+            self.ITS_parameters['its_replica_temperatures'] = np.array(tmp_temperatures)
             
         elif i_parameter.split()[0].upper() == 'ITS_initial_nk'.upper():
             tmp_nk = []
-            for i in range(self.its_parameters['its_number_of_replica']):
+            for i in range(self.ITS_parameters['its_number_of_replica']):
                 tmp_nk.append(float(i_parameter.split()[i+1]))
-            self.its_parameters['its_initial_nk'] = np.array(tmp_nk)
+            self.ITS_parameters['its_initial_nk'] = np.array(tmp_nk)
             
         elif i_parameter.split()[0].upper() == 'ITS_pk0'.upper():
             tmp_pk0 = []
-            for i in range(self.its_parameters['its_number_of_replica']):
+            for i in range(self.ITS_parameters['its_number_of_replica']):
                 tmp_pk0.append(float(i_parameter.split()[i+1]))
-            self.its_parameters['its_pk0'] = np.array(tmp_pk0)
+            self.ITS_parameters['its_pk0'] = np.array(tmp_pk0)
             
         elif i_parameter.split()[0].upper() == 'ITS_trial_MD_steps'.upper():
-            self.its_parameters['its_trial_MD_steps'] = int(i_parameter.split()[1])
+            self.ITS_parameters['its_trial_MD_steps'] = int(i_parameter.split()[1])
             
         elif i_parameter.split()[0].upper() == 'ITS_delta_pk'.upper():
-            self.its_parameters['its_delta_pk'] = float(i_parameter.split()[1])
+            self.ITS_parameters['its_delta_pk'] = float(i_parameter.split()[1])
             
         elif i_parameter.split()[0].upper() == 'ITS_weight_pk'.upper():
-            self.its_parameters['its_weight_pk'] = float(i_parameter.split()[1])
+            self.ITS_parameters['its_weight_pk'] = float(i_parameter.split()[1])
             
         elif i_parameter.split()[0].upper() == 'ITS_energy_shift'.upper():
-            self.its_parameters['its_energy_shift'] = float(i_parameter.split()[1])
+            self.ITS_parameters['its_energy_shift'] = float(i_parameter.split()[1])
             
     def read_wall_potential_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'Wall_number'.upper():
@@ -892,25 +892,25 @@ class read_parameters:
             log_morest.write('\n')
         return self.sampling_parameters
     
-    def get_md_parameters(self, log_morest=None):
-        self.md_parameters['md_time_step'] *= units.fs
-        self.md_parameters['md_simulation_time'] *= units.fs
+    def get_MD_parameters(self, log_morest=None):
+        self.MD_parameters['md_time_step'] *= units.fs
+        self.MD_parameters['md_simulation_time'] *= units.fs
         if self.sampling_parameters['sampling_ensemble'].upper() in ['NPT_Berendsen'.upper(), 'NPT_Langevin'.upper(), \
                                                                      'NPH_SVR', 'NPT_SVR']:
             self.get_barostat_parameters()
-            self.md_parameters.update(self.barostat_parameters) # Merge barostat parameters into MD parameters
+            self.MD_parameters.update(self.barostat_parameters) # Merge barostat parameters into MD parameters
         if self.morest_parameters['morest_save_parameters_file']:
-            np.save('MoREST_MD_parameters.npy', self.md_parameters)
+            np.save('MoREST_MD_parameters.npy', self.MD_parameters)
         if log_morest != None:
-            for key in self.md_parameters:
+            for key in self.MD_parameters:
                 if key in ['md_time_step','md_simulation_time']:
-                    log_morest.write(key+' : '+str(self.md_parameters[key]/units.fs)+'\n')
+                    log_morest.write(key+' : '+str(self.MD_parameters[key]/units.fs)+'\n')
                 elif key in ['barostat_pressure']:
-                    log_morest.write(key+' : '+str(self.md_parameters[key]/units.bar)+'\n')
+                    log_morest.write(key+' : '+str(self.MD_parameters[key]/units.bar)+'\n')
                 else:
-                    log_morest.write(key+' : '+str(self.md_parameters[key])+'\n')
+                    log_morest.write(key+' : '+str(self.MD_parameters[key])+'\n')
             log_morest.write('\n')
-        return self.md_parameters
+        return self.MD_parameters
     
     def get_barostat_parameters(self):
         self.barostat_parameters['barostat_pressure'] = \
@@ -918,34 +918,34 @@ class read_parameters:
         for key in ['barostat_space_parameters', 'barostat_space_shape', 'barostat_space_type', 'barostat_action_atoms']:
             self.barostat_parameters[key] = self.barostat_parameters[key][:self.barostat_parameters['barostat_number']]
         
-    def get_rpmd_parameters(self, log_morest=None):
+    def get_RPMD_parameters(self, log_morest=None):
         if self.morest_parameters['morest_initialization'] == True:
-           self.rpmd_parameters['rpmd_initialization'] = True
-        n_beads = self.rpmd_parameters['rp_number_of_beads']
-        beta = 1/(self.rpmd_parameters['rpmd_temperature'] * units.kB)
-        self.rpmd_parameters['omega_n'] = n_beads / (beta * units._hbar)
-        self.rpmd_parameters['omega_k'] = 2*self.rpmd_parameters['omega_n']*np.sin(np.linspace(0,n_beads-1,n_beads)*units.pi/n_beads)
-        self.rpmd_parameters['C_jk'] = np.zeros((n_beads,n_beads))
+           self.RPMD_parameters['rpmd_initialization'] = True
+        n_beads = self.RPMD_parameters['rp_number_of_beads']
+        beta = 1/(self.RPMD_parameters['rpmd_temperature'] * units.kB)
+        self.RPMD_parameters['omega_n'] = n_beads / (beta * units._hbar)
+        self.RPMD_parameters['omega_k'] = 2*self.RPMD_parameters['omega_n']*np.sin(np.linspace(0,n_beads-1,n_beads)*units.pi/n_beads)
+        self.RPMD_parameters['C_jk'] = np.zeros((n_beads,n_beads))
         for k in range(n_beads):
             if k == 0:
-                self.rpmd_parameters['C_jk'][:,k] = np.sqrt(1/n_beads)
+                self.RPMD_parameters['C_jk'][:,k] = np.sqrt(1/n_beads)
             elif k > 0 and k <= (n_beads/2-1):
                 for j in range(n_beads):
-                    self.rpmd_parameters['C_jk'][j,k] = np.sqrt(2/n_beads) * np.cos(2*units.pi*j*k/n_beads)
+                    self.RPMD_parameters['C_jk'][j,k] = np.sqrt(2/n_beads) * np.cos(2*units.pi*j*k/n_beads)
             elif k == n_beads/2:
                 for j in range(n_beads):
-                    self.rpmd_parameters['C_jk'][j,k] = np.sqrt(1/n_beads)*(-1)**j
+                    self.RPMD_parameters['C_jk'][j,k] = np.sqrt(1/n_beads)*(-1)**j
             elif k > n_beads/2:
                 for j in range(n_beads):
-                    self.rpmd_parameters['C_jk'][j,k] = np.sqrt(2/n_beads)*np.sin(2*units.pi*j*k/n_beads)
+                    self.RPMD_parameters['C_jk'][j,k] = np.sqrt(2/n_beads)*np.sin(2*units.pi*j*k/n_beads)
 
         if self.morest_parameters['morest_save_parameters_file']:
-            np.save('MoREST_RE_parameters.npy',self.rpmd_parameters)
+            np.save('MoREST_RE_parameters.npy',self.RPMD_parameters)
         if log_morest != None:
-            for key in self.rpmd_parameters:
-                log_morest.write(key+' : '+str(self.rpmd_parameters[key])+'\n')
+            for key in self.RPMD_parameters:
+                log_morest.write(key+' : '+str(self.RPMD_parameters[key])+'\n')
             log_morest.write('\n')
-        return self.rpmd_parameters
+        return self.RPMD_parameters
 
     def get_scattering_parameters(self, log_morest=None):
         if self.morest_parameters['morest_initialization'] == True:
@@ -1059,29 +1059,29 @@ class read_parameters:
     
     def get_gradient_parameters(self, log_morest=None):
         if self.morest_parameters['morest_save_parameters_file']:
-            np.save('MoREST_gradient_parameters.npy', self.fire_parameters)
+            np.save('MoREST_gradient_parameters.npy', self.FIRE_parameters)
         if log_morest != None:
             for key in self.gradient_parameters:
                 log_morest.write(key+' : '+str(self.gradient_parameters[key])+'\n')
             log_morest.write('\n')
         return self.gradient_parameters
     
-    def get_fire_parameters(self, log_morest=None):
-        self.fire_parameters['fire_time_step'] *= units.fs
-        if not 'fire_max_time_step' in self.fire_parameters:
-            self.fire_parameters['fire_max_time_step'] = 10 * self.fire_parameters['fire_time_step']
+    def get_FIRE_parameters(self, log_morest=None):
+        self.FIRE_parameters['fire_time_step'] *= units.fs
+        if not 'fire_max_time_step' in self.FIRE_parameters:
+            self.FIRE_parameters['fire_max_time_step'] = 10 * self.FIRE_parameters['fire_time_step']
         else:
-            self.fire_parameters['fire_max_time_step'] *= units.fs
+            self.FIRE_parameters['fire_max_time_step'] *= units.fs
         if self.morest_parameters['morest_save_parameters_file']:
-            np.save('MoREST_FIRE_parameters.npy', self.fire_parameters)
+            np.save('MoREST_FIRE_parameters.npy', self.FIRE_parameters)
         if log_morest != None:
-            for key in self.fire_parameters:
+            for key in self.FIRE_parameters:
                 if key in ['fire_time_step','fire_max_time_step']:
-                    log_morest.write(key+' : '+str(self.fire_parameters[key]/units.fs)+'\n')
+                    log_morest.write(key+' : '+str(self.FIRE_parameters[key]/units.fs)+'\n')
                 else:
-                    log_morest.write(key+' : '+str(self.fire_parameters[key])+'\n')
+                    log_morest.write(key+' : '+str(self.FIRE_parameters[key])+'\n')
             log_morest.write('\n')
-        return self.fire_parameters
+        return self.FIRE_parameters
 
     def get_enhanced_sampling_parameters(self, log_morest=None):
         if self.morest_parameters['morest_save_parameters_file']:
@@ -1092,84 +1092,84 @@ class read_parameters:
             log_morest.write('\n')
         return self.enhanced_sampling_parameters
         
-    def get_re_parameters(self, log_morest=None):
+    def get_RE_parameters(self, log_morest=None):
         if self.morest_parameters['morest_initialization'] == True:
-           self.re_parameters['re_initialization'] = True
-        if not 're_replica_temperatures' in self.re_parameters:
-            if int(self.re_parameters['re_replica_arrange']) == -1:
-                replica_temperatures = np.linspace(self.re_parameters['re_lower_bound_temperature'],\
-                                                  self.re_parameters['re_upper_bound_temperature'],\
-                                                  num=self.re_parameters['re_number_of_replica'],\
+           self.RE_parameters['re_initialization'] = True
+        if not 're_replica_temperatures' in self.RE_parameters:
+            if int(self.RE_parameters['re_replica_arrange']) == -1:
+                replica_temperatures = np.linspace(self.RE_parameters['re_lower_bound_temperature'],\
+                                                  self.RE_parameters['re_upper_bound_temperature'],\
+                                                  num=self.RE_parameters['re_number_of_replica'],\
                                                   endpoint=True)
-            elif int(self.re_parameters['re_replica_arrange']) == 0:
-                replica_temperatures = np.geomspace(self.re_parameters['re_lower_bound_temperature'],\
-                                                   self.re_parameters['re_upper_bound_temperature'],\
-                                                   num=self.re_parameters['re_number_of_replica'],\
+            elif int(self.RE_parameters['re_replica_arrange']) == 0:
+                replica_temperatures = np.geomspace(self.RE_parameters['re_lower_bound_temperature'],\
+                                                   self.RE_parameters['re_upper_bound_temperature'],\
+                                                   num=self.RE_parameters['re_number_of_replica'],\
                                                    endpoint=True)
             else:
                 raise Exception('No RE_replica_arrange type was matched.')
-            self.re_parameters['re_replica_temperatures'] = replica_temperatures
-        self.re_parameters['re_replica_temperatures'] = np.around(self.re_parameters['re_replica_temperatures'], decimals=6)
-        self.re_parameters['re_replica_beta'] = 1/(self.re_parameters['re_replica_temperatures'] * units.kB)
+            self.RE_parameters['re_replica_temperatures'] = replica_temperatures
+        self.RE_parameters['re_replica_temperatures'] = np.around(self.RE_parameters['re_replica_temperatures'], decimals=6)
+        self.RE_parameters['re_replica_beta'] = 1/(self.RE_parameters['re_replica_temperatures'] * units.kB)
         #                                            scipy.constants.value('Boltzmann constant in eV/K'))
-        if not 're_init_structures_list' in self.re_parameters:
-            self.re_parameters['re_multiple_initi_structures'] = False
+        if not 're_init_structures_list' in self.RE_parameters:
+            self.RE_parameters['re_multiple_initi_structures'] = False
         else:
-            self.re_parameters['re_multiple_initi_structures'] = True
-        #if self.re_parameters['re_initialization']:
-        #    self.re_parameters['re_current_swap_step'] = 0
-        #    self.re_parameters['re_current_replica'] = 0
+            self.RE_parameters['re_multiple_initi_structures'] = True
+        #if self.RE_parameters['re_initialization']:
+        #    self.RE_parameters['re_current_swap_step'] = 0
+        #    self.RE_parameters['re_current_replica'] = 0
         #else:
         #    step_replica = np.loadtxt('MoREST_RE_current_step_replica.log')
-        #    self.re_parameters['re_current_swap_step'] = step_replica[0]
-        #    self.re_parameters['re_current_replica'] = step_replica[1]
+        #    self.RE_parameters['re_current_swap_step'] = step_replica[0]
+        #    self.RE_parameters['re_current_replica'] = step_replica[1]
         if self.morest_parameters['morest_save_parameters_file']:
-            np.save('MoREST_RE_parameters.npy',self.re_parameters)
+            np.save('MoREST_RE_parameters.npy',self.RE_parameters)
         if log_morest != None:
-            for key in self.re_parameters:
-                log_morest.write(key+' : '+str(self.re_parameters[key])+'\n')
+            for key in self.RE_parameters:
+                log_morest.write(key+' : '+str(self.RE_parameters[key])+'\n')
             log_morest.write('\n')
-        return self.re_parameters
+        return self.RE_parameters
     
-    def get_its_parameters(self, log_morest=None):
+    def get_ITS_parameters(self, log_morest=None):
         if self.morest_parameters['morest_initialization'] == True:
-           self.its_parameters['its_initialization'] = True
-        self.its_parameters['its_criteria_pk'] = self.its_parameters['its_delta_pk'] / \
-                                                self.its_parameters['its_number_of_replica']
-        if not 'its_replica_temperatures' in self.its_parameters:
-            if int(self.its_parameters['its_replica_arrange']) == -1:
-                replica_temperatures = np.linspace(self.its_parameters['its_lower_bound_temperature'],\
-                                                  self.its_parameters['its_upper_bound_temperature'],\
-                                                  num=self.its_parameters['its_number_of_replica'],\
+           self.ITS_parameters['its_initialization'] = True
+        self.ITS_parameters['its_criteria_pk'] = self.ITS_parameters['its_delta_pk'] / \
+                                                self.ITS_parameters['its_number_of_replica']
+        if not 'its_replica_temperatures' in self.ITS_parameters:
+            if int(self.ITS_parameters['its_replica_arrange']) == -1:
+                replica_temperatures = np.linspace(self.ITS_parameters['its_lower_bound_temperature'],\
+                                                  self.ITS_parameters['its_upper_bound_temperature'],\
+                                                  num=self.ITS_parameters['its_number_of_replica'],\
                                                   endpoint=True)
-            elif int(self.its_parameters['its_replica_arrange']) == 0:
-                replica_temperatures = np.geomspace(self.its_parameters['its_lower_bound_temperature'],\
-                                                   self.its_parameters['its_upper_bound_temperature'],\
-                                                   num=self.its_parameters['its_number_of_replica'],\
+            elif int(self.ITS_parameters['its_replica_arrange']) == 0:
+                replica_temperatures = np.geomspace(self.ITS_parameters['its_lower_bound_temperature'],\
+                                                   self.ITS_parameters['its_upper_bound_temperature'],\
+                                                   num=self.ITS_parameters['its_number_of_replica'],\
                                                    endpoint=True)
             else:
                 raise Exception('No ITS_replica_arrange type was matched.')
-            self.its_parameters['its_replica_temperatures'] = replica_temperatures
-        self.re_parameters['its_replica_temperatures'] = np.around(self.re_parameters['its_replica_temperatures'], decimals=6)
-        self.its_parameters['its_replica_beta'] = 1/(self.its_parameters['its_replica_temperatures'] * units.kB)
+            self.ITS_parameters['its_replica_temperatures'] = replica_temperatures
+        self.ITS_parameters['its_replica_temperatures'] = np.around(self.ITS_parameters['its_replica_temperatures'], decimals=6)
+        self.ITS_parameters['its_replica_beta'] = 1/(self.ITS_parameters['its_replica_temperatures'] * units.kB)
         #                                            scipy.constants.value('Boltzmann constant in eV/K')
-        if not 'its_initial_nk' in self.its_parameters:
-            #self.its_parameters['its_initial_nk'] = np.exp(self.its_parameters['its_replica_beta'])
-            #self.its_parameters['its_initial_nk'] = np.exp(-1*self.its_parameters['its_replica_temperatures'])
-            self.its_parameters['its_initial_nk'] = self.its_parameters['its_replica_beta'] /\
-                                                    np.sum(self.its_parameters['its_replica_beta'])
-        if not 'its_pk0' in self.its_parameters:
-            self.its_parameters['its_pk0'] = np.ones((self.its_parameters['its_number_of_replica'])) /\
-                                                   self.its_parameters['its_number_of_replica']
+        if not 'its_initial_nk' in self.ITS_parameters:
+            #self.ITS_parameters['its_initial_nk'] = np.exp(self.ITS_parameters['its_replica_beta'])
+            #self.ITS_parameters['its_initial_nk'] = np.exp(-1*self.ITS_parameters['its_replica_temperatures'])
+            self.ITS_parameters['its_initial_nk'] = self.ITS_parameters['its_replica_beta'] /\
+                                                    np.sum(self.ITS_parameters['its_replica_beta'])
+        if not 'its_pk0' in self.ITS_parameters:
+            self.ITS_parameters['its_pk0'] = np.ones((self.ITS_parameters['its_number_of_replica'])) /\
+                                                   self.ITS_parameters['its_number_of_replica']
         #with open('MoREST_ITS_parameters.json','w') as its_json:
-        #    json.dump(self.its_parameters,its_json, cls=NumpyArrayEncoder)
+        #    json.dump(self.ITS_parameters,its_json, cls=NumpyArrayEncoder)
         if self.morest_parameters['morest_save_parameters_file']:
-            np.save('MoREST_ITS_parameters.npy',self.its_parameters)
+            np.save('MoREST_ITS_parameters.npy',self.ITS_parameters)
         if log_morest != None:
-            for key in self.its_parameters:
-                log_morest.write(key+' : '+str(self.its_parameters[key])+'\n')
+            for key in self.ITS_parameters:
+                log_morest.write(key+' : '+str(self.ITS_parameters[key])+'\n')
             log_morest.write('\n')
-        return self.its_parameters
+        return self.ITS_parameters
             
     def get_wall_potential_parameters(self, log_morest=None):
         for key in ['wall_collective_variable', 'wall_shape', 'wall_type', 'power_wall_direction', \

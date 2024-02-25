@@ -12,10 +12,10 @@ class RPMD(initialize_sampling):
     Annu. Rev. Phys. Chem. 2013. 64:387-413
     J. Chem. Phys. 133, 124104 (2010)
     '''
-    def __init__(self, morest_parameters, sampling_parameters, rpmd_parameters, molecule=None, traj_file_name=None, calculator=None, log_morest=None):
-        self.n_beads = rpmd_parameters['rpmd_number_of_beads']
-        self.temperature = rpmd_parameters['rpmd_temperature']
-        self.beads_file_name = rpmd_parameters['rpmd_beads_file']
+    def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, traj_file_name=None, calculator=None, log_morest=None):
+        self.n_beads = RPMD_parameters['rpmd_number_of_beads']
+        self.temperature = RPMD_parameters['rpmd_temperature']
+        self.beads_file_name = RPMD_parameters['rpmd_beads_file']
 
         if os.path.isfile(self.beads_file_name):
             beads = read_xyz_traj(self.beads_file_name)

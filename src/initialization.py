@@ -35,8 +35,8 @@ class initialize_calculator:
     
 from molecular_dynamics_sampling import NVE_VV, NVK_VR, NVT_Berendsen, NVT_Langevin, NVT_SVR, NPH_SVR, NPT_Berendsen, NPT_Langevin, NPT_SVR
 from trajectory_scattering import scattering_velocity_Verlet, scattering_Runge_Kutta_4th
-from structure_searching import gradient_descent, fire_velocity_Verlet
-from enhanced_sampling import re, its
+from structure_searching import gradient_descent, FIRE_velocity_Verlet
+from enhanced_sampling import RE, ITS
 from wall_potential import repulsive_wall
             
 class initialize_modules:
@@ -169,7 +169,7 @@ class initialize_modules:
             self.searching_job = gradient_descent(self.morest_parameters, self.searching_parameters, self.gradient_parameters, calculator=self.calculator, \
                                                    method=self.searching_parameters['searching_method'], log_morest=self.log_morest)
         elif self.searching_parameters['searching_method'].upper() in ['FIRE']:
-            self.searching_job = fire_velocity_Verlet(self.morest_parameters, self.searching_parameters, self.fire_parameters, calculator=self.calculator, \
+            self.searching_job = FIRE_velocity_Verlet(self.morest_parameters, self.searching_parameters, self.fire_parameters, calculator=self.calculator, \
                                                       log_morest=self.log_morest)
         else:
             self.log_morest.write('It is not clear which searching method will be used.\n')
@@ -213,7 +213,7 @@ class initialize_modules:
                 except:
                     pass
                 self.log_morest.write('Replica exchange method is initialized.\n\n')
-            self.re_sampling = re(self.re_parameters)
+            self.re_sampling = RE(self.re_parameters)
             molecules = self.re_sampling.get_current_molecules()
             if len(molecules) != len(self.re_parameters['re_replica_temperatures']):
                 self.log_morest.write('The number of structures do not fit the number of temperatures.\n\n')
@@ -275,7 +275,7 @@ class initialize_modules:
                 except:
                     pass
                 self.log_morest.write('Integrated tempering sampling method is initialized.\n\n')
-            self.its_sampling = its(self.its_parameters)
+            self.its_sampling = ITS(self.its_parameters)
         else:
             self.log_morest.write('It is not clear which enhanced sampling method will be used.\n')
             self.log_morest.close()

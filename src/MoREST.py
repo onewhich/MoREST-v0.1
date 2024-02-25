@@ -64,9 +64,9 @@ class morest(initialize_modules):
         simulation_maxsteps = int(self.md_parameters['md_simulation_time']/self.md_parameters['md_time_step']) + 1
         if self.morest_parameters['enhanced_sampling']:
             if self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['re'.upper()]:
-                self.enhanced_sampling_re(simulation_maxsteps)
+                self.enhanced_sampling_RE(simulation_maxsteps)
             elif self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['its'.upper()]:
-                self.enhanced_sampling_its(simulation_maxsteps)
+                self.enhanced_sampling_ITS(simulation_maxsteps)
         else:
             current_step, current_system = self.sampling_job.current_step, self.sampling_job.current_system
             if self.morest_parameters['wall_potential']:
@@ -141,7 +141,7 @@ class morest(initialize_modules):
         self.log_morest.write('Structure optimization with '+self.searching_parameters['searching_method']+' method is finished!\n')
         self.mission_complete()
 
-    def enhanced_sampling_re(self,simulation_maxsteps):
+    def enhanced_sampling_RE(self,simulation_maxsteps):
         current_step = []
         current_system = []
         current_potential_energy = []
@@ -174,9 +174,9 @@ class morest(initialize_modules):
                 else:
                     current_step[i], current_system[i] = i_sampling_job.generate_new_step(updated_current_system=current_system[i])
                     current_potential_energy[i] = i_sampling_job.current_potential_energy
-            current_step, current_system = self.re_sampling.remd(current_step, current_potential_energy, current_system)
+            current_step, current_system = self.re_sampling.REMD(current_step, current_potential_energy, current_system)
 
-    def enhanced_sampling_its(self, simulation_maxsteps):
+    def enhanced_sampling_ITS(self, simulation_maxsteps):
         '''
         This function is called to excute enhanced sampling by phase space sampling module.
         --------
@@ -198,10 +198,10 @@ class morest(initialize_modules):
         while current_step <= simulation_maxsteps:
             potential_energy = self.sampling_job.current_potential_energy
             md_forces = self.sampling_job.current_forces
-            if self.its_sampling.its_if_converge():
-                bias_forces_its = self.its_sampling.its_sampling(simulation_temperature, potential_energy, md_forces)
+            if self.its_sampling.ITS_if_converge():
+                bias_forces_its = self.its_sampling.ITS_sampling(simulation_temperature, potential_energy, md_forces)
             else:
-                bias_forces_its = self.its_sampling.its_optimization(simulation_temperature, potential_energy, \
+                bias_forces_its = self.its_sampling.ITS_optimization(simulation_temperature, potential_energy, \
                                         current_step, md_forces, self.log_morest)
             if self.morest_parameters['wall_potential']:
                 general_coordinate = current_system.get_positions()

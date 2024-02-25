@@ -19,14 +19,14 @@ class velocity_Verlet(initialize_sampling):
     MoREST.xyz_new (default name) records the current xyz structure of the system
     '''
     
-    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
+    def __init__(self, morest_parameters, sampling_parameters, MD_parameters, molecule=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
         super(velocity_Verlet, self).__init__(morest_parameters, sampling_parameters, molecule, traj_file_name, calculator, log_morest)
-        self.md_parameters = md_parameters
-        self.time_step = self.md_parameters['md_time_step']
+        self.MD_parameters = MD_parameters
+        self.time_step = self.MD_parameters['md_time_step']
         
         if type(T_simulation) == type(None):
             self.re_simulation = False
-            self.T_simulation = self.md_parameters['md_temperature']
+            self.T_simulation = self.MD_parameters['md_temperature']
         else:
             self.re_simulation = True
             self.T_simulation = T_simulation
@@ -191,7 +191,7 @@ class velocity_Verlet(initialize_sampling):
 
 
 class NVE_VV(velocity_Verlet):
-    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
+    def __init__(self, morest_parameters, sampling_parameters, MD_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
         
         if type(log_file_name) == type(None):
             self.log_file_name = 'MoREST_MD.log'
@@ -202,7 +202,7 @@ class NVE_VV(velocity_Verlet):
         else:
             self.traj_file_name = traj_file_name
 
-        super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, self.traj_file_name, T_simulation, calculator, log_morest)
+        super().__init__(morest_parameters, sampling_parameters, MD_parameters, molecule, self.traj_file_name, T_simulation, calculator, log_morest)
 
         if self.sampling_parameters['sampling_initialization']:
             self.MD_log = open(self.log_file_name, 'w', buffering=1)
@@ -214,10 +214,10 @@ class NVE_VV(velocity_Verlet):
     def generate_new_step(self, bias_forces=None, updated_current_system=None):
         self.VV_next_step(bias_forces=bias_forces, updated_current_system=updated_current_system)
 
-        if self.md_parameters['md_clean_translation']:
+        if self.MD_parameters['md_clean_translation']:
             #next_velocities = clean_translation(next_velocities)
             Stationary(self.current_system)
-        if self.md_parameters['md_clean_rotation']:
+        if self.MD_parameters['md_clean_rotation']:
             #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
             ZeroRotation(self.current_system)
         
@@ -237,7 +237,7 @@ class NVE_VV(velocity_Verlet):
         return self.current_step, self.current_system
 
 class NVK_VR(velocity_Verlet):
-    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
+    def __init__(self, morest_parameters, sampling_parameters, MD_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
         
         if type(log_file_name) == type(None):
             self.log_file_name = 'MoREST_MD.log'
@@ -248,7 +248,7 @@ class NVK_VR(velocity_Verlet):
         else:
             self.traj_file_name = traj_file_name
 
-        super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, self.traj_file_name, T_simulation, calculator, log_morest)
+        super().__init__(morest_parameters, sampling_parameters, MD_parameters, molecule, self.traj_file_name, T_simulation, calculator, log_morest)
 
         new_velocities = velocity_rescaling(self.sampling_parameters['nvk_vr_dt'], self.T_simulation, self.current_system.get_kinetic_energy(), \
                                         self.n_atom, self.current_system.get_velocities())
@@ -267,10 +267,10 @@ class NVK_VR(velocity_Verlet):
                                         self.n_atom, self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
 
-        if self.md_parameters['md_clean_translation']:
+        if self.MD_parameters['md_clean_translation']:
             #next_velocities = clean_translation(next_velocities)
             Stationary(self.current_system)
-        if self.md_parameters['md_clean_rotation']:
+        if self.MD_parameters['md_clean_rotation']:
             #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
             ZeroRotation(self.current_system)
         
@@ -291,7 +291,7 @@ class NVK_VR(velocity_Verlet):
 
 
 class NVT_Berendsen(velocity_Verlet):
-    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
+    def __init__(self, morest_parameters, sampling_parameters, MD_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
         
         if type(log_file_name) == type(None):
             self.log_file_name = 'MoREST_MD.log'
@@ -302,7 +302,7 @@ class NVT_Berendsen(velocity_Verlet):
         else:
             self.traj_file_name = traj_file_name
 
-        super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, self.traj_file_name, T_simulation, calculator, log_morest)
+        super().__init__(morest_parameters, sampling_parameters, MD_parameters, molecule, self.traj_file_name, T_simulation, calculator, log_morest)
 
         new_velocities = Berendsen_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.n_atom, \
                                                       self.T_simulation, self.sampling_parameters['nvt_berendsen_tau'], self.current_system.get_velocities())
@@ -321,10 +321,10 @@ class NVT_Berendsen(velocity_Verlet):
                                                       self.T_simulation, self.sampling_parameters['nvt_berendsen_tau'], self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
 
-        if self.md_parameters['md_clean_translation']:
+        if self.MD_parameters['md_clean_translation']:
             #next_velocities = clean_translation(next_velocities)
             Stationary(self.current_system)
-        if self.md_parameters['md_clean_rotation']:
+        if self.MD_parameters['md_clean_rotation']:
             #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
             ZeroRotation(self.current_system)
         
@@ -345,7 +345,7 @@ class NVT_Berendsen(velocity_Verlet):
 
 
 class NVT_Langevin(velocity_Verlet):
-    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
+    def __init__(self, morest_parameters, sampling_parameters, MD_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
         
         if type(log_file_name) == type(None):
             self.log_file_name = 'MoREST_MD.log'
@@ -356,7 +356,7 @@ class NVT_Langevin(velocity_Verlet):
         else:
             self.traj_file_name = traj_file_name
 
-        super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, self.traj_file_name, T_simulation, calculator, log_morest)
+        super().__init__(morest_parameters, sampling_parameters, MD_parameters, molecule, self.traj_file_name, T_simulation, calculator, log_morest)
 
         if self.sampling_parameters['sampling_initialization']:
             self.MD_log = open(self.log_file_name, 'w', buffering=1)
@@ -376,10 +376,10 @@ class NVT_Langevin(velocity_Verlet):
                                                                   1, 1/(2*self.sampling_parameters['nvt_Langevin_gamma']), self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
 
-        if self.md_parameters['md_clean_translation']:
+        if self.MD_parameters['md_clean_translation']:
             #next_velocities = clean_translation(next_velocities)
             Stationary(self.current_system)
-        if self.md_parameters['md_clean_rotation']:
+        if self.MD_parameters['md_clean_rotation']:
             #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
             ZeroRotation(self.current_system)
         
@@ -402,7 +402,7 @@ class NVT_Langevin(velocity_Verlet):
 
 
 class NVT_SVR(velocity_Verlet):
-    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
+    def __init__(self, morest_parameters, sampling_parameters, MD_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
         
         if type(log_file_name) == type(None):
             self.log_file_name = 'MoREST_MD.log'
@@ -413,7 +413,7 @@ class NVT_SVR(velocity_Verlet):
         else:
             self.traj_file_name = traj_file_name
 
-        super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, self.traj_file_name, T_simulation, calculator, log_morest)
+        super().__init__(morest_parameters, sampling_parameters, MD_parameters, molecule, self.traj_file_name, T_simulation, calculator, log_morest)
 
         if self.sampling_parameters['sampling_initialization']:
             self.MD_log = open(self.log_file_name, 'w', buffering=1)
@@ -433,10 +433,10 @@ class NVT_SVR(velocity_Verlet):
                                                                   3*self.n_atom, self.sampling_parameters['nvt_svr_tau'], self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
 
-        if self.md_parameters['md_clean_translation']:
+        if self.MD_parameters['md_clean_translation']:
             #next_velocities = clean_translation(next_velocities)
             Stationary(self.current_system)
-        if self.md_parameters['md_clean_rotation']:
+        if self.MD_parameters['md_clean_rotation']:
             #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
             ZeroRotation(self.current_system)
         
@@ -459,7 +459,7 @@ class NVT_SVR(velocity_Verlet):
 
 
 class NPH_SVR(velocity_Verlet):
-    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
+    def __init__(self, morest_parameters, sampling_parameters, MD_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
         
         if type(log_file_name) == type(None):
             self.log_file_name = 'MoREST_MD.log'
@@ -470,13 +470,13 @@ class NPH_SVR(velocity_Verlet):
         else:
             self.traj_file_name = traj_file_name
 
-        super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, self.traj_file_name, T_simulation, calculator, log_morest)
+        super().__init__(morest_parameters, sampling_parameters, MD_parameters, molecule, self.traj_file_name, T_simulation, calculator, log_morest)
 
-        self.NPH_space = barostat_space(md_parameters, self.current_system)
+        self.NPH_space = barostat_space(MD_parameters, self.current_system)
 
-        self.P_simulation = self.md_parameters['barostat_pressure']
+        self.P_simulation = self.MD_parameters['barostat_pressure']
         self.tau_P = self.sampling_parameters['nph_svr_tau']
-        self.eta = np.zeros(self.md_parameters['barostat_number']) # initialize the velocity of the barostat
+        self.eta = np.zeros(self.MD_parameters['barostat_number']) # initialize the velocity of the barostat
         # N_f = 3 * N - 3 + 1, remove the center of mass DOF, add the barostat volume DOF
         self.Nf = 3*self.n_atom - 2
         self.half_time_step = self.time_step/2
@@ -507,17 +507,17 @@ class NPH_SVR(velocity_Verlet):
         # stage 2: propagate 1/2 time step velocities
         # stage 3: propagate time step positions and velocities
         # stage 4: propagate 1/2 time step velocities
-        new_coordinates, new_momenta, self.eta, P_current = stochastic_velocity_volume_rescaling(self.md_parameters, self.time_step, self.half_time_step, \
+        new_coordinates, new_momenta, self.eta, P_current = stochastic_velocity_volume_rescaling(self.MD_parameters, self.time_step, self.half_time_step, \
                                                             self.current_system.get_positions(), self.current_system.get_forces(), self.current_system.get_velocities(), \
                                                             self.eta, self.current_system.get_momenta(), self.masses, self.W_barostat, T_current, self.P_simulation)
         self.current_system.set_positions(new_coordinates)
         self.current_system.set_momenta(new_momenta)
         self.NPH_space.update_barostat_space_wall()
         
-        if self.md_parameters['md_clean_translation']:
+        if self.MD_parameters['md_clean_translation']:
             #next_velocities = clean_translation(next_velocities)
             Stationary(self.current_system)
-        if self.md_parameters['md_clean_rotation']:
+        if self.MD_parameters['md_clean_rotation']:
             #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
             ZeroRotation(self.current_system)
         
@@ -540,7 +540,7 @@ class NPH_SVR(velocity_Verlet):
 
 
 class NPT_Berendsen(velocity_Verlet):
-    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
+    def __init__(self, morest_parameters, sampling_parameters, MD_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
         
         if type(log_file_name) == type(None):
             self.log_file_name = 'MoREST_MD.log'
@@ -551,20 +551,20 @@ class NPT_Berendsen(velocity_Verlet):
         else:
             self.traj_file_name = traj_file_name
 
-        super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, self.traj_file_name, T_simulation, calculator, log_morest)
+        super().__init__(morest_parameters, sampling_parameters, MD_parameters, molecule, self.traj_file_name, T_simulation, calculator, log_morest)
 
-        self.NPT_space = barostat_space(md_parameters, self.current_system)
+        self.NPT_space = barostat_space(MD_parameters, self.current_system)
 
-        self.P_simulation = self.md_parameters['barostat_pressure']
+        self.P_simulation = self.MD_parameters['barostat_pressure']
         self.tau_T = self.sampling_parameters['npt_Berendsen_tau_t']
         self.tau_P = self.sampling_parameters['npt_Berendsen_tau_p']
         self.beta = self.sampling_parameters['npt_Berendsen_compressibility']
-        init_miu = np.ones(self.md_parameters['barostat_number']) # the first rescaling factor should be one for each barostat space
+        init_miu = np.ones(self.MD_parameters['barostat_number']) # the first rescaling factor should be one for each barostat space
 
         new_velocities = Berendsen_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.n_atom, \
                                                       self.T_simulation, self.tau_T, self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
-        next_coordinates, self.miu, P_current = Berendsen_volume_rescaling(self.md_parameters, self.time_step, self.current_system.get_positions(), \
+        next_coordinates, self.miu, P_current = Berendsen_volume_rescaling(self.MD_parameters, self.time_step, self.current_system.get_positions(), \
                                                                self.current_system.get_forces(), new_velocities, self.masses, self.P_simulation, self.tau_P, self.beta, init_miu)
         self.current_system.set_positions(next_coordinates)
         self.NPT_space.update_barostat_space_wall()
@@ -587,15 +587,15 @@ class NPT_Berendsen(velocity_Verlet):
         new_velocities = Berendsen_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.n_atom, \
                                                       self.T_simulation, self.tau_T, self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
-        next_coordinates, self.miu, P_current = Berendsen_volume_rescaling(self.md_parameters, self.time_step, self.current_system.get_positions(), \
+        next_coordinates, self.miu, P_current = Berendsen_volume_rescaling(self.MD_parameters, self.time_step, self.current_system.get_positions(), \
                                                                self.current_system.get_forces(), new_velocities, self.masses, self.P_simulation, self.tau_P, self.beta, self.miu)
         self.current_system.set_positions(next_coordinates)
         self.NPT_space.update_barostat_space_wall()
 
-        if self.md_parameters['md_clean_translation']:
+        if self.MD_parameters['md_clean_translation']:
             #next_velocities = clean_translation(next_velocities)
             Stationary(self.current_system)
-        if self.md_parameters['md_clean_rotation']:
+        if self.MD_parameters['md_clean_rotation']:
             #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
             ZeroRotation(self.current_system)
         
@@ -616,7 +616,7 @@ class NPT_Berendsen(velocity_Verlet):
 
 
 class NPT_Langevin(velocity_Verlet):
-    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
+    def __init__(self, morest_parameters, sampling_parameters, MD_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
         
         if type(log_file_name) == type(None):
             self.log_file_name = 'MoREST_MD.log'
@@ -627,13 +627,13 @@ class NPT_Langevin(velocity_Verlet):
         else:
             self.traj_file_name = traj_file_name
 
-        super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, self.traj_file_name, T_simulation, calculator, log_morest)
+        super().__init__(morest_parameters, sampling_parameters, MD_parameters, molecule, self.traj_file_name, T_simulation, calculator, log_morest)
 
-        self.NPT_space = barostat_space(md_parameters, self.current_system)
+        self.NPT_space = barostat_space(MD_parameters, self.current_system)
 
 
 class NPT_SVR(velocity_Verlet):
-    def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
+    def __init__(self, morest_parameters, sampling_parameters, MD_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
         
         if type(log_file_name) == type(None):
             self.log_file_name = 'MoREST_MD.log'
@@ -644,14 +644,14 @@ class NPT_SVR(velocity_Verlet):
         else:
             self.traj_file_name = traj_file_name
 
-        super().__init__(morest_parameters, sampling_parameters, md_parameters, molecule, self.traj_file_name, T_simulation, calculator, log_morest)
+        super().__init__(morest_parameters, sampling_parameters, MD_parameters, molecule, self.traj_file_name, T_simulation, calculator, log_morest)
 
-        self.NPT_space = barostat_space(md_parameters, self.current_system)
+        self.NPT_space = barostat_space(MD_parameters, self.current_system)
 
-        self.P_simulation = self.md_parameters['barostat_pressure']
+        self.P_simulation = self.MD_parameters['barostat_pressure']
         self.tau_T = self.sampling_parameters['npt_svr_tau_t']
         self.tau_P = self.sampling_parameters['npt_svr_tau_p']
-        self.eta = np.zeros(self.md_parameters['barostat_number']) # initialize the velocity of the barostat
+        self.eta = np.zeros(self.MD_parameters['barostat_number']) # initialize the velocity of the barostat
         # N_f = 3 * N - 3 + 1, remove the center of mass DOF, add the barostat volume DOF
         self.Nf = 3*self.n_atom - 2
         self.half_time_step = self.time_step/2
@@ -688,7 +688,7 @@ class NPT_SVR(velocity_Verlet):
         # stage 3: propagate time step positions and velocities
         # stage 4: propagate 1/2 time step velocities
         T_current = self.get_temperature(self.current_system.get_kinetic_energy(), self.n_atom)
-        new_coordinates, new_momenta, self.eta, P_current = stochastic_velocity_volume_rescaling(self.md_parameters, self.time_step, self.half_time_step, \
+        new_coordinates, new_momenta, self.eta, P_current = stochastic_velocity_volume_rescaling(self.MD_parameters, self.time_step, self.half_time_step, \
                                                             self.current_system.get_positions(), self.current_system.get_forces(), new_velocities, self.eta, self.current_system.get_momenta(), \
                                                             self.masses, self.W_barostat, T_current, self.P_simulation)
         self.current_system.set_positions(new_coordinates)
@@ -701,10 +701,10 @@ class NPT_SVR(velocity_Verlet):
         self.current_system.set_velocities(new_velocities)
         self.eta *= alpha
 
-        if self.md_parameters['md_clean_translation']:
+        if self.MD_parameters['md_clean_translation']:
             #next_velocities = clean_translation(next_velocities)
             Stationary(self.current_system)
-        if self.md_parameters['md_clean_rotation']:
+        if self.MD_parameters['md_clean_rotation']:
             #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
             ZeroRotation(self.current_system)
         
