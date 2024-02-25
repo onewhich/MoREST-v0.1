@@ -1,5 +1,4 @@
 import numpy as np
-#import scipy.constants
 #from json import JSONEncoder
 from ase import units
 
@@ -61,6 +60,8 @@ class read_parameters:
         self.barostat_parameters['barostat_space_size'] = []
         self.barostat_parameters['barostat_action_atoms'] = []
         self.barostat_parameters['barostat_space_parameters'] = []
+        self.rpmd_parameters = {}
+        self.rpmd_parameters['rp_initialization'] =False
         self.scattering_parameters = {}
         self.scattering_parameters['scattering_initialization'] = False
         self.scattering_parameters['scattering_pre_thermolized'] = False
@@ -94,8 +95,6 @@ class read_parameters:
         self.its_parameters['its_replica_arrange'] = 0
         self.its_parameters['its_weight_pk'] = 1e-4
         self.its_parameters['its_energy_shift'] = 0
-        self.rp_parameters = {}
-        self.rp_parameters['rp_initialization'] =False
         self.wall_potential_parameters = {}
         self.wall_potential_parameters['wall_number'] = 1
         self.wall_potential_parameters['wall_collective_variable'] = []
@@ -258,6 +257,9 @@ class read_parameters:
                         if self.sampling_parameters['sampling_ensemble'].upper() in ['NPT_Berendsen'.upper(), 'NPT_Langevin'.upper(), \
                                                                                      'NPH_SVR', 'NPT_SVR']:
                             self.read_barostat_parameters(i_parameter)
+                    ########################## Ring Polymer MD ############################
+                    if self.sampling_parameters['sampling_method'].upper() in ['RPMD']:
+                        self.read_rpmd_parameters(i_parameter)
                 
             ########################## Trajectory scattering ######################
             if self.morest_parameters['trajectory_scattering']:
@@ -283,11 +285,8 @@ class read_parameters:
                     if self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['re'.upper()]:
                         self.read_re_parameters(i_parameter)
                     ########################## ITS parameters    ##########################
-                    elif self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['its'.upper()]:
+                    if self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['its'.upper()]:
                         self.read_its_parameters(i_parameter)
-                    ########################## RP parameters  #############################
-                    if self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['rp'.upper()]:
-                        self.read_rp_parameters(i_parameter)
                 
             ########################## Wall potential #############################
             if self.morest_parameters['wall_potential']:
@@ -462,6 +461,21 @@ class read_parameters:
             tmp_space_parameter['barostat_plane_normal_vector'] = tmp_normal_vector / np.linalg.norm(tmp_normal_vector)
             if 'barostat_plane_point' in tmp_space_parameter:
                 self.barostat_parameters['barostat_space_parameters'].append(tmp_space_parameter)
+
+    def read_rpmd_parameters(self, i_parameter):
+        if i_parameter.split()[0].upper() == 'RPMD_initialization'.upper():
+            if i_parameter.split()[1].upper() == 'True'.upper():
+                self.rpmd_parameters['rpmd_initialization'] = True
+            elif i_parameter.split()[1].upper() == 'False'.upper():
+                self.rpmd_parameters['rpmd_initialization'] = False
+            else:
+                raise Exception('It is not clear whether the ring polymer sampling will be initialized.')
+            
+        elif i_parameter.split()[0].upper() == 'RPMD_number_of_beads'.upper():
+            self.rpmd_parameters['rpmd_number_of_beads'] = int(i_parameter.split()[1])
+            
+        elif i_parameter.split()[0].upper() == 'RPMD_temperature'.upper():
+            self.rpmd_parameters['rpmd_temperature'] = float(i_parameter.split()[1])
 
     def read_scattering_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'Scattering_initialization'.upper():
@@ -671,18 +685,6 @@ class read_parameters:
             
         elif i_parameter.split()[0].upper() == 'ITS_energy_shift'.upper():
             self.its_parameters['its_energy_shift'] = float(i_parameter.split()[1])
-
-    def read_rp_parameters(self, i_parameter):
-        if i_parameter.split()[0].upper() == 'RP_initialization'.upper():
-            if i_parameter.split()[1].upper() == 'True'.upper():
-                self.rp_parameters['rp_initialization'] = True
-            elif i_parameter.split()[1].upper() == 'False'.upper():
-                self.rp_parameters['rp_initialization'] = False
-            else:
-                raise Exception('It is not clear whether the ring polymer sampling will be initialized.')
-            
-        elif i_parameter.split()[0].upper() == 'RP_number_of_beads'.upper():
-            self.rp_parameters['rp_number_of_beads'] = int(i_parameter.split()[1])
             
     def read_wall_potential_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'Wall_number'.upper():
@@ -912,6 +914,35 @@ class read_parameters:
             np.array(self.barostat_parameters['barostat_pressure'][:self.barostat_parameters['barostat_number']]) * units.bar
         for key in ['barostat_space_parameters', 'barostat_space_shape', 'barostat_space_type', 'barostat_action_atoms']:
             self.barostat_parameters[key] = self.barostat_parameters[key][:self.barostat_parameters['barostat_number']]
+        
+    def get_rpmd_parameters(self, log_morest=None):
+        if self.morest_parameters['morest_initialization'] == True:
+           self.rpmd_parameters['rpmd_initialization'] = True
+        n_beads = self.rpmd_parameters['rp_number_of_beads']
+        beta = 1/(self.rpmd_parameters['rpmd_temperature'] * units.kB)
+        self.rpmd_parameters['omega_n'] = n_beads / (beta * units._hbar)
+        self.rpmd_parameters['omega_k'] = 2*self.rpmd_parameters['omega_n']*np.sin(np.linspace(0,n_beads-1,n_beads)*units.pi/n_beads)
+        self.rpmd_parameters['C_jk'] = np.zeros((n_beads,n_beads))
+        for k in range(n_beads):
+            if k == 0:
+                self.rpmd_parameters['C_jk'][:,k] = np.sqrt(1/n_beads)
+            elif k > 0 and k <= (n_beads/2-1):
+                for j in range(n_beads):
+                    self.rpmd_parameters['C_jk'][j,k] = np.sqrt(2/n_beads) * np.cos(2*units.pi*j*k/n_beads)
+            elif k == n_beads/2:
+                for j in range(n_beads):
+                    self.rpmd_parameters['C_jk'][j,k] = np.sqrt(1/n_beads)*(-1)**j
+            elif k > n_beads/2:
+                for j in range(n_beads):
+                    self.rpmd_parameters['C_jk'][j,k] = np.sqrt(2/n_beads)*np.sin(2*units.pi*j*k/n_beads)
+
+        if self.morest_parameters['morest_save_parameters_file']:
+            np.save('MoREST_RE_parameters.npy',self.rpmd_parameters)
+        if log_morest != None:
+            for key in self.rpmd_parameters:
+                log_morest.write(key+' : '+str(self.rpmd_parameters[key])+'\n')
+            log_morest.write('\n')
+        return self.rpmd_parameters
 
     def get_scattering_parameters(self, log_morest=None):
         if self.morest_parameters['morest_initialization'] == True:
@@ -1136,17 +1167,6 @@ class read_parameters:
                 log_morest.write(key+' : '+str(self.its_parameters[key])+'\n')
             log_morest.write('\n')
         return self.its_parameters
-        
-    def get_rp_parameters(self, log_morest=None):
-        if self.morest_parameters['morest_initialization'] == True:
-           self.rp_parameters['rp_initialization'] = True
-        if self.morest_parameters['morest_save_parameters_file']:
-            np.save('MoREST_RE_parameters.npy',self.rp_parameters)
-        if log_morest != None:
-            for key in self.rp_parameters:
-                log_morest.write(key+' : '+str(self.rp_parameters[key])+'\n')
-            log_morest.write('\n')
-        return self.rp_parameters
             
     def get_wall_potential_parameters(self, log_morest=None):
         for key in ['wall_collective_variable', 'wall_shape', 'wall_type', 'power_wall_direction', \

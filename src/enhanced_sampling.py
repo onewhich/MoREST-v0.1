@@ -240,13 +240,4 @@ class its:
         np.savetxt('MoREST_ITS_pk.npy',p_k)
         #print(p_k)
         return p_k,n_k
-
-class rp:
-    '''
-    The ring polymer molecular dynamics module.
-    Annu. Rev. Phys. Chem. 2013. 64:387-413
-    J. Chem. Phys. 133, 124104 (2010)
-    '''
-    def __init__(self, rp_parameters) -> None:
-        pass
-
+    

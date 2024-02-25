@@ -16,7 +16,7 @@ class initialize_sampling(initialize_calculator):
             self.current_system = self.get_current_structure(molecule)
         else:
             try:
-                self.current_traj = read_xyz_traj(self.traj_file_name)
+                self.current_traj = read_xyz_traj(traj_file_name)
                 self.current_step = (len(self.current_traj) - 1) * self.sampling_parameters['sampling_traj_interval']
                 try:
                     self.ml_calculator.get_current_step(self.current_step)

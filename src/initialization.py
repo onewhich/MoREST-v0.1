@@ -36,7 +36,7 @@ class initialize_calculator:
 from molecular_dynamics_sampling import NVE_VV, NVK_VR, NVT_Berendsen, NVT_Langevin, NVT_SVR, NPH_SVR, NPT_Berendsen, NPT_Langevin, NPT_SVR
 from trajectory_scattering import scattering_velocity_Verlet, scattering_Runge_Kutta_4th
 from structure_searching import gradient_descent, fire_velocity_Verlet
-from enhanced_sampling import re, its, rp
+from enhanced_sampling import re, its
 from wall_potential import repulsive_wall
             
 class initialize_modules:

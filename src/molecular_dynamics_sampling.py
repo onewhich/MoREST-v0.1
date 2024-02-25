@@ -198,7 +198,7 @@ class NVE_VV(velocity_Verlet):
         else:
             self.log_file_name = log_file_name
         if type(traj_file_name) == type(None):
-            self.traj_file_name = 'MoREST_sampling_traj.xyz'
+            self.traj_file_name = 'MoREST_MD_traj.xyz'
         else:
             self.traj_file_name = traj_file_name
 
@@ -244,7 +244,7 @@ class NVK_VR(velocity_Verlet):
         else:
             self.log_file_name = log_file_name
         if type(traj_file_name) == type(None):
-            self.traj_file_name = 'MoREST_sampling_traj.xyz'
+            self.traj_file_name = 'MoREST_MD_traj.xyz'
         else:
             self.traj_file_name = traj_file_name
 
@@ -298,7 +298,7 @@ class NVT_Berendsen(velocity_Verlet):
         else:
             self.log_file_name = log_file_name
         if type(traj_file_name) == type(None):
-            self.traj_file_name = 'MoREST_sampling_traj.xyz'
+            self.traj_file_name = 'MoREST_MD_traj.xyz'
         else:
             self.traj_file_name = traj_file_name
 
@@ -352,7 +352,7 @@ class NVT_Langevin(velocity_Verlet):
         else:
             self.log_file_name = log_file_name
         if type(traj_file_name) == type(None):
-            self.traj_file_name = 'MoREST_sampling_traj.xyz'
+            self.traj_file_name = 'MoREST_MD_traj.xyz'
         else:
             self.traj_file_name = traj_file_name
 
@@ -409,7 +409,7 @@ class NVT_SVR(velocity_Verlet):
         else:
             self.log_file_name = log_file_name
         if type(traj_file_name) == type(None):
-            self.traj_file_name = 'MoREST_sampling_traj.xyz'
+            self.traj_file_name = 'MoREST_MD_traj.xyz'
         else:
             self.traj_file_name = traj_file_name
 
@@ -466,7 +466,7 @@ class NPH_SVR(velocity_Verlet):
         else:
             self.log_file_name = log_file_name
         if type(traj_file_name) == type(None):
-            self.traj_file_name = 'MoREST_sampling_traj.xyz'
+            self.traj_file_name = 'MoREST_MD_traj.xyz'
         else:
             self.traj_file_name = traj_file_name
 
@@ -547,7 +547,7 @@ class NPT_Berendsen(velocity_Verlet):
         else:
             self.log_file_name = log_file_name
         if type(traj_file_name) == type(None):
-            self.traj_file_name = 'MoREST_sampling_traj.xyz'
+            self.traj_file_name = 'MoREST_MD_traj.xyz'
         else:
             self.traj_file_name = traj_file_name
 
@@ -623,7 +623,7 @@ class NPT_Langevin(velocity_Verlet):
         else:
             self.log_file_name = log_file_name
         if type(traj_file_name) == type(None):
-            self.traj_file_name = 'MoREST_sampling_traj.xyz'
+            self.traj_file_name = 'MoREST_MD_traj.xyz'
         else:
             self.traj_file_name = traj_file_name
 
@@ -640,7 +640,7 @@ class NPT_SVR(velocity_Verlet):
         else:
             self.log_file_name = log_file_name
         if type(traj_file_name) == type(None):
-            self.traj_file_name = 'MoREST_sampling_traj.xyz'
+            self.traj_file_name = 'MoREST_MD_traj.xyz'
         else:
             self.traj_file_name = traj_file_name
 
