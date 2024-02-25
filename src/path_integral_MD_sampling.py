@@ -14,8 +14,11 @@ class RPMD(initialize_sampling):
     '''
     def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, traj_file_name=None, calculator=None, log_morest=None):
         self.n_beads = RPMD_parameters['rpmd_number_of_beads']
-        self.temperature = RPMD_parameters['rpmd_temperature']
         self.beads_file_name = RPMD_parameters['rpmd_beads_file']
+        self.time_step = RPMD_parameters['rpmd_time_step']
+        self.temperature = RPMD_parameters['rpmd_temperature']
+        self.omega_k = RPMD_parameters['omega_k']
+        self.C_jk = RPMD_parameters['C_jk']
 
         if os.path.isfile(self.beads_file_name):
             beads = read_xyz_traj(self.beads_file_name)
