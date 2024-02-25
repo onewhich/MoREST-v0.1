@@ -933,8 +933,8 @@ class read_parameters:
             self.barostat_parameters[key] = self.barostat_parameters[key][:self.barostat_parameters['barostat_number']]
         
     def get_RPMD_parameters(self, log_morest=None):
-        if self.morest_parameters['morest_initialization'] == True:
-           self.RPMD_parameters['rpmd_initialization'] = True
+        self.RPMD_parameters['rpmd_time_step'] *= units.fs
+        self.RPMD_parameters['rpmd_simulation_time'] *= units.fs
         n_beads = self.RPMD_parameters['rp_number_of_beads']
         beta = 1/(self.RPMD_parameters['rpmd_temperature'] * units.kB)
         self.RPMD_parameters['omega_n'] = n_beads / (beta * units._hbar)
