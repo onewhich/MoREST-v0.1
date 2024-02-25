@@ -53,7 +53,7 @@ class initialize_scattering(initialize_calculator):
 
         # combine target molecule and incident molecule
         scattering_system = target_molecule + incident_molecule
-        write_xyz_file('MoREST.str', scattering_system)
+        write_xyz_file('MoREST_scattering.xyz', scattering_system)
 
     def generate_new_traj(self, i_traj):
         self.traj_filename = 'MoREST_scattering_traj_'+str(i_traj)+'.xyz'
@@ -73,7 +73,7 @@ class initialize_scattering(initialize_calculator):
             try:
                 self.current_traj = read_xyz_traj(self.traj_filename)
                 self.current_step = len(self.current_traj) - 1
-                self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_scattering_traj.xyz
+                self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.xyz_new instead of MoREST_scattering_traj.xyz
                 self.MD_log = open(log_filename, 'a', buffering=1)
             except:
                 self.generate_scattering_system()
@@ -88,12 +88,12 @@ class initialize_scattering(initialize_calculator):
             
     def get_current_structure(self):
         if self.scattering_parameters['scattering_initialization']:
-            system = read_xyz_file('MoREST.str')
+            system = read_xyz_file('MoREST_scattering.xyz')
         else:
             try:
                 system = self.current_traj[-1]
             except:
-                system = read_xyz_file('MoREST.str')
+                system = read_xyz_file('MoREST_scattering.xyz')
             
         self.n_atom = system.get_global_number_of_atoms()
         self.masses = system.get_masses()[:,np.newaxis]

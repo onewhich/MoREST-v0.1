@@ -32,7 +32,7 @@ class initialize_searching(initialize_calculator):
                     self.ml_calculator.get_current_step(self.current_step)
                 except:
                     pass
-                self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
+                self.current_system = self.get_current_structure()
                 self.potential_energy_list = [i_sys.get_potential_energy() for i_sys in self.current_traj]
                 self.potential_energy_list.append(self.current_system.get_potential_energy())
             except:
@@ -55,7 +55,6 @@ class initialize_searching(initialize_calculator):
         else:
             try:
                 system = self.current_traj[-1]
-                #system = read_xyz_file('MoREST.str_new') #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
             except:
                 self.log_morest.write('Can not read current structure, and read structure from starting point.')
                 if molecule == None:
@@ -164,7 +163,7 @@ class gradient_descent(initialize_searching):
         except:
             pass
         
-        write_xyz_traj('MoREST_traj.xyz', self.current_system)
+        write_xyz_traj(self.traj_file_name, self.current_system)
         write_xyz_file(self.searching_parameters['searching_starting_point']+'_new', self.current_system)
         self.write_log()
 
@@ -192,8 +191,8 @@ class searching_velocity_Verlet(initialize_searching):
     '''
     This class implements velocity Verlet algorithm for structure optimization methods.
     MoREST_traj.xyz records the trajectory in an extended xyz format
-    MoREST.str (default name) records the initial xyz structure of the system
-    MoREST.str_new (default name) records the current xyz structure of the system
+    MoREST_searching.xyz (default name) records the initial xyz structure of the system
+    MoREST_searching.xyz_new (default name) records the current xyz structure of the system
     '''
     def __init__(self, morest_parameters, searching_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
         super(searching_velocity_Verlet, self).__init__(morest_parameters, searching_parameters, molecule, log_file_name, traj_file_name, calculator, log_morest)
@@ -251,7 +250,7 @@ class searching_velocity_Verlet(initialize_searching):
         except:
             pass
         
-        write_xyz_traj('MoREST_traj.xyz', self.current_system)
+        write_xyz_traj(self.traj_file_name, self.current_system)
         write_xyz_file(self.searching_parameters['searching_starting_point']+'_new', self.current_system)
         
 

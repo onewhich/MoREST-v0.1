@@ -15,8 +15,8 @@ class velocity_Verlet(initialize_sampling):
     '''
     This class implements velocity Verlet algorithm to do microcanonical ensemble (NVE MD) sampling, and (stochestic) velocity rescaling method to constrain the kinetic energy in a NVT MD system.
     MoREST_traj.xyz records the trajectory in an extended xyz format
-    MoREST.str (default name) records the initial xyz structure of the system
-    MoREST.str_new (default name) records the current xyz structure of the system
+    MoREST.xyz (default name) records the initial xyz structure of the system
+    MoREST.xyz_new (default name) records the current xyz structure of the system
     '''
     
     def __init__(self, morest_parameters, sampling_parameters, md_parameters, molecule=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
@@ -224,7 +224,7 @@ class NVE_VV(velocity_Verlet):
         if not self.re_simulation:
             write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
         else:
-            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.str_new', self.current_system)
+            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.xyz_new', self.current_system)
         
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             #print(next_coordinates) #DEGUB
@@ -277,7 +277,7 @@ class NVK_VR(velocity_Verlet):
         if not self.re_simulation:
             write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
         else:
-            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.str_new', self.current_system)
+            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.xyz_new', self.current_system)
         
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             #print(next_coordinates) #DEGUB
@@ -331,7 +331,7 @@ class NVT_Berendsen(velocity_Verlet):
         if not self.re_simulation:
             write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
         else:
-            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.str_new', self.current_system)
+            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.xyz_new', self.current_system)
         
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             #print(next_coordinates) #DEGUB
@@ -386,7 +386,7 @@ class NVT_Langevin(velocity_Verlet):
         if not self.re_simulation:
             write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
         else:
-            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.str_new', self.current_system)
+            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.xyz_new', self.current_system)
         
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             #print(next_coordinates) #DEGUB
@@ -443,7 +443,7 @@ class NVT_SVR(velocity_Verlet):
         if not self.re_simulation:
             write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
         else:
-            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.str_new', self.current_system)
+            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.xyz_new', self.current_system)
         
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             #print(next_coordinates) #DEGUB
@@ -524,7 +524,7 @@ class NPH_SVR(velocity_Verlet):
         if not self.re_simulation:
             write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
         else:
-            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.str_new', self.current_system)
+            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.xyz_new', self.current_system)
         
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             #print(next_coordinates) #DEGUB
@@ -602,7 +602,7 @@ class NPT_Berendsen(velocity_Verlet):
         if not self.re_simulation:
             write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
         else:
-            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.str_new', self.current_system)
+            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.xyz_new', self.current_system)
         
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             #print(next_coordinates) #DEGUB
@@ -711,7 +711,7 @@ class NPT_SVR(velocity_Verlet):
         if not self.re_simulation:
             write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
         else:
-            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.str_new', self.current_system)
+            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.xyz_new', self.current_system)
         
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             #print(next_coordinates) #DEGUB

@@ -45,7 +45,7 @@ class read_parameters:
         self.morest_parameters['wall_potential'] = False
         self.sampling_parameters = {}
         self.sampling_parameters['sampling_initialization'] = False
-        self.sampling_parameters['sampling_molecule'] = 'MoREST.str'
+        self.sampling_parameters['sampling_molecule'] = 'MoREST_sampling.xyz'
         self.sampling_parameters['sampling_pre_thermalized'] = True
         self.md_parameters = {}
         self.md_parameters['md_clean_translation'] = True
@@ -67,11 +67,11 @@ class read_parameters:
         self.scattering_parameters['scattering_pre_thermolized'] = False
         self.scattering_parameters['scattering_traj_stop'] = None
         self.scattering_parameters['scattering_traj_length'] = None
-        self.scattering_parameters['scattering_target_molecule'] = 'MoREST.str_target'
-        self.scattering_parameters['scattering_incident_molecule'] = 'MoREST.str_incident'
+        self.scattering_parameters['scattering_target_molecule'] = 'MoREST_scattering_target.xyz'
+        self.scattering_parameters['scattering_incident_molecule'] = 'MoREST_scattering_incident.xyz'
         self.searching_parameters = {}
         self.searching_parameters['searching_initialization'] = False
-        self.searching_parameters['searching_starting_point'] = 'MoREST.str'
+        self.searching_parameters['searching_starting_point'] = 'MoREST_searching.xyz'
         self.searching_parameters['searching_convergence'] = 5e-3
         self.searching_parameters['searching_max_steps'] = 100
         self.searching_parameters['searching_constrained'] = False
