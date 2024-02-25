@@ -61,7 +61,7 @@ class read_parameters:
         self.barostat_parameters['barostat_action_atoms'] = []
         self.barostat_parameters['barostat_space_parameters'] = []
         self.rpmd_parameters = {}
-        self.rpmd_parameters['rp_initialization'] =False
+        self.rpmd_parameters['rpmd_initialization'] =False
         self.scattering_parameters = {}
         self.scattering_parameters['scattering_initialization'] = False
         self.scattering_parameters['scattering_pre_thermolized'] = False
@@ -476,6 +476,9 @@ class read_parameters:
             
         elif i_parameter.split()[0].upper() == 'RPMD_temperature'.upper():
             self.rpmd_parameters['rpmd_temperature'] = float(i_parameter.split()[1])
+            
+        elif i_parameter.split()[0].upper() == 'RPMD_beads_file'.upper():
+            self.rpmd_parameters['rpmd_beads_file'] = i_parameter.split()[1]
 
     def read_scattering_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'Scattering_initialization'.upper():
