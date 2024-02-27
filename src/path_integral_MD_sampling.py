@@ -24,6 +24,7 @@ class RPMD(initialize_sampling):
         self.temperature = RPMD_parameters['rpmd_temperature']
         self.omega_k = RPMD_parameters['omega_k']
         self.C_jk = RPMD_parameters['C_jk']
+        self.atom_masses = self.masses.flatten()
 
         if self.current_step == 0:
             if self.sampling_parameters['sampling_pre_thermalized']:
@@ -79,15 +80,22 @@ class RPMD(initialize_sampling):
         beads_momenta_half = self.current_beads_momenta + 0.5 * time_step * self.current_beads_forces
         
         # transform momenta and positions from coordinate representation to normal mode representation
-        beads_momenta_half_k : beads_momenta_half
-        beads_positions_k : self.current_beads_positions
+        beads_momenta_half_k = self.coordinate_to_normal_mode_representation(beads_momenta_half)
+        beads_positions_k = self.coordinate_to_normal_mode_representation(self.current_beads_positions)
             
         # dt Hamiltonian kinetic energy part
-            
+        beads_momenta_half_kp = [[np.cos(self.omega_k[k]*self.time_step)*beads_momenta_half_k[k,i,:] for i in range(self.n_atom)] \
+                                    for k in range(self.n_beads)] - \
+                                [[self.atom_masses[i]*self.omega_k[k]*np.sin(self.omega_k[k]*self.time_step)*beads_positions_k[k,i,:] \
+                                    for i in range(self.n_atom)] for k in range(self.n_beads)]
+        beads_positions_kp = [[1/(self.atom_masses[i]*self.omega_k[k])*np.sin(self.omega_k[k]*self.time_step)*beads_momenta_half_k[k,i,:] \
+                               for i in range(self.n_atom)] for k in range(self.n_beads)] \
+                             + [[np.cos(self.omega_k[k]*self.time_step)*beads_positions_k[k,i,:] for i in range(self.n_atom)] \
+                                for k in range(self.n_beads)]
 
         # back transform momenta and positions
-        beads_momenta_half : beads_momenta_half_k
-        next_beads_positions : beads_positions_k
+        beads_momenta_half = self.normal_mode_to_coordinate_representation(beads_momenta_half_kp)
+        next_beads_positions = self.normal_mode_to_coordinate_representation(beads_positions_kp)
             
         # p_j(t+dt) = p_j(t+0.5dt) + 0.5 * dt * F(t)
         next_beads_momenta = beads_momenta_half + 0.5 * time_step * self.current_beads_forces
@@ -133,4 +141,12 @@ class RPMD(initialize_sampling):
             beads_potential_energy.append(tmp_potential_energy)
             beads_forces.append(tmp_forces)
         return np.array(beads_potential_energy), np.array(beads_forces)
+    
+    def coordinate_to_normal_mode_representation(self, beads_vectors):
+        return np.array([[np.sum([beads_vectors[j,i,:]*self.C_jk[j,k] for j in range(self.n_beads)],axis=0) \
+                          for i in range(self.n_atom)] for k in range(self.n_beads)])
+
+    def normal_mode_to_coordinate_representation(self, beads_vectors):
+        return np.array([[np.sum([beads_vectors[j,i,:]*self.C_jk[k,j] for j in range(self.n_beads)],axis=0) \
+                          for i in range(self.n_atom)] for k in range(self.n_beads)])
         
