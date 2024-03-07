@@ -61,7 +61,7 @@ class morest(initialize_modules):
         INPUT:
             calculator: The same as the calculator in ASE. It is required, when many body potential is specified as 'on_the_fly'.
         '''
-        simulation_maxsteps = int(self.md_parameters['md_simulation_time']/self.md_parameters['md_time_step']) + 1
+        simulation_maxsteps = int(self.MD_parameters['md_simulation_time']/self.MD_parameters['md_time_step']) + 1
         if self.morest_parameters['enhanced_sampling']:
             if self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['re'.upper()]:
                 self.enhanced_sampling_RE(simulation_maxsteps)
@@ -194,7 +194,7 @@ class morest(initialize_modules):
             #current_step:          The current MD step is returned to identify the number of opt and sampling steps in ITS
         '''
         current_step, current_system = self.sampling_job.current_step, self.sampling_job.current_system
-        simulation_temperature = self.md_parameters['md_temperature']
+        simulation_temperature = self.MD_parameters['md_temperature']
         while current_step <= simulation_maxsteps:
             potential_energy = self.sampling_job.current_potential_energy
             md_forces = self.sampling_job.current_forces

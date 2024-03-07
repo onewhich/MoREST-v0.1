@@ -62,6 +62,7 @@ class read_parameters:
         self.barostat_parameters['barostat_space_parameters'] = []
         self.RPMD_parameters = {}
         self.RPMD_parameters['rpmd_initialization'] =False
+        self.RPMD_parameters['rpmd_beads_file'] = 'MoREST_RPMD_beads.xyz'
         self.scattering_parameters = {}
         self.scattering_parameters['scattering_initialization'] = False
         self.scattering_parameters['scattering_pre_thermolized'] = False
@@ -954,7 +955,7 @@ class read_parameters:
                     self.RPMD_parameters['C_jk'][j,k] = np.sqrt(2/n_beads)*np.sin(2*units.pi*j*k/n_beads)
 
         if self.morest_parameters['morest_save_parameters_file']:
-            np.save('MoREST_RE_parameters.npy',self.RPMD_parameters)
+            np.save('MoREST_RPMD_parameters.npy',self.RPMD_parameters)
         if log_morest != None:
             for key in self.RPMD_parameters:
                 log_morest.write(key+' : '+str(self.RPMD_parameters[key])+'\n')
