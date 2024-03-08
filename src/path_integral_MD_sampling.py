@@ -7,26 +7,18 @@ from structure_io import read_xyz_file, read_xyz_traj, write_xyz_file, write_xyz
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary, ZeroRotation
 from phase_space_sampling import initialize_sampling
 
-class RP_NVE(initialize_sampling):
+class RPMD(initialize_sampling):
     '''
     The ring polymer molecular dynamics module.
     Annu. Rev. Phys. Chem. 2013. 64:387-413
     J. Chem. Phys. 133, 124104 (2010)
     '''
-    def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
-        
-        if type(log_file_name) == type(None):
-            self.log_file_name = 'MoREST_RPMD.log'
-        else:
-            self.log_file_name = log_file_name
-        if type(traj_file_name) == type(None):
-            self.traj_file_name = 'MoREST_RPMD_traj.xyz'
-        else:
-            self.traj_file_name = traj_file_name
+    def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, traj_file_name=None, calculator=None, log_morest=None):
+
         self.beads_traj_file_head = 'MoREST_RPMD_beads_traj_'
-        
+
         time_0 = time()
-        super(RP_NVE, self).__init__(morest_parameters, sampling_parameters, molecule, traj_file_name, calculator, log_morest)
+        super(RPMD, self).__init__(morest_parameters, sampling_parameters, molecule, traj_file_name, calculator, log_morest)
         time_1 = time()
         print('time intialize sampling:', time_1-time_0)
         self.n_beads = RPMD_parameters['rpmd_number_of_beads']
@@ -77,17 +69,7 @@ class RP_NVE(initialize_sampling):
 
         self.update_current_system_from_beads_average(self.current_beads_positions, self.current_beads_momenta)
 
-        time_0 = time()
-        if self.sampling_parameters['sampling_initialization']:
-            self.RPMD_log = open(self.log_file_name, 'w', buffering=1)
-            self.RPMD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
-            self.write_RPMD_log(self.RPMD_log, self.current_step, np.average(self.current_beads_potential_energy), self.current_system.get_kinetic_energy(), self.masses)
-        else:
-            self.RPMD_log = open(self.log_file_name, 'a', buffering=1)
-        time_1 = time()
-        print('time write the log:', time_1-time_0)
-
-    def RPMD_next_step(self, time_step=None, bias_forces=None, updated_current_beads=None):
+    def RPMD_next_step(self, time_step=None, wall_potential=None, updated_current_beads=None):
         if type(time_step) == type(None):
             time_step = self.time_step
 
@@ -95,8 +77,12 @@ class RP_NVE(initialize_sampling):
             self.current_beads = updated_current_beads
         
         ### F(t) + bias
-        #if type(bias_forces) != type(None):
-        #    self.current_forces = self.current_forces + bias_forces
+        if type(wall_potential) != type(None):
+            for i in range(self.n_beads):
+                current_forces = self.current_beads_forces[i]
+                current_positions = self.current_beads_positions[i]
+                bias_force = wall_potential(current_positions)
+                self.current_beads_forces[i] = current_forces + bias_force
             
         # p_j(t+0.5dt) = p_j(t) + 0.5 * dt * F(t)
         beads_momenta_half = self.current_beads_momenta + 0.5 * time_step * self.current_beads_forces
@@ -132,15 +118,6 @@ class RP_NVE(initialize_sampling):
             self.ml_calculator.get_current_step(self.current_step)
         except:
             pass
-
-        write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
-
-        if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
-            for i in range(self.n_beads):
-                write_xyz_traj(self.beads_traj_file_head+str(i)+'.xyz',self.current_beads[i])
-            write_xyz_traj(self.traj_file_name, self.current_system)
-            self.kinetic_energy = self.current_system.get_kinetic_energy()
-            self.write_RPMD_log(self.RPMD_log, self.current_step, np.average(self.current_beads_potential_energy), self.kinetic_energy, self.masses)
 
     def pre_thermalization(self, Tf):
         Ek_i = self.current_system.get_kinetic_energy()
@@ -184,8 +161,8 @@ class RP_NVE(initialize_sampling):
     
     def update_current_system_from_beads_average(self, beads_positions, beads_momenta):
         system_positions = np.average(beads_positions, axis=0)
-        system_momenta = np.average(beads_momenta, axis=0)
         self.current_system.set_positions(system_positions)
+        system_momenta = np.average(beads_momenta, axis=0)
         self.current_system.set_momenta(system_momenta)
         
     @staticmethod
@@ -199,3 +176,50 @@ class RP_NVE(initialize_sampling):
         T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
         Et = Ek + Ep
         RPMD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'\n')
+
+class RP_NVE(RPMD):
+    def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
+                
+        if type(log_file_name) == type(None):
+            self.log_file_name = 'MoREST_RPMD.log'
+        else:
+            self.log_file_name = log_file_name
+        if type(traj_file_name) == type(None):
+            self.traj_file_name = 'MoREST_RPMD_traj.xyz'
+        else:
+            self.traj_file_name = traj_file_name
+
+        self.RPMD_clean_translation = RPMD_parameters['rpmd_clean_translation']
+        self.RPMD_clean_rotation = RPMD_parameters['rpmd_clean_rotation']
+
+        super().__init__(morest_parameters, sampling_parameters, RPMD_parameters, molecule, traj_file_name, calculator, log_morest)
+
+        time_0 = time()
+        if self.sampling_parameters['sampling_initialization']:
+            self.RPMD_log = open(self.log_file_name, 'w', buffering=1)
+            self.RPMD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
+            self.write_RPMD_log(self.RPMD_log, self.current_step, np.average(self.current_beads_potential_energy), self.current_system.get_kinetic_energy(), self.masses)
+        else:
+            self.RPMD_log = open(self.log_file_name, 'a', buffering=1)
+        time_1 = time()
+        print('time write the log:', time_1-time_0)
+
+    def generate_new_step(self, wall_potential=None, updated_current_system=None):
+        self.RPMD_next_step(wall_potential=wall_potential, updated_current_system=updated_current_system)
+
+        if self.RPMD_clean_translation:
+            Stationary(self.current_beads[0])
+        if self.RPMD_clean_rotation:
+            ZeroRotation(self.current_beads[0])
+        
+        write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
+
+        if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
+            for i in range(self.n_beads):
+                write_xyz_traj(self.beads_traj_file_head+str(i)+'.xyz',self.current_beads[i])
+            write_xyz_traj(self.traj_file_name, self.current_system)
+            self.kinetic_energy = self.current_system.get_kinetic_energy()
+            self.write_RPMD_log(self.RPMD_log, self.current_step, np.average(self.current_beads_potential_energy), self.kinetic_energy, self.masses)
+
+        return self.current_step, self.current_system
+    
