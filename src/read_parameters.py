@@ -936,7 +936,7 @@ class read_parameters:
     def get_RPMD_parameters(self, log_morest=None):
         self.RPMD_parameters['rpmd_time_step'] *= units.fs
         self.RPMD_parameters['rpmd_simulation_time'] *= units.fs
-        n_beads = self.RPMD_parameters['rp_number_of_beads']
+        n_beads = self.RPMD_parameters['rpmd_number_of_beads']
         beta = 1/(self.RPMD_parameters['rpmd_temperature'] * units.kB)
         self.RPMD_parameters['omega_n'] = n_beads / (beta * units._hbar)
         self.RPMD_parameters['omega_k'] = 2*self.RPMD_parameters['omega_n']*np.sin(np.linspace(0,n_beads-1,n_beads)*units.pi/n_beads)
