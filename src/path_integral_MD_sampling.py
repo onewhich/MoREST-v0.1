@@ -135,7 +135,7 @@ class RPMD(initialize_sampling):
             self.current_beads[i].set_positions(new_beads_positions[i])
 
     def get_beads_momenta(self, beads):
-        beads_momenta = np.array([beads[i].get_mometa() for i in range(self.n_beads)])
+        beads_momenta = np.array([beads[i].get_momenta() for i in range(self.n_beads)])
         return beads_momenta
     
     def update_beads_momenta(self, new_beads_momenta):
