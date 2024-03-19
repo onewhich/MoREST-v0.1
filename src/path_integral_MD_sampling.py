@@ -92,14 +92,14 @@ class RPMD(initialize_sampling):
         beads_positions_k = self.coordinate_to_normal_mode_representation(self.current_beads_positions)
             
         # dt Hamiltonian kinetic energy part
-        beads_momenta_half_kp = [[np.cos(self.omega_k[k]*self.time_step)*beads_momenta_half_k[k,i,:] for i in range(self.n_atom)] \
-                                    for k in range(self.n_beads)] - \
-                                [[self.atom_masses[i]*self.omega_k[k]*np.sin(self.omega_k[k]*self.time_step)*beads_positions_k[k,i,:] \
-                                    for i in range(self.n_atom)] for k in range(self.n_beads)]
-        beads_positions_kp = [[1/(self.atom_masses[i]*self.omega_k[k])*np.sin(self.omega_k[k]*self.time_step)*beads_momenta_half_k[k,i,:] \
-                               for i in range(self.n_atom)] for k in range(self.n_beads)] \
-                             + [[np.cos(self.omega_k[k]*self.time_step)*beads_positions_k[k,i,:] for i in range(self.n_atom)] \
-                                for k in range(self.n_beads)]
+        beads_momenta_half_kp = np.array([[np.cos(self.omega_k[k]*self.time_step)*beads_momenta_half_k[k,i,:] for i in range(self.n_atom)] \
+                                    for k in range(self.n_beads)]) \
+                                - np.array([[self.atom_masses[i]*self.omega_k[k]*np.sin(self.omega_k[k]*self.time_step)*beads_positions_k[k,i,:] \
+                                    for i in range(self.n_atom)] for k in range(self.n_beads)])
+        beads_positions_kp = np.array([[1/(self.atom_masses[i]*self.omega_k[k])*np.sin(self.omega_k[k]*self.time_step)*beads_momenta_half_k[k,i,:] \
+                               for i in range(self.n_atom)] for k in range(self.n_beads)]) \
+                             + np.array([[np.cos(self.omega_k[k]*self.time_step)*beads_positions_k[k,i,:] for i in range(self.n_atom)] \
+                                for k in range(self.n_beads)])
 
         # back transform momenta and positions
         beads_momenta_half = self.normal_mode_to_coordinate_representation(beads_momenta_half_kp)
