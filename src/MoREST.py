@@ -69,7 +69,7 @@ class morest(initialize_modules):
                 elif self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['its'.upper()]:
                     self.enhanced_sampling_ITS(simulation_maxsteps)
             elif self.sampling_parameters['sampling_method'].upper() in ['RPMD']:
-                simulation_maxsteps = int(self.RPMD_parameters['md_simulation_time']/self.RPMD_parameters['md_time_step']) + 1
+                simulation_maxsteps = int(self.RPMD_parameters['rpmd_simulation_time']/self.RPMD_parameters['rpmd_time_step']) + 1
                 raise Exception('Enhanced sampling for RPMD has not been implemented.')
         else:
             current_step, current_system = self.sampling_job.current_step, self.sampling_job.current_system
@@ -81,7 +81,7 @@ class morest(initialize_modules):
                         bias_forces = self.wall_potential(general_coordinate)
                         current_step, current_system= self.sampling_job.generate_new_step(bias_forces)
                 elif self.sampling_parameters['sampling_method'].upper() in ['RPMD']:
-                    simulation_maxsteps = int(self.RPMD_parameters['md_simulation_time']/self.RPMD_parameters['md_time_step']) + 1
+                    simulation_maxsteps = int(self.RPMD_parameters['rpmd_simulation_time']/self.RPMD_parameters['rpmd_time_step']) + 1
                     while current_step <= simulation_maxsteps:
                         current_step, current_system= self.sampling_job.generate_new_step(self.wall_potential)
             else:
