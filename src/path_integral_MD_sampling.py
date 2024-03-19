@@ -204,8 +204,8 @@ class RP_NVE(RPMD):
         time_1 = time()
         print('time write the log:', time_1-time_0)
 
-    def generate_new_step(self, wall_potential=None, updated_current_system=None):
-        self.RPMD_next_step(wall_potential=wall_potential, updated_current_system=updated_current_system)
+    def generate_new_step(self, wall_potential=None, updated_current_beads=None):
+        self.RPMD_next_step(wall_potential=wall_potential, updated_current_beads=updated_current_beads)
 
         if self.RPMD_clean_translation:
             Stationary(self.current_beads[0])
