@@ -49,7 +49,9 @@ class RPMD(initialize_sampling):
                 raise Exception('The number of structures in beads file does not fit the number of beads given by the parameter file. Please check.')
         else:
             self.current_beads = []
-            for _ in range(self.n_beads):
+            self.current_beads.append(deepcopy(self.current_system))
+            for _ in range(self.n_beads-1):
+                self.VV_initialize_beads()
                 self.current_beads.append(deepcopy(self.current_system))
         time_1 = time()
         print('time prepare beads:', time_1-time_0)
@@ -68,6 +70,49 @@ class RPMD(initialize_sampling):
         print('time get energy and forces:', time_1-time_0)
 
         self.update_current_system_from_beads_average(self.current_beads_positions, self.current_beads_momenta)
+
+    def VV_initialize_beads(self, time_step=None, bias_forces=None, updated_current_system=None):
+        MaxwellBoltzmannDistribution(self.current_system, temperature_K = 1000)
+
+        if type(time_step) == type(None):
+            time_step = self.time_step
+
+        if type(updated_current_system) != type(None):
+            self.current_system = updated_current_system
+        
+        ### F(t) + bias
+        if type(bias_forces) != type(None):
+            self.current_forces = self.current_forces + bias_forces
+        
+        ### x(t), v(t) = p(t) / m
+        current_coordinates = self.current_system.get_positions()
+        #current_velocities = self.current_system.get_velocities()
+        current_momenta = self.current_system.get_momenta()
+        
+        ### x(t+dt) = x(t) + v(t)*dt + 0.5*F(t)*dt^2/m
+        #next_coordinates = current_coordinates + current_velocities * time_step + 0.5 * self.current_accelerations * time_step**2
+        next_coordinates = current_coordinates + (current_momenta * time_step + 0.5 * self.current_forces * time_step**2) / self.masses
+        self.current_system.set_positions(next_coordinates)
+        
+        ### v(t+0.5dt) = p(t+0.5dt) / m; p(t+0.5dt) = p(t) + 0.5 * F(t) * dt
+        momenta_half = current_momenta + 0.5 * self.current_forces * time_step
+        
+        ### F(t+dt)
+        next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(self.current_system)
+        
+        ### v(t+dt) = v(t+0.5dt) + 0.5 * F(t+dt) * dt / m
+        #next_accelerations = self.current_forces / self.masses
+        #next_velocities = current_velocities + 0.5 * (self.current_accelerations + next_accelerations) * self.time_step
+        #self.current_system.set_velocities(next_velocities)
+        
+        ### p(t+dt) = p(t+0.5dt) + 0.5 * F(t+dt) * dt
+        next_momenta = momenta_half + 0.5 * next_forces * time_step
+        self.current_system.set_momenta(next_momenta)
+        
+        #next_velocities = next_system.get_velocities()
+    
+        self.current_forces = next_forces
+        self.current_potential_energy = next_potential_energy
 
     def RPMD_next_step(self, time_step=None, wall_potential=None, updated_current_beads=None):
         if type(time_step) == type(None):
@@ -109,8 +154,11 @@ class RPMD(initialize_sampling):
         next_beads_momenta = beads_momenta_half + 0.5 * time_step * self.current_beads_forces
 
         self.update_beads_positions(next_beads_positions)
+        self.current_beads_positions = next_beads_positions
         self.update_beads_momenta(next_beads_momenta)
+        self.current_beads_momenta = next_beads_momenta
         self.current_beads_potential_energy, self.current_beads_forces = self.get_beads_potential_forces(self.current_beads)
+        write_xyz_file(self.beads_file_name, self.current_beads)
         self.current_step += 1
         self.update_current_system_from_beads_average(self.current_beads_positions, self.current_beads_momenta)
             
@@ -181,11 +229,11 @@ class RP_NVE(RPMD):
     def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
                 
         if type(log_file_name) == type(None):
-            self.log_file_name = 'MoREST_RPMD.log'
+            self.log_file_name = 'MoREST_RPMD_NVE.log'
         else:
             self.log_file_name = log_file_name
         if type(traj_file_name) == type(None):
-            self.traj_file_name = 'MoREST_RPMD_traj.xyz'
+            self.traj_file_name = 'MoREST_RPMD_NVE_traj.xyz'
         else:
             self.traj_file_name = traj_file_name
 
