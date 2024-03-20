@@ -158,6 +158,7 @@ class RPMD(initialize_sampling):
         self.current_beads_positions = next_beads_positions
         self.update_beads_momenta(next_beads_momenta)
         self.current_beads_momenta = next_beads_momenta
+        write_xyz_file(self.beads_file_name, self.current_beads)
         self.current_beads_potential_energy, self.current_beads_forces = self.get_beads_potential_forces(self.current_beads)
         write_xyz_file(self.beads_file_name, self.current_beads)
         self.current_step += 1
