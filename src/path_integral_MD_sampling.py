@@ -82,8 +82,6 @@ class RPMD(initialize_sampling):
         ### F(t) + bias
         if type(bias_forces) != type(None):
             self.current_forces = self.current_forces + bias_forces
-
-        MaxwellBoltzmannDistribution(self.current_system, temperature_K = temperature)
         
         ### x(t), v(t) = p(t) / m
         current_coordinates = self.current_system.get_positions()
