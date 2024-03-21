@@ -77,7 +77,7 @@ class RPMD(initialize_sampling):
             time_step = self.time_step
 
         if type(temperature) == type(None):
-            temperature = 1000
+            temperature = self.temperature
         
         ### F(t) + bias
         if type(bias_forces) != type(None):
