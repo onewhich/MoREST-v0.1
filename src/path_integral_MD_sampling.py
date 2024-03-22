@@ -49,6 +49,8 @@ class RPMD(initialize_sampling):
                 raise Exception('The number of structures in beads file does not fit the number of beads given by the parameter file. Please check.')
         else:
             self.current_beads = []
+            print(type(self.current_system))
+            print(self.current_system)
             self.current_beads.append(deepcopy(self.current_system))
             for _ in range(self.n_beads-1):
                 self.VV_initialize_beads()
