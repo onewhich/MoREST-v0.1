@@ -85,6 +85,10 @@ class morest(initialize_modules):
                     while current_step <= simulation_maxsteps:
                         current_step, current_system= self.sampling_job.generate_new_step(self.wall_potential)
             else:
+                if self.sampling_parameters['sampling_method'].upper() in ['MD']:
+                    simulation_maxsteps = int(self.MD_parameters['md_simulation_time']/self.MD_parameters['md_time_step']) + 1
+                elif self.sampling_parameters['sampling_method'].upper() in ['RPMD']:
+                    simulation_maxsteps = int(self.RPMD_parameters['rpmd_simulation_time']/self.RPMD_parameters['rpmd_time_step']) + 1
                 while current_step <= simulation_maxsteps:
                     current_step, current_system= self.sampling_job.generate_new_step()
         self.log_morest.write('Phase space sampling with molecular dynamics method is finished!\n')
