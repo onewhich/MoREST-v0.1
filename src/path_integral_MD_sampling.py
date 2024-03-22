@@ -38,7 +38,7 @@ class RPMD(initialize_sampling):
             self.current_beads = []
             self.current_beads.append(deepcopy(self.current_system))
             for _ in range(self.n_beads-1):
-                self.VV_initialize_beads()
+                self.initialize_beads()
                 self.current_beads.append(deepcopy(self.current_system))
         write_xyz_file(self.beads_file_name, self.current_beads)
         time_1 = time()
@@ -75,7 +75,7 @@ class RPMD(initialize_sampling):
 
         self.update_current_system_from_beads_average(self.current_beads_positions, self.current_beads_momenta)
 
-    def VV_initialize_beads(self, time_step=None, bias_forces=None, temperature=None):
+    def initialize_beads(self, time_step=None, bias_forces=None, temperature=None):
         if type(time_step) == type(None):
             time_step = self.time_step
 

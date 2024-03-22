@@ -51,8 +51,6 @@ class initialize_sampling(initialize_calculator):
         self.n_atom = system.get_global_number_of_atoms()
         self.masses = system.get_masses()[:,np.newaxis]
         #self.current_accelerations = self.current_forces / self.masses
-        
-        self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(system)
 
         #self.masses = system.get_masses()
         #self.current_accelerations = np.array([self.current_forces[i_atom] / self.masses[i_atom] for i_atom in range(self.n_atom)])

@@ -23,6 +23,7 @@ class velocity_Verlet(initialize_sampling):
         super(velocity_Verlet, self).__init__(morest_parameters, sampling_parameters, molecule, traj_file_name, calculator, log_morest)
         self.MD_parameters = MD_parameters
         self.time_step = self.MD_parameters['md_time_step']
+        self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(self.current_system)
         
         if type(T_simulation) == type(None):
             self.re_simulation = False
