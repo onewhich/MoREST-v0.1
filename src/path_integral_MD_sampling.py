@@ -29,19 +29,6 @@ class RPMD(initialize_sampling):
         self.C_jk = RPMD_parameters['C_jk']
         self.atom_masses = self.masses.flatten()
 
-        if self.current_step == 0:
-            if self.sampling_parameters['sampling_pre_thermalized']:
-                if 'sampling_initial_E' in self.sampling_parameters:
-                    T_thermalized = 2/3 * self.sampling_parameters['sampling_initial_E']/units.kB /self.n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
-                    MaxwellBoltzmannDistribution(self.current_system, temperature_K = T_thermalized)
-                    self.pre_thermalization(T_thermalized)
-                elif 'sampling_initial_T' in self.sampling_parameters:
-                    T_thermalized = self.sampling_parameters['sampling_initial_T']
-                    MaxwellBoltzmannDistribution(self.current_system, temperature_K = T_thermalized)
-                    self.pre_thermalization(T_thermalized)
-                elif self.T_simulation > 1e-3:
-                    MaxwellBoltzmannDistribution(self.current_system, temperature_K = self.T_simulation)
-
         time_0 = time()
         if os.path.isfile(self.beads_file_name):
             self.current_beads = read_xyz_traj(self.beads_file_name)
@@ -56,6 +43,22 @@ class RPMD(initialize_sampling):
         write_xyz_file(self.beads_file_name, self.current_beads)
         time_1 = time()
         print('time prepare beads:', time_1-time_0)
+
+        if self.current_step == 0:
+            if self.sampling_parameters['sampling_pre_thermalized']:
+                if 'sampling_initial_E' in self.sampling_parameters:
+                    T_thermalized = 2/3 * self.sampling_parameters['sampling_initial_E']/units.kB /self.n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+                    for i in range(self.n_beads):
+                        MaxwellBoltzmannDistribution(self.current_beads[i], temperature_K = T_thermalized)
+                        self.pre_thermalization(T_thermalized)
+                elif 'sampling_initial_T' in self.sampling_parameters:
+                    T_thermalized = self.sampling_parameters['sampling_initial_T']
+                    for i in range(self.n_beads):
+                        MaxwellBoltzmannDistribution(self.current_beads[i], temperature_K = T_thermalized)
+                        self.pre_thermalization(T_thermalized)
+                elif self.T_simulation > 1e-3:
+                    for i in range(self.n_beads):
+                        MaxwellBoltzmannDistribution(self.current_beads[i], temperature_K = self.T_simulation)
 
         time_0 = time()
         self.current_beads_positions = self.get_beads_positions(self.current_beads)
@@ -168,11 +171,12 @@ class RPMD(initialize_sampling):
             pass
 
     def pre_thermalization(self, Tf):
-        Ek_i = self.current_system.get_kinetic_energy()
-        Ti = 2/3 * Ek_i/units.kB /self.n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
-        velocities = self.current_system.get_velocities()
-        factor = np.sqrt(Tf / Ti)
-        self.current_system.set_velocities(factor * velocities)
+        for i in range(self.n_beads):
+            Ek_i = self.current_beads[i].get_kinetic_energy()
+            Ti = 2/3 * Ek_i/units.kB /self.n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+            velocities = self.current_beads[i].get_velocities()
+            factor = np.sqrt(Tf / Ti)
+            self.current_beads[i].set_velocities(factor * velocities)
             
     def get_beads_positions(self, beads):
         beads_positions = np.array([beads[i].get_positions() for i in range(self.n_beads)])
