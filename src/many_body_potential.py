@@ -414,6 +414,10 @@ class Molpro(FileIOCalculator):
             self.outfile = kwargs['outfile']
         except:
             self.outfile='molpro.out'
+        try:
+            self.noforce = kwargs['noforce']
+        except:
+            self.noforce = False
         FileIOCalculator.__init__(self, *args, **kwargs)
 
     def calculate(self,  *args, **kwargs):
@@ -446,8 +450,11 @@ class Molpro(FileIOCalculator):
         # Parse the basis
         inpstr += '\nbasis=' + self.basis
         # Parse the method
-        if not 'force' in self.method:
-            inpstr += '\n' + self.method + '\nforce'
+        if not self.noforce:
+            if not 'force' in self.method:
+                inpstr += '\n' + self.method + '\nforce'
+            else:
+                inpstr += '\n' + self.method
         else:
             inpstr += '\n' + self.method
         # Write the input file
