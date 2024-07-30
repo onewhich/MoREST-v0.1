@@ -394,7 +394,7 @@ class Molpro(FileIOCalculator):
             self.overwrite = kwargs['overwrite']
             if self.overwrite.upper() in ['True'.upper()]:
                 self.overwrite = True
-            else:
+            elif self.overwrite.upper() in ['False'.upper()]:
                 self.overwrite = False
         except:
             self.overwrite = False
@@ -416,6 +416,10 @@ class Molpro(FileIOCalculator):
             self.outfile='molpro.out'
         try:
             self.noforce = kwargs['noforce']
+            if self.noforce.upper() in ['True'.upper()]:
+                self.noforce = True
+            elif self.noforce.upper() in ['False'.upper()]:
+                self.noforce = False
         except:
             self.noforce = False
         FileIOCalculator.__init__(self, *args, **kwargs)
