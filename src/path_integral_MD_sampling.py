@@ -21,6 +21,8 @@ class RPMD(initialize_sampling):
         super(RPMD, self).__init__(morest_parameters, sampling_parameters, molecule, traj_file_name, calculator, log_morest)
         time_1 = time()
         print('time intialize sampling:', time_1-time_0)
+        self.beta = RPMD_parameters['beta']
+        self.hbar = RPMD_parameters['hbar']
         self.n_beads = RPMD_parameters['rpmd_number_of_beads']
         self.beads_file_name = RPMD_parameters['rpmd_beads_file']
         self.time_step = RPMD_parameters['rpmd_time_step']
@@ -38,8 +40,8 @@ class RPMD(initialize_sampling):
             self.current_beads = []
             self.current_beads.append(deepcopy(self.current_system))
             for _ in range(self.n_beads-1):
-                #self.initialize_beads()
                 self.current_beads.append(deepcopy(self.current_system))
+            self.initialize_beads()
         write_xyz_file(self.beads_file_name, self.current_beads)
         time_1 = time()
         print('time prepare beads:', time_1-time_0)
@@ -75,46 +77,10 @@ class RPMD(initialize_sampling):
 
         self.update_current_system_from_beads_average(self.current_beads_positions, self.current_beads_momenta)
 
-    def initialize_beads(self, time_step=None, bias_forces=None, temperature=None):
-        if type(time_step) == type(None):
-            time_step = self.time_step
-
-        if type(temperature) == type(None):
-            temperature = self.temperature
+    def initialize_beads(self):
+        r_beads = [np.sqrt(self.beta * (self.hbar)**2 / self.n_beads / self.atom_masses[i]) for i in range(self.n_atom)]
         
-        ### F(t) + bias
-        if type(bias_forces) != type(None):
-            self.current_forces = self.current_forces + bias_forces
-        
-        ### x(t), v(t) = p(t) / m
-        current_coordinates = self.current_system.get_positions()
-        #current_velocities = self.current_system.get_velocities()
-        current_momenta = self.current_system.get_momenta()
-        
-        ### x(t+dt) = x(t) + v(t)*dt + 0.5*F(t)*dt^2/m
-        #next_coordinates = current_coordinates + current_velocities * time_step + 0.5 * self.current_accelerations * time_step**2
-        next_coordinates = current_coordinates + (current_momenta * time_step + 0.5 * self.current_forces * time_step**2) / self.masses
-        self.current_system.set_positions(next_coordinates)
-        
-        ### v(t+0.5dt) = p(t+0.5dt) / m; p(t+0.5dt) = p(t) + 0.5 * F(t) * dt
-        momenta_half = current_momenta + 0.5 * self.current_forces * time_step
-        
-        ### F(t+dt)
-        next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(self.current_system)
-        
-        ### v(t+dt) = v(t+0.5dt) + 0.5 * F(t+dt) * dt / m
-        #next_accelerations = self.current_forces / self.masses
-        #next_velocities = current_velocities + 0.5 * (self.current_accelerations + next_accelerations) * self.time_step
-        #self.current_system.set_velocities(next_velocities)
-        
-        ### p(t+dt) = p(t+0.5dt) + 0.5 * F(t+dt) * dt
-        next_momenta = momenta_half + 0.5 * next_forces * time_step
-        self.current_system.set_momenta(next_momenta)
-        
-        #next_velocities = next_system.get_velocities()
-    
-        self.current_forces = next_forces
-        self.current_potential_energy = next_potential_energy
+        for i in range(self.n_beads):
 
     def RPMD_next_step(self, time_step=None, wall_potential=None, updated_current_beads=None):
         if type(time_step) == type(None):

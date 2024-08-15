@@ -565,11 +565,13 @@ class Molpro(FileIOCalculator):
                 n_atoms = int(molpro_output[i+1])
                 chemical_symbols = []
                 positions = []
-                for i_atom in range(n_atoms):
-                    element = molpro_output[i+3+i_atom].split()[0]
-                    chemical_symbols.append(element)
-                    tmp_pos = np.array(molpro_output[i+3+i_atom].split()[1:4],dtype=float)
-                    positions.append(tmp_pos)
+                for i_atom in range(n_atoms+1):
+                    i_check_line = i+2+i_atom
+                    if len(molpro_output[i_check_line].split()) == 4:
+                        element = molpro_output[i_check_line].split()[0]
+                        chemical_symbols.append(element)
+                        tmp_pos = np.array(molpro_output[i_check_line].split()[1:4],dtype=float)
+                        positions.append(tmp_pos)
         return chemical_symbols, np.array(positions)
 
 
