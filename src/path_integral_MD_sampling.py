@@ -41,7 +41,7 @@ class RPMD(initialize_sampling):
             self.current_beads.append(deepcopy(self.current_system))
             for _ in range(self.n_beads-1):
                 self.current_beads.append(deepcopy(self.current_system))
-            self.initialize_beads()
+            #self.initialize_beads()
         write_xyz_file(self.beads_file_name, self.current_beads)
         time_1 = time()
         print('time prepare beads:', time_1-time_0)
