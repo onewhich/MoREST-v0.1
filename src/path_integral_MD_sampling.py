@@ -77,10 +77,10 @@ class RPMD(initialize_sampling):
 
         self.update_current_system_from_beads_average(self.current_beads_positions, self.current_beads_momenta)
 
-    def initialize_beads(self):
-        r_beads = [np.sqrt(self.beta * (self.hbar)**2 / self.n_beads / self.atom_masses[i]) for i in range(self.n_atom)]
-        
-        for i in range(self.n_beads):
+#    def initialize_beads(self):
+#        r_beads = [np.sqrt(self.beta * (self.hbar)**2 / self.n_beads / self.atom_masses[i]) for i in range(self.n_atom)]
+#        
+#        for i in range(self.n_beads):
 
     def RPMD_next_step(self, time_step=None, wall_potential=None, updated_current_beads=None):
         if type(time_step) == type(None):
