@@ -962,7 +962,10 @@ class read_parameters:
             np.save('MoREST_RPMD_parameters.npy',self.RPMD_parameters)
         if log_morest != None:
             for key in self.RPMD_parameters:
-                log_morest.write(key+' : '+str(self.RPMD_parameters[key])+'\n')
+                if key in ['rpmd_time_step','rpmd_simulation_time']:
+                    log_morest.write(key+' : '+str(self.RPMD_parameters[key]/units.fs)+'\n')
+                else:
+                    log_morest.write(key+' : '+str(self.RPMD_parameters[key])+'\n')
             log_morest.write('\n')
         return self.RPMD_parameters
 
