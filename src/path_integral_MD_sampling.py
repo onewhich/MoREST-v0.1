@@ -78,13 +78,17 @@ class RPMD(initialize_sampling):
         # r_beads = [np.sqrt(self.beta * (self.hbar)**2 / self.n_beads / self.atom_masses[i]) for i in range(self.n_atom)] 
         
         # r_ring: the radius of the beads gyration in imaginary time.
-        lambda_T = units._hplanck*units.J*units.s / np.sqrt(2*np.pi*self.atom_masses[i]*units.kB*self.temperature)
-        r_ring = np.array([lambda_T / np.sqrt(8*np.pi) for i in range(self.n_atom)])[:,np.newaxis]
+        lambda_T = np.array([units._hplanck*units.J*units.s / np.sqrt(2*np.pi*self.atom_masses[i]*units.kB*self.temperature) for i in range(self.n_atom)])[:,np.newaxis]
+        r_ring = lambda_T / np.sqrt(8*np.pi)
+
+        print(r_ring)
         
         rand_pos = np.random.rand(5,3) - 0.5
         norm = np.linalg.norm(rand_pos,axis=-1)[:,np.newaxis]
         pos_vec = rand_pos/norm*r_ring
         
+        print(pos_vec)
+
         centroid_pos = self.current_system.get_positions()
         self.current_beads = []
         for _ in range(self.n_beads):
