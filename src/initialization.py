@@ -74,9 +74,11 @@ class initialize_modules:
             #Method: '+str(self.sampling_parameters['sampling_method'])+'\nEnsemble: '+str(self.sampling_parameters['sampling_ensemble'])+'\n\n')
             try:
                 if self.sampling_parameters['sampling_method'].upper() in ['MD']:
-                    os.remove('MoREST_MD*')
+                    for md_file in glob('./MoREST_MD*'):
+                        os.remove(md_file)
                 elif self.sampling_parameters['sampling_method'].upper() in ['RPMD']:
-                    os.remove('MoREST_RPMD*')
+                    for rpmd_file in glob('./MoREST_RPMD*'):
+                        os.remove(rpmd_file)
             except:
                 pass
         else:
