@@ -206,15 +206,12 @@ class RP_NVE(RPMD):
 
         super().__init__(morest_parameters, sampling_parameters, RPMD_parameters, molecule, traj_file_name, calculator, log_morest)
 
-        time_0 = time()
         if self.sampling_parameters['sampling_initialization']:
             self.RPMD_log = open(self.log_file_name, 'w', buffering=1)
             self.RPMD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
             self.write_RPMD_log(self.RPMD_log, self.current_step, np.average(self.current_beads_potential_energy), self.current_system.get_kinetic_energy(), self.masses)
         else:
             self.RPMD_log = open(self.log_file_name, 'a', buffering=1)
-        time_1 = time()
-        print('time write the log:', time_1-time_0)
 
     def generate_new_step(self, wall_potential=None, updated_current_beads=None):
         self.RPMD_next_step(wall_potential=wall_potential, updated_current_beads=updated_current_beads)
