@@ -37,11 +37,7 @@ class RPMD(initialize_sampling):
             if len(self.current_beads) != self.n_beads:
                 raise Exception('The number of structures in beads file does not fit the number of beads given by the parameter file. Please check.')
         else:
-            self.current_beads = []
-            self.current_beads.append(deepcopy(self.current_system))
-            for _ in range(self.n_beads-1):
-                self.current_beads.append(deepcopy(self.current_system))
-            #self.initialize_beads()
+            self.initialize_beads()
         write_xyz_file(self.beads_file_name, self.current_beads)
         time_1 = time()
         print('time prepare beads:', time_1-time_0)
@@ -77,10 +73,24 @@ class RPMD(initialize_sampling):
 
         self.update_current_system_from_beads_average(self.current_beads_positions, self.current_beads_momenta)
 
-#    def initialize_beads(self):
-#        r_beads = [np.sqrt(self.beta * (self.hbar)**2 / self.n_beads / self.atom_masses[i]) for i in range(self.n_atom)]
-#        
-#        for i in range(self.n_beads):
+    def initialize_beads(self):
+        # r_beads: the average distance from a bead to the neighbor for free particles.
+        # r_beads = [np.sqrt(self.beta * (self.hbar)**2 / self.n_beads / self.atom_masses[i]) for i in range(self.n_atom)] 
+        
+        # r_ring: the radius of the beads gyration in imaginary time.
+        lambda_T = units._hplanck*units.J*units.s / np.sqrt(2*np.pi*self.atom_masses[i]*units.kB*self.temperature)
+        r_ring = np.array([lambda_T / np.sqrt(8*np.pi) for i in range(self.n_atom)])[:,np.newaxis]
+        
+        rand_pos = np.random.rand(5,3) - 0.5
+        norm = np.linalg.norm(rand_pos,axis=-1)[:,np.newaxis]
+        pos_vec = rand_pos/norm*r_ring
+        
+        centroid_pos = self.current_system.get_positions()
+        self.current_beads = []
+        for _ in range(self.n_beads):
+            tmp_system = deepcopy(self.current_system)
+            tmp_system.set_positions(centroid_pos+pos_vec)
+            self.current_beads.append(tmp_system)
 
     def RPMD_next_step(self, time_step=None, wall_potential=None, updated_current_beads=None):
         if type(time_step) == type(None):
