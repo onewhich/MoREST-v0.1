@@ -73,11 +73,10 @@ class initialize_modules:
             self.log_morest.write('Start to sample the phase space\n\n')
             #Method: '+str(self.sampling_parameters['sampling_method'])+'\nEnsemble: '+str(self.sampling_parameters['sampling_ensemble'])+'\n\n')
             try:
-                #os.remove('MoREST.str_new')
-                os.remove('MoREST_MD_traj.xyz')
-                os.remove('MoREST_MD.log')
-                os.remove('MoREST_RPMD_traj.xyz')
-                os.remove('MoREST_RPMD.log')
+                if self.sampling_parameters['sampling_method'].upper() in ['MD']:
+                    os.remove('MoREST_MD*')
+                elif self.sampling_parameters['sampling_method'].upper() in ['RPMD']:
+                    os.remove('MoREST_RPMD*')
             except:
                 pass
         else:
