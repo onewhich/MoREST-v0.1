@@ -83,7 +83,7 @@ class RPMD(initialize_sampling):
 
         print(r_ring)
         
-        rand_pos = np.random.rand(5,3) - 0.5
+        rand_pos = np.random.rand(self.n_atom,3) - 0.5
         norm = np.linalg.norm(rand_pos,axis=-1)[:,np.newaxis]
         pos_vec = rand_pos/norm*r_ring
         
