@@ -17,10 +17,7 @@ class RPMD(initialize_sampling):
 
         self.beads_traj_file_head = 'MoREST_RPMD_beads_traj_'
 
-        time_0 = time()
         super(RPMD, self).__init__(morest_parameters, sampling_parameters, molecule, traj_file_name, calculator, log_morest)
-        time_1 = time()
-        print('time intialize sampling:', time_1-time_0)
         self.beta = RPMD_parameters['beta']
         self.hbar = RPMD_parameters['hbar']
         self.n_beads = RPMD_parameters['rpmd_number_of_beads']
@@ -31,7 +28,6 @@ class RPMD(initialize_sampling):
         self.C_jk = RPMD_parameters['C_jk']
         self.atom_masses = self.masses.flatten()
 
-        time_0 = time()
         if os.path.isfile(self.beads_file_name):
             self.current_beads = read_xyz_traj(self.beads_file_name)
             if len(self.current_beads) != self.n_beads:
@@ -39,8 +35,6 @@ class RPMD(initialize_sampling):
         else:
             self.initialize_beads()
         write_xyz_file(self.beads_file_name, self.current_beads)
-        time_1 = time()
-        print('time prepare beads:', time_1-time_0)
 
         if self.current_step == 0:
             if self.sampling_parameters['sampling_pre_thermalized']:
@@ -58,18 +52,9 @@ class RPMD(initialize_sampling):
                     for i in range(self.n_beads):
                         MaxwellBoltzmannDistribution(self.current_beads[i], temperature_K = self.T_simulation)
 
-        time_0 = time()
         self.current_beads_positions = self.get_beads_positions(self.current_beads)
-        time_1 = time()
-        print('time get positions:', time_1-time_0)
-        time_0 = time()
         self.current_beads_momenta = self.get_beads_momenta(self.current_beads)
-        time_1 = time()
-        print('time get momenta:', time_1-time_0)
-        time_0 = time()
         self.current_beads_potential_energy, self.current_beads_forces = self.get_beads_potential_forces(self.current_beads)
-        time_1 = time()
-        print('time get energy and forces:', time_1-time_0)
 
         self.update_current_system_from_beads_average(self.current_beads_positions, self.current_beads_momenta)
 
@@ -81,13 +66,9 @@ class RPMD(initialize_sampling):
         lambda_T = np.array([units._hplanck*units.J*units.s / np.sqrt(2*np.pi*self.atom_masses[i]*units.kB*self.T_simulation) for i in range(self.n_atom)])[:,np.newaxis]
         r_ring = lambda_T / np.sqrt(8*np.pi)
 
-        print(r_ring)
-        
         rand_pos = np.random.rand(self.n_atom,3) - 0.5
         norm = np.linalg.norm(rand_pos,axis=-1)[:,np.newaxis]
         pos_vec = rand_pos/norm*r_ring
-        
-        print(pos_vec)
 
         centroid_pos = self.current_system.get_positions()
         self.current_beads = []
@@ -139,7 +120,6 @@ class RPMD(initialize_sampling):
         self.current_beads_positions = next_beads_positions
         self.update_beads_momenta(next_beads_momenta)
         self.current_beads_momenta = next_beads_momenta
-        write_xyz_file(self.beads_file_name, self.current_beads)
         self.current_beads_potential_energy, self.current_beads_forces = self.get_beads_potential_forces(self.current_beads)
         write_xyz_file(self.beads_file_name, self.current_beads)
         self.current_step += 1
@@ -240,9 +220,11 @@ class RP_NVE(RPMD):
         self.RPMD_next_step(wall_potential=wall_potential, updated_current_beads=updated_current_beads)
 
         if self.RPMD_clean_translation:
-            Stationary(self.current_beads[0])
+            for i in range(self.n_beads):
+                Stationary(self.current_beads[i])
         if self.RPMD_clean_rotation:
-            ZeroRotation(self.current_beads[0])
+            for i in range(self.n_beads):
+                ZeroRotation(self.current_beads[i])
         
         write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
 
