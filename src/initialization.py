@@ -109,6 +109,8 @@ class initialize_modules:
         elif self.sampling_parameters['sampling_method'].upper() in ['RPMD']:
             if self.sampling_parameters['sampling_ensemble'].upper() in ['NVE_VV']:
                 self.sampling_job = RP_NVE(self.morest_parameters, self.sampling_parameters, self.RPMD_parameters, calculator=self.calculator, log_morest=self.log_morest)
+            else:
+                raise Exception('The chosen sampling ensemble has not yet been implemented.')
         else:
             self.log_morest.write('It is not clear which sampling method will be used.\n')
             self.log_morest.close()

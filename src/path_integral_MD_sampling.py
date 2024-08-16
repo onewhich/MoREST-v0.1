@@ -213,11 +213,11 @@ class RP_NVE(RPMD):
     def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
                 
         if type(log_file_name) == type(None):
-            self.log_file_name = 'MoREST_RPMD_NVE.log'
+            self.log_file_name = 'MoREST_RPMD.log'
         else:
             self.log_file_name = log_file_name
         if type(traj_file_name) == type(None):
-            self.traj_file_name = 'MoREST_RPMD_NVE_traj.xyz'
+            self.traj_file_name = 'MoREST_RPMD_traj.xyz'
         else:
             self.traj_file_name = traj_file_name
 
