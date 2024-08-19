@@ -78,7 +78,7 @@ class RPMD(initialize_sampling):
         self.current_beads.append(tmp_system)
 
         # the positions of other beads
-        while len(self.current_beads) < range(self.n_beads):
+        while len(self.current_beads) < self.n_beads:
             beads_pos = np.array([i_bead.get_positions() for i_bead in self.current_beads])
             tmp_pos = []
             i = 0
