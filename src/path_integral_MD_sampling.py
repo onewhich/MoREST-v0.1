@@ -71,7 +71,7 @@ class RPMD(initialize_sampling):
 
         # the position of the first bead
         rand_pos_1 = np.random.rand(self.n_atom, 3) - 0.5
-        norm_1 = np.linalg.norm(rand_pos_1,axis=-1)
+        norm_1 = np.linalg.norm(rand_pos_1,axis=-1)[:,np.newaxis]
         pos_new_1 = rand_pos_1/norm_1*r_ring + centroid_pos
         tmp_system = deepcopy(self.current_system)
         tmp_system.set_positions(pos_new_1)
