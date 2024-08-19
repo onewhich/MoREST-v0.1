@@ -60,21 +60,40 @@ class RPMD(initialize_sampling):
 
     def initialize_beads(self):
         # r_beads: the average distance from a bead to the neighbor for free particles.
-        # r_beads = [np.sqrt(self.beta * (self.hbar)**2 / self.n_beads / self.atom_masses[i]) for i in range(self.n_atom)] 
+        r_beads = [np.sqrt(self.beta * (self.hbar)**2 / self.n_beads / self.atom_masses[i]) for i in range(self.n_atom)] 
         
         # r_ring: the radius of the beads gyration in imaginary time.
         lambda_T = np.array([units._hplanck*units.J*units.s / np.sqrt(2*np.pi*self.atom_masses[i]*units.kB*self.T_simulation) for i in range(self.n_atom)])[:,np.newaxis]
         r_ring = lambda_T / np.sqrt(8*np.pi)
 
-        rand_pos = np.random.rand(self.n_atom,3) - 0.5
-        norm = np.linalg.norm(rand_pos,axis=-1)[:,np.newaxis]
-        pos_vec = rand_pos/norm*r_ring
-
         centroid_pos = self.current_system.get_positions()
         self.current_beads = []
-        for _ in range(self.n_beads):
+
+        # the position of the first bead
+        rand_pos_1 = np.random.rand(self.n_atom, 3) - 0.5
+        norm_1 = np.linalg.norm(rand_pos_1,axis=-1)
+        pos_new_1 = rand_pos_1/norm_1*r_ring + centroid_pos
+        tmp_system = deepcopy(self.current_system)
+        tmp_system.set_positions(pos_new_1)
+        self.current_beads.append(tmp_system)
+
+        # the positions of other beads
+        while len(self.current_beads) < range(self.n_beads):
+            beads_pos = np.array([i_bead.get_positions() for i_bead in self.current_beads])
+            tmp_pos = []
+            i = 0
+            while len(tmp_pos) < self.n_atom:
+                atoms_pos = beads_pos[:,i,:]
+
+                rand_pos = np.random.rand(3) - 0.5
+                norm = np.linalg.norm(rand_pos,axis=-1)
+                pos_new = np.array(rand_pos/norm*r_ring[i] + centroid_pos[i])
+
+                if np.all(np.linalg.norm(atoms_pos - pos_new,axis=-1) > r_beads[i]):
+                    tmp_pos.append(pos_new)
+                    i += 1
             tmp_system = deepcopy(self.current_system)
-            tmp_system.set_positions(centroid_pos+pos_vec)
+            tmp_system.set_positions(tmp_pos)
             self.current_beads.append(tmp_system)
 
     def RPMD_next_step(self, time_step=None, wall_potential=None, updated_current_beads=None):
