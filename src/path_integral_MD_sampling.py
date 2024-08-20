@@ -6,6 +6,7 @@ from ase import units
 from structure_io import read_xyz_file, read_xyz_traj, write_xyz_file, write_xyz_traj
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary, ZeroRotation
 from phase_space_sampling import initialize_sampling
+from numerical_integraion import RPMD_integration
 
 class RPMD(initialize_sampling):
     '''
@@ -57,6 +58,8 @@ class RPMD(initialize_sampling):
         self.current_beads_potential_energy, self.current_beads_forces = self.get_beads_potential_forces(self.current_beads)
 
         self.update_current_system_from_beads_average(self.current_beads_positions, self.current_beads_momenta)
+
+        self.integration = RPMD_integration()
 
     def initialize_beads(self):
         # r_beads: the average distance from a bead to the neighbor for free particles.
@@ -112,28 +115,20 @@ class RPMD(initialize_sampling):
                 self.current_beads_forces[i] = current_forces + bias_force
             
         # p_j(t+0.5dt) = p_j(t) + 0.5 * dt * F(t)
-        beads_momenta_half = self.current_beads_momenta + 0.5 * time_step * self.current_beads_forces
+        beads_momenta_half = self.integration.propagate_momenta_half(self.time_step, self.current_beads_momenta, self.current_beads_forces)
         
         # transform momenta and positions from coordinate representation to normal mode representation
-        beads_momenta_half_k = self.coordinate_to_normal_mode_representation(beads_momenta_half)
-        beads_positions_k = self.coordinate_to_normal_mode_representation(self.current_beads_positions)
+        beads_momenta_half_k, beads_positions_k = self.integration.transform_to_normal_mode(beads_momenta_half, self.current_beads_positions)
             
         # dt Hamiltonian kinetic energy part
-        beads_momenta_half_kp = np.array([[np.cos(self.omega_k[k]*self.time_step)*beads_momenta_half_k[k,i,:] for i in range(self.n_atom)] \
-                                    for k in range(self.n_beads)]) \
-                                - np.array([[self.atom_masses[i]*self.omega_k[k]*np.sin(self.omega_k[k]*self.time_step)*beads_positions_k[k,i,:] \
-                                    for i in range(self.n_atom)] for k in range(self.n_beads)])
-        beads_positions_kp = np.array([[1/(self.atom_masses[i]*self.omega_k[k])*np.sin(self.omega_k[k]*self.time_step)*beads_momenta_half_k[k,i,:] \
-                               for i in range(self.n_atom)] for k in range(self.n_beads)]) \
-                             + np.array([[np.cos(self.omega_k[k]*self.time_step)*beads_positions_k[k,i,:] for i in range(self.n_atom)] \
-                                for k in range(self.n_beads)])
+        beads_momenta_half_kp, beads_positions_kp = self.integration.free_beads_evolution(self.time_step, beads_positions_k, beads_momenta_half_k, \
+                                                                                          self.omega_k, self.n_atom, self.n_beads, self.atom_masses)
 
         # back transform momenta and positions
-        beads_momenta_half = self.normal_mode_to_coordinate_representation(beads_momenta_half_kp)
-        next_beads_positions = self.normal_mode_to_coordinate_representation(beads_positions_kp)
+        beads_momenta_half, next_beads_positions = self.integration.transform_back_to_coordinates(beads_momenta_half_kp, beads_positions_kp)
             
         # p_j(t+dt) = p_j(t+0.5dt) + 0.5 * dt * F(t)
-        next_beads_momenta = beads_momenta_half + 0.5 * time_step * self.current_beads_forces
+        next_beads_momenta = self.integration.propagate_momenta_half(self.time_step, beads_momenta_half, self.current_beads_forces)
 
         self.update_beads_positions(next_beads_positions)
         self.current_beads_positions = next_beads_positions
@@ -182,14 +177,6 @@ class RPMD(initialize_sampling):
             beads_forces.append(tmp_forces)
         return np.array(beads_potential_energy), np.array(beads_forces)
     
-    def coordinate_to_normal_mode_representation(self, beads_vectors):
-        return np.array([[np.sum([beads_vectors[j,i,:]*self.C_jk[j,k] for j in range(self.n_beads)],axis=0) \
-                          for i in range(self.n_atom)] for k in range(self.n_beads)])
-
-    def normal_mode_to_coordinate_representation(self, beads_vectors):
-        return np.array([[np.sum([beads_vectors[j,i,:]*self.C_jk[k,j] for j in range(self.n_beads)],axis=0) \
-                          for i in range(self.n_atom)] for k in range(self.n_beads)])
-    
     def update_current_system_from_beads_average(self, beads_positions, beads_momenta):
         system_positions = np.average(beads_positions, axis=0)
         self.current_system.set_positions(system_positions)
@@ -207,6 +194,22 @@ class RPMD(initialize_sampling):
         T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
         Et = Ek + Ep
         RPMD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'\n')
+
+    @staticmethod
+    def write_SVR_RPMD_log(RPMD_log, step, Ep, Ek, masses, Ee=0, d_Ee=0):
+        try:
+            if len(Ep) >= 1:
+                Ep = Ep[0]
+        except:
+            pass
+        n_atom = len(masses)
+        #Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(n_atom)])
+        #Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)
+        T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+        Et = Ek + Ep
+        Ee += d_Ee
+        RPMD_log.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et)+'    '+str(Ee)+'\n')
+        return Ee
 
 class RP_NVE(RPMD):
     def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
@@ -253,3 +256,51 @@ class RP_NVE(RPMD):
 
         return self.current_step, self.current_system
     
+class RP_NVT_SVR(RPMD):
+    def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
+                
+        if type(log_file_name) == type(None):
+            self.log_file_name = 'MoREST_RPMD.log'
+        else:
+            self.log_file_name = log_file_name
+        if type(traj_file_name) == type(None):
+            self.traj_file_name = 'MoREST_RPMD_traj.xyz'
+        else:
+            self.traj_file_name = traj_file_name
+
+        self.RPMD_clean_translation = RPMD_parameters['rpmd_clean_translation']
+        self.RPMD_clean_rotation = RPMD_parameters['rpmd_clean_rotation']
+
+        super().__init__(morest_parameters, sampling_parameters, RPMD_parameters, molecule, traj_file_name, calculator, log_morest)
+
+        if self.sampling_parameters['sampling_initialization']:
+            self.RPMD_log = open(self.log_file_name, 'w', buffering=1)
+            self.RPMD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), Effective energy (eV)\n')   
+            self.Ee = self.write_SVR_RPMD_log(self.RPMD_log, self.current_step, np.average(self.current_beads_potential_energy), self.current_system.get_kinetic_energy(), self.masses)
+        else:
+            self.RPMD_log = open(self.log_file_name, 'a', buffering=1)
+
+    def generate_new_step(self, wall_potential=None, updated_current_beads=None):
+        self.RPMD_next_step(wall_potential=wall_potential, updated_current_beads=updated_current_beads)
+        new_velocities, self.d_Ee, alpha = stochastic_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.K_simulation, \
+                                                                  3*self.n_atom, self.sampling_parameters['nvt_svr_tau'], self.current_system.get_velocities())
+        self.current_system.set_velocities(new_velocities)
+
+        if self.RPMD_clean_translation:
+            for i in range(self.n_beads):
+                Stationary(self.current_beads[i])
+        if self.RPMD_clean_rotation:
+            for i in range(self.n_beads):
+                ZeroRotation(self.current_beads[i])
+
+
+        write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
+
+        if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
+            for i in range(self.n_beads):
+                write_xyz_traj(self.beads_traj_file_head+str(i)+'.xyz',self.current_beads[i])
+            write_xyz_traj(self.traj_file_name, self.current_system)
+            self.kinetic_energy = self.current_system.get_kinetic_energy()
+            self.Ee = self.write_SVR_RPMD_log(self.RPMD_log, self.current_step, np.average(self.current_beads_potential_energy), self.kinetic_energy, self.masses, self.Ee, self.d_Ee)
+            
+        return self.current_step, self.current_system
