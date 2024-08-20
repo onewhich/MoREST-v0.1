@@ -118,14 +118,16 @@ class RPMD(initialize_sampling):
         beads_momenta_half = self.integration.propagate_momenta_half(self.time_step, self.current_beads_momenta, self.current_beads_forces)
         
         # transform momenta and positions from coordinate representation to normal mode representation
-        beads_momenta_half_k, beads_positions_k = self.integration.transform_to_normal_mode(beads_momenta_half, self.current_beads_positions)
+        beads_momenta_half_k, beads_positions_k = self.integration.transform_to_normal_mode(beads_momenta_half, self.current_beads_positions, \
+                                                                                            self.C_jk, self.n_atom, self.n_beads)
             
         # dt Hamiltonian kinetic energy part
         beads_momenta_half_kp, beads_positions_kp = self.integration.free_beads_evolution(self.time_step, beads_positions_k, beads_momenta_half_k, \
                                                                                           self.omega_k, self.n_atom, self.n_beads, self.atom_masses)
 
         # back transform momenta and positions
-        beads_momenta_half, next_beads_positions = self.integration.transform_back_to_coordinates(beads_momenta_half_kp, beads_positions_kp)
+        beads_momenta_half, next_beads_positions = self.integration.transform_back_to_coordinates(beads_momenta_half_kp, beads_positions_kp, \
+                                                                                                  self.C_jk, self.n_atom, self.n_beads)
             
         # p_j(t+dt) = p_j(t+0.5dt) + 0.5 * dt * F(t)
         next_beads_momenta = self.integration.propagate_momenta_half(self.time_step, beads_momenta_half, self.current_beads_forces)
