@@ -285,7 +285,7 @@ class RP_NVK_VR(RPMD):
         d_velocities = new_velocities - old_velocities
         for i in range(self.n_beads):
             tmp_velocites = self.current_beads[i].get_velocities()
-            self.current_beads[i].set_velocites(tmp_velocites + d_velocities)
+            self.current_beads[i].set_velocities(tmp_velocites + d_velocities)
         self.update_current_system_from_beads_average(self.current_beads)
 
         if self.sampling_parameters['sampling_initialization']:
@@ -333,7 +333,7 @@ class RP_NVK_VR(RPMD):
         d_velocities = new_velocities - old_velocities
         for i in range(self.n_beads):
             tmp_velocites = self.current_beads[i].get_velocities()
-            self.current_beads[i].set_velocites(tmp_velocites + d_velocities)
+            self.current_beads[i].set_velocities(tmp_velocites + d_velocities)
         self.update_current_system_from_beads_average(self.current_beads)
 
         if self.RPMD_clean_translation:
