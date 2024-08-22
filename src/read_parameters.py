@@ -346,7 +346,7 @@ class read_parameters:
         elif i_parameter.split()[0].upper() == 'Sampling_ensemble'.upper():
             self.sampling_parameters['sampling_ensemble'] = str(i_parameter.split()[1])
             if self.sampling_parameters['sampling_ensemble'].upper() in ['NVK_VR']:
-                self.sampling_parameters['nvt_vr_dt'] = float(i_parameter.split()[2])
+                self.sampling_parameters['nvk_vr_dt'] = float(i_parameter.split()[2])
             elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_Berendsen'.upper()]:
                 self.sampling_parameters['nvt_berendsen_tau'] = float(i_parameter.split()[2])
             elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_Langevin'.upper()]:
