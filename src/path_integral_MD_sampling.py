@@ -29,6 +29,7 @@ class RPMD(initialize_sampling):
         self.omega_k = RPMD_parameters['omega_k']
         self.C_jk = RPMD_parameters['C_jk']
         self.atom_masses = self.masses.flatten()
+        self.current_system.calc = calculator
 
         if os.path.isfile(self.beads_file_name):
             self.current_beads = read_xyz_traj(self.beads_file_name)
@@ -58,7 +59,8 @@ class RPMD(initialize_sampling):
         self.current_beads_momenta = self.get_beads_momenta(self.current_beads)
         self.current_beads_potential_energy, self.current_beads_forces = self.get_beads_potential_forces(self.current_beads)
 
-        self.update_current_system_from_beads_average(self.current_beads)
+        self.update_centroid_positions_momenta(self.current_beads)
+        self.update_centroid_potential_energy_forces(self.current_beads_potential_energy, self.current_beads_forces)
 
         self.integration = RPMD_integration()
 
@@ -111,7 +113,8 @@ class RPMD(initialize_sampling):
         self.current_beads_potential_energy, self.current_beads_forces = self.get_beads_potential_forces(self.current_beads)
         write_xyz_file(self.beads_file_name, self.current_beads)
         self.current_step += 1
-        self.update_current_system_from_beads_average(self.current_beads)
+        self.update_centroid_positions_momenta(self.current_beads)
+        self.update_centroid_potential_energy_forces(self.current_beads_potential_energy, self.current_beads_forces)
             
         try:
             self.ml_calculator.get_current_step(self.current_step)
@@ -151,13 +154,17 @@ class RPMD(initialize_sampling):
             beads_forces.append(tmp_forces)
         return np.array(beads_potential_energy), np.array(beads_forces)
     
-    def update_current_system_from_beads_average(self, beads):
+    def update_centroid_positions_momenta(self, beads):
         beads_positions = self.get_beads_positions(beads)
         system_positions = np.average(beads_positions, axis=0)
         self.current_system.set_positions(system_positions)
         beads_momenta = self.get_beads_momenta(beads)
         system_momenta = np.average(beads_momenta, axis=0)
         self.current_system.set_momenta(system_momenta)
+
+    def update_centroid_potential_energy_forces(self, beads_potential_energy, beads_forces):
+        self.current_system.calc.results['energy'] = np.average(beads_potential_energy)
+        self.current_system.calc.results['forces'] = np.average(beads_forces, axis=0)
 
     # only remove the centroid translational motion
     def stationary_centroid(self):
@@ -304,7 +311,7 @@ class RP_NVK_VR(RPMD):
         for i in range(self.n_beads):
             tmp_velocites = self.current_beads[i].get_velocities()
             self.current_beads[i].set_velocities(tmp_velocites + d_velocities)
-        self.update_current_system_from_beads_average(self.current_beads)
+        self.update_centroid_positions_momenta(self.current_beads)
 
         if self.sampling_parameters['sampling_initialization']:
             self.RPMD_log = open(self.log_file_name, 'w', buffering=1)
@@ -352,7 +359,7 @@ class RP_NVK_VR(RPMD):
         for i in range(self.n_beads):
             tmp_velocites = self.current_beads[i].get_velocities()
             self.current_beads[i].set_velocities(tmp_velocites + d_velocities)
-        self.update_current_system_from_beads_average(self.current_beads)
+        self.update_centroid_positions_momenta(self.current_beads)
 
         if self.RPMD_clean_translation:
             self.stationary_centroid()
@@ -395,7 +402,7 @@ class RP_NVT_Berendsen(RPMD):
         for i in range(self.n_beads):
             tmp_velocites = self.current_beads[i].get_velocities()
             self.current_beads[i].set_velocities(tmp_velocites + d_velocities)
-        self.update_current_system_from_beads_average(self.current_beads)
+        self.update_centroid_positions_momenta(self.current_beads)
 
         if self.sampling_parameters['sampling_initialization']:
             self.RPMD_log = open(self.log_file_name, 'w', buffering=1)
@@ -443,7 +450,7 @@ class RP_NVT_Berendsen(RPMD):
         for i in range(self.n_beads):
             tmp_velocites = self.current_beads[i].get_velocities()
             self.current_beads[i].set_velocities(tmp_velocites + d_velocities)
-        self.update_current_system_from_beads_average(self.current_beads)
+        self.update_centroid_positions_momenta(self.current_beads)
 
         if self.RPMD_clean_translation:
             self.stationary_centroid()
@@ -524,7 +531,7 @@ class RP_NVT_Langevin(RPMD):
         for i in range(self.n_beads):
             tmp_velocites = self.current_beads[i].get_velocities()
             self.current_beads[i].set_velocities(tmp_velocites + d_velocities)
-        self.update_current_system_from_beads_average(self.current_beads)
+        self.update_centroid_positions_momenta(self.current_beads)
 
         if self.RPMD_clean_translation:
             self.stationary_centroid()
@@ -605,7 +612,7 @@ class RP_NVT_SVR(RPMD):
         for i in range(self.n_beads):
             tmp_velocites = self.current_beads[i].get_velocities()
             self.current_beads[i].set_velocities(tmp_velocites + d_velocities)
-        self.update_current_system_from_beads_average(self.current_beads)
+        self.update_centroid_positions_momenta(self.current_beads)
 
         if self.RPMD_clean_translation:
             self.stationary_centroid()
