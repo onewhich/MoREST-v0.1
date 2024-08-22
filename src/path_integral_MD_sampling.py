@@ -1,9 +1,8 @@
-from time import time
 import os
 import numpy as np
 from copy import deepcopy
 from ase import units
-from structure_io import read_xyz_file, read_xyz_traj, write_xyz_file, write_xyz_traj
+from structure_io import read_xyz_traj, write_xyz_file, write_xyz_traj
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary, ZeroRotation
 from phase_space_sampling import initialize_sampling
 from numerical_integraion import RPMD_integration
@@ -159,6 +158,27 @@ class RPMD(initialize_sampling):
         beads_momenta = self.get_beads_momenta(beads)
         system_momenta = np.average(beads_momenta, axis=0)
         self.current_system.set_momenta(system_momenta)
+
+    # only remove the centroid translational motion
+    def stationary_centroid(self):
+        centroid_velocity = self.current_system.get_velocities()
+        Stationary(self.current_system)
+        new_velocity = self.current_system.get_velocities()
+        d_velocity = new_velocity - centroid_velocity
+        for i_bead in self.current_beads:
+            bead_velocity = i_bead.get_velocities()
+            i_bead.set_velocities(bead_velocity + d_velocity)
+
+    # only remove the centroid rotational motion
+    def zero_rotation_centroid(self):
+        centroid_velocity = self.current_system.get_velocities()
+        ZeroRotation(self.current_system)
+        new_velocity = self.current_system.get_velocities()
+        d_velocity = new_velocity - centroid_velocity
+        for i_bead in self.current_beads:
+            bead_velocity = i_bead.get_velocities()
+            i_bead.set_velocities(bead_velocity + d_velocity)
+
         
     @staticmethod
     def write_RPMD_log(RPMD_log, step, Ep, Ek, masses):
@@ -244,11 +264,9 @@ class RP_NVE(RPMD):
         self.RPMD_update_step(next_beads_momenta, next_beads_positions)
 
         if self.RPMD_clean_translation:
-            for i in range(self.n_beads):
-                Stationary(self.current_beads[i])
+            self.stationary_centroid()
         if self.RPMD_clean_rotation:
-            for i in range(self.n_beads):
-                ZeroRotation(self.current_beads[i])
+            self.zero_rotation_centroid()
         
         write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
 
@@ -337,11 +355,9 @@ class RP_NVK_VR(RPMD):
         self.update_current_system_from_beads_average(self.current_beads)
 
         if self.RPMD_clean_translation:
-            for i in range(self.n_beads):
-                Stationary(self.current_beads[i])
+            self.stationary_centroid()
         if self.RPMD_clean_rotation:
-            for i in range(self.n_beads):
-                ZeroRotation(self.current_beads[i])
+            self.zero_rotation_centroid()
         
         write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
 
@@ -430,11 +446,9 @@ class RP_NVT_Berendsen(RPMD):
         self.update_current_system_from_beads_average(self.current_beads)
 
         if self.RPMD_clean_translation:
-            for i in range(self.n_beads):
-                Stationary(self.current_beads[i])
+            self.stationary_centroid()
         if self.RPMD_clean_rotation:
-            for i in range(self.n_beads):
-                ZeroRotation(self.current_beads[i])
+            self.zero_rotation_centroid()
         
         write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
 
@@ -513,11 +527,9 @@ class RP_NVT_Langevin(RPMD):
         self.update_current_system_from_beads_average(self.current_beads)
 
         if self.RPMD_clean_translation:
-            for i in range(self.n_beads):
-                Stationary(self.current_beads[i])
+            self.stationary_centroid()
         if self.RPMD_clean_rotation:
-            for i in range(self.n_beads):
-                ZeroRotation(self.current_beads[i])
+            self.zero_rotation_centroid()
 
         write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
 
@@ -596,11 +608,9 @@ class RP_NVT_SVR(RPMD):
         self.update_current_system_from_beads_average(self.current_beads)
 
         if self.RPMD_clean_translation:
-            for i in range(self.n_beads):
-                Stationary(self.current_beads[i])
+            self.stationary_centroid()
         if self.RPMD_clean_rotation:
-            for i in range(self.n_beads):
-                ZeroRotation(self.current_beads[i])
+            self.zero_rotation_centroid()
 
         write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
 
