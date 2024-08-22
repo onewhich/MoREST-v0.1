@@ -34,7 +34,7 @@ class initialize_calculator:
         return self.calculator
     
 from molecular_dynamics_sampling import NVE_VV, NVK_VR, NVT_Berendsen, NVT_Langevin, NVT_SVR, NPH_SVR, NPT_Berendsen, NPT_Langevin, NPT_SVR
-from path_integral_MD_sampling import RP_NVE, RP_NVK_VR, RP_NVT_SVR
+from path_integral_MD_sampling import RP_NVE, RP_NVK_VR, RP_NVT_Langevin, RP_NVT_SVR
 from trajectory_scattering import scattering_velocity_Verlet, scattering_Runge_Kutta_4th
 from structure_searching import gradient_descent, FIRE_velocity_Verlet
 from enhanced_sampling import RE, ITS
@@ -112,6 +112,10 @@ class initialize_modules:
                 self.sampling_job = RP_NVT_SVR(self.morest_parameters, self.sampling_parameters, self.RPMD_parameters, calculator=self.calculator, log_morest=self.log_morest)
             elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVE_VV']:
                 self.sampling_job = RP_NVE(self.morest_parameters, self.sampling_parameters, self.RPMD_parameters, calculator=self.calculator, log_morest=self.log_morest)
+            elif self.sampling_parameters['sampling_ensemble'].upper()  in ['NVT_Langevin'.upper()]:
+                self.sampling_job = RP_NVT_Langevin(self.morest_parameters, self.sampling_parameters, self.RPMD_parameters, calculator=self.calculator, log_morest=self.log_morest)
+            elif self.sampling_parameters['sampling_ensemble'].upper()  in ['NVT_Berendsen'.upper()]:
+                self.sampling_job = NVT_Berendsen(self.morest_parameters, self.sampling_parameters, self.RPMD_parameters, calculator=self.calculator, log_morest=self.log_morest)
             elif self.sampling_parameters['sampling_ensemble'].upper()  in ['NVK_VR']:
                 self.sampling_job = RP_NVK_VR(self.morest_parameters, self.sampling_parameters, self.RPMD_parameters, calculator=self.calculator, log_morest=self.log_morest)
             else:
