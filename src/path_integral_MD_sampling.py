@@ -31,6 +31,10 @@ class RPMD(initialize_sampling):
         self.atom_masses = self.masses.flatten()
         self.current_system.calc = calculator
 
+        ### kinetic energy at simulation temperature
+        Nf = 3 * self.n_atom
+        self.K_simulation = Nf/2 * units.kB * self.T_simulation # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+
         if os.path.isfile(self.beads_file_name):
             self.current_beads = read_xyz_traj(self.beads_file_name)
             if len(self.current_beads) != self.n_beads:
