@@ -30,6 +30,7 @@ class RPMD(initialize_sampling):
         self.C_jk = RPMD_parameters['C_jk']
         self.atom_masses = self.masses.flatten()
         self.current_system.calc = calculator
+        self.current_system.calc.results['step'] = 0
 
         ### kinetic energy at simulation temperature
         Nf = 3 * self.n_atom
@@ -117,6 +118,7 @@ class RPMD(initialize_sampling):
         self.current_beads_potential_energy, self.current_beads_forces = self.get_beads_potential_forces(self.current_beads)
         write_xyz_file(self.beads_file_name, self.current_beads)
         self.current_step += 1
+        self.current_system.calc.results['step'] = self.current_step
         self.update_centroid_positions_momenta(self.current_beads)
         self.update_centroid_potential_energy_forces(self.current_beads_potential_energy, self.current_beads_forces)
             
