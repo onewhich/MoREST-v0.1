@@ -1,6 +1,6 @@
 import numpy as np
 from structure_io import read_xyz_file, read_xyz_traj, write_xyz_traj, write_xyz_file
-from initialization import initialize_calculator
+from initialize_calculator import initialize_calculator
 from ase.md.velocitydistribution import Stationary, ZeroRotation
 from ase import units
 

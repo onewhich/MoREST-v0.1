@@ -1,7 +1,7 @@
 #from time import time
 import numpy as np
 from structure_io import read_xyz_file, write_xyz_file, read_xyz_traj, write_xyz_traj
-from initialization import initialize_calculator
+from initialize_calculator import initialize_calculator
 #from copy import deepcopy
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary
 from ase import units

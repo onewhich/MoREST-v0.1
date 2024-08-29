@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from glob import glob
-from initialization import initialize_modules
+from initialize_modules import initialize_modules
 from read_parameters import read_parameters
 from collective_variable import collective_variables
 

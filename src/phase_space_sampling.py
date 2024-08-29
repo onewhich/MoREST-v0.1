@@ -1,6 +1,6 @@
 import numpy as np
 from structure_io import read_xyz_file, read_xyz_traj
-from initialization import initialize_calculator
+from initialize_calculator import initialize_calculator
 
 class initialize_sampling(initialize_calculator):
     def __init__(self, morest_parameters, sampling_parameters, molecule=None, traj_file_name=None, calculator=None, log_morest=None):
