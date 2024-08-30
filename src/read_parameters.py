@@ -61,8 +61,9 @@ class read_parameters:
         self.barostat_parameters['barostat_action_atoms'] = []
         self.barostat_parameters['barostat_space_parameters'] = []
         self.RPMD_parameters = {}
-        self.RPMD_parameters['rpmd_initialization'] =False
         self.RPMD_parameters['rpmd_beads_file'] = 'MoREST_RPMD_beads.xyz'
+        self.RPMD_parameters['rpmd_clean_translation'] = True
+        self.RPMD_parameters['rpmd_clean_rotation'] = False
         self.scattering_parameters = {}
         self.scattering_parameters['scattering_initialization'] = False
         self.scattering_parameters['scattering_pre_thermolized'] = False
