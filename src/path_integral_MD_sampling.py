@@ -359,6 +359,11 @@ class RP_NVK_VR(RPMD):
 
         self.RPMD_update_step(next_beads_momenta, next_beads_positions)
 
+        if self.RPMD_clean_translation:
+            self.stationary_centroid()
+        if self.RPMD_clean_rotation:
+            self.zero_rotation_centroid()
+
         # only rescale the centroids velocities
         old_velocities = self.current_system.get_velocities()
         new_velocities = velocity_rescaling(self.sampling_parameters['nvk_vr_dt'], self.T_simulation, self.current_system.get_kinetic_energy(), \
@@ -368,11 +373,6 @@ class RP_NVK_VR(RPMD):
             tmp_velocites = self.current_beads[i].get_velocities()
             self.current_beads[i].set_velocities(tmp_velocites + d_velocities)
         self.update_centroid_positions_momenta(self.current_beads)
-
-        if self.RPMD_clean_translation:
-            self.stationary_centroid()
-        if self.RPMD_clean_rotation:
-            self.zero_rotation_centroid()
         
         write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
 
