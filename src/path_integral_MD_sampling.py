@@ -172,8 +172,8 @@ class RPMD(initialize_sampling):
     # only remove the centroid translational motion
     def stationary_centroid(self):
         centroid_velocity = self.current_system.get_velocities()
-        Stationary(self.current_system)
-        new_velocity = self.current_system.get_velocities()
+        new_velocity = self.clean_translation(centroid_velocity)
+        self.current_system.set_velocities(new_velocity)
         d_velocity = new_velocity - centroid_velocity
         for i_bead in self.current_beads:
             bead_velocity = i_bead.get_velocities()
@@ -189,6 +189,11 @@ class RPMD(initialize_sampling):
             bead_velocity = i_bead.get_velocities()
             i_bead.set_velocities(bead_velocity + d_velocity)
 
+    @staticmethod
+    def clean_translation(velocities):
+        total_velocity = np.sum(velocities, axis=0)/len(velocities)
+        new_velocities = velocities - total_velocity
+        return new_velocities
         
     @staticmethod
     def write_RPMD_log(RPMD_log, step, Ep, Ek, masses):
@@ -607,12 +612,7 @@ class RP_NVT_SVR(RPMD):
 
         self.RPMD_update_step(next_beads_momenta, next_beads_positions)
 
-        if self.RPMD_clean_translation:
-            self.stationary_centroid()
-        if self.RPMD_clean_rotation:
-            self.zero_rotation_centroid()
-
-        # only rescale the centroids velocities
+        # only rescale the centroids 
         old_velocities = self.current_system.get_velocities()
         new_velocities, self.d_Ee, alpha = stochastic_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.K_simulation, \
                                                                   3*self.n_atom, self.sampling_parameters['nvt_svr_tau'], old_velocities)
@@ -621,6 +621,11 @@ class RP_NVT_SVR(RPMD):
         for i in range(self.n_beads):
             tmp_velocites = self.current_beads[i].get_velocities()
             self.current_beads[i].set_velocities(tmp_velocites + d_velocities)
+
+        if self.RPMD_clean_translation:
+            self.stationary_centroid()
+        if self.RPMD_clean_rotation:
+            self.zero_rotation_centroid()
 
         write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
 
