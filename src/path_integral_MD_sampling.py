@@ -196,6 +196,29 @@ class RPMD(initialize_sampling):
         return new_velocities
         
     @staticmethod
+    def clean_rotation(velocities, coordinates, masses):
+        '''
+        L = r x p = r x (m v) = r x (omega x (m r)) = m r^2 omega = I omega
+        L : angular momentum
+        omega: angular velocity
+        I : moment of inertia
+        '''
+        v_vector = velocities
+        #center_of_mass = np.sum([masses[i]*coordinates[i] for i in range(len(masses))], axis=0)/np.sum(masses)
+        center_of_mass = np.sum(masses*coordinates, axis=0)/np.sum(masses)
+        r_vector = coordinates - center_of_mass
+        # r_cross_v : angular velocities
+        # omega = (r x v) / |r|^2
+        r_cross_v = np.cross(r_vector, v_vector)
+        r_2 = np.linalg.norm(r_vector, axis=1)**2
+        omega = np.array([r_cross_v[i]/r_2[i] for i in range(4)])
+        # Rv = omega/n_atom : system total angular velocity
+        rotat_vector = np.sum(omega, axis=0)/len(masses)
+        v_tang = np.cross(rotat_vector, r_vector)
+        new_velocities = v_vector - v_tang
+        return new_velocities
+        
+    @staticmethod
     def write_RPMD_log(RPMD_log, step, Ep, Ek, masses):
         try:
             if len(Ep) >= 1:
@@ -368,11 +391,11 @@ class RP_NVK_VR(RPMD):
         old_velocities = self.current_system.get_velocities()
         new_velocities = velocity_rescaling(self.sampling_parameters['nvk_vr_dt'], self.T_simulation, self.current_system.get_kinetic_energy(), \
                                         self.n_atom, old_velocities)
+        self.current_system.set_velocities(new_velocities)
         d_velocities = new_velocities - old_velocities
         for i in range(self.n_beads):
             tmp_velocites = self.current_beads[i].get_velocities()
             self.current_beads[i].set_velocities(tmp_velocites + d_velocities)
-        self.update_centroid_positions_momenta(self.current_beads)
         
         write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
 
@@ -450,20 +473,20 @@ class RP_NVT_Berendsen(RPMD):
 
         self.RPMD_update_step(next_beads_momenta, next_beads_positions)
 
-        # only rescale the centroids velocities
-        old_velocities = self.current_system.get_velocities()
-        new_velocities = Berendsen_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.n_atom, \
-                                                      self.T_simulation, self.sampling_parameters['nvt_berendsen_tau'], old_velocities)
-        d_velocities = new_velocities - old_velocities
-        for i in range(self.n_beads):
-            tmp_velocites = self.current_beads[i].get_velocities()
-            self.current_beads[i].set_velocities(tmp_velocites + d_velocities)
-        self.update_centroid_positions_momenta(self.current_beads)
-
         if self.RPMD_clean_translation:
             self.stationary_centroid()
         if self.RPMD_clean_rotation:
             self.zero_rotation_centroid()
+
+        # only rescale the centroids velocities
+        old_velocities = self.current_system.get_velocities()
+        new_velocities = Berendsen_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.n_atom, \
+                                                      self.T_simulation, self.sampling_parameters['nvt_berendsen_tau'], old_velocities)
+        self.current_system.set_velocities(new_velocities)
+        d_velocities = new_velocities - old_velocities
+        for i in range(self.n_beads):
+            tmp_velocites = self.current_beads[i].get_velocities()
+            self.current_beads[i].set_velocities(tmp_velocites + d_velocities)
         
         write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
 
@@ -531,20 +554,20 @@ class RP_NVT_Langevin(RPMD):
 
         self.RPMD_update_step(next_beads_momenta, next_beads_positions)
 
-        # only rescale the centroids velocities
-        old_velocities = self.current_system.get_velocities()
-        new_velocities, self.d_Ee, alpha = stochastic_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.K_simulation, \
-                                                                  1, 1/(2*self.sampling_parameters['nvt_Langevin_gamma']), old_velocities)
-        d_velocities = new_velocities - old_velocities
-        for i in range(self.n_beads):
-            tmp_velocites = self.current_beads[i].get_velocities()
-            self.current_beads[i].set_velocities(tmp_velocites + d_velocities)
-        self.update_centroid_positions_momenta(self.current_beads)
-
         if self.RPMD_clean_translation:
             self.stationary_centroid()
         if self.RPMD_clean_rotation:
             self.zero_rotation_centroid()
+
+        # only rescale the centroids velocities
+        old_velocities = self.current_system.get_velocities()
+        new_velocities, self.d_Ee, alpha = stochastic_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.K_simulation, \
+                                                                  1, 1/(2*self.sampling_parameters['nvt_Langevin_gamma']), old_velocities)
+        self.current_system.set_velocities(new_velocities)
+        d_velocities = new_velocities - old_velocities
+        for i in range(self.n_beads):
+            tmp_velocites = self.current_beads[i].get_velocities()
+            self.current_beads[i].set_velocities(tmp_velocites + d_velocities)
 
         write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
 
@@ -612,6 +635,11 @@ class RP_NVT_SVR(RPMD):
 
         self.RPMD_update_step(next_beads_momenta, next_beads_positions)
 
+        if self.RPMD_clean_translation:
+            self.stationary_centroid()
+        if self.RPMD_clean_rotation:
+            self.zero_rotation_centroid()
+
         # only rescale the centroids 
         old_velocities = self.current_system.get_velocities()
         new_velocities, self.d_Ee, alpha = stochastic_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.K_simulation, \
@@ -621,11 +649,6 @@ class RP_NVT_SVR(RPMD):
         for i in range(self.n_beads):
             tmp_velocites = self.current_beads[i].get_velocities()
             self.current_beads[i].set_velocities(tmp_velocites + d_velocities)
-
-        if self.RPMD_clean_translation:
-            self.stationary_centroid()
-        if self.RPMD_clean_rotation:
-            self.zero_rotation_centroid()
 
         write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
 

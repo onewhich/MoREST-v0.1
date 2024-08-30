@@ -162,9 +162,8 @@ class velocity_Verlet(initialize_sampling):
     @staticmethod
     def clean_translation(velocities):
         total_velocity = np.sum(velocities, axis=0)/len(velocities)
-        velocities = velocities - total_velocity
-        
-        return velocities
+        new_velocities = velocities - total_velocity
+        return new_velocities
         
     @staticmethod
     def clean_rotation(velocities, coordinates, masses):
@@ -186,9 +185,8 @@ class velocity_Verlet(initialize_sampling):
         # Rv = omega/n_atom : system total angular velocity
         rotat_vector = np.sum(omega, axis=0)/len(masses)
         v_tang = np.cross(rotat_vector, r_vector)
-        velocities = v_vector - v_tang
-            
-        return velocities
+        new_velocities = v_vector - v_tang
+        return new_velocities
 
 
 class NVE_VV(velocity_Verlet):
@@ -216,8 +214,8 @@ class NVE_VV(velocity_Verlet):
         self.VV_next_step(bias_forces=bias_forces, updated_current_system=updated_current_system)
 
         if self.MD_parameters['md_clean_translation']:
-            #next_velocities = clean_translation(next_velocities)
-            Stationary(self.current_system)
+            self.current_system.set_velocities(self.clean_translation(self.current_system.get_velocities()))
+            #Stationary(self.current_system)
         if self.MD_parameters['md_clean_rotation']:
             #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
             ZeroRotation(self.current_system)
@@ -269,8 +267,8 @@ class NVK_VR(velocity_Verlet):
         self.current_system.set_velocities(new_velocities)
 
         if self.MD_parameters['md_clean_translation']:
-            #next_velocities = clean_translation(next_velocities)
-            Stationary(self.current_system)
+            self.current_system.set_velocities(self.clean_translation(self.current_system.get_velocities()))
+            #Stationary(self.current_system)
         if self.MD_parameters['md_clean_rotation']:
             #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
             ZeroRotation(self.current_system)
@@ -323,8 +321,8 @@ class NVT_Berendsen(velocity_Verlet):
         self.current_system.set_velocities(new_velocities)
 
         if self.MD_parameters['md_clean_translation']:
-            #next_velocities = clean_translation(next_velocities)
-            Stationary(self.current_system)
+            self.current_system.set_velocities(self.clean_translation(self.current_system.get_velocities()))
+            #Stationary(self.current_system)
         if self.MD_parameters['md_clean_rotation']:
             #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
             ZeroRotation(self.current_system)
@@ -378,8 +376,8 @@ class NVT_Langevin(velocity_Verlet):
         self.current_system.set_velocities(new_velocities)
 
         if self.MD_parameters['md_clean_translation']:
-            #next_velocities = clean_translation(next_velocities)
-            Stationary(self.current_system)
+            self.current_system.set_velocities(self.clean_translation(self.current_system.get_velocities()))
+            #Stationary(self.current_system)
         if self.MD_parameters['md_clean_rotation']:
             #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
             ZeroRotation(self.current_system)
@@ -435,8 +433,8 @@ class NVT_SVR(velocity_Verlet):
         self.current_system.set_velocities(new_velocities)
 
         if self.MD_parameters['md_clean_translation']:
-            #next_velocities = clean_translation(next_velocities)
-            Stationary(self.current_system)
+            self.current_system.set_velocities(self.clean_translation(self.current_system.get_velocities()))
+            #Stationary(self.current_system)
         if self.MD_parameters['md_clean_rotation']:
             #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
             ZeroRotation(self.current_system)
@@ -516,8 +514,8 @@ class NPH_SVR(velocity_Verlet):
         self.NPH_space.update_barostat_space_wall()
         
         if self.MD_parameters['md_clean_translation']:
-            #next_velocities = clean_translation(next_velocities)
-            Stationary(self.current_system)
+            self.current_system.set_velocities(self.clean_translation(self.current_system.get_velocities()))
+            #Stationary(self.current_system)
         if self.MD_parameters['md_clean_rotation']:
             #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
             ZeroRotation(self.current_system)
@@ -594,8 +592,8 @@ class NPT_Berendsen(velocity_Verlet):
         self.NPT_space.update_barostat_space_wall()
 
         if self.MD_parameters['md_clean_translation']:
-            #next_velocities = clean_translation(next_velocities)
-            Stationary(self.current_system)
+            self.current_system.set_velocities(self.clean_translation(self.current_system.get_velocities()))
+            #Stationary(self.current_system)
         if self.MD_parameters['md_clean_rotation']:
             #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
             ZeroRotation(self.current_system)
@@ -703,8 +701,8 @@ class NPT_SVR(velocity_Verlet):
         self.eta *= alpha
 
         if self.MD_parameters['md_clean_translation']:
-            #next_velocities = clean_translation(next_velocities)
-            Stationary(self.current_system)
+            self.current_system.set_velocities(self.clean_translation(self.current_system.get_velocities()))
+            #Stationary(self.current_system)
         if self.MD_parameters['md_clean_rotation']:
             #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
             ZeroRotation(self.current_system)
