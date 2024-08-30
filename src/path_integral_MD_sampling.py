@@ -109,7 +109,6 @@ class RPMD(initialize_sampling):
             self.current_beads.append(tmp_system)
 
     def RPMD_update_step(self, next_beads_momenta, next_beads_positions):
-
         self.update_beads_positions(next_beads_positions)
         self.current_beads_positions = next_beads_positions
         self.update_beads_momenta(next_beads_momenta)
@@ -608,20 +607,20 @@ class RP_NVT_SVR(RPMD):
 
         self.RPMD_update_step(next_beads_momenta, next_beads_positions)
 
-        # only rescale the centroids velocities
-        old_velocities = self.current_system.get_velocities()
-        new_velocities, self.d_Ee, alpha = stochastic_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.K_simulation, \
-                                                                  3*self.n_atom, self.sampling_parameters['nvt_svr_tau'], old_velocities)
-        d_velocities = new_velocities - old_velocities
-        for i in range(self.n_beads):
-            tmp_velocites = self.current_beads[i].get_velocities()
-            self.current_beads[i].set_velocities(tmp_velocites + d_velocities)
-        self.update_centroid_positions_momenta(self.current_beads)
-
         if self.RPMD_clean_translation:
             self.stationary_centroid()
         if self.RPMD_clean_rotation:
             self.zero_rotation_centroid()
+
+        # only rescale the centroids velocities
+        old_velocities = self.current_system.get_velocities()
+        new_velocities, self.d_Ee, alpha = stochastic_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.K_simulation, \
+                                                                  3*self.n_atom, self.sampling_parameters['nvt_svr_tau'], old_velocities)
+        self.current_system.set_velocities(new_velocities)
+        d_velocities = new_velocities - old_velocities
+        for i in range(self.n_beads):
+            tmp_velocites = self.current_beads[i].get_velocities()
+            self.current_beads[i].set_velocities(tmp_velocites + d_velocities)
 
         write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
 
