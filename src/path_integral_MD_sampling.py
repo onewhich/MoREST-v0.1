@@ -17,7 +17,7 @@ class RPMD(initialize_sampling):
     '''
     def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, traj_file_name=None, calculator=None, log_morest=None):
 
-        self.beads_traj_file_head = 'MoREST_RPMD_beads_traj_'
+        self.beads_file_head = 'MoREST_RPMD_beads_'
 
         super(RPMD, self).__init__(morest_parameters, sampling_parameters, molecule, traj_file_name, calculator, log_morest)
         self.beta = RPMD_parameters['beta']
@@ -207,8 +207,8 @@ class RPMD(initialize_sampling):
         '''
         v_vector = velocities
         #center_of_mass = np.sum([masses[i]*coordinates[i] for i in range(len(masses))], axis=0)/np.sum(masses)
-        center_of_mass = np.sum(masses*coordinates, axis=0)/np.sum(masses)
-        r_vector = coordinates - center_of_mass
+        centroid = np.sum(masses*coordinates, axis=0)/np.sum(masses)
+        r_vector = coordinates - centroid
         # r_cross_v : angular velocities
         # omega = (r x v) / |r|^2
         r_cross_v = np.cross(r_vector, v_vector)
@@ -312,7 +312,7 @@ class RP_NVE(RPMD):
 
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             for i in range(self.n_beads):
-                write_xyz_traj(self.beads_traj_file_head+str(i)+'.xyz',self.current_beads[i])
+                write_xyz_traj(self.beads_file_head+"traj_"+str(i)+'.xyz',self.current_beads[i])
             write_xyz_traj(self.traj_file_name, self.current_system)
             self.kinetic_energy = self.current_system.get_kinetic_energy()
             self.write_RPMD_log(self.RPMD_log, self.current_step, np.average(self.current_beads_potential_energy), self.kinetic_energy, self.masses)
@@ -403,7 +403,7 @@ class RP_NVK_VR(RPMD):
 
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             for i in range(self.n_beads):
-                write_xyz_traj(self.beads_traj_file_head+str(i)+'.xyz',self.current_beads[i])
+                write_xyz_traj(self.beads_file_head+"traj_"+str(i)+'.xyz',self.current_beads[i])
             write_xyz_traj(self.traj_file_name, self.current_system)
             self.kinetic_energy = self.current_system.get_kinetic_energy()
             self.write_RPMD_log(self.RPMD_log, self.current_step, np.average(self.current_beads_potential_energy), self.kinetic_energy, self.masses)
@@ -494,7 +494,7 @@ class RP_NVT_Berendsen(RPMD):
 
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             for i in range(self.n_beads):
-                write_xyz_traj(self.beads_traj_file_head+str(i)+'.xyz',self.current_beads[i])
+                write_xyz_traj(self.beads_file_head+"traj_"+str(i)+'.xyz',self.current_beads[i])
             write_xyz_traj(self.traj_file_name, self.current_system)
             self.kinetic_energy = self.current_system.get_kinetic_energy()
             self.write_RPMD_log(self.RPMD_log, self.current_step, np.average(self.current_beads_potential_energy), self.kinetic_energy, self.masses)
@@ -575,7 +575,7 @@ class RP_NVT_Langevin(RPMD):
 
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             for i in range(self.n_beads):
-                write_xyz_traj(self.beads_traj_file_head+str(i)+'.xyz',self.current_beads[i])
+                write_xyz_traj(self.beads_file_head+"traj_"+str(i)+'.xyz',self.current_beads[i])
             write_xyz_traj(self.traj_file_name, self.current_system)
             self.kinetic_energy = self.current_system.get_kinetic_energy()
             self.Ee = self.write_SVR_RPMD_log(self.RPMD_log, self.current_step, np.average(self.current_beads_potential_energy), self.kinetic_energy, self.masses, self.Ee, self.d_Ee)
@@ -656,7 +656,7 @@ class RP_NVT_SVR(RPMD):
 
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             for i in range(self.n_beads):
-                write_xyz_traj(self.beads_traj_file_head+str(i)+'.xyz',self.current_beads[i])
+                write_xyz_traj(self.beads_file_head+"traj_"+str(i)+'.xyz',self.current_beads[i])
             write_xyz_traj(self.traj_file_name, self.current_system)
             self.kinetic_energy = self.current_system.get_kinetic_energy()
             self.Ee = self.write_SVR_RPMD_log(self.RPMD_log, self.current_step, np.average(self.current_beads_potential_energy), self.kinetic_energy, self.masses, self.Ee, self.d_Ee)
