@@ -340,11 +340,11 @@ class RP_NVK_VR(RPMD):
         old_velocities = self.current_system.get_velocities()
         new_velocities = velocity_rescaling(self.sampling_parameters['nvk_vr_dt'], self.T_simulation, self.current_system.get_kinetic_energy(), \
                                         self.n_atom, old_velocities)
+        self.current_system.set_velocities(new_velocities)
         d_velocities = new_velocities - old_velocities
         for i in range(self.n_beads):
             tmp_velocites = self.current_beads[i].get_velocities()
             self.current_beads[i].set_velocities(tmp_velocites + d_velocities)
-        self.update_centroid_positions_momenta(self.current_beads)
 
         if self.sampling_parameters['sampling_initialization']:
             self.RPMD_log = open(self.log_file_name, 'w', buffering=1)
@@ -431,11 +431,11 @@ class RP_NVT_Berendsen(RPMD):
         old_velocities = self.current_system.get_velocities()
         new_velocities = Berendsen_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.n_atom, \
                                                       self.T_simulation, self.sampling_parameters['nvt_berendsen_tau'], old_velocities)
+        self.current_system.set_velocities(new_velocities)
         d_velocities = new_velocities - old_velocities
         for i in range(self.n_beads):
             tmp_velocites = self.current_beads[i].get_velocities()
             self.current_beads[i].set_velocities(tmp_velocites + d_velocities)
-        self.update_centroid_positions_momenta(self.current_beads)
 
         if self.sampling_parameters['sampling_initialization']:
             self.RPMD_log = open(self.log_file_name, 'w', buffering=1)
