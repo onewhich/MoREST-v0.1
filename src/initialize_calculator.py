@@ -1,6 +1,3 @@
-import os
-from glob import glob
-import numpy as np
 from many_body_potential import ml_potential, on_the_fly, molpro_calculator
 
 class initialize_calculator:
