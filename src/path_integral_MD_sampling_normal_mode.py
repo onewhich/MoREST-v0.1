@@ -1,10 +1,9 @@
 import numpy as np
 from structure_io import write_xyz_file, write_xyz_traj
-from phase_space_sampling import RPMD
+from phase_space_sampling import RPMD_normal_mode
 from thermostat import velocity_rescaling, Berendsen_velocity_rescaling, stochastic_velocity_rescaling
-from barostat import barostat_space, Berendsen_volume_rescaling, stochastic_velocity_volume_rescaling
 
-class RP_NVE(RPMD):
+class RP_NVE(RPMD_normal_mode):
     def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
                 
         if type(log_file_name) == type(None):
@@ -43,13 +42,11 @@ class RP_NVE(RPMD):
         if type(time_step) == type(None):
             time_step = self.time_step
 
-        self.current_beads_potential_energy, self.current_beads_forces = \
-            self.integration.RP_velocity_Verlet(time_step, self.current_beads, self.current_beads_forces, self.masses)
-        
-        write_xyz_file(self.beads_file_name, self.current_beads)
-        self.current_step += 1
-        self.update_centroid_positions_momenta(self.current_beads)
-        self.update_centroid_potential_energy_forces(self.current_beads_potential_energy, self.current_beads_forces)
+        next_beads_momenta, next_beads_positions = self.integration.RP_velocity_Verlet(time_step, self.current_beads_positions, self.current_beads_momenta, \
+                                                                                       self.current_beads_forces, self.C_jk, self.n_atom, \
+                                                                                       self.n_beads, self.omega_k, self.atom_masses)
+
+        self.RPMD_update_step(next_beads_momenta, next_beads_positions)
 
         if self.RPMD_clean_translation:
             self.stationary_centroid()
@@ -67,7 +64,7 @@ class RP_NVE(RPMD):
 
         return self.current_step, self.current_system
     
-class RP_NVK_VR(RPMD):
+class RP_NVK_VR(RPMD_normal_mode):
     def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
                 
         if type(log_file_name) == type(None):
@@ -116,13 +113,11 @@ class RP_NVK_VR(RPMD):
         if type(time_step) == type(None):
             time_step = self.time_step
 
-        self.current_beads_potential_energy, self.current_beads_forces = \
-            self.integration.RP_velocity_Verlet(time_step, self.current_beads, self.current_beads_forces, self.masses)
-        
-        write_xyz_file(self.beads_file_name, self.current_beads)
-        self.current_step += 1
-        self.update_centroid_positions_momenta(self.current_beads)
-        self.update_centroid_potential_energy_forces(self.current_beads_potential_energy, self.current_beads_forces)
+        next_beads_momenta, next_beads_positions = self.integration.RP_velocity_Verlet(time_step, self.current_beads_positions, self.current_beads_momenta, \
+                                                                                       self.current_beads_forces, self.C_jk, self.n_atom, \
+                                                                                       self.n_beads, self.omega_k, self.atom_masses)
+
+        self.RPMD_update_step(next_beads_momenta, next_beads_positions)
 
         if self.RPMD_clean_translation:
             self.stationary_centroid()
@@ -150,7 +145,7 @@ class RP_NVK_VR(RPMD):
 
         return self.current_step, self.current_system
     
-class RP_NVT_Berendsen(RPMD):
+class RP_NVT_Berendsen(RPMD_normal_mode):
     def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
                 
         if type(log_file_name) == type(None):
@@ -199,13 +194,11 @@ class RP_NVT_Berendsen(RPMD):
         if type(time_step) == type(None):
             time_step = self.time_step
 
-        self.current_beads_potential_energy, self.current_beads_forces = \
-            self.integration.RP_velocity_Verlet(time_step, self.current_beads, self.current_beads_forces, self.masses)
-        
-        write_xyz_file(self.beads_file_name, self.current_beads)
-        self.current_step += 1
-        self.update_centroid_positions_momenta(self.current_beads)
-        self.update_centroid_potential_energy_forces(self.current_beads_potential_energy, self.current_beads_forces)
+        next_beads_momenta, next_beads_positions = self.integration.RP_velocity_Verlet(time_step, self.current_beads_positions, self.current_beads_momenta, \
+                                                                                       self.current_beads_forces, self.C_jk, self.n_atom, \
+                                                                                       self.n_beads, self.omega_k, self.atom_masses)
+
+        self.RPMD_update_step(next_beads_momenta, next_beads_positions)
 
         if self.RPMD_clean_translation:
             self.stationary_centroid()
@@ -233,7 +226,7 @@ class RP_NVT_Berendsen(RPMD):
 
         return self.current_step, self.current_system
     
-class RP_NVT_Langevin(RPMD):
+class RP_NVT_Langevin(RPMD_normal_mode):
     def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
                 
         if type(log_file_name) == type(None):
@@ -272,13 +265,11 @@ class RP_NVT_Langevin(RPMD):
         if type(time_step) == type(None):
             time_step = self.time_step
 
-        self.current_beads_potential_energy, self.current_beads_forces = \
-            self.integration.RP_velocity_Verlet(time_step, self.current_beads, self.current_beads_forces, self.masses)
-        
-        write_xyz_file(self.beads_file_name, self.current_beads)
-        self.current_step += 1
-        self.update_centroid_positions_momenta(self.current_beads)
-        self.update_centroid_potential_energy_forces(self.current_beads_potential_energy, self.current_beads_forces)
+        next_beads_momenta, next_beads_positions = self.integration.RP_velocity_Verlet(time_step, self.current_beads_positions, self.current_beads_momenta, \
+                                                                                       self.current_beads_forces, self.C_jk, self.n_atom, \
+                                                                                       self.n_beads, self.omega_k, self.atom_masses)
+
+        self.RPMD_update_step(next_beads_momenta, next_beads_positions)
 
         if self.RPMD_clean_translation:
             self.stationary_centroid()
@@ -306,7 +297,7 @@ class RP_NVT_Langevin(RPMD):
             
         return self.current_step, self.current_system
     
-class RP_NVT_SVR(RPMD):
+class RP_NVT_SVR(RPMD_normal_mode):
     def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
                 
         if type(log_file_name) == type(None):
@@ -345,13 +336,11 @@ class RP_NVT_SVR(RPMD):
         if type(time_step) == type(None):
             time_step = self.time_step
 
-        self.current_beads_potential_energy, self.current_beads_forces = \
-            self.integration.RP_velocity_Verlet(time_step, self.current_beads, self.current_beads_forces, self.masses)
-        
-        write_xyz_file(self.beads_file_name, self.current_beads)
-        self.current_step += 1
-        self.update_centroid_positions_momenta(self.current_beads)
-        self.update_centroid_potential_energy_forces(self.current_beads_potential_energy, self.current_beads_forces)
+        next_beads_momenta, next_beads_positions = self.integration.RP_velocity_Verlet(time_step, self.current_beads_positions, self.current_beads_momenta, \
+                                                                                       self.current_beads_forces, self.C_jk, self.n_atom, \
+                                                                                       self.n_beads, self.omega_k, self.atom_masses)
+
+        self.RPMD_update_step(next_beads_momenta, next_beads_positions)
 
         if self.RPMD_clean_translation:
             self.stationary_centroid()

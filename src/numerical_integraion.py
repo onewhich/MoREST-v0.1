@@ -10,13 +10,13 @@ class MD_integration:
         #current_velocities = self.current_system.get_velocities()
         current_momenta = current_system.get_momenta()
 
+        ### v(t+0.5dt) = p(t+0.5dt) / m; p(t+0.5dt) = p(t) + 0.5 * F(t) * dt
+        momenta_half = current_momenta + 0.5 * current_forces * time_step
+
         ### x(t+dt) = x(t) + v(t)*dt + 0.5*F(t)*dt^2/m
         #next_positions = current_positions + current_velocities * time_step + 0.5 * self.current_accelerations * time_step**2
         next_positions = current_positions + (current_momenta * time_step + 0.5 * current_forces * time_step**2) / masses
         current_system.set_positions(next_positions)
-
-        ### v(t+0.5dt) = p(t+0.5dt) / m; p(t+0.5dt) = p(t) + 0.5 * F(t) * dt
-        momenta_half = current_momenta + 0.5 * current_forces * time_step
 
         ### F(t+dt)
         next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(current_system)
@@ -41,30 +41,82 @@ class MD_integration:
         return momenta + 0.5 * forces * time_step
 
     @staticmethod
-    def propagate_positions(time_step, positions, momenta, forces, masses):
-        ### x(t+dt) = x(t) + v(t)*dt + 0.5*F(t)*dt^2/m
-        return positions + (momenta * time_step + 0.5 * forces * time_step**2) / masses
-
-    @staticmethod
     def propagate_positions_half(time_step, positions, momenta, masses):
         ### x(t+0.5dt) = x(t) + 0.5*p(t)*dt / m
         return positions + 0.5 * momenta * time_step / masses
     
     @staticmethod
+    def propagate_positions_p_half(time_step, positions, momenta_half, masses):
+        ### x(t+dt) = x(t) + v(t+0.5dt)*dt
+        return positions + momenta_half * time_step / masses
+
+    @staticmethod
+    def propagate_positions_p0(time_step, positions, momenta, forces, masses):
+        ### x(t+dt) = x(t) + v(t)*dt + 0.5*F(t)*dt^2/m
+        return positions + (momenta * time_step + 0.5 * forces * time_step**2) / masses
+    
+    @staticmethod
     def propagate_random_velocities(time_step, velocities, gamma, kBT, noise=None):
         if noise == None:
-            noise = np.random.normal(size=np.shape(velocities))
+            noise_vector = np.random.normal(size=np.shape(velocities))
+            noise_vector = noise_vector / np.linalg.norm(noise_vector,axis=-1)[:,np.newaxis]
+            noise = np.random.normal(size=(len(velocities),1)) * noise_vector
         c_1 = np.exp(-gamma*time_step)
-        c_2 = np.sqrt(kBT*(1-c_1*c_1))
+        c_2 = np.sqrt(kBT*(1-c_1**2))
         next_velocities =  c_1*velocities+c_2*noise
         return next_velocities
 
-class RPMD_integration:
+class RPMD_integration(MD_integration):
     '''
     Implement RPMD in real space
     '''
-    def __init__(self) -> None:
-        pass
+    def __init__(self, many_body_potential, omega_n, n_beads):
+        super().__init__(many_body_potential)
+        self.omega_n = omega_n
+        self.n_beads = n_beads
+
+    def beads_harmonic_forces(self, beads_positions, masses):
+        n_beads = len(beads_positions)
+        k = masses*self.omega_n**2
+        forces = []
+        r_1 = beads_positions[0] - beads_positions[-1]
+        r_2 = beads_positions[0] - beads_positions[1]
+        forces.append(-k*r_1 - k*r_2)
+        for i in range(1, n_beads-1):
+            r_1 = beads_positions[i] - beads_positions[i-1]
+            r_2 = beads_positions[i] - beads_positions[i+1]
+            forces.append(-k*r_1 - k*r_2)
+        r_1 = beads_positions[-1] - beads_positions[-2]
+        r_2 = beads_positions[-1] - beads_positions[0]
+        forces.append(-k*r_1 - k*r_2)
+        return np.array(forces)
+    
+    def RP_velocity_Verlet(self, time_step, current_beads, current_beads_forces, masses):
+        beads_positions = np.array([i_bead.get_positions() for i_bead in current_beads])
+        beads_momenta = np.array([i_bead.get_momenta() for i_bead in current_beads])
+        RP_forces = current_beads_forces + self.beads_harmonic_forces(beads_positions, masses)
+
+        beads_momenta_half = self.propagate_momenta_half(time_step, beads_momenta, RP_forces)
+
+        next_beads_positions = self.propagate_positions_p_half(time_step, beads_positions, beads_momenta_half,masses)
+
+        for i in range(self.n_beads):
+            current_beads[i].set_positions(next_beads_positions[i])
+        beads_potential_energy = []
+        next_beads_forces = []
+        for i in range(self.n_beads):
+            tmp_potential_energy, tmp_forces = self.many_body_potential.get_potential_forces(current_beads[i])
+            beads_potential_energy.append(tmp_potential_energy)
+            next_beads_forces.append(tmp_forces)
+        beads_potential_energy = np.array(beads_potential_energy)
+        next_beads_forces = np.array(next_beads_forces)
+
+        next_RP_forces = next_beads_forces + self.beads_harmonic_forces(next_beads_positions, masses)
+        next_beads_momenta = self.propagate_momenta_half(time_step, beads_momenta_half, next_RP_forces)
+        for i in range(self.n_beads):
+            current_beads[i].set_momenta(next_beads_momenta[i])
+
+        return beads_potential_energy, next_beads_forces
 
 class RPMD_normal_mode_integration:
     '''

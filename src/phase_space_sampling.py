@@ -234,7 +234,6 @@ class RPMD(initialize_sampling):
     '''
     The ring polymer molecular dynamics module.
     Annu. Rev. Phys. Chem. 2013. 64:387-413
-    J. Chem. Phys. 133, 124104 (2010)
     '''
     def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, traj_file_name=None, calculator=None, log_morest=None):
 
@@ -287,9 +286,9 @@ class RPMD(initialize_sampling):
         self.update_centroid_positions_momenta(self.current_beads)
         self.update_centroid_potential_energy_forces(self.current_beads_potential_energy, self.current_beads_forces)
 
-        self.integration = RPMD_normal_mode_integration()
+        self.integration = RPMD_integration(self.many_body_potential, RPMD_parameters['omega_n'], self.n_beads)
 
-    def initialize_beads(self):
+    def initialize_beads(self, factor_r=0.7):
         # r_beads: the average distance from a bead to the neighbor for free particles.
         r_beads = [np.sqrt(self.beta * (self.hbar)**2 / self.n_beads / self.atom_masses[i]) for i in range(self.n_atom)] 
         
@@ -321,8 +320,8 @@ class RPMD(initialize_sampling):
                 norm = np.linalg.norm(rand_pos,axis=-1)
                 pos_new = np.array(rand_pos/norm*r_ring[i] + centroid_pos[i])
 
-                # each bead is farther from every other bead than r_beads.
-                if np.all(np.linalg.norm(atoms_pos - pos_new,axis=-1) > r_beads[i]):
+                # each bead is farther from every other bead than r_beads times a factor.
+                if np.all(np.linalg.norm(atoms_pos - pos_new,axis=-1) > (factor_r * r_beads[i])):
                     tmp_pos.append(pos_new)
                     i += 1
             tmp_system = deepcopy(self.current_system)
@@ -411,3 +410,12 @@ class RPMD(initialize_sampling):
         for i_bead in self.current_beads:
             bead_velocity = i_bead.get_velocities()
             i_bead.set_velocities(bead_velocity + d_velocity)
+
+class RPMD_normal_mode(RPMD):
+    '''
+    The ring polymer molecular dynamics in normal mode representation.
+    J. Chem. Phys. 133, 124104 (2010)
+    '''
+    def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, traj_file_name=None, calculator=None, log_morest=None):
+        super().__init__(morest_parameters, sampling_parameters, RPMD_parameters, molecule, traj_file_name, calculator, log_morest)
+        self.integration = RPMD_normal_mode_integration()
