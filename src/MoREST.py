@@ -119,6 +119,8 @@ class morest(initialize_modules):
             self.scattering_job.generate_new_traj(i_traj)
             current_step, current_system = self.scattering_job.current_step, self.scattering_job.current_system
             while current_step <= simulation_maxsteps:
+                if self.stop_condition.check_CVs_one(current_system):
+                    break
                 if self.morest_parameters['enhanced_sampling']:
                     self.morest_parameters['enhanced_sampling'] = False # TODO: enhanced sampling method for trajectory scattering
                 else:
@@ -128,10 +130,8 @@ class morest(initialize_modules):
                         current_step, current_system= self.scattering_job.generate_new_step(bias_forces)
                     else:
                         current_step, current_system= self.scattering_job.generate_new_step()
-                if self.stop_condition.check_CVs_one(current_system):
-                    break
             self.log_morest.write('Trajectory number '+str(i_traj)+' has been finished.\n')
-        self.log_morest.write('Trajectory scattering with molecular dynamics method is finished!\n')
+        self.log_morest.write('Trajectory scattering based on molecular dynamics method is finished!\n')
         self.mission_complete()
 
     def structure_searching(self):
