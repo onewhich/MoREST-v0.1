@@ -20,6 +20,7 @@ class initialize_scattering(initialize_calculator):
         ### kinetic energy at simulation temperature
         #Nf = 3 * self.n_atom
         #self.K_simulation = Nf/2 * units.kB * self.scattering_parameters['scattering_T_target'] # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+    
 
     def generate_scattering_system(self):
         if self.scattering_parameters['scattering_pre_thermolized']:
@@ -33,6 +34,7 @@ class initialize_scattering(initialize_calculator):
             incident_molecule = read_xyz_file(self.scattering_parameters['scattering_incident_molecule'])
             MaxwellBoltzmannDistribution(incident_molecule, temperature_K = self.scattering_parameters['scattering_T_incident'])
             Stationary(incident_molecule)
+            scalar_translational_velocity = np.linalg.norm(get_translational_velocity(incident_molecule))
             reset_mass_center(incident_molecule)
         # set collision momentum
         #scalar_translational_momentum = np.linalg.norm(get_translational_momentum(incident_molecule))
@@ -43,7 +45,10 @@ class initialize_scattering(initialize_calculator):
         # normalized collision_vector
         collision_vector = (target_point - incident_point) / np.linalg.norm(target_point - incident_point)
         # if Scattering_E_collision is given, Scattering_V_collision will be ignored.
-        if 'scattering_E_collision' in self.scattering_parameters:
+        # if if_Maxwell_Boltzmann_collision is True, scattering_E_collision and scattering_V_collision will be ignored
+        if self.scattering_parameters['if_Maxwell_Boltzmann_collision'] == True:
+            collision_velocity = collision_vector * scalar_translational_velocity
+        elif 'scattering_E_collision' in self.scattering_parameters:
             collision_velocity = collision_vector * np.sqrt( 2*self.scattering_parameters['scattering_E_collision'] / np.sum(incident_molecule.get_masses()) )
         else:
             collision_velocity = collision_vector * self.scattering_parameters['scattering_V_collision']
@@ -316,6 +321,10 @@ def reset_mass_center(system):
 def get_translational_momentum(system):
     n_atom = system.get_global_number_of_atoms()
     return np.sum(system.get_momenta(), axis=0)/n_atom
+
+def get_translational_velocity(system):
+    n_atom = system.get_global_number_of_atoms()
+    return np.sum(system.get_velocities(),axis=0)/n_atom
 
 def rotate_system_at_center(system, theta, unit_normal_vector, center=[0,0,0]):
     '''

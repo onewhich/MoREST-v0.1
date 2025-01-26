@@ -541,7 +541,10 @@ class read_parameters:
             self.traj_stop_parameter = i_parameter.split()[1:]
 
         elif i_parameter.split()[0].upper() == 'Scattering_traj_length'.upper():
-            self.scattering_parameters['scattering_traj_length'] = int(i_parameter.split()[1])
+            if i_parameter.split()[1] == "None":
+                self.scattering_parameters['scattering_traj_length'] = None
+            else:
+                self.scattering_parameters['scattering_traj_length'] = int(i_parameter.split()[1])
 
         elif i_parameter.split()[0].upper() == 'Scattering_target_molecule'.upper():
             self.scattering_parameters['scattering_target_molecule'] = str(i_parameter.split()[1])
@@ -554,6 +557,8 @@ class read_parameters:
 
         elif i_parameter.split()[0].upper() == 'Scattering_R_incident'.upper():
             self.scattering_parameters['scattering_R_incident'] = float(i_parameter.split()[1])
+
+
 
     def read_searching_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'Searching_initialization'.upper():
@@ -974,7 +979,11 @@ class read_parameters:
         if self.morest_parameters['morest_initialization'] == True:
            self.scattering_parameters['scattering_initialization'] = True
         self.scattering_parameters['scattering_time_step'] *= units.fs
-        self.scattering_parameters['scattering_V_collision'] /= units.fs
+        if 'scattering_V_collision' in self.scattering_parameters:
+            self.scattering_parameters['scattering_V_collision'] /= units.fs
+        if not (('scattering_V_collision' in self.scattering_parameters) or ('scattering_E_collision' in self.scattering_parameters)):
+            self.scattering_parameters['if_Maxwell_Boltzmann_collision'] = True
+
         if self.scattering_parameters['scattering_stops_number'] == 0:
             self.scattering_parameters['scattering_traj_stop'] = None
         else:
