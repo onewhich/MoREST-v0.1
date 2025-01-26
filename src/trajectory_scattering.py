@@ -49,22 +49,40 @@ class initialize_scattering(initialize_calculator):
         else:
             target_molecule = read_xyz_file(self.scattering_parameters['scattering_target_molecule'])
             MaxwellBoltzmannDistribution(target_molecule, temperature_K = self.scattering_parameters['scattering_T_target'])
-            Stationary(target_molecule)
-            reset_mass_center(target_molecule)
 
             incident_molecule = read_xyz_file(self.scattering_parameters['scattering_incident_molecule'])
             MaxwellBoltzmannDistribution(incident_molecule, temperature_K = self.scattering_parameters['scattering_T_incident'])
-            Stationary(incident_molecule)
-            scalar_translational_velocity = np.linalg.norm(get_translational_velocity(incident_molecule))
-            reset_mass_center(incident_molecule)
-        # set collision momentum
-        #scalar_translational_momentum = np.linalg.norm(get_translational_momentum(incident_molecule))
+
+        # get collision velocity
+        scalar_translational_velocity = np.linalg.norm(get_translational_velocity(incident_molecule))
+        collision_energy = 0.5 * np.sum(self.masses) * scalar_translational_velocity**2
+        
+        # initialize target and incident molecules
+        Stationary(target_molecule)
+        reset_mass_center(target_molecule)
         target_point = np.random.uniform(-1,1,3)
         target_point = self.scattering_parameters['scattering_R_target'] * target_point / np.linalg.norm(target_point)
+        Stationary(incident_molecule)
+        reset_mass_center(incident_molecule)
         incident_point = np.random.uniform(-1,1,3)
         incident_point = self.scattering_parameters['scattering_R_incident'] * incident_point / np.linalg.norm(incident_point)
+        
         # normalized collision_vector
         collision_vector = (target_point - incident_point) / np.linalg.norm(target_point - incident_point)
+        
+        # calculate the impact parameter (ip): the distance of point (x0,y0,z0) to the collision line.
+        # the collision line is formed with the vector (m,n,p) and the online point (x1,y1,z1).
+        # the collision line formular is (x-x1)/m = (y-y1)/n = (z-z1)/p = t,
+        # where t = [m*(x0-x1)+n*(y0-y1)+p*(z0-z1)]/(m*m+n*n+p*p).
+        # and point (xf,yf,zf) is the perpendicular foot of point (x0,y0,z0) on the collision line,
+        # where xf = m*t+x1, yf = n*t+y1, zf = p*t+z1.
+        # the distance is the norm of (x0-xf,y0-yf,z0-zf).
+        # point (x0,y0,z0) is the coordinate origin point (0,0,0) here.
+        [ip_m,ip_n,ip_p] = collision_vector
+        [ip_x1,ip_y1,ip_z1] = incident_point
+        ip_t = (-ip_m*ip_x1-ip_n*ip_y1-ip_p*ip_z1)/(ip_m*ip_m+ip_n*ip_n+ip_p*ip_p)
+        impact_parameter = np.linalg.norm([ip_m*ip_t+ip_x1, ip_n*ip_t+ip_y1, ip_p*ip_t+ip_z1])
+        
         # if Scattering_E_collision is given, Scattering_V_collision will be ignored.
         # if scattering_Maxwell_Boltzmann_collision is True, scattering_E_collision and scattering_V_collision will be ignored
         if self.scattering_parameters['scattering_Maxwell_Boltzmann_collision'] == True:
@@ -74,13 +92,15 @@ class initialize_scattering(initialize_calculator):
         else:
             collision_velocity = collision_vector * self.scattering_parameters['scattering_V_collision']
         incident_molecule.set_velocities(incident_molecule.get_velocities() + collision_velocity)
+        
         # move the mass center of incident molecule to the incident_point
         incident_molecule.set_positions(incident_molecule.get_positions() + incident_point)
 
         # combine target molecule and incident molecule
         scattering_system = target_molecule + incident_molecule
         write_xyz_file('MoREST_scattering.xyz', scattering_system)
-        self.scattering_log.write('\n')
+
+        self.scattering_log.write(str(i_traj)+'    '+str(impact_parameter)+'    '+str(collision_energy)+'\n')
 
     def generate_new_traj(self, i_traj):
         self.traj_filename = 'MoREST_scattering_traj_'+str(i_traj)+'.xyz'
