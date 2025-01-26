@@ -45,8 +45,8 @@ class initialize_scattering(initialize_calculator):
         # normalized collision_vector
         collision_vector = (target_point - incident_point) / np.linalg.norm(target_point - incident_point)
         # if Scattering_E_collision is given, Scattering_V_collision will be ignored.
-        # if if_Maxwell_Boltzmann_collision is True, scattering_E_collision and scattering_V_collision will be ignored
-        if self.scattering_parameters['if_Maxwell_Boltzmann_collision'] == True:
+        # if scattering_Maxwell_Boltzmann_collision is True, scattering_E_collision and scattering_V_collision will be ignored
+        if self.scattering_parameters['scattering_Maxwell_Boltzmann_collision'] == True:
             collision_velocity = collision_vector * scalar_translational_velocity
         elif 'scattering_E_collision' in self.scattering_parameters:
             collision_velocity = collision_vector * np.sqrt( 2*self.scattering_parameters['scattering_E_collision'] / np.sum(incident_molecule.get_masses()) )

@@ -108,8 +108,8 @@ class morest(initialize_modules):
         self.stop_condition = collective_variables(from_CVs_file=False, CVs_list=self.scattering_parameters['scattering_traj_stop'])
         # Find current traj number
         traj_number_list = []
-        for traj_log in glob('./MoREST_traj_*.log'):
-            traj_number_list.append(int(traj_log.split('MoREST_traj_')[1].split('.log')[0]))
+        for traj_log in glob('./MoREST_scattering_traj_*.log'):
+            traj_number_list.append(int(traj_log.split('MoREST_scattering_traj_')[1].split('.log')[0]))
         if len(traj_number_list) == 0:
             current_traj = 0
         else:
