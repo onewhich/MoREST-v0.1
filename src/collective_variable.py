@@ -180,14 +180,13 @@ class collective_variables:
     def central_R(system, atom_list):
         coordinates = system.get_positions()
         if type(atom_list) == int:
-            coordinates_list = coordinates[np.array([atom_list])]
+            coordinates_list = coordinates[np.array([atom_list])-1]
         elif type(atom_list) == list:
-            coordinates_list = coordinates[np.array(atom_list)]
+            coordinates_list = coordinates[np.array(atom_list)-1]
         elif atom_list == 'all':
             coordinates_list = coordinates
         else:
             raise ValueError
-        atom_list -= 1
         central_R_list = np.linalg.norm(coordinates_list, axis=1)
         return central_R_list
 
