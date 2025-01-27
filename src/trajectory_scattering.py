@@ -55,7 +55,7 @@ class initialize_scattering(initialize_calculator):
 
         # get collision velocity
         scalar_translational_velocity = np.linalg.norm(get_translational_velocity(incident_molecule))
-        collision_energy = 0.5 * np.sum(self.masses) * scalar_translational_velocity**2
+        collision_energy = 0.5 * np.sum(incident_molecule.get_masses()) * scalar_translational_velocity**2
         
         # initialize incident and target molecules
         Stationary(incident_molecule)
