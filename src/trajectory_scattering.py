@@ -28,6 +28,8 @@ class initialize_scattering(initialize_calculator):
             self.generate_scattering_system(i_traj)
             self.current_step = 0
             self.current_system = self.get_current_structure()
+            print(self.n_atom)
+            print(self.current_system.get_global_number_of_atoms())
             #self.current_traj = []
             #self.current_traj.append(self.current_system)
             write_xyz_traj(self.traj_filename, self.current_system)
