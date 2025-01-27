@@ -75,7 +75,7 @@ class initialize_scattering(initialize_calculator):
         # the plane including the disc is perpendicular to the vector from incident point to the coordinate origin.
         # the plane is formed with the normal vector (a,b,c) and the point (x1,y1,z1) on the plane.
         # the plane formular is a(x-x1) + b(y-y1) + c(z-z1) = 0
-        # first generate a uniform sampling on the plane, then screen out the samples in the disc.
+        # first generate a uniform sampling on the plane, then screen out the samples on the disc.
         [nv_a,nv_b,nv_c] = incident_point
         d_r = self.scattering_parameters['scattering_R_target']
         if nv_a > 1e-4:
