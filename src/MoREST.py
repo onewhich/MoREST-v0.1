@@ -104,8 +104,10 @@ class morest(initialize_modules):
         if 'scattering_traj_length' in self.scattering_parameters:
             if self.scattering_parameters['scattering_traj_length'] != None:
                 simulation_maxsteps = int(self.scattering_parameters['scattering_traj_length'])
+            else:
+                simulation_maxsteps = np.inf
         else:
-            simulation_maxsteps = int(np.inf)
+            simulation_maxsteps = np.inf
         self.stop_condition = collective_variables(from_CVs_file=False, CVs_list=self.scattering_parameters['scattering_traj_stop'])
         # Find current traj number
         traj_number_list = []
