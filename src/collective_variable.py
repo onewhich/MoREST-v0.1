@@ -183,7 +183,7 @@ class collective_variables:
             coordinates_list = coordinates[np.array([atom_list])]
         elif type(atom_list) == list:
             coordinates_list = coordinates[np.array(atom_list)]
-        elif type(atom_list) == 'all':
+        elif atom_list == 'all':
             coordinates_list = coordinates
         else:
             raise ValueError
