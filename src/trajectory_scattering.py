@@ -30,6 +30,7 @@ class initialize_scattering(initialize_calculator):
             self.current_system = self.get_current_structure()
             #self.current_traj = []
             #self.current_traj.append(self.current_system)
+            write_xyz_file(self.traj_filename, self.current_system)
             write_xyz_traj(self.traj_filename, self.current_system)
             self.MD_log = open(log_filename, 'w', buffering=1)
             self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
