@@ -30,7 +30,6 @@ class initialize_scattering(initialize_calculator):
             self.current_system = self.get_current_structure()
             #self.current_traj = []
             #self.current_traj.append(self.current_system)
-            write_xyz_file(self.traj_filename, self.current_system)
             write_xyz_traj(self.traj_filename, self.current_system)
             self.MD_log = open(log_filename, 'w', buffering=1)
             self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
@@ -64,43 +63,42 @@ class initialize_scattering(initialize_calculator):
         Stationary(target_molecule)
         reset_mass_center(target_molecule)
 
-        # uniform sampling on a sphere for inciden point and on a circle for target point.
+        # uniform sampling on a sphere for inciden point and on a disc for target point.
         # sampling spherical coordinate system (r,theta,phi), angle in radians.
         # x = r * sin(theta) * cos(phi)
         # y = r * sin(theta) * sin(phi)
         # z = r * cos(theta)
-        theta = np.random.uniform(0,np.pi)
-        phi = np.random.uniform(0,2*np.pi)
-        r = self.scattering_parameters['scattering_R_incident']
-        incident_point = np.array([r*np.sin(theta)*np.cos(phi), r*np.sin(theta)*np.sin(phi), r*np.cos(theta)])
-        # the plane including the circle is perpendicular to the vector from incident point to the coordinate origin.
+        s_theta = np.random.uniform(0,np.pi)
+        s_phi = np.random.uniform(0,2*np.pi)
+        s_r = self.scattering_parameters['scattering_R_incident']
+        incident_point = np.array([s_r*np.sin(s_theta)*np.cos(s_phi), s_r*np.sin(s_theta)*np.sin(s_phi), s_r*np.cos(s_theta)])
+        # the plane including the disc is perpendicular to the vector from incident point to the coordinate origin.
         # the plane is formed with the normal vector (a,b,c) and the point (x1,y1,z1) on the plane.
         # the plane formular is a(x-x1) + b(y-y1) + c(z-z1) = 0
-        # first generate a uniform sampling on the plane, then screen out the samples in the circle and rescale with R_target.
+        # first generate a uniform sampling on the plane, then screen out the samples in the disc.
         [nv_a,nv_b,nv_c] = incident_point
+        d_r = self.scattering_parameters['scattering_R_target']
         if nv_a > 1e-4:
             while True:
-                [p_y,p_z] = np.random.uniform(-1,1,2)
+                [p_y,p_z] = np.random.uniform(-d_r,d_r,2)
                 p_x = -(nv_b*p_y + nv_c*p_z) / nv_a
                 target_point = np.array([p_x,p_y,p_z])
-                if np.linalg.norm(target_point) < 1:
+                if np.linalg.norm(target_point) < d_r:
                     break
         elif nv_b > 1e-4:
             while True:
-                [p_x,p_z] = np.random.uniform(-1,1,2)
+                [p_x,p_z] = np.random.uniform(-d_r,d_r,2)
                 p_y = -(nv_a*p_x + nv_c*p_z) / nv_b
                 target_point = np.array([p_x,p_y,p_z])
-                if np.linalg.norm(target_point) < 1:
+                if np.linalg.norm(target_point) < d_r:
                     break
         else:
             while True:
-                [p_x,p_y] = np.random.uniform(-1,1,2)
+                [p_x,p_y] = np.random.uniform(-d_r,d_r,2)
                 p_z = -(nv_a*p_x + nv_b*p_y) / nv_c
                 target_point = np.array([p_x,p_y,p_z])
-                if np.linalg.norm(target_point) < 1:
-                    break
-        target_point = self.scattering_parameters['scattering_R_target'] * target_point / np.linalg.norm(target_point)
-            
+                if np.linalg.norm(target_point) < d_r:
+                    break            
         
         # normalized collision_vector
         collision_vector = (target_point - incident_point) / np.linalg.norm(target_point - incident_point)
