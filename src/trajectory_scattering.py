@@ -171,10 +171,8 @@ class initialize_scattering(initialize_calculator):
         
         self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(system)
 
-        print(self.n_atom)
-        print(self.masses)
-        print(self.current_potential_energy)
-        print(self.current_forces)
+        print(type(system))
+        print(system)
 
         return system
     
