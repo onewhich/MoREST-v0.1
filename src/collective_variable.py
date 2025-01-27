@@ -178,15 +178,17 @@ class collective_variables:
 
     @staticmethod
     def central_R(system, atom_list):
-        if type(atom_list) == int:
-            atom_list = np.array([atom_list])
-        elif type(atom_list) == list:
-            atom_list = np.array(atom_list)
-        elif type(atom_list) != np.ndarray:
-            raise ValueError
         coordinates = system.get_positions()
+        if type(atom_list) == int:
+            coordinates_list = coordinates[np.array([atom_list])]
+        elif type(atom_list) == list:
+            coordinates_list = coordinates[np.array(atom_list)]
+        elif type(atom_list) == 'all':
+            coordinates_list = coordinates
+        else:
+            raise ValueError
         atom_list -= 1
-        central_R_list = np.linalg.norm(coordinates[atom_list], axis=1)
+        central_R_list = np.linalg.norm(coordinates_list, axis=1)
         return central_R_list
 
     @staticmethod
