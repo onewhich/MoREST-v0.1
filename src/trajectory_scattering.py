@@ -166,14 +166,13 @@ class initialize_scattering(initialize_calculator):
             except:
                 system = read_xyz_file('MoREST_scattering.xyz')
             
+        write_xyz_traj('test.xyz', system)
+        
         self.n_atom = system.get_global_number_of_atoms()
         self.masses = system.get_masses()[:,np.newaxis]
         
         self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(system)
 
-        
-        write_xyz_traj('test.xyz', system)
-        
         return system
     
 
