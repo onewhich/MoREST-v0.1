@@ -102,9 +102,9 @@ class morest(initialize_modules):
             calculator: The same as the calculator in ASE. It is required, when many body potential is specified as 'on_the_fly'.
         '''
         if 'scattering_traj_length' in self.scattering_parameters:
-            simulation_maxsteps = self.scattering_parameters['scattering_traj_length']
+            simulation_maxsteps = int(self.scattering_parameters['scattering_traj_length'])
         else:
-            simulation_maxsteps = np.inf
+            simulation_maxsteps = int(np.inf)
         self.stop_condition = collective_variables(from_CVs_file=False, CVs_list=self.scattering_parameters['scattering_traj_stop'])
         # Find current traj number
         traj_number_list = []
