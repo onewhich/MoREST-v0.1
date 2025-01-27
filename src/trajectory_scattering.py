@@ -145,7 +145,17 @@ class initialize_scattering(initialize_calculator):
             self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.xyz_new instead of MoREST_scattering_traj.xyz
             self.MD_log = open(log_filename, 'a', buffering=1)
         except:
-            raise Exception('Trajectory '+str(i_traj)+' cannot be found. Please check the trajectories.')
+            self.traj_filename = 'MoREST_scattering_traj_'+str(i_traj)+'.xyz'
+            log_filename = 'MoREST_scattering_traj_'+str(i_traj)+'.log'
+            self.generate_scattering_system(i_traj)
+            self.current_step = 0
+            self.current_system = self.get_current_structure()
+            #self.current_traj = []
+            #self.current_traj.append(self.current_system)
+            write_xyz_traj(self.traj_filename, self.current_system)
+            self.MD_log = open(log_filename, 'w', buffering=1)
+            self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
+            write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses)
             
     def get_current_structure(self):
         if self.scattering_parameters['scattering_initialization']:
