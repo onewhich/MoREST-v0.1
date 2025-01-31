@@ -114,11 +114,11 @@ class morest(initialize_modules):
         for traj_log in glob('./MoREST_scattering_traj_*.log'):
             traj_number_list.append(int(traj_log.split('MoREST_scattering_traj_')[1].split('.log')[0]))
         if len(traj_number_list) == 0:
-            current_traj = 0
+            current_traj_number = 0
         else:
-            current_traj = np.sort(traj_number_list)[-1]
+            current_traj_number = np.sort(traj_number_list)[-1]
         # Start to run the calculation
-        for i_traj in range(current_traj, self.scattering_parameters['scattering_traj_number']):
+        for i_traj in range(current_traj_number, self.scattering_parameters['scattering_traj_number']):
             self.scattering_job.generate_new_traj(i_traj)
             current_step, current_system = self.scattering_job.current_step, self.scattering_job.current_system
             while current_step <= simulation_maxsteps:

@@ -1,4 +1,5 @@
 #from time import time
+import os
 import numpy as np
 from structure_io import read_xyz_file, write_xyz_file, read_xyz_traj, write_xyz_traj
 from initialize_calculator import initialize_calculator
@@ -28,8 +29,8 @@ class initialize_scattering(initialize_calculator):
             self.generate_scattering_system(i_traj)
             self.current_step = 0
             self.current_system = self.get_current_structure()
-            #self.current_traj = []
-            #self.current_traj.append(self.current_system)
+            self.current_traj = []
+            self.current_traj.append(self.current_system)
             write_xyz_traj(self.traj_filename, self.current_system)
             self.MD_log = open(log_filename, 'w', buffering=1)
             self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
@@ -140,17 +141,17 @@ class initialize_scattering(initialize_calculator):
         self.traj_filename = 'MoREST_scattering_traj_'+str(i_traj)+'.xyz'
         log_filename = 'MoREST_scattering_traj_'+str(i_traj)+'.log'
         
-        try:
+        if os.path.isfile(self.traj_filename):
             self.current_traj = read_xyz_traj(self.traj_filename)
             self.current_step = len(self.current_traj) - 1
             self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.xyz_new instead of MoREST_scattering_traj.xyz
             self.MD_log = open(log_filename, 'a', buffering=1)
-        except:
+        else:
             self.generate_scattering_system(i_traj)
             self.current_step = 0
             self.current_system = self.get_current_structure()
-            #self.current_traj = []
-            #self.current_traj.append(self.current_system)
+            self.current_traj = []
+            self.current_traj.append(self.current_system)
             write_xyz_traj(self.traj_filename, self.current_system)
             self.MD_log = open(log_filename, 'w', buffering=1)
             self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
@@ -160,10 +161,7 @@ class initialize_scattering(initialize_calculator):
         if self.scattering_parameters['scattering_initialization']:
             system = self.scattering_system
         else:
-            try:
-                system = self.current_traj[-1]
-            except:
-                system = self.scattering_system
+            system = self.current_traj[-1]
 
         self.n_atom = system.get_global_number_of_atoms()
         self.masses = system.get_masses()[:,np.newaxis]
