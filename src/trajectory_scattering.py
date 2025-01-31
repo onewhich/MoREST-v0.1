@@ -131,8 +131,8 @@ class initialize_scattering(initialize_calculator):
         incident_molecule.set_positions(incident_molecule.get_positions() + incident_point)
 
         # combine target molecule and incident molecule
-        scattering_system = target_molecule + incident_molecule
-        write_xyz_file('MoREST_scattering.xyz', scattering_system)
+        self.scattering_system = target_molecule + incident_molecule
+        write_xyz_file('MoREST_scattering_'+str(i_traj)+'.xyz', self.scattering_system)
 
         self.scattering_log.write(str(i_traj)+'    '+str(impact_parameter)+'    '+str(collision_energy)+'\n')
 
@@ -158,12 +158,12 @@ class initialize_scattering(initialize_calculator):
             
     def get_current_structure(self):
         if self.scattering_parameters['scattering_initialization']:
-            system = read_xyz_file('MoREST_scattering.xyz')
+            system = self.scattering_system
         else:
             try:
                 system = self.current_traj[-1]
             except:
-                system = read_xyz_file('MoREST_scattering.xyz')
+                system = self.scattering_system
 
         self.n_atom = system.get_global_number_of_atoms()
         self.masses = system.get_masses()[:,np.newaxis]
