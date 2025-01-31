@@ -45,7 +45,8 @@ class initialize_scattering(initialize_calculator):
 
     def generate_scattering_system(self, i_traj):
         if self.scattering_parameters['scattering_pre_thermolized']:
-            pass
+            incident_molecule = read_xyz_file(self.scattering_parameters['scattering_incident_molecule'])
+            target_molecule = read_xyz_file(self.scattering_parameters['scattering_target_molecule'])
         else:
             incident_molecule = read_xyz_file(self.scattering_parameters['scattering_incident_molecule'])
             MaxwellBoltzmannDistribution(incident_molecule, temperature_K = self.scattering_parameters['scattering_T_incident'])
@@ -54,7 +55,7 @@ class initialize_scattering(initialize_calculator):
             MaxwellBoltzmannDistribution(target_molecule, temperature_K = self.scattering_parameters['scattering_T_target'])
 
         # get collision velocity
-        scalar_translational_velocity = np.linalg.norm(get_translational_velocity(incident_molecule))
+        scalar_translational_velocity = np.linalg.norm(get_translational_velocity(target_molecule) - get_translational_velocity(incident_molecule))
         collision_energy = 0.5 * np.sum(incident_molecule.get_masses()) * scalar_translational_velocity**2
         
         # initialize incident and target molecules
