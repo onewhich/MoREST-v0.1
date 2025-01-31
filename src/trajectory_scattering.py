@@ -145,8 +145,6 @@ class initialize_scattering(initialize_calculator):
             self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.xyz_new instead of MoREST_scattering_traj.xyz
             self.MD_log = open(log_filename, 'a', buffering=1)
         except:
-            self.traj_filename = 'MoREST_scattering_traj_'+str(i_traj)+'.xyz'
-            log_filename = 'MoREST_scattering_traj_'+str(i_traj)+'.log'
             self.generate_scattering_system(i_traj)
             self.current_step = 0
             self.current_system = self.get_current_structure()
