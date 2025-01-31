@@ -142,11 +142,13 @@ class initialize_scattering(initialize_calculator):
         log_filename = 'MoREST_scattering_traj_'+str(i_traj)+'.log'
         
         if os.path.isfile(self.traj_filename):
+            print('Find exist traj file, reading.')
             self.current_traj = read_xyz_traj(self.traj_filename)
             self.current_step = len(self.current_traj) - 1
             self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.xyz_new instead of MoREST_scattering_traj.xyz
             self.MD_log = open(log_filename, 'a', buffering=1)
         else:
+            print('No exist traj file, generating.')
             self.generate_scattering_system(i_traj)
             self.current_step = 0
             self.current_system = self.get_current_structure()
@@ -159,8 +161,10 @@ class initialize_scattering(initialize_calculator):
             
     def get_current_structure(self):
         if self.scattering_parameters['scattering_initialization']:
+            print('Read from scattering system.')
             system = self.scattering_system
         else:
+            print('Read from traj file, the last system.')
             system = self.current_traj[-1]
 
         self.n_atom = system.get_global_number_of_atoms()
