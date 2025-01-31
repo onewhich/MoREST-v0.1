@@ -133,7 +133,7 @@ class initialize_scattering(initialize_calculator):
 
         # combine target molecule and incident molecule
         self.scattering_system = target_molecule + incident_molecule
-        write_xyz_file('MoREST_scattering_'+str(i_traj)+'.xyz', self.scattering_system)
+        #write_xyz_file('MoREST_scattering.xyz', self.scattering_system)
 
         self.scattering_log.write(str(i_traj)+'    '+str(impact_parameter)+'    '+str(collision_energy)+'\n')
 
