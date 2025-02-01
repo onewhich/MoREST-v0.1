@@ -27,9 +27,9 @@ class initialize_scattering(initialize_calculator):
             log_filename = 'MoREST_scattering_traj_'+str(i_traj)+'.log'
 
             self.generate_scattering_system(i_traj)
+            self.current_traj = []
             self.current_step = 0
             self.current_system = self.get_current_structure()
-            self.current_traj = []
             self.current_traj.append(self.current_system)
             write_xyz_traj(self.traj_filename, self.current_system)
             self.MD_log = open(log_filename, 'w', buffering=1)
@@ -151,9 +151,9 @@ class initialize_scattering(initialize_calculator):
         else:
             print('No exist traj file, generating.')
             self.generate_scattering_system(i_traj)
+            self.current_traj = []
             self.current_step = 0
             self.current_system = self.get_current_structure()
-            self.current_traj = []
             self.current_traj.append(self.current_system)
             print('traj length: ',len(self.current_traj))
             write_xyz_traj(self.traj_filename, self.current_system)
@@ -166,9 +166,12 @@ class initialize_scattering(initialize_calculator):
             print('Read from scattering system.')
             system = self.scattering_system
         else:
-            print('Read from traj file, the last system.')
-            print('traj length: ',len(self.current_traj))
-            system = self.current_traj[-1]
+            if len(self.current_traj) == 0:
+                system = self.scattering_system
+            else:
+                print('Read from traj file, the last system.')
+                print('traj length: ',len(self.current_traj))
+                system = self.current_traj[-1]
 
         self.n_atom = system.get_global_number_of_atoms()
         self.masses = system.get_masses()[:,np.newaxis]
