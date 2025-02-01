@@ -119,13 +119,10 @@ class morest(initialize_modules):
             current_traj_number = np.sort(traj_number_list)[-1]
         # Start to run the calculation
         for i_traj in range(current_traj_number, self.scattering_parameters['scattering_traj_number']):
-            print('Generate new traj.')
             self.scattering_job.generate_new_traj(i_traj)
             current_step, current_system = self.scattering_job.current_step, self.scattering_job.current_system
             while current_step <= simulation_maxsteps:
-                print('Loop in a traj.')
                 if self.stop_condition.check_CVs_one(current_system):
-                    print('Touch stop condition.')
                     break
                 if self.morest_parameters['enhanced_sampling']:
                     self.morest_parameters['enhanced_sampling'] = False # TODO: enhanced sampling method for trajectory scattering
