@@ -19,7 +19,7 @@ ML_FD_forces                      False  # Use numerical forces calculation or r
 FD_displacement                   0.0025 # unit in \AA. Parameter for finite difference forces calculation. Default value is 0.0025 \AA
 ML_active_learning                True
 ML_energy_uncertainty_tolerance   0.01 # Check if ab initio calculator will involve based on the difference between ML prediction and the QC calculation. It is the energy std for GPR.
-ML_appending_set_number           10 # The number of samplings calculated by ab initio and added to the training set.
+ML_appending_set_number           10 # The number of samplings calculated by ab initio and added to the training set before the re-training. If 0 is given, no re-training will happen.
 ML_appending_sampling_steps       100 #TODO: Ab initio samplings will be added to traning set for every given MD/MC sampling steps.
 ML_GPR_noise_level_bounds         1e-7 1. # Parameter noise_level_bounds in GPR. Default value is 1e-7 1. It only gives the lower bound, if there is only one number given.
 
