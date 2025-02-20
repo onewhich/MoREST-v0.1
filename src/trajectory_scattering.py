@@ -29,6 +29,10 @@ class initialize_scattering(initialize_calculator):
             self.generate_scattering_system(i_traj)
             self.current_traj = []
             self.current_step = 0
+            try:
+                self.ml_calculator.get_current_step(self.current_step)
+            except:
+                pass
             self.current_system = self.get_current_structure()
             self.current_traj.append(self.current_system)
             write_xyz_traj(self.traj_filename, self.current_system)
