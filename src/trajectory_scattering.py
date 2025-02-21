@@ -220,10 +220,11 @@ class scattering_velocity_Verlet(initialize_scattering):
         except:
             pass
         
-        #self.current_traj.append(self.current_system)
-        write_xyz_traj(self.traj_filename, self.current_system)
-        kinetic_energy = self.current_system.get_kinetic_energy()
-        write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses)
+        if self.current_step % self.scattering_parameters['scattering_step_interval'] == 0:
+            #self.current_traj.append(self.current_system)
+            write_xyz_traj(self.traj_filename, self.current_system)
+            kinetic_energy = self.current_system.get_kinetic_energy()
+            write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses)
         
         return self.current_step, self.current_system
 
@@ -292,10 +293,11 @@ class scattering_Runge_Kutta_4th(initialize_scattering):
         except:
             pass
         
-        #self.current_traj.append(self.current_system)
-        write_xyz_traj(self.traj_filename, self.current_system)
-        kinetic_energy = self.current_system.get_kinetic_energy()
-        write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses)
+        if self.current_step % self.scattering_parameters['scattering_step_interval'] == 0:
+            #self.current_traj.append(self.current_system)
+            write_xyz_traj(self.traj_filename, self.current_system)
+            kinetic_energy = self.current_system.get_kinetic_energy()
+            write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses)
         
         return self.current_step, self.current_system
  
@@ -363,10 +365,11 @@ class scattering_Runge_Kutta_4th_a(initialize_scattering):
         except:
             pass
         
-        #self.current_traj.append(self.current_system)
-        write_xyz_traj(self.traj_filename, self.current_system)
-        kinetic_energy = self.current_system.get_kinetic_energy()
-        write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses)
+        if self.current_step % self.scattering_parameters['scattering_step_interval'] == 0:
+            #self.current_traj.append(self.current_system)
+            write_xyz_traj(self.traj_filename, self.current_system)
+            kinetic_energy = self.current_system.get_kinetic_energy()
+            write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses)
         
         return self.current_step, self.current_system
 

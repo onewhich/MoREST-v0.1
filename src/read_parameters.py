@@ -522,6 +522,9 @@ class read_parameters:
         elif i_parameter.split()[0].upper() == 'Scattering_time_step'.upper():
             self.scattering_parameters['scattering_time_step'] = float(i_parameter.split()[1])
 
+        elif i_parameter.split()[0].upper() == 'Scattering_step_interval'.upper():
+            self.scattering_parameters['scattering_step_interval'] = int(i_parameter.split()[1])
+
         elif i_parameter.split()[0].upper() == 'Scattering_V_collision'.upper():
             self.scattering_parameters['scattering_V_collision'] = float(i_parameter.split()[1])
 
