@@ -232,8 +232,8 @@ class scattering_Runge_Kutta_4th(initialize_scattering):
     This class implements Runge-Kutta 4th order algorithm to do microcanonical ensemble (NVE) dynamics.
     '''
     
-    def __init__(self, morest_parameters, scattering_parameters, calculator=None, i_traj=0, log_file=None):
-        super(scattering_Runge_Kutta_4th, self).__init__(morest_parameters, scattering_parameters, calculator, i_traj, log_file)
+    def __init__(self, morest_parameters, scattering_parameters, calculator=None, log_morest=None):
+        super(scattering_Runge_Kutta_4th, self).__init__(morest_parameters, scattering_parameters, calculator, log_morest)
         
     def generate_new_step(self, bias_forces=None):
         '''
@@ -305,8 +305,8 @@ class scattering_Runge_Kutta_4th_a(initialize_scattering):
     This class implements Runge-Kutta 4th order algorithm to do microcanonical ensemble (NVE) dynamics.
     '''
     
-    def __init__(self, morest_parameters, scattering_parameters, calculator=None, log_file=None):
-        super(scattering_Runge_Kutta_4th_a, self).__init__(morest_parameters, scattering_parameters, calculator, log_file)
+    def __init__(self, morest_parameters, scattering_parameters, calculator=None, log_morest=None):
+        super(scattering_Runge_Kutta_4th_a, self).__init__(morest_parameters, scattering_parameters, calculator, log_morest)
         
     def generate_new_step(self, bias_forces=None):
         '''
