@@ -79,11 +79,11 @@ class morest(initialize_modules):
                     while current_step <= simulation_maxsteps:
                         general_coordinate = current_system.get_positions()
                         bias_forces = self.wall_potential(general_coordinate)
-                        current_step, current_system= self.sampling_job.generate_new_step(bias_forces)
+                        current_step, current_system= self.sampling_job.generate_new_step(bias_forces=bias_forces)
                 elif self.sampling_parameters['sampling_method'].upper() in ['RPMD']:
                     simulation_maxsteps = int(self.RPMD_parameters['rpmd_simulation_time']/self.RPMD_parameters['rpmd_time_step']) + 1
                     while current_step <= simulation_maxsteps:
-                        current_step, current_system= self.sampling_job.generate_new_step(self.wall_potential)
+                        current_step, current_system= self.sampling_job.generate_new_step(wall_potential=self.wall_potential)
             else:
                 if self.sampling_parameters['sampling_method'].upper() in ['MD']:
                     simulation_maxsteps = int(self.MD_parameters['md_simulation_time']/self.MD_parameters['md_time_step']) + 1
@@ -130,7 +130,7 @@ class morest(initialize_modules):
                     if self.morest_parameters['wall_potential']:
                         general_coordinate = current_system.get_positions()
                         bias_forces = self.wall_potential(general_coordinate)
-                        current_step, current_system= self.scattering_job.generate_new_step(bias_forces)
+                        current_step, current_system= self.scattering_job.generate_new_step(bias_forces=bias_forces)
                     else:
                         current_step, current_system= self.scattering_job.generate_new_step()
             self.log_morest.write('Trajectory number '+str(i_traj)+' has been finished.\n')
@@ -178,7 +178,7 @@ class morest(initialize_modules):
                 if self.morest_parameters['wall_potential']:
                     general_coordinate = current_system[i].get_positions()
                     bias_forces = self.wall_potential(general_coordinate)
-                    current_step[i], current_system[i] = i_sampling_job.generate_new_step(bias_forces,current_system[i])
+                    current_step[i], current_system[i] = i_sampling_job.generate_new_step(bias_forces=bias_forces,updated_current_system=current_system[i])
                     current_potential_energy[i] = i_sampling_job.current_potential_energy
                 else:
                     current_step[i], current_system[i] = i_sampling_job.generate_new_step(updated_current_system=current_system[i])
@@ -189,7 +189,7 @@ class morest(initialize_modules):
                 if self.morest_parameters['wall_potential']:
                     general_coordinate = current_system[i].get_positions()
                     bias_forces = self.wall_potential(general_coordinate)
-                    current_step[i], current_system[i] = i_sampling_job.generate_new_step(bias_forces,current_system[i])
+                    current_step[i], current_system[i] = i_sampling_job.generate_new_step(bias_forces=bias_forces,updated_current_system=current_system[i])
                     current_potential_energy[i] = i_sampling_job.current_potential_energy
                 else:
                     current_step[i], current_system[i] = i_sampling_job.generate_new_step(updated_current_system=current_system[i])
@@ -229,7 +229,7 @@ class morest(initialize_modules):
                 bias_forces = bias_forces_its + bias_forces_wall_potential
             else:
                 bias_forces = bias_forces_its
-            current_step, current_system = self.sampling_job.generate_new_step(bias_forces)
+            current_step, current_system = self.sampling_job.generate_new_step(bias_forces=bias_forces)
 
 
     def wall_potential(self, general_coordinate):
