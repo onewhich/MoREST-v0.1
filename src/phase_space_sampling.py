@@ -191,6 +191,8 @@ class MD(initialize_sampling):
             self.current_system = updated_current_system
         
         ### F(t) + bias
+        print(self.current_forces)
+        print(bias_forces)
         if type(bias_forces) != type(None):
             self.current_forces = self.current_forces + bias_forces
 
