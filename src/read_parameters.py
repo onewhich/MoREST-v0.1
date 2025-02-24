@@ -47,6 +47,7 @@ class read_parameters:
         self.sampling_parameters['sampling_initialization'] = False
         self.sampling_parameters['sampling_molecule'] = 'MoREST_sampling.xyz'
         self.sampling_parameters['sampling_pre_thermalized'] = True
+        self.sampling_parameters['sampling_traj_interval'] = 1
         self.MD_parameters = {}
         self.MD_parameters['md_clean_translation'] = True
         self.MD_parameters['md_clean_rotation'] = False
@@ -67,6 +68,8 @@ class read_parameters:
         self.scattering_parameters = {}
         self.scattering_parameters['scattering_initialization'] = False
         self.scattering_parameters['scattering_pre_thermolized'] = False
+        self.scattering_parameters['scattering_traj_interval'] = 1
+        self.scattering_parameters['scattering_traj_number'] = 1
         self.scattering_parameters['scattering_traj_stop'] = None
         self.scattering_parameters['scattering_traj_length'] = None
         self.scattering_parameters['scattering_target_molecule'] = 'MoREST_scattering_target.xyz'
@@ -522,8 +525,8 @@ class read_parameters:
         elif i_parameter.split()[0].upper() == 'Scattering_time_step'.upper():
             self.scattering_parameters['scattering_time_step'] = float(i_parameter.split()[1])
 
-        elif i_parameter.split()[0].upper() == 'Scattering_step_interval'.upper():
-            self.scattering_parameters['scattering_step_interval'] = int(i_parameter.split()[1])
+        elif i_parameter.split()[0].upper() == 'Scattering_traj_interval'.upper():
+            self.scattering_parameters['scattering_traj_interval'] = int(i_parameter.split()[1])
 
         elif i_parameter.split()[0].upper() == 'Scattering_V_collision'.upper():
             self.scattering_parameters['scattering_V_collision'] = float(i_parameter.split()[1])

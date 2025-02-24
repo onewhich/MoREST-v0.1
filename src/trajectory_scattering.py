@@ -220,7 +220,7 @@ class scattering_velocity_Verlet(initialize_scattering):
         except:
             pass
         
-        if self.current_step % self.scattering_parameters['scattering_step_interval'] == 0:
+        if self.current_step % self.scattering_parameters['scattering_traj_interval'] == 0:
             #self.current_traj.append(self.current_system)
             write_xyz_traj(self.traj_filename, self.current_system)
             kinetic_energy = self.current_system.get_kinetic_energy()
@@ -293,7 +293,7 @@ class scattering_Runge_Kutta_4th(initialize_scattering):
         except:
             pass
         
-        if self.current_step % self.scattering_parameters['scattering_step_interval'] == 0:
+        if self.current_step % self.scattering_parameters['scattering_traj_interval'] == 0:
             #self.current_traj.append(self.current_system)
             write_xyz_traj(self.traj_filename, self.current_system)
             kinetic_energy = self.current_system.get_kinetic_energy()
@@ -365,7 +365,7 @@ class scattering_Runge_Kutta_4th_a(initialize_scattering):
         except:
             pass
         
-        if self.current_step % self.scattering_parameters['scattering_step_interval'] == 0:
+        if self.current_step % self.scattering_parameters['scattering_traj_interval'] == 0:
             #self.current_traj.append(self.current_system)
             write_xyz_traj(self.traj_filename, self.current_system)
             kinetic_energy = self.current_system.get_kinetic_energy()
