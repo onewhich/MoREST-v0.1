@@ -181,9 +181,11 @@ class initialize_scattering(initialize_calculator):
 
         return system
     
-    def rescale_T_kinetic(self, system, Tf):
+    @staticmethod
+    def rescale_T_kinetic(system, Tf):
+        n_atom = system.get_global_number_of_atoms()
         Ek_i = system.get_kinetic_energy()
-        Ti = 2/3 * Ek_i/units.kB /self.n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+        Ti = 2/3 * Ek_i/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
         velocities = system.get_velocities()
         factor = np.sqrt(Tf / Ti)
         system.set_velocities(factor * velocities)
