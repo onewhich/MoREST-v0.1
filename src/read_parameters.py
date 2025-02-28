@@ -539,6 +539,14 @@ class read_parameters:
 
         elif i_parameter.split()[0].upper() == 'Scattering_T_incident'.upper():
             self.scattering_parameters['scattering_T_incident'] = float(i_parameter.split()[1])
+                
+        elif i_parameter.split()[0].upper() == 'Scattering_T_kinetic'.upper():
+            if i_parameter.split()[1].upper() == 'True'.upper():
+                self.scattering_parameters['scattering_T_kinetic'] = True
+            elif i_parameter.split()[1].upper() == 'False'.upper():
+                self.scattering_parameters['scattering_T_kinetic'] = False
+            else:
+                raise Exception('It is not clear whether the kinetic energy temperature will be used.')
 
         elif i_parameter.split()[0].upper() == 'Scattering_stops_number'.upper():
             self.scattering_parameters['scattering_stops_number'] = int(i_parameter.split()[1])

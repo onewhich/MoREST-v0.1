@@ -77,6 +77,7 @@ Scattering_V_collision            1e-2 # Initial collision velocity in AA/fs ( 1
 Scattering_E_collision            1  # Initial collision energy in eV. This energy is the translational kinetic energy of incident molecule. 'Scattering_V_collision' will be ignored, if 'Scattering_E_collision' is defined.
 Scattering_T_target               400 # in K. When Scattering_pre_thermolized is False. The initial temperature of the target molecule will be initialized by Maxwell-Boltzmann distribution, and remove translational movement.
 Scattering_T_incident             400 # in K. When Scattering_pre_thermolized is False. The initial temperature of the incident moelcule will be initialized by Maxwell-Boltzmann distribution, and remove translational movement.
+Scattering_T_kinetic              False # False: The temperature of target and incident is thermodynamic temperature following MB distribution. True: The temperature is kinetic energy temperature.
 Scattering_stops_number           2 # The number of stop conditions whcih will be checked.
 Scattering_traj_stop              central_R_one 1 10 2 4 5 central_R_all 1 9 all distance 1 2 6 7 angle -1 2 6 7 10 
                                   # central_R_one: check distances of 2 atoms (atom 4 and atom 5) from the central (0,0,0), it will stop when the distance is larger (1)/ shorter (-1) than 10.

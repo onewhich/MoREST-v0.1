@@ -55,9 +55,13 @@ class initialize_scattering(initialize_calculator):
         else:
             incident_molecule = read_xyz_file(self.scattering_parameters['scattering_incident_molecule'])
             MaxwellBoltzmannDistribution(incident_molecule, temperature_K = self.scattering_parameters['scattering_T_incident'])
-
+            
             target_molecule = read_xyz_file(self.scattering_parameters['scattering_target_molecule'])
             MaxwellBoltzmannDistribution(target_molecule, temperature_K = self.scattering_parameters['scattering_T_target'])
+
+            if self.scattering_parameters['scattering_T_kinetic'] == True:
+                incident_molecule = self.rescale_T_kinetic(incident_molecule, self.scattering_parameters['scattering_T_incident'])
+                target_molecule = self.rescale_T_kinetic(target_molecule, self.scattering_parameters['scattering_T_target'])
 
         # get collision velocity
         scalar_translational_velocity = np.linalg.norm(get_translational_velocity(target_molecule) - get_translational_velocity(incident_molecule))
@@ -175,6 +179,14 @@ class initialize_scattering(initialize_calculator):
         
         self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(system)
 
+        return system
+    
+    def rescale_T_kinetic(self, system, Tf):
+        Ek_i = system.get_kinetic_energy()
+        Ti = 2/3 * Ek_i/units.kB /self.n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+        velocities = system.get_velocities()
+        factor = np.sqrt(Tf / Ti)
+        system.set_velocities(factor * velocities)
         return system
     
 
