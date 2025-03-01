@@ -91,7 +91,7 @@ class morest(initialize_modules):
                     simulation_maxsteps = int(self.RPMD_parameters['rpmd_simulation_time']/self.RPMD_parameters['rpmd_time_step']) + 1
                 while current_step <= simulation_maxsteps:
                     current_step, current_system= self.sampling_job.generate_new_step()
-        self.log_morest.write('Phase space sampling with molecular dynamics method is finished!\n')
+        self.log_morest.write('Phase space sampling with molecular dynamics method is finished!\n\n')
         self.mission_complete()
 
     def trajectory_scattering(self):
@@ -134,7 +134,7 @@ class morest(initialize_modules):
                     else:
                         current_step, current_system= self.scattering_job.generate_new_step()
             self.log_morest.write('Trajectory number '+str(i_traj)+' has been finished.\n\n')
-        self.log_morest.write('Trajectory scattering based on molecular dynamics method is finished!\n')
+        self.log_morest.write('Trajectory scattering based on molecular dynamics method is finished!\n\n')
         self.mission_complete()
 
     def structure_searching(self):
@@ -158,7 +158,7 @@ class morest(initialize_modules):
             else:
                 while current_convergence >= searching_convergence and current_step <= searching_maxsteps:
                     current_convergence, current_step, current_system= self.searching_job.generate_new_step()
-        self.log_morest.write('Structure optimization with '+self.searching_parameters['searching_method']+' method is finished!\n')
+        self.log_morest.write('Structure optimization with '+self.searching_parameters['searching_method']+' method is finished!\n\n')
         self.mission_complete()
 
     def enhanced_sampling_RE(self,simulation_maxsteps):
