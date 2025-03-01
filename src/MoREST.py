@@ -133,7 +133,7 @@ class morest(initialize_modules):
                         current_step, current_system= self.scattering_job.generate_new_step(bias_forces=bias_forces)
                     else:
                         current_step, current_system= self.scattering_job.generate_new_step()
-            self.log_morest.write('Trajectory number '+str(i_traj)+' has been finished.\n')
+            self.log_morest.write('Trajectory number '+str(i_traj)+' has been finished.\n\n')
         self.log_morest.write('Trajectory scattering based on molecular dynamics method is finished!\n')
         self.mission_complete()
 
