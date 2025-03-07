@@ -88,7 +88,7 @@ Scattering_traj_stop              central_R_one 1 10 2 4 5 central_R_all 1 9 all
 Scattering_traj_length            1000 # It will stop when the number of steps is larger than the length. None: do not check the number of steps.
 Scattering_target_molecule        MoREST_scattering_target.xyz # structure or trajectory of the target molecule.
 Scattering_incident_molecule      MoREST_scattering_incident.xyz # structure or trajectory of the incident molecule.
-Scattering_R_target               1 # the final point of the incident direction vector locates on the surface of the sphere with 1 AA radius. The central point of the sphere locates at the geometric center of the target molecule.
+Scattering_R_target               1 # the final point of the incident direction vector locates on the circle with 1 AA radius. The central point of the sphere locates at the geometric center of the target molecule.
 Scattering_R_incident             9 # the initial point of the incident direction vector locates on the surface of the sphere with 9 AA radius. The central point of the sphere locates at the geometric center of the target molecule.
 
 Structure_searching               False
