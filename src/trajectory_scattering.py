@@ -64,7 +64,7 @@ class initialize_scattering(initialize_calculator):
                 target_molecule = self.rescale_T_kinetic(target_molecule, self.scattering_parameters['scattering_T_target'])
 
         # get collision velocity
-        scalar_translational_velocity = np.linalg.norm(get_translational_velocity(target_molecule) - get_translational_velocity(incident_molecule))
+        scalar_translational_velocity = np.linalg.norm(get_translational_velocity(incident_molecule) - get_translational_velocity(target_molecule))
         collision_energy = 0.5 * np.sum(incident_molecule.get_masses()) * scalar_translational_velocity**2
         
         # initialize incident and target molecules
