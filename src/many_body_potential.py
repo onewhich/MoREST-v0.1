@@ -84,7 +84,6 @@ class ml_potential(Calculator):
                 self.training_set = []
             try:
                 self.trained_ml_potential = kwargs['ml_parameters']['ml_potential_model']
-                print(self.trained_ml_potential)
                 self.ml_potential = pickle.load(open(self.trained_ml_potential, 'rb'))
             except:
                 self.log_morest.write('Trained ML model has not beed indicated. The ML model will be trained from training set.\n')
