@@ -997,7 +997,8 @@ class read_parameters:
             self.scattering_parameters['scattering_V_collision'] /= units.fs
         if not (('scattering_V_collision' in self.scattering_parameters) or ('scattering_E_collision' in self.scattering_parameters)):
             self.scattering_parameters['scattering_Maxwell_Boltzmann_collision'] = True
-
+        else:
+            self.scattering_parameters['scattering_Maxwell_Boltzmann_collision'] = False
         if self.scattering_parameters['scattering_stops_number'] == 0:
             self.scattering_parameters['scattering_traj_stop'] = None
         else:
