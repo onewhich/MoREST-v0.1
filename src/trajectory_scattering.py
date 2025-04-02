@@ -140,8 +140,10 @@ class initialize_scattering(initialize_calculator):
             collision_velocity = collision_vector * scalar_translational_velocity
         elif 'scattering_E_collision' in self.scattering_parameters:
             collision_velocity = collision_vector * np.sqrt( 2*self.scattering_parameters['scattering_E_collision'] / np.sum(incident_molecule.get_masses()) )
+            collision_energy = self.scattering_parameters['scattering_E_collision']
         else:
             collision_velocity = collision_vector * self.scattering_parameters['scattering_V_collision']
+            collision_energy = 0.5 * np.sum(incident_molecule.get_masses()) * self.scattering_parameters['scattering_V_collision']**2
         incident_molecule.set_velocities(incident_molecule.get_velocities() + collision_velocity)
         
         # move the mass center of incident molecule to the incident_point
