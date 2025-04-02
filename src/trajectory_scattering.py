@@ -74,14 +74,17 @@ class initialize_scattering(initialize_calculator):
         reset_mass_center(target_molecule)
 
         # uniform sampling on a sphere for inciden point and on a disc for target point.
-        # sampling spherical coordinate system (r,theta,phi), angle in radians.
-        # x = r * sin(theta) * cos(phi)
-        # y = r * sin(theta) * sin(phi)
-        # z = r * cos(theta)
-        s_theta = np.random.uniform(0,np.pi)
-        s_phi = np.random.uniform(0,2*np.pi)
-        s_r = self.scattering_parameters['scattering_R_incident']
-        incident_point = np.array([s_r*np.sin(s_theta)*np.cos(s_phi), s_r*np.sin(s_theta)*np.sin(s_phi), s_r*np.cos(s_theta)])
+        if not self.scattering_parameters['scattering_fix_molecule']:
+            # sampling spherical coordinate system (r,theta,phi), angle in radians.
+            # x = r * sin(theta) * cos(phi)
+            # y = r * sin(theta) * sin(phi)
+            # z = r * cos(theta)
+            s_theta = np.random.uniform(0,np.pi)
+            s_phi = np.random.uniform(0,2*np.pi)
+            s_r = self.scattering_parameters['scattering_R_incident']
+            incident_point = np.array([s_r*np.sin(s_theta)*np.cos(s_phi), s_r*np.sin(s_theta)*np.sin(s_phi), s_r*np.cos(s_theta)])
+        else:
+            incident_point = np.array([0.0, 0.0, self.scattering_parameters['scattering_R_incident']])
         # the plane including the disc is perpendicular to the vector from incident point to the coordinate origin.
         # the plane is formed with the normal vector (a,b,c) and the point (x1,y1,z1) on the plane.
         # the plane formular is a(x-x1) + b(y-y1) + c(z-z1) = 0

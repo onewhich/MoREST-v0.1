@@ -74,6 +74,7 @@ class read_parameters:
         self.scattering_parameters['scattering_traj_length'] = None
         self.scattering_parameters['scattering_target_molecule'] = 'MoREST_scattering_target.xyz'
         self.scattering_parameters['scattering_incident_molecule'] = 'MoREST_scattering_incident.xyz'
+        self.scattering_parameters['scattering_fix_molecule'] = False
         self.searching_parameters = {}
         self.searching_parameters['searching_initialization'] = False
         self.searching_parameters['searching_starting_point'] = 'MoREST_searching.xyz'
@@ -571,6 +572,12 @@ class read_parameters:
 
         elif i_parameter.split()[0].upper() == 'Scattering_R_incident'.upper():
             self.scattering_parameters['scattering_R_incident'] = float(i_parameter.split()[1])
+                
+        elif i_parameter.split()[0].upper() == 'Scattering_fix_molecule'.upper():
+            if i_parameter.split()[1].upper() == 'True'.upper():
+                self.scattering_parameters['scattering_fix_molecule'] = True
+            elif i_parameter.split()[1].upper() == 'False'.upper():
+                self.scattering_parameters['scattering_fix_molecule'] = False
 
 
 
