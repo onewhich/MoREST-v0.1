@@ -9,6 +9,8 @@ import os
 import math
 from collective_variable import collective_variables
 from ase.calculators.calculator import Calculator, FileIOCalculator
+from ase.calculators.singlepoint import SinglePointCalculator
+from ase.atoms import Atoms
 from MoREAT.src.representation import generate_representation
 from sklearn.gaussian_process import GaussianProcessRegressor, kernels
 
@@ -574,7 +576,17 @@ class Molpro(FileIOCalculator):
                         positions.append(tmp_pos)
         return chemical_symbols, np.array(positions)
 
-
+    @staticmethod
+    def get_Atoms_from_output(file):
+        """
+        Get the ase.Atoms object from the molpro output file.
+        """
+        chemical_symbols, positions = Molpro.get_atoms_from_output(file)
+        energy, forces = Molpro.parse_outfile(file)
+        system = Atoms(chemical_symbols, positions=positions)
+        system.calc = SinglePointCalculator(system, energy=energy, forces=forces)
+        print(chemical_symbols, positions, energy, forces)
+        return system
 
 class molpro_calculator:
     '''
