@@ -585,7 +585,6 @@ class Molpro(FileIOCalculator):
         energy, forces = Molpro.parse_outfile(file)
         system = Atoms(chemical_symbols, positions=positions)
         system.calc = SinglePointCalculator(system, energy=energy, forces=forces)
-        print(chemical_symbols, positions, energy, forces)
         return system
 
 class molpro_calculator:
