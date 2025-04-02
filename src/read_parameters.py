@@ -74,7 +74,7 @@ class read_parameters:
         self.scattering_parameters['scattering_traj_length'] = None
         self.scattering_parameters['scattering_target_molecule'] = 'MoREST_scattering_target.xyz'
         self.scattering_parameters['scattering_incident_molecule'] = 'MoREST_scattering_incident.xyz'
-        self.scattering_parameters['scattering_fix_target'] = True
+        self.scattering_parameters['scattering_fix_target'] = False
         self.scattering_parameters['scattering_fix_incident'] = False
         self.scattering_parameters['scattering_clean_rotation'] = False
         self.searching_parameters = {}
