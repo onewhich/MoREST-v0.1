@@ -428,10 +428,10 @@ class Molpro(FileIOCalculator):
 
     def calculate(self,  *args, **kwargs):
         if self.overwrite:
-            self.command = self.molpro_dir + " -n " + str(self.ntasks) + " -t " + str(self.nthreads) + " -W \$PWD\/wfu "  + \
+            self.command = self.molpro_dir + " -n " + str(self.ntasks) + " -t " + str(self.nthreads) + r" -W $PWD/wfu "  + \
                             " -o " + self.outfile + " " + self.infile
         else:
-            self.command = self.molpro_dir + " -n " + str(self.ntasks) + " -t " + str(self.nthreads) + " -W \$PWD\/wfu "  + self.infile
+            self.command = self.molpro_dir + " -n " + str(self.ntasks) + " -t " + str(self.nthreads) + r" -W $PWD/wfu "  + self.infile
         FileIOCalculator.calculate(self, *args, **kwargs)
 
     def write_input(self, system, properties=None, system_changes=None):
@@ -634,10 +634,10 @@ class molpro_calculator:
     def run_molpro(self):
         #runcommand = self.molpro_dir + " < " + self.infile + " > " + self.outfile
         if self.overwrite:
-            runcommand = self.molpro_dir + " -n " + str(self.ntasks) + " -t " + str(self.nthreads) + " -W \$PWD\/wfu "  + \
+            runcommand = self.molpro_dir + " -n " + str(self.ntasks) + " -t " + str(self.nthreads) + r" -W $PWD/wfu "  + \
                             " -o " + self.outfile + " " + self.infile
         else:
-            runcommand = self.molpro_dir + " -n " + str(self.ntasks) + " -t " + str(self.nthreads) + " -W \$PWD\/wfu "  + self.infile
+            runcommand = self.molpro_dir + " -n " + str(self.ntasks) + " -t " + str(self.nthreads) + r" -W $PWD/wfu "  + self.infile
         inpstr = 'memory,'+self.memory+'\n\n'
         inpstr += 'symmetry,nosym\n\n'
         inpstr += self.unit + '\n\n'
