@@ -88,6 +88,7 @@ class initialize_scattering(initialize_calculator):
             incident_point = np.array([s_r*np.sin(s_theta)*np.cos(s_phi), s_r*np.sin(s_theta)*np.sin(s_phi), s_r*np.cos(s_theta)])
         else:
             incident_point = np.array([0.0, 0.0, self.scattering_parameters['scattering_R_incident']])
+            self.n_atom_target = target_molecule.get_global_number_of_atoms()
         # the plane including the disc is perpendicular to the vector from incident point to the coordinate origin.
         # the plane is formed with the normal vector (a,b,c) and the point (x1,y1,z1) on the plane.
         # the plane formular is a(x-x1) + b(y-y1) + c(z-z1) = 0
@@ -267,6 +268,8 @@ class scattering_velocity_Verlet(initialize_scattering):
         
         ### p(t+dt) = p(t+0.5dt) + 0.5 * F(t+dt) * dt
         next_momenta = momenta_half + 0.5 * next_forces * time_step
+        if self.scattering_parameters['scattering_fix_molecule']:
+            next_momenta[0:self.n_atom_target] = self.clean_translation(next_momenta[0:self.n_atom_target])
         self.current_system.set_momenta(next_momenta)
         
         self.current_step += 1
