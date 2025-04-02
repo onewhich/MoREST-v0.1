@@ -216,6 +216,7 @@ class initialize_scattering(initialize_calculator):
         n_atom = len(velocities)
         if n_atom == 1:
             return velocities
+        masses = masses[:,np.newaxis]
         v_vector = velocities
         #center_of_mass = np.sum([masses[i]*coordinates[i] for i in range(len(masses))], axis=0)/np.sum(masses)
         #center_of_mass = np.sum(masses[:,np.newaxis]*coordinates, axis=0)/np.sum(masses)
