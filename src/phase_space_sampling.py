@@ -76,17 +76,21 @@ class initialize_sampling(initialize_calculator):
         omega: angular velocity
         I : moment of inertia
         '''
+        n_atom = len(velocities)
+        if n_atom == 1:
+            return velocities
         v_vector = velocities
         #center_of_mass = np.sum([masses[i]*coordinates[i] for i in range(len(masses))], axis=0)/np.sum(masses)
+        #center_of_mass = np.sum(masses[:,np.newaxis]*coordinates, axis=0)/np.sum(masses)
         center_of_mass = np.sum(masses*coordinates, axis=0)/np.sum(masses)
         r_vector = coordinates - center_of_mass
         # r_cross_v : angular velocities
         # omega = (r x v) / |r|^2
         r_cross_v = np.cross(r_vector, v_vector)
         r_2 = np.linalg.norm(r_vector, axis=1)**2
-        omega = np.array([r_cross_v[i]/r_2[i] for i in range(4)])
+        omega = np.array([r_cross_v[i]/r_2[i] for i in range(n_atom)])
         # Rv = omega/n_atom : system total angular velocity
-        rotat_vector = np.sum(omega, axis=0)/len(masses)
+        rotat_vector = np.sum(omega, axis=0)/n_atom
         v_tang = np.cross(rotat_vector, r_vector)
         new_velocities = v_vector - v_tang
         return new_velocities
@@ -161,15 +165,13 @@ class MD(initialize_sampling):
             self.T_simulation = T_simulation
 
         if self.current_step == 0:
-            if self.sampling_parameters['sampling_pre_thermalized']:
+            if not self.sampling_parameters['sampling_pre_thermalized']:
                 if 'sampling_initial_E' in self.sampling_parameters:
                     T_thermalized = 2/3 * self.sampling_parameters['sampling_initial_E']/units.kB /self.n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
-                    MaxwellBoltzmannDistribution(self.current_system, temperature_K = T_thermalized)
-                    self.pre_thermalization(T_thermalized)
+                    MaxwellBoltzmannDistribution(self.current_system, temperature_K = T_thermalized, force_temp = True)
                 elif 'sampling_initial_T' in self.sampling_parameters:
                     T_thermalized = self.sampling_parameters['sampling_initial_T']
-                    MaxwellBoltzmannDistribution(self.current_system, temperature_K = T_thermalized)
-                    self.pre_thermalization(T_thermalized)
+                    MaxwellBoltzmannDistribution(self.current_system, temperature_K = T_thermalized, force_temp = True)
                 elif self.T_simulation > 1e-3:
                     MaxwellBoltzmannDistribution(self.current_system, temperature_K = self.T_simulation)
             

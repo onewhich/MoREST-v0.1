@@ -28,7 +28,8 @@ Sampling_initialization           False   # Overwrite or append the trajectory i
 Sampling_molecule                 MoREST_sampling.xyz # The input of the structure.
 Sampling_traj_interval            10    # Record sampling every traj_interval steps
 Sampling_method                   MD    # MD, RPMD, MC
-Sampling_pre_thermalized          False # True: initialize the kinetic energy of the molecule as a specific value.
+Sampling_pre_thermalized          False # True: the initial structures with thermalized velocities are required.
+                                        # False: initialize the kinetic energy of the molecule as given by iniitial_T or initial_E, or randomly initialize the kinetic based on MB distribution at simulation temperature if no iniitial_T or initial_E are given.
 Sampling_initial_T                20 # unit in K. The initial instantanous temperature of the molecule.
 Sampling_initial_E                1 # unit in eV. The initial kinetic energy of the molecule. "Sampling_initial_T" will be ignored, if "Sampling_initial_E" is defined.
 Sampling_ensemble                 NVT_SVR  10   # Choose the ensemble, e.g. NVE_VV: velocity Verlet;
@@ -68,15 +69,15 @@ Barostat_plane_normal_vector      0 0 -5 # The normal vector does not have to be
 
 Trajectory_scattering             False
 Scattering_initialization         False
-Scattering_pre_thermolized        False # If true, the thermolization trajectories of the target and incident molecules are required. Otherwise, the initial structures are required.
+Scattering_pre_thermalized        False # If true, the thermalization trajectories of the target and incident molecules are required. Otherwise, the initial structures are required.
 Scattering_traj_number            2000 # The number of trajectories for the scattering.
 Scattering_method                 VV # VV: velocity Verlet; RK4: Runge-Kutta 4th order; LD: Langevin dynamics
 Scattering_time_step              0.5 # fs
 Scattering_traj_interval          10    # Record sampling every traj_interval steps
 Scattering_V_collision            1e-2 # Initial collision velocity in AA/fs ( 1 AA/fs = 1e5 m/s ). This velocity defines the translational energy of incident molecule, while the target molecule is static.
 Scattering_E_collision            1  # Initial collision energy in eV. This energy is the translational kinetic energy of incident molecule. 'Scattering_V_collision' will be ignored, if 'Scattering_E_collision' is defined.
-Scattering_T_target               400 # in K. When Scattering_pre_thermolized is False. The initial temperature of the target molecule will be initialized by Maxwell-Boltzmann distribution, and remove translational movement.
-Scattering_T_incident             400 # in K. When Scattering_pre_thermolized is False. The initial temperature of the incident moelcule will be initialized by Maxwell-Boltzmann distribution, and remove translational movement.
+Scattering_T_target               400 # in K. When Scattering_pre_thermalized is False. The initial temperature of the target molecule will be initialized by Maxwell-Boltzmann distribution, and remove translational movement.
+Scattering_T_incident             400 # in K. When Scattering_pre_thermalized is False. The initial temperature of the incident moelcule will be initialized by Maxwell-Boltzmann distribution, and remove translational movement.
 Scattering_T_kinetic              False # False: The temperature of target and incident is thermodynamic temperature following MB distribution. True: The temperature is kinetic energy temperature.
 Scattering_stops_number           2 # The number of stop conditions whcih will be checked.
 Scattering_traj_stop              central_R_one 1 10 2 4 5 central_R_all 1 9 all distance 1 2 6 7 angle -1 2 6 7 10 

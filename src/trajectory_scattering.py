@@ -5,6 +5,7 @@ from structure_io import read_xyz_file, write_xyz_file, read_xyz_traj, write_xyz
 from initialize_calculator import initialize_calculator
 #from copy import deepcopy
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary
+# Stationary and ZeroRotation from ase will not change the total kinetic energy, the vibrational energy will arise after these two processes.
 from ase import units
 
 class initialize_scattering(initialize_calculator):
@@ -49,28 +50,27 @@ class initialize_scattering(initialize_calculator):
     
 
     def generate_scattering_system(self, i_traj):
-        if self.scattering_parameters['scattering_pre_thermolized']:
+        if self.scattering_parameters['scattering_pre_thermalized']:
             incident_molecule = read_xyz_file(self.scattering_parameters['scattering_incident_molecule'])
             target_molecule = read_xyz_file(self.scattering_parameters['scattering_target_molecule'])
         else:
             incident_molecule = read_xyz_file(self.scattering_parameters['scattering_incident_molecule'])
-            MaxwellBoltzmannDistribution(incident_molecule, temperature_K = self.scattering_parameters['scattering_T_incident'])
+            MaxwellBoltzmannDistribution(incident_molecule, temperature_K = self.scattering_parameters['scattering_T_incident'], \
+                                         force_temp = self.scattering_parameters['scattering_T_kinetic'])
             
             target_molecule = read_xyz_file(self.scattering_parameters['scattering_target_molecule'])
-            MaxwellBoltzmannDistribution(target_molecule, temperature_K = self.scattering_parameters['scattering_T_target'])
+            MaxwellBoltzmannDistribution(target_molecule, temperature_K = self.scattering_parameters['scattering_T_target'], \
+                                         force_temp = self.scattering_parameters['scattering_T_kinetic'])
 
-            if self.scattering_parameters['scattering_T_kinetic'] == True:
-                incident_molecule = self.rescale_T_kinetic(incident_molecule, self.scattering_parameters['scattering_T_incident'])
-                target_molecule = self.rescale_T_kinetic(target_molecule, self.scattering_parameters['scattering_T_target'])
 
         # get collision velocity
         scalar_translational_velocity = np.linalg.norm(get_translational_velocity(incident_molecule) - get_translational_velocity(target_molecule))
         collision_energy = 0.5 * np.sum(incident_molecule.get_masses()) * scalar_translational_velocity**2
         
         # initialize incident and target molecules
-        Stationary(incident_molecule)
+        incident_molecule.set_velocities(self.clean_translation(incident_molecule.get_velocities()))
         reset_mass_center(incident_molecule)
-        Stationary(target_molecule)
+        target_molecule.set_velocities(self.clean_translation(target_molecule.get_velocities()))
         reset_mass_center(target_molecule)
 
         # uniform sampling on a sphere for inciden point and on a disc for target point.
@@ -190,6 +190,39 @@ class initialize_scattering(initialize_calculator):
         factor = np.sqrt(Tf / Ti)
         system.set_velocities(factor * velocities)
         return system
+    
+    @staticmethod
+    def clean_translation(velocities):
+        total_velocity = np.sum(velocities, axis=0)/len(velocities)
+        new_velocities = velocities - total_velocity
+        return new_velocities
+        
+    @staticmethod
+    def clean_rotation(velocities, coordinates, masses):
+        '''
+        L = r x p = r x (m v) = r x (omega x (m r)) = m r^2 omega = I omega
+        L : angular momentum
+        omega: angular velocity
+        I : moment of inertia
+        '''
+        n_atom = len(velocities)
+        if n_atom == 1:
+            return velocities
+        v_vector = velocities
+        #center_of_mass = np.sum([masses[i]*coordinates[i] for i in range(len(masses))], axis=0)/np.sum(masses)
+        #center_of_mass = np.sum(masses[:,np.newaxis]*coordinates, axis=0)/np.sum(masses)
+        center_of_mass = np.sum(masses*coordinates, axis=0)/np.sum(masses)
+        r_vector = coordinates - center_of_mass
+        # r_cross_v : angular velocities
+        # omega = (r x v) / |r|^2
+        r_cross_v = np.cross(r_vector, v_vector)
+        r_2 = np.linalg.norm(r_vector, axis=1)**2
+        omega = np.array([r_cross_v[i]/r_2[i] for i in range(n_atom)])
+        # Rv = omega/n_atom : system total angular velocity
+        rotat_vector = np.sum(omega, axis=0)/n_atom
+        v_tang = np.cross(rotat_vector, r_vector)
+        new_velocities = v_vector - v_tang
+        return new_velocities
     
 
 class scattering_velocity_Verlet(initialize_scattering):

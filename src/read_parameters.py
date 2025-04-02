@@ -67,7 +67,7 @@ class read_parameters:
         self.RPMD_parameters['rpmd_clean_rotation'] = False
         self.scattering_parameters = {}
         self.scattering_parameters['scattering_initialization'] = False
-        self.scattering_parameters['scattering_pre_thermolized'] = False
+        self.scattering_parameters['scattering_pre_thermalized'] = False
         self.scattering_parameters['scattering_traj_interval'] = 1
         self.scattering_parameters['scattering_traj_number'] = 1
         self.scattering_parameters['scattering_traj_stop'] = None
@@ -508,13 +508,13 @@ class read_parameters:
             else:
                 raise Exception('It is not clear whether the scattering method will be initialized.')
                 
-        elif i_parameter.split()[0].upper() == 'Scattering_pre_thermolized'.upper():
+        elif i_parameter.split()[0].upper() == 'Scattering_pre_thermalized'.upper():
             if i_parameter.split()[1].upper() == 'True'.upper():
-                self.scattering_parameters['scattering_pre_thermolized'] = True
+                self.scattering_parameters['scattering_pre_thermalized'] = True
             elif i_parameter.split()[1].upper() == 'False'.upper():
-                self.scattering_parameters['scattering_pre_thermolized'] = False
+                self.scattering_parameters['scattering_pre_thermalized'] = False
             else:
-                raise Exception('It is not clear whether the pre-thermolized trajectory will be used.')
+                raise Exception('It is not clear whether the pre-thermalized trajectory will be used.')
 
         elif i_parameter.split()[0].upper() == 'Scattering_traj_number'.upper():
             self.scattering_parameters['scattering_traj_number'] = int(i_parameter.split()[1])
