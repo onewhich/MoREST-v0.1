@@ -77,7 +77,7 @@ class initialize_scattering(initialize_calculator):
             target_molecule.set_velocities(self.clean_rotation(target_molecule.get_velocities(), target_molecule.get_positions(), target_molecule.get_masses()))
 
         # uniform sampling on a sphere for inciden point and on a disc for target point.
-        if not self.scattering_parameters['scattering_fix_molecule']:
+        if not self.scattering_parameters['scattering_fix_incident']:
             # sampling spherical coordinate system (r,theta,phi), angle in radians.
             # x = r * sin(theta) * cos(phi)
             # y = r * sin(theta) * sin(phi)
@@ -88,6 +88,7 @@ class initialize_scattering(initialize_calculator):
             incident_point = np.array([s_r*np.sin(s_theta)*np.cos(s_phi), s_r*np.sin(s_theta)*np.sin(s_phi), s_r*np.cos(s_theta)])
         else:
             incident_point = np.array([0.0, 0.0, self.scattering_parameters['scattering_R_incident']])
+        if self.scattering_parameters['scattering_fix_target']:
             self.n_atom_target = target_molecule.get_global_number_of_atoms()
         # the plane including the disc is perpendicular to the vector from incident point to the coordinate origin.
         # the plane is formed with the normal vector (a,b,c) and the point (x1,y1,z1) on the plane.
@@ -268,7 +269,7 @@ class scattering_velocity_Verlet(initialize_scattering):
         
         ### p(t+dt) = p(t+0.5dt) + 0.5 * F(t+dt) * dt
         next_momenta = momenta_half + 0.5 * next_forces * time_step
-        if self.scattering_parameters['scattering_fix_molecule']:
+        if self.scattering_parameters['scattering_fix_target']:
             next_momenta[0:self.n_atom_target] = self.clean_translation(next_momenta[0:self.n_atom_target])
         self.current_system.set_momenta(next_momenta)
         
