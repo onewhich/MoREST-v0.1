@@ -72,6 +72,9 @@ class initialize_scattering(initialize_calculator):
         reset_mass_center(incident_molecule)
         target_molecule.set_velocities(self.clean_translation(target_molecule.get_velocities()))
         reset_mass_center(target_molecule)
+        if self.scattering_parameters['scattering_clean_rotation']:
+            incident_molecule.set_velocities(self.clean_rotation(incident_molecule.get_velocities(), incident_molecule.get_positions(), incident_molecule.get_masses()))
+            target_molecule.set_velocities(self.clean_rotation(target_molecule.get_velocities(), target_molecule.get_positions(), target_molecule.get_masses()))
 
         # uniform sampling on a sphere for inciden point and on a disc for target point.
         if not self.scattering_parameters['scattering_fix_molecule']:
