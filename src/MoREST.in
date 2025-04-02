@@ -1,6 +1,6 @@
 # MoREST.in
 
-MoREST_initialization             True # True will overwrite exist MoREST.log from beginning.
+MoREST_initialization             True # True will overwrite the existing MoREST.log from the beginning.
 MoREST_save_parameters_file       False # Write parameters in the file
 MoREST_load_parameters_file       False # Read parameters from the file
 Many_body_potential               ML_potential  # ML_potential: machine learning potential with finite difference forces; on_the_fly: using QC, DFT package (molpro is added) via ASE to calculate potential and forces; molpro: using home-made molpro API to run molpro
@@ -11,17 +11,17 @@ ML_representation                 inverse_r_exp_r # TODO
 #ML_add_features_number            2 # The number of additional features (setted in ML_additional_features) which will be added into the representation.
 #ML_additional_features            inverse_r_exp_r 1,2 3,4 inverse_r_exp_r 1,4 2,3 # min_distance: calculte the minimum distance between atoms / atom groups (group1: 1,2; group2: 3,4; group3: 1,4; group4: 2,3). max_distance: caluclate the maximum distance between atoms / atom groups.
 ML_features_min_number            2 # The number of features calculated for checking the minimum value in ML_additional_features_min
-ML_additional_features_min        inverse_r_exp_r 1,2 3,4 inverse_r_exp_r 1,4 2,3 # Only the feature with the minimum value will be added into the representation.
+ML_additional_features_min        inverse_r_exp_r 1,2 3,4 inverse_r_exp_r 1,4 2,3 # Only the feature with the minimum value will be added to the representation.
 #ML_features_max_number            2 # The number of features calculated for checking the maximum value in ML_additional_features_min
-#ML_additional_features_max        inverse_r_exp_r 1,2 3,4 inverse_r_exp_r 1,4 2,3 # Only the feature with the maximum value will be added into the representation.
+#ML_additional_features_max        inverse_r_exp_r 1,2 3,4 inverse_r_exp_r 1,4 2,3 # Only the feature with the maximum value will be added to the representation.
 ML_print_uncertainty              False
 ML_FD_forces                      False  # Use numerical forces calculation or read forces from the ML model.
-FD_displacement                   0.0025 # unit in \AA. Parameter for finite difference forces calculation. Default value is 0.0025 \AA
+FD_displacement                   0.0025 # unit in \AA. Parameter for finite difference forces calculation. The default value is 0.0025 \AA
 ML_active_learning                True
-ML_energy_uncertainty_tolerance   0.01 # Check if ab initio calculator will involve based on the difference between ML prediction and the QC calculation. It is the energy std for GPR.
+ML_energy_uncertainty_tolerance   0.01 # Check if the ab initio calculator will be involved based on the difference between ML prediction and the QC calculation. It is the energy std for GPR.
 ML_appending_set_number           10 # The number of samplings calculated by ab initio and added to the training set before the re-training. If 0 is given, no re-training will happen.
-ML_appending_sampling_steps       100 #TODO: Ab initio samplings will be added to traning set for every given MD/MC sampling steps.
-ML_GPR_noise_level_bounds         1e-7 1. # Parameter noise_level_bounds in GPR. Default value is 1e-7 1. It only gives the lower bound, if there is only one number given.
+ML_appending_sampling_steps       100 #TODO: Ab initio samplings will be added to the training set for every given MD/MC sampling step.
+ML_GPR_noise_level_bounds         1e-7 1. # Parameter noise_level_bounds in GPR. The default value is 1e-7 1. It only gives the lower bound if only one number is given.
 
 Phase_space_sampling              False
 Sampling_initialization           False   # Overwrite or append the trajectory in MoREST_traj.xyz file, read structure from MoREST.str or MoREST.str_new
@@ -29,8 +29,8 @@ Sampling_molecule                 MoREST_sampling.xyz # The input of the structu
 Sampling_traj_interval            10    # Record sampling every traj_interval steps
 Sampling_method                   MD    # MD, RPMD, MC
 Sampling_pre_thermalized          False # True: the initial structures with thermalized velocities are required.
-                                        # False: initialize the kinetic energy of the molecule as given by iniitial_T or initial_E, or randomly initialize the kinetic based on MB distribution at simulation temperature if no iniitial_T or initial_E are given.
-Sampling_initial_T                20 # unit in K. The initial instantanous temperature of the molecule.
+                                        # False: initialize the kinetic energy of the molecule as given by initial_T or initial_E, or randomly initialize the kinetic based on MB distribution at simulation temperature if no initial_T or initial_E are given.
+Sampling_initial_T                20 # unit in K. The initial instantaneous temperature of the molecule.
 Sampling_initial_E                1 # unit in eV. The initial kinetic energy of the molecule. "Sampling_initial_T" will be ignored, if "Sampling_initial_E" is defined.
 Sampling_ensemble                 NVT_SVR  10   # Choose the ensemble, e.g. NVE_VV: velocity Verlet;
                                                 #                           NPH_SVR 5:BZP stochastic volume rescaling barostat with NPH_SVR_tau=5;
@@ -53,12 +53,12 @@ RPMD_clean_rotation               True
 RPMD_time_step                    0.5  # unit in fs
 RPMD_simulation_time              10000   # unit in fs
 RPMD_temperature                  10 # unit: K
-Barostat_number                   1 # Pressure control in NPT is implemented by controling the size of wall potential.
+Barostat_number                   1 # Pressure control in NPT is implemented by controlling the size of the wall potential.
 Barostat_collective_variable      False
 Barostat_pressure                 1 # unit: Bar (10^5 Pa)
-Barostat_space_shape              sphere # sphere: spherical space for barostat; cuboid: cuboidal space for barostat; plane: planar wall for barostat used in periodic system.
-Barostat_space_type               gas # gas: only change the size of the barostat; condensed: change both the size of barostat and the positions of atoms.
-Barostat_action_atoms             all # all; 1 ; 0,2,4,7.  Indicating the atoms acffected by the wall potential.
+Barostat_space_shape              sphere # sphere: spherical space for barostat; cuboid: cuboidal space for barostat; plane: planar wall for barostat used in pa eriodic system.
+Barostat_space_type               gas # gas: only change the size of the barostat; condensed: change both the size of the barostat and the positions of atoms.
+Barostat_action_atoms             all # all; 1 ; 0,2,4,7.  Indicating the atoms affected by the wall potential.
 Barostat_sphere_center            0 0 0 # This point and radius determine the parameter b in the spherical wall. 
 #Barostat_shpere_radius            # The radius and center point determine the parameter b in the spherical wall. It is calculated from the pressure.
 Barostat_cuboid_center            0 0 0 # This point and normal vector determine the parameter b of six planar walls of the cube.
@@ -74,12 +74,12 @@ Scattering_traj_number            2000 # The number of trajectories for the scat
 Scattering_method                 VV # VV: velocity Verlet; RK4: Runge-Kutta 4th order; LD: Langevin dynamics
 Scattering_time_step              0.5 # fs
 Scattering_traj_interval          10    # Record sampling every traj_interval steps
-Scattering_V_collision            1e-2 # Initial collision velocity in AA/fs ( 1 AA/fs = 1e5 m/s ). This velocity defines the translational energy of incident molecule, while the target molecule is static.
-Scattering_E_collision            1  # Initial collision energy in eV. This energy is the translational kinetic energy of incident molecule. 'Scattering_V_collision' will be ignored, if 'Scattering_E_collision' is defined.
+Scattering_V_collision            1e-2 # Initial collision velocity in AA/fs ( 1 AA/fs = 1e5 m/s ). This velocity defines the translational energy of the incident molecule, while the target molecule is static.
+Scattering_E_collision            1  # Initial collision energy in eV. This energy is the translational kinetic energy of the incident molecule. 'Scattering_V_collision' will be ignored, if 'Scattering_E_collision' is defined.
 Scattering_T_target               400 # in K. When Scattering_pre_thermalized is False. The initial temperature of the target molecule will be initialized by Maxwell-Boltzmann distribution, and remove translational movement.
-Scattering_T_incident             400 # in K. When Scattering_pre_thermalized is False. The initial temperature of the incident moelcule will be initialized by Maxwell-Boltzmann distribution, and remove translational movement.
-Scattering_T_kinetic              False # False: The temperature of target and incident is thermodynamic temperature following MB distribution. True: The temperature is kinetic energy temperature.
-Scattering_stops_number           2 # The number of stop conditions whcih will be checked.
+Scattering_T_incident             400 # in K. When Scattering_pre_thermalized is False. The initial temperature of the incident molecule will be initialized by Maxwell-Boltzmann distribution, and remove translational movement.
+Scattering_T_kinetic              False # False: The temperature of the target and incident is the thermodynamic temperature following MB distribution. True: The temperature is kinetic energy temperature.
+Scattering_stops_number           2 # The number of stop conditions which will be checked.
 Scattering_traj_stop              central_R_one 1 10 2 4 5 central_R_all 1 9 all distance 1 2 6 7 angle -1 2 6 7 10 
                                   # central_R_one: check distances of 2 atoms (atom 4 and atom 5) from the central (0,0,0), it will stop when the distance is larger (1)/ shorter (-1) than 10.
                                   # central_R_all: check distances of all atoms from the central (0,0,0), it will stop when the distance is larger (1)/ shorter (-1) than 9.
@@ -89,8 +89,9 @@ Scattering_traj_stop              central_R_one 1 10 2 4 5 central_R_all 1 9 all
 Scattering_traj_length            1000 # It will stop when the number of steps is larger than the length. None: do not check the number of steps.
 Scattering_target_molecule        MoREST_scattering_target.xyz # structure or trajectory of the target molecule.
 Scattering_incident_molecule      MoREST_scattering_incident.xyz # structure or trajectory of the incident molecule.
-Scattering_R_target               1 # the final point of the incident direction vector locates on the circle with 1 AA radius. The central point of the sphere locates at the geometric center of the target molecule.
-Scattering_R_incident             9 # the initial point of the incident direction vector locates on the surface of the sphere with 9 AA radius. The central point of the sphere locates at the geometric center of the target molecule.
+Scattering_R_target               1 # the final point of the incident direction vector is located on the circle with 1 AA radius. The central point of the sphere is located at the geometric center of the target molecule.
+Scattering_R_incident             9 # the initial point of the incident direction vector located on the surface of the sphere with a 9 AA radius. The central point of the sphere is located at the geometric center of the target molecule.
+Scattering_fix_molecule           False # True: the incident molecule will not be randomly placed on the sphere but on the positive x-axis with the distance of R_incident.
 
 Structure_searching               False
 Searching_initialization          False
@@ -118,10 +119,10 @@ RE_upper_bound_temperature        100000
 RE_number_of_replica              10
 RE_replica_arrange                0     # -1: arithmetic progression   0:  geometric progression
 #RE_replica_temperatures          290 310 330 350 370   # specify or default
-RE_swap_interval                  10    # replica will swap the temperature after every interval steps.
-#RE_init_structures_list           MoREST_RE.str # Includes a series initial/updated structures for each temperature replica, respectively. The number of structures should equal to the number of replica. Default in extxyz format.
+RE_swap_interval                  10    # replica will swap the temperature after every interval step.
+#RE_init_structures_list           MoREST_RE.str # Includes a series of initial/updated structures for each temperature replica, respectively. The number of structures should equal the number of replicas. Default in extxyz format.
 RE_energy_shift                   0
-ITS_initialization                True  # Set True for the first time running ITS. It will delete all relvent files such as MoREST_TIS_nk.npy, MoREST_ITS_pk.npy.
+ITS_initialization                True  # Set True for the first time running ITS. It will delete all relevant files such as MoREST_TIS_nk.npy, MoREST_ITS_pk.npy.
 ITS_lower_bound_temperature       1000
 ITS_upper_bound_temperature       2000
 ITS_number_of_replica             100
@@ -139,9 +140,9 @@ Wall_number                       1    # the number of walls added in the simula
 Wall_collective_variable          False
 Wall_shape                        spherical    # planar, spherical, dot, linear, circular
 Wall_type                         power_wall  -1  # opaque_wall, translucent_wall, power_wall 1: power_wall acts on (b dot norm_vec) > 0, -1: power_wall acts on (b dot norm_vec) < 0.
-Wall_scaling                      0.1      # This is parameter a in the potential
+Wall_scaling                      0.1      # This is parameter an in the potential
 Wall_scope                        10      # This is parameter c in the potential
-Wall_action_atoms                 all    #TODO all; 1 ; 0,2,4,7.  Indicating the atoms acffected by the wall potential.
+Wall_action_atoms                 all    #TODO all; 1 ; 0,2,4,7.  Indicating the atoms affected by the wall potential.
 Spherical_wall_center             0 0 0 # This point and radius determine the parameter b in the spherical potential.
 Spherical_wall_radius             20 # The radius and center point determine the parameter b in the spherical potential.
 Planar_wall_point                 0 0 3 # This point and normal vector determine the parameter b in the planar potential.
