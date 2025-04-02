@@ -48,7 +48,7 @@ class initialize_scattering(initialize_calculator):
         #Nf = 3 * self.n_atom
         #self.K_simulation = Nf/2 * units.kB * self.scattering_parameters['scattering_T_target'] # Ek = 1/2 m v^2 = 3/2 kB T for each particle
     
-
+    
     def generate_scattering_system(self, i_traj):
         if self.scattering_parameters['scattering_pre_thermalized']:
             incident_molecule = read_xyz_file(self.scattering_parameters['scattering_incident_molecule'])
