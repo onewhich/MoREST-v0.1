@@ -210,8 +210,8 @@ class MD(initialize_sampling):
             pass
 
         if self.MD_parameters['md_clean_translation']:
-            self.current_system.set_velocities(self.clean_translation(self.current_system.get_velocities()))
-            #Stationary(self.current_system)
+            #self.current_system.set_velocities(self.clean_translation(self.current_system.get_velocities()))
+            Stationary(self.current_system)
         if self.MD_parameters['md_clean_rotation']:
             #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
             ZeroRotation(self.current_system)
