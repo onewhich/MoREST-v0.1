@@ -34,6 +34,50 @@ class MD_integration:
 
         return next_potential_energy, next_forces
     
+    def Runge_Kutta_4th(self, time_step, current_system, current_forces, masses):
+        '''
+        This version comes from classic Runge-Kutta methods:
+        Runge–Kutta methods. (2022, September 6). In Wikipedia. https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods
+         https://www.haroldserrano.com/blog/visualizing-the-runge-kutta-method
+        '''
+        # x_1 = x_n, v_1 = v_n, a_1 = a_n
+        x_1 = current_system.get_positions()
+        v_1 = current_system.get_velocities()
+        a_1 = current_forces/masses
+
+        # x_2 = x_n + h/2 * v_1, v_2 = v_n + h/2 * a_1, a_2 = f(x_2)
+        x_2 = x_1 + time_step/2 * v_1
+        v_2 = v_1 + time_step/2 * a_1
+        current_system.set_positions(x_2)
+        Ep_2, F_2 = self.many_body_potential.get_potential_forces(current_system)
+        a_2 = F_2/masses
+
+        # x_3 = x_n + h/2 * v_2, v_3 = v_n + h/2 * a_2, a_3 = f(x_3)
+        x_3 = x_1 + time_step/2 * v_2
+        v_3 = v_1 + time_step/2 * a_2
+        current_system.set_positions(x_3)
+        Ep_3, F_3 = self.many_body_potential.get_potential_forces(current_system)
+        a_3 = F_3/masses
+
+        # x_4 = x_n + h * v_3, v_4 = v_n + h * a_3, a_4 = f(x_4)
+        x_4 = x_1 + time_step * v_3
+        v_4 = v_1 + time_step * a_3
+        current_system.set_positions(x_4)
+        Ep_4, F_4 = self.many_body_potential.get_potential_forces(current_system)
+        a_4 = F_4/masses
+
+        # x_n+1 = x_n + h/6 * (v_1 + 2*v_2 + 2*v_3 + v_4), v_n+1 = v_n + h/6 * (a_1 + 2*a_2 + 2*a_3 + a_4)
+        next_coordinates = x_1 + time_step/6 * (v_1 + 2*v_2 + 2*v_3 + v_4)
+        next_velocities = v_1 + time_step/6 * (a_1 + 2*a_2 + 2*a_3 + a_4)
+
+        current_system.set_positions(next_coordinates)
+        current_system.set_velocities(next_velocities)
+
+        ### F(t+dt)
+        next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(current_system)
+
+        return next_potential_energy, next_forces
+    
     @staticmethod
     def propagate_momenta_half(time_step, momenta, forces):
         ### p(t+0.5dt) = p(t) + 0.5 * F(t) * dt ; v(t+0.5dt) = p(t+0.5dt) / m

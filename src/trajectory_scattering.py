@@ -3,6 +3,7 @@ import os
 import numpy as np
 from structure_io import read_xyz_file, write_xyz_file, read_xyz_traj, write_xyz_traj
 from initialize_calculator import initialize_calculator
+from numerical_integraion import MD_integration
 #from copy import deepcopy
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary
 # Stationary and ZeroRotation from ase will not change the total kinetic energy, the vibrational energy will arise after these two processes.
@@ -245,6 +246,7 @@ class scattering_velocity_Verlet(initialize_scattering):
     
     def __init__(self, morest_parameters, scattering_parameters, calculator=None, log_morest=None):
         super(scattering_velocity_Verlet, self).__init__(morest_parameters, scattering_parameters, calculator, log_morest)
+        self.integration = MD_integration(self.many_body_potential)
         
     def generate_new_step(self, bias_forces=None):
         time_step = self.scattering_parameters['scattering_time_step']
@@ -252,26 +254,12 @@ class scattering_velocity_Verlet(initialize_scattering):
         ### F(t) + bias
         if bias_forces != None:
             self.current_forces = self.current_forces + bias_forces
-        
-        ### x(t), v(t) = p(t) / m
-        current_coordinates = self.current_system.get_positions()
-        current_momenta = self.current_system.get_momenta()
-        
-        ### x(t+dt) = x(t) + v(t)*dt + 0.5*F(t)*dt^2/m
-        next_coordinates = current_coordinates + (current_momenta * time_step + 0.5 * self.current_forces * time_step**2) / self.masses
-        self.current_system.set_positions(next_coordinates)
-        
-        ### v(t+0.5dt) = p(t+0.5dt) / m; p(t+0.5dt) = p(t) + 0.5 * F(t) * dt
-        momenta_half = current_momenta + 0.5 * self.current_forces * time_step
-        
-        ### F(t+dt)
-        next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(self.current_system)
-        
-        ### p(t+dt) = p(t+0.5dt) + 0.5 * F(t+dt) * dt
-        next_momenta = momenta_half + 0.5 * next_forces * time_step
+
+        next_potential_energy, next_forces  = self.integration.velocity_Verlet(time_step, self.current_system, self.current_forces, self.masses)
         if self.scattering_parameters['scattering_fix_target']:
+            next_momenta = self.current_system.get_momenta()
             next_momenta[0:self.n_atom_target] = self.clean_translation(next_momenta[0:self.n_atom_target])
-        self.current_system.set_momenta(next_momenta)
+            self.current_system.set_momenta(next_momenta)
         
         self.current_step += 1
         self.current_forces = next_forces
@@ -297,6 +285,7 @@ class scattering_Runge_Kutta_4th(initialize_scattering):
     
     def __init__(self, morest_parameters, scattering_parameters, calculator=None, log_morest=None):
         super(scattering_Runge_Kutta_4th, self).__init__(morest_parameters, scattering_parameters, calculator, log_morest)
+        self.integration = MD_integration(self.many_body_potential)
         
     def generate_new_step(self, bias_forces=None):
         '''
@@ -310,41 +299,11 @@ class scattering_Runge_Kutta_4th(initialize_scattering):
         if bias_forces != None:
             self.current_forces = self.current_forces + bias_forces
         
-        # x_1 = x_n, v_1 = v_n, a_1 = a_n
-        x_1 = self.current_system.get_positions()
-        v_1 = self.current_system.get_velocities()
-        a_1 = self.current_forces/self.masses
-
-        # x_2 = x_n + h/2 * v_1, v_2 = v_n + h/2 * a_1, a_2 = f(x_2)
-        x_2 = x_1 + time_step/2 * v_1
-        v_2 = v_1 + time_step/2 * a_1
-        self.current_system.set_positions(x_2)
-        Ep_2, F_2 = self.many_body_potential.get_potential_forces(self.current_system)
-        a_2 = F_2/self.masses
-
-        # x_3 = x_n + h/2 * v_2, v_3 = v_n + h/2 * a_2, a_3 = f(x_3)
-        x_3 = x_1 + time_step/2 * v_2
-        v_3 = v_1 + time_step/2 * a_2
-        self.current_system.set_positions(x_3)
-        Ep_3, F_3 = self.many_body_potential.get_potential_forces(self.current_system)
-        a_3 = F_3/self.masses
-
-        # x_4 = x_n + h * v_3, v_4 = v_n + h * a_3, a_4 = f(x_4)
-        x_4 = x_1 + time_step * v_3
-        v_4 = v_1 + time_step * a_3
-        self.current_system.set_positions(x_4)
-        Ep_4, F_4 = self.many_body_potential.get_potential_forces(self.current_system)
-        a_4 = F_4/self.masses
-
-        # x_n+1 = x_n + h/6 * (v_1 + 2*v_2 + 2*v_3 + v_4), v_n+1 = v_n + h/6 * (a_1 + 2*a_2 + 2*a_3 + a_4)
-        next_coordinates = x_1 + time_step/6 * (v_1 + 2*v_2 + 2*v_3 + v_4)
-        next_velocities = v_1 + time_step/6 * (a_1 + 2*a_2 + 2*a_3 + a_4)
-
-        self.current_system.set_positions(next_coordinates)
-        self.current_system.set_velocities(next_velocities)
-
-        ### F(t+dt)
-        next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(self.current_system)
+        next_potential_energy, next_forces  = self.integration.Runge_Kutta_4th(time_step, self.current_system, self.current_forces, self.masses)
+        if self.scattering_parameters['scattering_fix_target']:
+            next_momenta = self.current_system.get_momenta()
+            next_momenta[0:self.n_atom_target] = self.clean_translation(next_momenta[0:self.n_atom_target])
+            self.current_system.set_momenta(next_momenta)
         
         self.current_step += 1
         self.current_forces = next_forces
