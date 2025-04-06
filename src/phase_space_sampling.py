@@ -270,13 +270,11 @@ class RPMD(initialize_sampling):
                 if 'sampling_initial_E' in self.sampling_parameters:
                     T_thermalized = 2/3 * self.sampling_parameters['sampling_initial_E']/units.kB /self.n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
                     for i in range(self.n_beads):
-                        MaxwellBoltzmannDistribution(self.current_beads[i], temperature_K = T_thermalized)
-                    self.pre_thermalization(T_thermalized)
+                        MaxwellBoltzmannDistribution(self.current_beads[i], temperature_K = T_thermalized, force_temp = True)
                 elif 'sampling_initial_T' in self.sampling_parameters:
                     T_thermalized = self.sampling_parameters['sampling_initial_T']
                     for i in range(self.n_beads):
-                        MaxwellBoltzmannDistribution(self.current_beads[i], temperature_K = T_thermalized)
-                    self.pre_thermalization(T_thermalized)
+                        MaxwellBoltzmannDistribution(self.current_beads[i], temperature_K = T_thermalized, force_temp = True)
                 elif self.T_simulation > 1e-3:
                     for i in range(self.n_beads):
                         MaxwellBoltzmannDistribution(self.current_beads[i], temperature_K = self.T_simulation)
