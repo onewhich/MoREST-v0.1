@@ -273,6 +273,7 @@ class NPH_SVR(MD):
             self.Ee = 0
 
     def generate_new_step(self, time_step=None, bias_forces=None, updated_current_system=None):
+        time_step = self.update_pre_step(time_step, bias_forces, updated_current_system)
         
         NPT_bias_forces = self.NPH_space.get_barostat_space_bias_forces()
         if type(bias_forces) != type(None):
@@ -280,7 +281,7 @@ class NPH_SVR(MD):
         else:
             bias_forces = NPT_bias_forces
 
-        self.VV_next_step(bias_forces=bias_forces, updated_current_system=updated_current_system)
+        next_potential_energy, next_forces = self.integration.velocity_Verlet(time_step, self.current_system, self.current_forces, self.masses)
 
         T_current = self.get_temperature(self.current_system.get_kinetic_energy(), self.n_atom)
         # stage 2: propagate 1/2 time step velocities
@@ -293,17 +294,7 @@ class NPH_SVR(MD):
         self.current_system.set_momenta(new_momenta)
         self.NPH_space.update_barostat_space_wall()
         
-        if self.MD_parameters['md_clean_translation']:
-            self.current_system.set_velocities(self.clean_translation(self.current_system.get_velocities()))
-            #Stationary(self.current_system)
-        if self.MD_parameters['md_clean_rotation']:
-            #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
-            ZeroRotation(self.current_system)
-        
-        if not self.re_simulation:
-            write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
-        else:
-            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.xyz_new', self.current_system)
+        self.update_step(next_potential_energy, next_forces)
         
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             #print(next_coordinates) #DEGUB
@@ -356,13 +347,16 @@ class NPT_Berendsen(MD):
             self.MD_log = open(self.log_file_name, 'a', buffering=1)
 
     def generate_new_step(self, time_step=None, bias_forces=None, updated_current_system=None):
+        time_step = self.update_pre_step(time_step, bias_forces, updated_current_system)
+
         NPT_bias_forces = self.NPT_space.get_barostat_space_bias_forces()
         if type(bias_forces) != type(None):
             bias_forces += NPT_bias_forces
         else:
             bias_forces = NPT_bias_forces
 
-        self.VV_next_step(bias_forces=bias_forces, updated_current_system=updated_current_system)
+        next_potential_energy, next_forces = self.integration.velocity_Verlet(time_step, self.current_system, self.current_forces, self.masses)
+
         new_velocities = Berendsen_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.n_atom, \
                                                       self.T_simulation, self.tau_T, self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
@@ -370,18 +364,8 @@ class NPT_Berendsen(MD):
                                                                self.current_system.get_forces(), new_velocities, self.masses, self.P_simulation, self.tau_P, self.beta, self.miu)
         self.current_system.set_positions(next_coordinates)
         self.NPT_space.update_barostat_space_wall()
-
-        if self.MD_parameters['md_clean_translation']:
-            self.current_system.set_velocities(self.clean_translation(self.current_system.get_velocities()))
-            #Stationary(self.current_system)
-        if self.MD_parameters['md_clean_rotation']:
-            #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
-            ZeroRotation(self.current_system)
         
-        if not self.re_simulation:
-            write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
-        else:
-            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.xyz_new', self.current_system)
+        self.update_step(next_potential_energy, next_forces)
         
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             #print(next_coordinates) #DEGUB
@@ -448,6 +432,7 @@ class NPT_SVR(MD):
             self.Ee = 0
 
     def generate_new_step(self, time_step=None, bias_forces=None, updated_current_system=None):
+        time_step = self.update_pre_step(time_step, bias_forces, updated_current_system)
         
         NPT_bias_forces = self.NPT_space.get_barostat_space_bias_forces()
         if type(bias_forces) != type(None):
@@ -455,7 +440,7 @@ class NPT_SVR(MD):
         else:
             bias_forces = NPT_bias_forces
 
-        self.VV_next_step(bias_forces=bias_forces, updated_current_system=updated_current_system)
+        next_potential_energy, next_forces = self.integration.velocity_Verlet(time_step, self.current_system, self.current_forces, self.masses)
 
         # stage 1: propagate 1/2 time step thermostat
         new_velocities, self.d_Ee, alpha = stochastic_velocity_rescaling(self.time_step/2, self.current_system.get_kinetic_energy(), self.K_simulation, \
@@ -479,18 +464,8 @@ class NPT_SVR(MD):
                                                                   self.Nf, self.tau_T, self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
         self.eta *= alpha
-
-        if self.MD_parameters['md_clean_translation']:
-            self.current_system.set_velocities(self.clean_translation(self.current_system.get_velocities()))
-            #Stationary(self.current_system)
-        if self.MD_parameters['md_clean_rotation']:
-            #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
-            ZeroRotation(self.current_system)
         
-        if not self.re_simulation:
-            write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
-        else:
-            write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.xyz_new', self.current_system)
+        self.update_step(next_potential_energy, next_forces)
         
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             #print(next_coordinates) #DEGUB
