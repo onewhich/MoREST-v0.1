@@ -119,7 +119,7 @@ class initialize_scattering(initialize_calculator):
                 p_z = -(nv_a*p_x + nv_b*p_y) / nv_c
                 target_point = np.array([p_x,p_y,p_z])
                 if np.linalg.norm(target_point) < d_r:
-                    break            
+                    break
         
         # normalized collision_vector
         collision_vector = (target_point - incident_point) / np.linalg.norm(target_point - incident_point)
