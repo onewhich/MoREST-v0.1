@@ -2,8 +2,7 @@
 import numpy as np
 #import sys
 #sys.path.append('..')
-from structure_io import write_xyz_file, write_xyz_traj
-from ase.md.velocitydistribution import Stationary, ZeroRotation
+from structure_io import  write_xyz_traj
 from ase import units
 from phase_space_sampling import MD
 from thermostat import velocity_rescaling, Berendsen_velocity_rescaling, stochastic_velocity_rescaling

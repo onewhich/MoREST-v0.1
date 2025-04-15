@@ -1,6 +1,7 @@
 from structure_io import write_xyz_traj
 from trajectory_scattering import initialize_scattering
 from numerical_integraion import MD_integration
+from kinetic_energy_assignment import clean_translation
 
 class scattering_velocity_Verlet(initialize_scattering):
     '''
@@ -21,7 +22,7 @@ class scattering_velocity_Verlet(initialize_scattering):
         next_potential_energy, next_forces  = self.integration.velocity_Verlet(time_step, self.current_system, self.current_forces, self.masses)
         if self.scattering_parameters['scattering_fix_target']:
             next_momenta = self.current_system.get_momenta()
-            next_momenta[0:self.n_atom_target] = self.clean_translation(next_momenta[0:self.n_atom_target])
+            next_momenta[0:self.n_atom_target] = clean_translation(next_momenta[0:self.n_atom_target])
             self.current_system.set_momenta(next_momenta)
         
         self.current_step += 1
@@ -65,7 +66,7 @@ class scattering_Runge_Kutta_4th(initialize_scattering):
         next_potential_energy, next_forces  = self.integration.Runge_Kutta_4th(time_step, self.current_system, self.current_forces, self.masses)
         if self.scattering_parameters['scattering_fix_target']:
             next_momenta = self.current_system.get_momenta()
-            next_momenta[0:self.n_atom_target] = self.clean_translation(next_momenta[0:self.n_atom_target])
+            next_momenta[0:self.n_atom_target] = clean_translation(next_momenta[0:self.n_atom_target])
             self.current_system.set_momenta(next_momenta)
         
         self.current_step += 1

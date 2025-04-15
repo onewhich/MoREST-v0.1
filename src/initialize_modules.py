@@ -4,6 +4,7 @@ import numpy as np
 from molecular_dynamics_sampling import NVE_VV, NVK_VR, NVT_Berendsen, NVT_Langevin, NVT_SVR, NPH_SVR, NPT_Berendsen, NPT_Langevin, NPT_SVR
 from path_integral_MD_sampling import RP_NVE, RP_NVK_VR, RP_NVT_Langevin, RP_NVT_SVR
 from molecular_dynamics_scattering import scattering_velocity_Verlet, scattering_Runge_Kutta_4th
+from molecule_rovibrating import rovibrating_velocity_Verlet, rovibrating_Runge_Kutta_4th
 from structure_searching import gradient_descent, FIRE_velocity_Verlet
 from enhanced_sampling import RE, ITS
 from wall_potential import repulsive_wall
@@ -126,6 +127,34 @@ class initialize_modules:
             self.log_morest.write('It is not clear which scattering method will be used.\n')
             self.log_morest.close()
             raise Exception('Which scattering method will you use?')
+
+    def initialize_molecule_rovibrating(self, MoREST_parameters):
+        if not self.morest_parameters['morest_load_parameters_file']:
+            self.rovibrating_parameters = MoREST_parameters.get_rovibrating_parameters(self.log_morest)
+        else:
+            try:
+                self.rovibrating_parameters = np.load('MoREST_rovibrating_parameters.npy',allow_pickle=True).item()
+            except:
+                self.log_morest.write('Can not find parameters files: MoREST_rovibrating_parameters.npy\n Read parameters from input file.\n\n')
+                self.rovibrating_parameters = MoREST_parameters.get_rovibrating_parameters(self.log_morest)
+        if self.rovibrating_parameters['rovibrating_initialization']:
+            self.log_morest.write('Start to sample the rovibration states\n\n')
+            try:
+                os.remove('MoREST_rovibrating.log')
+                os.remove('MoREST_rovibrating_traj.xyz')
+            except:
+                pass
+        else:
+            self.log_morest.write('Continue to sample the rovibration states\n\n')
+
+        if self.rovibrating_parameters['rovibrating_method'].upper() in ['VV']:
+            self.rovibrating_job = rovibrating_velocity_Verlet(self.morest_parameters, self.rovibrating_parameters, calculator=self.calculator, log_morest=self.log_morest)
+        elif self.rovibrating_parameters['rovibrating_method'].upper() in ['RK4']:
+            self.rovibrating_job = rovibrating_Runge_Kutta_4th(self.morest_parameters, self.rovibrating_parameters, calculator=self.calculator, log_morest=self.log_morest)
+        else:
+            self.log_morest.write('It is not clear which rovibrating method will be used.\n')
+            self.log_morest.close()
+            raise Exception('Which rovibrating method will you use?')
 
     def initialize_structure_searching(self, MoREST_parameters):
         if not self.morest_parameters['morest_load_parameters_file']:

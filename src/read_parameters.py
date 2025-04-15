@@ -32,7 +32,7 @@ class read_parameters:
         self.morest_parameters['morest_load_parameters_file'] = False
         self.morest_parameters['ml_print_uncertainty'] = False
         self.morest_parameters['ml_fd_forces'] = True
-        self.morest_parameters['fd_displacement'] = 0.005 #0.0025
+        self.morest_parameters['fd_displacement'] = 0.0025
         self.morest_parameters['ml_active_learning'] = False
         self.morest_parameters['ml_add_features_number'] = 0
         self.morest_parameters['ml_features_min_number'] = 0
@@ -40,6 +40,7 @@ class read_parameters:
         self.morest_parameters['ml_energy_uncertainty_tolerance'] = 0.01
         self.morest_parameters['phase_space_sampling'] = False
         self.morest_parameters['trajectory_scattering'] = False
+        self.morest_parameters['molecule_rovibrating'] = False
         self.morest_parameters['structure_searching'] = False
         self.morest_parameters['enhanced_sampling'] = False
         self.morest_parameters['wall_potential'] = False
@@ -77,6 +78,12 @@ class read_parameters:
         self.scattering_parameters['scattering_fix_target'] = False
         self.scattering_parameters['scattering_fix_incident'] = False
         self.scattering_parameters['scattering_clean_rotation'] = False
+        self.rovibrating_parameters = {}
+        self.rovibrating_parameters['rovibrating_initialization'] = False
+        self.rovibrating_parameters['rovibrating_pre_thermalized'] = False
+        self.rovibrating_parameters['rovibrating_traj_interval'] = 1
+        self.rovibrating_parameters['rovibrating_molecule'] = 'MoREST_rovibrating.xyz'
+        self.rovibrating_parameters['rovibrating_clean_rotation'] = False
         self.searching_parameters = {}
         self.searching_parameters['searching_initialization'] = False
         self.searching_parameters['searching_starting_point'] = 'MoREST_searching.xyz'
@@ -225,6 +232,14 @@ class read_parameters:
                     self.morest_parameters['trajectory_scattering'] = False
                 else:
                     raise Exception('It is not clear whether the scattering method will be used.')
+                                
+            elif i_parameter.split()[0].upper() == 'Molecule_rovibrating'.upper():
+                if i_parameter.split()[1].upper() == 'True'.upper():
+                    self.morest_parameters['molecule_rovibrating'] = True
+                elif i_parameter.split()[1].upper() == 'False'.upper():
+                    self.morest_parameters['molecule_rovibrating'] = False
+                else:
+                    raise Exception('It is not clear whether the  method will be used.')
                 
             elif i_parameter.split()[0].upper() == 'Structure_searching'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():
@@ -272,6 +287,10 @@ class read_parameters:
             ########################## Trajectory scattering ######################
             if self.morest_parameters['trajectory_scattering']:
                 self.read_scattering_parameters(i_parameter)
+
+            ########################## Molecule rovibrating #######################
+            if self.morest_parameters['molecule_rovibrating']:
+                self.read_rovibrating_parameters(i_parameter)
 
             ########################## Structure searching ########################
             if self.morest_parameters['structure_searching']:
@@ -593,7 +612,55 @@ class read_parameters:
             elif i_parameter.split()[1].upper() == 'False'.upper():
                 self.scattering_parameters['scattering_clean_rotation'] = False
 
+    def read_rovibrating_parameters(self, i_parameter):
+        if i_parameter.split()[0].upper() == 'Rovibrating_initialization'.upper():
+            if i_parameter.split()[1].upper() == 'True'.upper():
+                self.rovibrating_parameters['rovibrating_initialization'] = True
+            elif i_parameter.split()[1].upper() == 'False'.upper():
+                self.rovibrating_parameters['rovibrating_initialization'] = False
+            else:
+                raise Exception('It is not clear whether the rovibrating method will be initialized.')
+                
+        elif i_parameter.split()[0].upper() == 'Rovibrating_pre_thermalized'.upper():
+            if i_parameter.split()[1].upper() == 'True'.upper():
+                self.rovibrating_parameters['rovibrating_pre_thermalized'] = True
+            elif i_parameter.split()[1].upper() == 'False'.upper():
+                self.rovibrating_parameters['rovibrating_pre_thermalized'] = False
+            else:
+                raise Exception('It is not clear whether the pre-thermalized molecule will be used.')
+                
+        elif i_parameter.split()[0].upper() == 'Rovibrating_molecule'.upper():
+            self.rovibrating_parameters['rovibrating_molecule'] = str(i_parameter.split()[1])
 
+        elif i_parameter.split()[0].upper() == 'Rovibrating_method'.upper():
+            self.rovibrating_parameters['rovibrating_method'] = str(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'Rovibrating_time_step'.upper():
+            self.rovibrating_parameters['rovibrating_time_step'] = float(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'Rovibrating_traj_interval'.upper():
+            self.rovibrating_parameters['rovibrating_traj_interval'] = int(i_parameter.split()[1])
+        
+        elif i_parameter.split()[0].upper() == 'Rovibrating_simulation_time'.upper():
+            self.rovibrating_parameters['rovibrating_simulation_time'] = float(i_parameter.split()[1])
+        
+        elif i_parameter.split()[0].upper() == 'Rovibrating_vibration_T'.upper():
+            self.rovibrating_parameters['rovibrating_vibration_T'] = float(i_parameter.split()[1])
+        
+        elif i_parameter.split()[0].upper() == 'Rovibrating_vibration_E'.upper():
+            self.rovibrating_parameters['rovibrating_vibration_E'] = float(i_parameter.split()[1])
+        
+        elif i_parameter.split()[0].upper() == 'Rovibrating_rotation_T'.upper():
+            self.rovibrating_parameters['rovibrating_rotation_T'] = float(i_parameter.split()[1])
+        
+        elif i_parameter.split()[0].upper() == 'Rovibrating_rotation_E'.upper():
+            self.rovibrating_parameters['rovibrating_rotation_E'] = float(i_parameter.split()[1])
+                
+        elif i_parameter.split()[0].upper() == 'Rovibrating_clean_rotation'.upper():
+            if i_parameter.split()[1].upper() == 'True'.upper():
+                self.rovibrating_parameters['rovibrating_clean_rotation'] = True
+            elif i_parameter.split()[1].upper() == 'False'.upper():
+                self.rovibrating_parameters['rovibrating_clean_rotation'] = False
 
     def read_searching_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'Searching_initialization'.upper():
@@ -1113,6 +1180,22 @@ class read_parameters:
                     log_morest.write(key+' : '+str(self.scattering_parameters[key])+'\n')
             log_morest.write('\n')
         return self.scattering_parameters
+    
+    def get_rotation_parameters(self, log_morest=None):
+        if self.morest_parameters['morest_initialization'] == True:
+           self.rovibrating_parameters['rovibrating_initialization'] = True
+        self.rovibrating_parameters['rovibrating_time_step'] *= units.fs
+        self.rovibrating_parameters['rovibrating_simulation_time'] *= units.fs
+        if self.morest_parameters['morest_save_parameters_file']:
+            np.save('MoREST_rovibrating_parameters.npy', self.rovibrating_parameters)
+        if log_morest != None:
+            for key in self.rovibrating_parameters:
+                if key in ['rovibrating_time_step','rovibrating_simulation_time']:
+                    log_morest.write(key+' : '+str(self.rovibrating_parameters[key]/units.fs)+'\n')
+                else:
+                    log_morest.write(key+' : '+str(self.rovibrating_parameters[key])+'\n')
+            log_morest.write('\n')
+        return self.rovibrating_parameters
     
     def get_searching_parameters(self, log_morest=None):
         if self.morest_parameters['morest_initialization'] == True:

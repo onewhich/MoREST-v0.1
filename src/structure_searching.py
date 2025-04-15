@@ -1,7 +1,8 @@
 import numpy as np
 from structure_io import read_xyz_file, read_xyz_traj, write_xyz_traj, write_xyz_file
 from initialize_calculator import initialize_calculator
-from ase.md.velocitydistribution import Stationary, ZeroRotation
+from numerical_integraion import MD_integration
+from ase.md.velocitydistribution import Stationary
 from ase import units
 
 class initialize_searching(initialize_calculator):
@@ -196,6 +197,7 @@ class searching_velocity_Verlet(initialize_searching):
     '''
     def __init__(self, morest_parameters, searching_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
         super(searching_velocity_Verlet, self).__init__(morest_parameters, searching_parameters, molecule, log_file_name, traj_file_name, calculator, log_morest)
+        self.integration = MD_integration(self.many_body_potential)
 
     def VV_next_step(self, bias_forces=None, updated_current_system=None):
         if type(self.time_step) != float:
@@ -208,32 +210,7 @@ class searching_velocity_Verlet(initialize_searching):
         if bias_forces != None:
             self.current_forces = self.current_forces + bias_forces
         
-        ### x(t), v(t) = p(t) / m
-        current_coordinates = self.current_system.get_positions()
-        #current_velocities = self.current_system.get_velocities()
-        current_momenta = self.current_system.get_momenta()
-        
-        ### x(t+dt) = x(t) + v(t)*dt + 0.5*F(t)*dt^2/m
-        #next_coordinates = current_coordinates + current_velocities * time_step + 0.5 * self.current_accelerations * time_step**2
-        next_coordinates = current_coordinates + (current_momenta * time_step + 0.5 * self.current_forces * time_step**2) / self.masses
-        self.current_system.set_positions(next_coordinates)
-        
-        ### v(t+0.5dt) = p(t+0.5dt) / m; p(t+0.5dt) = p(t) + 0.5 * F(t) * dt
-        momenta_half = current_momenta + 0.5 * self.current_forces * time_step
-        
-        ### F(t+dt)
-        next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(self.current_system)
-        
-        ### v(t+dt) = v(t+0.5dt) + 0.5 * F(t+dt) * dt / m
-        #next_accelerations = self.current_forces / self.masses
-        #next_velocities = current_velocities + 0.5 * (self.current_accelerations + next_accelerations) * time_step
-        #self.current_system.set_velocities(next_velocities)
-        
-        ### p(t+dt) = p(t+0.5dt) + 0.5 * F(t+dt) * dt
-        next_momenta = momenta_half + 0.5 * next_forces * time_step
-        self.current_system.set_momenta(next_momenta)
-        
-        #next_velocities = next_system.get_velocities()
+        next_potential_energy, next_forces  = self.integration.velocity_Verlet(time_step, self.current_system, self.current_forces, self.masses)
         
         self.current_step += 1
         self.current_forces = next_forces

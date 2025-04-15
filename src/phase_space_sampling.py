@@ -5,6 +5,7 @@ from structure_io import read_xyz_file, read_xyz_traj, write_xyz_file, write_xyz
 from initialize_calculator import initialize_calculator
 from numerical_integraion import MD_integration, RPMD_integration, RPMD_normal_mode_integration
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary, ZeroRotation
+# Stationary and ZeroRotation from ase will not change the total kinetic energy, the vibrational energy will arise after these two processes.
 from ase import units
 
 class initialize_sampling(initialize_calculator):
@@ -62,39 +63,6 @@ class initialize_sampling(initialize_calculator):
         
         return system
     
-    @staticmethod
-    def clean_translation(velocities):
-        total_velocity = np.sum(velocities, axis=0)/len(velocities)
-        new_velocities = velocities - total_velocity
-        return new_velocities
-        
-    @staticmethod
-    def clean_rotation(velocities, coordinates, masses):
-        '''
-        L = r x p = r x (m v) = r x (omega x (m r)) = m r^2 omega = I omega
-        L : angular momentum
-        omega: angular velocity
-        I : moment of inertia
-        '''
-        n_atom = len(velocities)
-        if n_atom == 1:
-            return velocities
-        v_vector = velocities
-        #center_of_mass = np.sum([masses[i]*coordinates[i] for i in range(len(masses))], axis=0)/np.sum(masses)
-        #center_of_mass = np.sum(masses[:,np.newaxis]*coordinates, axis=0)/np.sum(masses)
-        center_of_mass = np.sum(masses*coordinates, axis=0)/np.sum(masses)
-        r_vector = coordinates - center_of_mass
-        # r_cross_v : angular velocities
-        # omega = (r x v) / |r|^2
-        r_cross_v = np.cross(r_vector, v_vector)
-        r_2 = np.linalg.norm(r_vector, axis=1)**2
-        omega = np.array([r_cross_v[i]/r_2[i] for i in range(n_atom)])
-        # Rv = omega/n_atom : system total angular velocity
-        rotat_vector = np.sum(omega, axis=0)/n_atom
-        v_tang = np.cross(rotat_vector, r_vector)
-        new_velocities = v_vector - v_tang
-        return new_velocities
-        
     @staticmethod
     def write_MD_log(log_file, step, Ep, Ek, masses):
         try:
@@ -210,7 +178,7 @@ class MD(initialize_sampling):
             pass
 
         if self.MD_parameters['md_clean_translation']:
-            #self.current_system.set_velocities(self.clean_translation(self.current_system.get_velocities()))
+            #self.current_system.set_velocities(clean_translation(self.current_system.get_velocities()))
             Stationary(self.current_system)
         if self.MD_parameters['md_clean_rotation']:
             #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)

@@ -23,6 +23,7 @@ ML_appending_set_number           10 # The number of samplings calculated by ab 
 ML_appending_sampling_steps       100 #TODO: Ab initio samplings will be added to the training set for every given MD/MC sampling step.
 ML_GPR_noise_level_bounds         1e-7 1. # Parameter noise_level_bounds in GPR. The default value is 1e-7 1. It only gives the lower bound if only one number is given.
 
+
 Phase_space_sampling              False
 Sampling_initialization           False   # Overwrite or append the trajectory in MoREST_traj.xyz file, read structure from MoREST.str or MoREST.str_new
 Sampling_molecule                 MoREST_sampling.xyz # The input of the structure.
@@ -67,11 +68,12 @@ Barostat_cuboid_length_ratio      4 5 6 # The length on each side of the cuboid.
 Barostat_plane_point              0 0 3 # This point and normal vector determine the parameter b in the planar wall.
 Barostat_plane_normal_vector      0 0 -5 # The normal vector does not have to be a unit vector. It will be normalized after reading.
 
+
 Trajectory_scattering             False
 Scattering_initialization         False
 Scattering_pre_thermalized        False # If true, the thermalization trajectories of the target and incident molecules are required. Otherwise, the initial structures are required.
 Scattering_traj_number            2000 # The number of trajectories for the scattering.
-Scattering_method                 VV # VV: velocity Verlet; RK4: Runge-Kutta 4th order; LD: Langevin dynamics
+Scattering_method                 VV # VV: velocity Verlet; RK4: Runge-Kutta 4th order; LD: Langevin dynamics;
 Scattering_time_step              0.5 # fs
 Scattering_traj_interval          10    # Record sampling every traj_interval steps
 Scattering_V_collision            1e-2 # Initial collision velocity in AA/fs ( 1 AA/fs = 1e5 m/s ). This velocity defines the translational energy of the incident molecule, while the target molecule is static.
@@ -94,6 +96,23 @@ Scattering_R_incident             9 # the initial point of the incident directio
 Scattering_fix_target             False # True: the target molecule will be fixed at the origin point
 Scattering_fix_incident           False # True: the incident molecule will not be randomly placed on the sphere but on the positive z-axis with the distance of R_incident.
 Scattering_clean_rotation         False
+
+
+Molecule_rovibrating              False   # The rovibration calculation is treated as a scattering process, but without incident molecule. It is used to calculate the rovibrational spectrum. This method will always clean translation.
+Rovibrating_initialization        False
+Rovibrating_method                RK4    #  RK4, VV
+Rovibrating_pre_thermalized       False    # True: the initial structures with thermalized velocities are required.
+                                           # False: initialize the kinetic energy of the molecule should be assigned by vibration_T, vibration_E, rotation_T, rotation_E.
+Rovibrating_molecule              MoREST_rovibration.xyz
+Rovibrating_time_step             1    # unit in fs
+Rovibrating_traj_interval         10    # Record sampling every traj_interval steps
+Rovibrating_simulation_time       100000    # unit in fs
+Rovibrating_vibration_T           1000    # unit in K. The instantaneous temperature assigned for vibration.
+Rovibrating_vibration_E           1    # unit in eV. The kinetic energy assigned for vibration. "Spectrum_vibration_T" will be ignored, if "Spectrum_vibration_E" is given.
+Rovibrating_rotation_T            1000    # unit in K. The instantaneous temperature assigned for rotation.
+Rovibrating_rotation_E            1    # unit in eV. The kinetic energy assigned for rotation. "Spectrum_rotation_T" will be ignored, if "Spectrum_rotation_E" is given.
+Rovibrating_clean_rotation        True
+
 
 Structure_searching               False
 Searching_initialization          False
