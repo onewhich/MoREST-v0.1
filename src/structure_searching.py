@@ -2,7 +2,8 @@ import numpy as np
 from structure_io import read_xyz_file, read_xyz_traj, write_xyz_traj, write_xyz_file
 from initialize_calculator import initialize_calculator
 from numerical_integraion import MD_integration
-from ase.md.velocitydistribution import Stationary
+# Stationary and ZeroRotation from ase will not change the total kinetic energy, the vibrational energy will arise after these two processes.
+from kinetic_energy_assignment import clean_translation
 from ase import units
 
 class initialize_searching(initialize_calculator):
@@ -219,8 +220,8 @@ class searching_velocity_Verlet(initialize_searching):
         self.potential_energy_list.append(self.current_system.get_potential_energy())
         self.kinetic_energy = self.current_system.get_kinetic_energy()
 
-        Stationary(self.current_system)
-        #ZeroRotation(self.current_system)
+        #clean_rotation(self.current_system)
+        clean_translation(self.current_system)
             
         try:
             self.ml_calculator.get_current_step(self.current_step)

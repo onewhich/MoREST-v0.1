@@ -69,13 +69,13 @@ class initialize_scattering(initialize_calculator):
         collision_energy = 0.5 * np.sum(incident_molecule.get_masses()) * scalar_translational_velocity**2
         
         # initialize incident and target molecules
-        incident_molecule.set_velocities(clean_translation(incident_molecule.get_velocities()))
-        self.reset_mass_center(incident_molecule)
-        target_molecule.set_velocities(clean_translation(target_molecule.get_velocities()))
-        self.reset_mass_center(target_molecule)
         if self.scattering_parameters['scattering_clean_rotation']:
-            incident_molecule.set_velocities(clean_rotation(incident_molecule.get_velocities(), incident_molecule.get_positions(), incident_molecule.get_masses()))
-            target_molecule.set_velocities(clean_rotation(target_molecule.get_velocities(), target_molecule.get_positions(), target_molecule.get_masses()))
+            clean_rotation(incident_molecule)
+            clean_rotation(target_molecule)
+        clean_translation(incident_molecule)
+        self.reset_mass_center(incident_molecule)
+        clean_translation(target_molecule)
+        self.reset_mass_center(target_molecule)
 
         # uniform sampling on a sphere for inciden point and on a disc for target point.
         if not self.scattering_parameters['scattering_fix_incident']:

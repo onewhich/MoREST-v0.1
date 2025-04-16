@@ -4,8 +4,9 @@ import numpy as np
 from structure_io import read_xyz_file, read_xyz_traj, write_xyz_file, write_xyz_traj
 from initialize_calculator import initialize_calculator
 from numerical_integraion import MD_integration, RPMD_integration, RPMD_normal_mode_integration
-from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary, ZeroRotation
+from ase.md.velocitydistribution import MaxwellBoltzmannDistribution
 # Stationary and ZeroRotation from ase will not change the total kinetic energy, the vibrational energy will arise after these two processes.
+from kinetic_energy_assignment import clean_translation, clean_rotation
 from ase import units
 
 class initialize_sampling(initialize_calculator):
@@ -177,12 +178,10 @@ class MD(initialize_sampling):
         except:
             pass
 
-        if self.MD_parameters['md_clean_translation']:
-            #self.current_system.set_velocities(clean_translation(self.current_system.get_velocities()))
-            Stationary(self.current_system)
         if self.MD_parameters['md_clean_rotation']:
-            #next_velocities = clean_rotation(next_velocities, next_coordinates, self.masses)
-            ZeroRotation(self.current_system)
+            clean_rotation(self.current_system, preserve_temperature=True)
+        if self.MD_parameters['md_clean_translation']:
+            clean_translation(self.current_system, preserve_temperature=True)
         
         if not self.re_simulation:
             write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
@@ -372,7 +371,7 @@ class RPMD(initialize_sampling):
     # only remove the centroid rotational motion
     def zero_rotation_centroid(self):
         centroid_velocity = self.current_system.get_velocities()
-        ZeroRotation(self.current_system)
+        clean_rotation(self.current_system)
         new_velocity = self.current_system.get_velocities()
         d_velocity = new_velocity - centroid_velocity
         for i_bead in self.current_beads:

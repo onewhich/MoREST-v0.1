@@ -50,7 +50,10 @@ def clean_translation(system, preserve_temperature=False):
         rescale_T_kinetic(system, temperature)
     else:
         system.set_velocities(new_velocities)
-    
+
+def clean_translation_v(velocities):
+    net_velocity = np.sum(velocities, axis=0)/len(velocities)
+    return velocities - net_velocity
 
 def get_rotation_velocities(system):
     '''
