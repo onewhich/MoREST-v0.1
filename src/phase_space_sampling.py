@@ -359,10 +359,8 @@ class RPMD(initialize_sampling):
     # only remove the centroid translational motion
     def stationary_centroid(self):
         centroid_velocity = self.current_system.get_velocities()
-        #Stationary(self.current_system)
-        #new_velocity = self.current_system.get_velocities()
-        new_velocity = self.clean_translation(centroid_velocity)
-        self.current_system.set_velocities(new_velocity)
+        clean_translation(self.current_system)
+        new_velocity = self.current_system.get_velocities()
         d_velocity = new_velocity - centroid_velocity
         for i_bead in self.current_beads:
             bead_velocity = i_bead.get_velocities()
