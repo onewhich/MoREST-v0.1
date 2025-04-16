@@ -2,7 +2,7 @@ import numpy as np
 from structure_io import read_xyz_file, read_xyz_traj, write_xyz_traj
 from initialize_calculator import initialize_calculator
 from numerical_integraion import MD_integration
-from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary
+from ase.md.velocitydistribution import MaxwellBoltzmannDistribution
 # Stationary and ZeroRotation from ase will not change the total kinetic energy, the vibrational energy will arise after these two processes.
 from kinetic_energy_assignment import get_kinetic_velocities, get_kinetic_temperatures, rescale_kinetic_temperature
 from ase import units

@@ -1,4 +1,3 @@
-import numpy as np
 import ase.io
 from ase.units import kB
 
