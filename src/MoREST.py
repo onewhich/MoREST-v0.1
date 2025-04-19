@@ -79,14 +79,12 @@ class morest(initialize_modules):
             if self.morest_parameters['wall_potential']:
                 if self.sampling_parameters['sampling_method'].upper() in ['MD']:
                     simulation_maxsteps = int(self.MD_parameters['md_simulation_time']/self.MD_parameters['md_time_step']) + 1
-                    while current_step <= simulation_maxsteps:
-                        general_coordinate = current_system.get_positions()
-                        bias_forces = self.wall_potential(general_coordinate)
-                        current_step, current_system= self.sampling_job.generate_new_step(bias_forces=bias_forces)
                 elif self.sampling_parameters['sampling_method'].upper() in ['RPMD']:
                     simulation_maxsteps = int(self.RPMD_parameters['rpmd_simulation_time']/self.RPMD_parameters['rpmd_time_step']) + 1
-                    while current_step <= simulation_maxsteps:
-                        current_step, current_system= self.sampling_job.generate_new_step(wall_potential=self.wall_potential)
+                while current_step <= simulation_maxsteps:
+                    general_coordinate = current_system.get_positions()
+                    bias_forces = self.wall_potential(general_coordinate)
+                    current_step, current_system= self.sampling_job.generate_new_step(bias_forces=bias_forces)
             else:
                 if self.sampling_parameters['sampling_method'].upper() in ['MD']:
                     simulation_maxsteps = int(self.MD_parameters['md_simulation_time']/self.MD_parameters['md_time_step']) + 1

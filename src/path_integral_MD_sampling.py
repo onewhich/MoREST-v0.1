@@ -28,17 +28,15 @@ class RP_NVE(RPMD):
         else:
             self.RPMD_log = open(self.log_file_name, 'a', buffering=1)
 
-    def generate_new_step(self, wall_potential=None, updated_current_beads=None, time_step=None):
+    def generate_new_step(self, time_step=None, bias_forces=None, updated_current_beads=None):
         if type(updated_current_beads) != type(None):
             self.current_beads = updated_current_beads
         
         ### F(t) + bias
-        if type(wall_potential) != type(None):
+        if type(bias_forces) != type(None):
             for i in range(self.n_beads):
                 current_forces = self.current_beads_forces[i]
-                current_positions = self.current_beads_positions[i]
-                bias_force = wall_potential(current_positions)
-                self.current_beads_forces[i] = current_forces + bias_force
+                self.current_beads_forces[i] = current_forces + bias_forces
             
         if type(time_step) == type(None):
             time_step = self.time_step
@@ -106,17 +104,15 @@ class RP_NVK_VR(RPMD):
         else:
             self.RPMD_log = open(self.log_file_name, 'a', buffering=1)
 
-    def generate_new_step(self, wall_potential=None, updated_current_beads=None, time_step=None):
+    def generate_new_step(self, time_step=None, bias_forces=None, updated_current_beads=None):
         if type(updated_current_beads) != type(None):
             self.current_beads = updated_current_beads
         
         ### F(t) + bias
-        if type(wall_potential) != type(None):
+        if type(bias_forces) != type(None):
             for i in range(self.n_beads):
                 current_forces = self.current_beads_forces[i]
-                current_positions = self.current_beads_positions[i]
-                bias_force = wall_potential(current_positions)
-                self.current_beads_forces[i] = current_forces + bias_force
+                self.current_beads_forces[i] = current_forces + bias_forces
             
         if type(time_step) == type(None):
             time_step = self.time_step
@@ -194,17 +190,15 @@ class RP_NVT_Berendsen(RPMD):
         else:
             self.RPMD_log = open(self.log_file_name, 'a', buffering=1)
 
-    def generate_new_step(self, wall_potential=None, updated_current_beads=None, time_step=None):
+    def generate_new_step(self, time_step=None, bias_forces=None, updated_current_beads=None):
         if type(updated_current_beads) != type(None):
             self.current_beads = updated_current_beads
         
         ### F(t) + bias
-        if type(wall_potential) != type(None):
+        if type(bias_forces) != type(None):
             for i in range(self.n_beads):
                 current_forces = self.current_beads_forces[i]
-                current_positions = self.current_beads_positions[i]
-                bias_force = wall_potential(current_positions)
-                self.current_beads_forces[i] = current_forces + bias_force
+                self.current_beads_forces[i] = current_forces + bias_forces
             
         if type(time_step) == type(None):
             time_step = self.time_step
@@ -272,17 +266,15 @@ class RP_NVT_Langevin(RPMD):
         else:
             self.RPMD_log = open(self.log_file_name, 'a', buffering=1)
 
-    def generate_new_step(self, wall_potential=None, updated_current_beads=None, time_step=None):
+    def generate_new_step(self, time_step=None, bias_forces=None, updated_current_beads=None):
         if type(updated_current_beads) != type(None):
             self.current_beads = updated_current_beads
         
         ### F(t) + bias
-        if type(wall_potential) != type(None):
+        if type(bias_forces) != type(None):
             for i in range(self.n_beads):
                 current_forces = self.current_beads_forces[i]
-                current_positions = self.current_beads_positions[i]
-                bias_force = wall_potential(current_positions)
-                self.current_beads_forces[i] = current_forces + bias_force
+                self.current_beads_forces[i] = current_forces + bias_forces
             
         if type(time_step) == type(None):
             time_step = self.time_step
@@ -350,17 +342,15 @@ class RP_NVT_SVR(RPMD):
         else:
             self.RPMD_log = open(self.log_file_name, 'a', buffering=1)
 
-    def generate_new_step(self, wall_potential=None, updated_current_beads=None, time_step=None):
+    def generate_new_step(self, time_step=None, bias_forces=None, updated_current_beads=None):
         if type(updated_current_beads) != type(None):
             self.current_beads = updated_current_beads
         
         ### F(t) + bias
-        if type(wall_potential) != type(None):
+        if type(bias_forces) != type(None):
             for i in range(self.n_beads):
                 current_forces = self.current_beads_forces[i]
-                current_positions = self.current_beads_positions[i]
-                bias_force = wall_potential(current_positions)
-                self.current_beads_forces[i] = current_forces + bias_force
+                self.current_beads_forces[i] = current_forces + bias_forces
             
         if type(time_step) == type(None):
             time_step = self.time_step
