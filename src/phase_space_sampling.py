@@ -224,12 +224,12 @@ class RPMD(initialize_sampling):
         Nf = 3 * self.n_atom
         self.K_simulation = Nf/2 * units.kB * self.T_simulation # Ek = 1/2 m v^2 = 3/2 kB T for each particle
 
-        try:
+        if os.path.isfile(self.beads_file_name):
             self.current_beads = read_xyz_traj(self.beads_file_name)
             log_morest.write('Read beads from file: '+self.beads_file_name+'\n\n')
             if len(self.current_beads) != self.n_beads:
                 raise Exception('The number of structures in beads file does not fit the number of beads given by the parameter file. Please check.')
-        except:
+        else:
             self.initialize_beads()
             log_morest.write('Initialize beads and write to file: '+self.beads_file_name+'\n\n')
         write_xyz_file(self.beads_file_name, self.current_beads)
