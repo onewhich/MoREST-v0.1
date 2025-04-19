@@ -226,6 +226,7 @@ class RPMD(initialize_sampling):
 
         if os.path.isfile(self.beads_file_name):
             self.current_beads = read_xyz_traj(self.beads_file_name)
+            log_morest.write('\nRead beads from file: '+self.beads_file_name+'\n\n')
             if len(self.current_beads) != self.n_beads:
                 raise Exception('The number of structures in beads file does not fit the number of beads given by the parameter file. Please check.')
         else:
