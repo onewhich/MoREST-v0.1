@@ -231,6 +231,7 @@ class RPMD(initialize_sampling):
                 raise Exception('The number of structures in beads file does not fit the number of beads given by the parameter file. Please check.')
         else:
             self.initialize_beads()
+            log_morest.write('\nInitialize beads and write to file: '+self.beads_file_name+'\n\n')
         write_xyz_file(self.beads_file_name, self.current_beads)
 
         if self.current_step == 0:
