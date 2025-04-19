@@ -160,7 +160,7 @@ class RPMD_integration(MD_integration):
         for i in range(self.n_beads):
             current_beads[i].set_momenta(next_beads_momenta[i])
 
-        return beads_potential_energy, next_beads_forces
+        return beads_potential_energy, next_beads_forces, next_beads_positions, next_beads_momenta
 
 class RPMD_normal_mode_integration:
     '''

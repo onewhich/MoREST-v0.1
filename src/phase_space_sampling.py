@@ -295,16 +295,15 @@ class RPMD(initialize_sampling):
             tmp_system.set_positions(tmp_pos)
             self.current_beads.append(tmp_system)
 
-    def RPMD_update_step(self, next_beads_momenta, next_beads_positions):
+    def RPMD_update_step(self, current_beads_potential_energy, current_beads_forces, next_beads_momenta, next_beads_positions):
         self.update_beads_positions(next_beads_positions)
         self.current_beads_positions = next_beads_positions
         self.update_beads_momenta(next_beads_momenta)
         self.current_beads_momenta = next_beads_momenta
-        self.current_beads_potential_energy, self.current_beads_forces = self.get_beads_potential_forces(self.current_beads)
         write_xyz_file(self.beads_file_name, self.current_beads)
         self.current_step += 1
         self.update_centroid_positions_momenta(self.current_beads)
-        self.update_centroid_potential_energy_forces(self.current_beads_potential_energy, self.current_beads_forces)
+        self.update_centroid_potential_energy_forces(current_beads_potential_energy, current_beads_forces)
             
         try:
             self.ml_calculator.get_current_step(self.current_step)

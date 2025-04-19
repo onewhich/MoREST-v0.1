@@ -41,13 +41,10 @@ class RP_NVE(RPMD):
         if type(time_step) == type(None):
             time_step = self.time_step
 
-        self.current_beads_potential_energy, self.current_beads_forces = \
+        self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta = \
             self.integration.RP_velocity_Verlet(time_step, self.current_beads, self.current_beads_forces, self.masses)
         
-        write_xyz_file(self.beads_file_name, self.current_beads)
-        self.current_step += 1
-        self.update_centroid_positions_momenta(self.current_beads)
-        self.update_centroid_potential_energy_forces(self.current_beads_potential_energy, self.current_beads_forces)
+        self.RPMD_update_step(self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta)
 
         if self.RPMD_clean_rotation:
             self.clean_rotation_centroid()
@@ -55,11 +52,6 @@ class RP_NVE(RPMD):
             self.clean_translation_centroid()
         
         write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
-        
-        try:
-            self.ml_calculator.get_current_step(self.current_step)
-        except:
-            pass
 
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             for i in range(self.n_beads):
