@@ -333,16 +333,26 @@ class RP_NVT_SVR(RPMD):
         if self.RPMD_clean_translation:
             self.clean_translation_centroid()
 
-        # only rescale the centroids 
-        old_velocities = self.current_system.get_velocities()
-        new_velocities, self.d_Ee, alpha = stochastic_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.K_simulation, \
-                                                                  3*self.n_atom, self.sampling_parameters['nvt_svr_tau'], old_velocities)
-        self.current_system.set_velocities(new_velocities)
-        d_velocities = new_velocities - old_velocities
-        for i in range(self.n_beads):
-            tmp_velocites = self.current_beads[i].get_velocities()
-            self.current_beads[i].set_velocities(tmp_velocites + d_velocities)
 
+        ## only rescale the centroids 
+        #old_velocities = self.current_system.get_velocities()
+        #new_velocities, self.d_Ee, alpha = stochastic_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.K_simulation, \
+        #                                                          3*self.n_atom, self.sampling_parameters['nvt_svr_tau'], old_velocities)
+        #self.current_system.set_velocities(new_velocities)
+        #d_velocities = new_velocities - old_velocities
+        #for i in range(self.n_beads):
+        #    tmp_velocites = self.current_beads[i].get_velocities()
+        #    self.current_beads[i].set_velocities(tmp_velocites + d_velocities)
+
+        tmp_d_Ee_list = []
+        for i in range(self.n_beads):
+            old_velocities = self.current_beads[i].get_velocities()
+            new_velocities, tmp_d_Ee, alpha = stochastic_velocity_rescaling(self.time_step, self.current_beads[i].get_kinetic_energy(), self.K_simulation, \
+                                                                    3*self.n_atom, self.sampling_parameters['nvt_svr_tau'], old_velocities)
+            self.current_beads[i].set_velocities(new_velocities)
+            tmp_d_Ee_list.append(tmp_d_Ee)
+        self.d_Ee = np.average(tmp_d_Ee_list)
+            
         write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
 
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
