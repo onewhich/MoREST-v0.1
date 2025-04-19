@@ -235,7 +235,7 @@ class RPMD(initialize_sampling):
         write_xyz_file(self.beads_file_name, self.current_beads)
 
         if self.current_step == 0:
-            if self.sampling_parameters['sampling_pre_thermalized']:
+            if not self.sampling_parameters['sampling_pre_thermalized']:
                 if 'sampling_initial_E' in self.sampling_parameters:
                     T_thermalized = 2/3 * self.sampling_parameters['sampling_initial_E']/units.kB /self.n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
                     for i in range(self.n_beads):
