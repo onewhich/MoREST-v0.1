@@ -46,8 +46,10 @@ class initialize_modules:
                     for md_file in glob('./MoREST_MD*'):
                         os.remove(md_file)
                 elif self.sampling_parameters['sampling_method'].upper() in ['RPMD']:
-                    tmp_list = ['./MoREST_RPMD.log', './MoREST_RPMD_traj.xyz', './MoREST_RPMD_beads_traj_*']
-                    for rpmd_file in tmp_list:
+                    tmp_file_list = ['./MoREST_RPMD.log', './MoREST_RPMD_traj.xyz'] 
+                    for tmp_file in glob('./MoREST_RPMD_beads_traj_*'):
+                        tmp_file_list.append(tmp_file)
+                    for rpmd_file in tmp_file_list:
                         os.remove(rpmd_file)
             except:
                 pass
