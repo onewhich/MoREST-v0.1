@@ -51,12 +51,17 @@ class RP_NVE(RPMD):
         self.update_centroid_positions_momenta(self.current_beads)
         self.update_centroid_potential_energy_forces(self.current_beads_potential_energy, self.current_beads_forces)
 
-        if self.RPMD_clean_translation:
-            self.stationary_centroid()
         if self.RPMD_clean_rotation:
-            self.zero_rotation_centroid()
+            self.clean_rotation_centroid()
+        if self.RPMD_clean_translation:
+            self.clean_translation_centroid()
         
         write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
+        
+        try:
+            self.ml_calculator.get_current_step(self.current_step)
+        except:
+            pass
 
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             for i in range(self.n_beads):
@@ -124,10 +129,10 @@ class RP_NVK_VR(RPMD):
         self.update_centroid_positions_momenta(self.current_beads)
         self.update_centroid_potential_energy_forces(self.current_beads_potential_energy, self.current_beads_forces)
 
-        if self.RPMD_clean_translation:
-            self.stationary_centroid()
         if self.RPMD_clean_rotation:
-            self.zero_rotation_centroid()
+            self.clean_rotation_centroid()
+        if self.RPMD_clean_translation:
+            self.clean_translation_centroid()
 
         # only rescale the centroids velocities
         old_velocities = self.current_system.get_velocities()
@@ -140,6 +145,11 @@ class RP_NVK_VR(RPMD):
             self.current_beads[i].set_velocities(tmp_velocites + d_velocities)
         
         write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
+        
+        try:
+            self.ml_calculator.get_current_step(self.current_step)
+        except:
+            pass
 
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             for i in range(self.n_beads):
@@ -207,10 +217,10 @@ class RP_NVT_Berendsen(RPMD):
         self.update_centroid_positions_momenta(self.current_beads)
         self.update_centroid_potential_energy_forces(self.current_beads_potential_energy, self.current_beads_forces)
 
-        if self.RPMD_clean_translation:
-            self.stationary_centroid()
         if self.RPMD_clean_rotation:
-            self.zero_rotation_centroid()
+            self.clean_rotation_centroid()
+        if self.RPMD_clean_translation:
+            self.clean_translation_centroid()
 
         # only rescale the centroids velocities
         old_velocities = self.current_system.get_velocities()
@@ -223,6 +233,11 @@ class RP_NVT_Berendsen(RPMD):
             self.current_beads[i].set_velocities(tmp_velocites + d_velocities)
         
         write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
+        
+        try:
+            self.ml_calculator.get_current_step(self.current_step)
+        except:
+            pass
 
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             for i in range(self.n_beads):
@@ -280,10 +295,10 @@ class RP_NVT_Langevin(RPMD):
         self.update_centroid_positions_momenta(self.current_beads)
         self.update_centroid_potential_energy_forces(self.current_beads_potential_energy, self.current_beads_forces)
 
-        if self.RPMD_clean_translation:
-            self.stationary_centroid()
         if self.RPMD_clean_rotation:
-            self.zero_rotation_centroid()
+            self.clean_rotation_centroid()
+        if self.RPMD_clean_translation:
+            self.clean_translation_centroid()
 
         # only rescale the centroids velocities
         old_velocities = self.current_system.get_velocities()
@@ -296,6 +311,11 @@ class RP_NVT_Langevin(RPMD):
             self.current_beads[i].set_velocities(tmp_velocites + d_velocities)
 
         write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
+        
+        try:
+            self.ml_calculator.get_current_step(self.current_step)
+        except:
+            pass
 
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             for i in range(self.n_beads):
@@ -353,10 +373,10 @@ class RP_NVT_SVR(RPMD):
         self.update_centroid_positions_momenta(self.current_beads)
         self.update_centroid_potential_energy_forces(self.current_beads_potential_energy, self.current_beads_forces)
 
-        if self.RPMD_clean_translation:
-            self.stationary_centroid()
         if self.RPMD_clean_rotation:
-            self.zero_rotation_centroid()
+            self.clean_rotation_centroid()
+        if self.RPMD_clean_translation:
+            self.clean_translation_centroid()
 
         # only rescale the centroids 
         old_velocities = self.current_system.get_velocities()
@@ -369,6 +389,11 @@ class RP_NVT_SVR(RPMD):
             self.current_beads[i].set_velocities(tmp_velocites + d_velocities)
 
         write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
+        
+        try:
+            self.ml_calculator.get_current_step(self.current_step)
+        except:
+            pass
 
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             for i in range(self.n_beads):

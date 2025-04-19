@@ -357,7 +357,7 @@ class RPMD(initialize_sampling):
         self.current_system.calc.results['forces'] = np.average(beads_forces, axis=0)
 
     # only remove the centroid translational motion
-    def stationary_centroid(self):
+    def clean_translation_centroid(self):
         centroid_velocity = self.current_system.get_velocities()
         clean_translation(self.current_system)
         new_velocity = self.current_system.get_velocities()
@@ -367,7 +367,7 @@ class RPMD(initialize_sampling):
             i_bead.set_velocities(bead_velocity + d_velocity)
 
     # only remove the centroid rotational motion
-    def zero_rotation_centroid(self):
+    def clean_rotation_centroid(self):
         centroid_velocity = self.current_system.get_velocities()
         clean_rotation(self.current_system)
         new_velocity = self.current_system.get_velocities()
