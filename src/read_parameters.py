@@ -276,13 +276,13 @@ class read_parameters:
                     ########################## Molecular dynamics #########################
                     if self.sampling_parameters['sampling_method'].upper() in ['MD']:
                         self.read_MD_parameters(i_parameter)
+                    ########################## Ring Polymer MD ############################
+                    elif self.sampling_parameters['sampling_method'].upper() in ['RPMD']:
+                        self.read_RPMD_parameters(i_parameter)
                     if 'sampling_ensemble' in self.sampling_parameters:
                         if self.sampling_parameters['sampling_ensemble'].upper() in ['NPT_Berendsen'.upper(), 'NPT_Langevin'.upper(), \
                                                                                      'NPH_SVR', 'NPT_SVR']:
                             self.read_barostat_parameters(i_parameter)
-                    ########################## Ring Polymer MD ############################
-                    if self.sampling_parameters['sampling_method'].upper() in ['RPMD']:
-                        self.read_RPMD_parameters(i_parameter)
                 
             ########################## Trajectory scattering ######################
             if self.morest_parameters['trajectory_scattering']:
@@ -415,6 +415,38 @@ class read_parameters:
             else:
                 raise Exception('It is not clear whether the translation will be removed.')
 
+    def read_RPMD_parameters(self, i_parameter):            
+        if i_parameter.split()[0].upper() == 'RPMD_number_of_beads'.upper():
+            self.RPMD_parameters['rpmd_number_of_beads'] = int(i_parameter.split()[1])
+            
+        elif i_parameter.split()[0].upper() == 'RPMD_beads_file'.upper():
+            self.RPMD_parameters['rpmd_beads_file'] = i_parameter.split()[1]
+
+        elif i_parameter.split()[0].upper() == 'RPMD_time_step'.upper():
+            self.RPMD_parameters['rpmd_time_step'] = float(i_parameter.split()[1])
+        
+        elif i_parameter.split()[0].upper() == 'RPMD_simulation_time'.upper():
+            self.RPMD_parameters['rpmd_simulation_time'] = float(i_parameter.split()[1])
+        
+        elif i_parameter.split()[0].upper() == 'RPMD_temperature'.upper():
+            self.RPMD_parameters['rpmd_temperature'] = float(i_parameter.split()[1])
+        
+        elif i_parameter.split()[0].upper() == 'RPMD_clean_rotation'.upper():
+            if i_parameter.split()[1].upper() == 'True'.upper():
+                self.RPMD_parameters['rpmd_clean_rotation'] = True
+            elif i_parameter.split()[1].upper() == 'False'.upper():
+                self.RPMD_parameters['rpmd_clean_rotation'] = False
+            else:
+                raise Exception('It is not clear whether the rotation will be removed.')
+                
+        elif i_parameter.split()[0].upper() == 'RPMD_clean_translation'.upper():
+            if i_parameter.split()[1].upper() == 'True'.upper():
+                self.RPMD_parameters['rpmd_clean_translation'] = True
+            elif i_parameter.split()[1].upper() == 'False'.upper():
+                self.RPMD_parameters['rpmd_clean_translation'] = False
+            else:
+                raise Exception('It is not clear whether the translation will be removed.')
+
     def read_barostat_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'Barostat_number'.upper():
             self.barostat_parameters['barostat_number'] = int(i_parameter.split()[1])
@@ -488,38 +520,6 @@ class read_parameters:
             tmp_space_parameter['barostat_plane_normal_vector'] = tmp_normal_vector / np.linalg.norm(tmp_normal_vector)
             if 'barostat_plane_point' in tmp_space_parameter:
                 self.barostat_parameters['barostat_space_parameters'].append(tmp_space_parameter)
-
-    def read_RPMD_parameters(self, i_parameter):            
-        if i_parameter.split()[0].upper() == 'RPMD_number_of_beads'.upper():
-            self.RPMD_parameters['rpmd_number_of_beads'] = int(i_parameter.split()[1])
-            
-        elif i_parameter.split()[0].upper() == 'RPMD_beads_file'.upper():
-            self.RPMD_parameters['rpmd_beads_file'] = i_parameter.split()[1]
-
-        elif i_parameter.split()[0].upper() == 'RPMD_time_step'.upper():
-            self.RPMD_parameters['rpmd_time_step'] = float(i_parameter.split()[1])
-        
-        elif i_parameter.split()[0].upper() == 'RPMD_simulation_time'.upper():
-            self.RPMD_parameters['rpmd_simulation_time'] = float(i_parameter.split()[1])
-        
-        elif i_parameter.split()[0].upper() == 'RPMD_temperature'.upper():
-            self.RPMD_parameters['rpmd_temperature'] = float(i_parameter.split()[1])
-        
-        elif i_parameter.split()[0].upper() == 'RPMD_clean_rotation'.upper():
-            if i_parameter.split()[1].upper() == 'True'.upper():
-                self.RPMD_parameters['rpmd_clean_rotation'] = True
-            elif i_parameter.split()[1].upper() == 'False'.upper():
-                self.RPMD_parameters['rpmd_clean_rotation'] = False
-            else:
-                raise Exception('It is not clear whether the rotation will be removed.')
-                
-        elif i_parameter.split()[0].upper() == 'RPMD_clean_translation'.upper():
-            if i_parameter.split()[1].upper() == 'True'.upper():
-                self.RPMD_parameters['rpmd_clean_translation'] = True
-            elif i_parameter.split()[1].upper() == 'False'.upper():
-                self.RPMD_parameters['rpmd_clean_translation'] = False
-            else:
-                raise Exception('It is not clear whether the translation will be removed.')
 
     def read_scattering_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'Scattering_initialization'.upper():
@@ -1035,12 +1035,6 @@ class read_parameters:
             log_morest.write('\n')
         return self.MD_parameters
     
-    def get_barostat_parameters(self):
-        self.barostat_parameters['barostat_pressure'] = \
-            np.array(self.barostat_parameters['barostat_pressure'][:self.barostat_parameters['barostat_number']]) * units.bar
-        for key in ['barostat_space_parameters', 'barostat_space_shape', 'barostat_space_type', 'barostat_action_atoms']:
-            self.barostat_parameters[key] = self.barostat_parameters[key][:self.barostat_parameters['barostat_number']]
-        
     def get_RPMD_parameters(self, log_morest=None):
         self.RPMD_parameters['rpmd_time_step'] *= units.fs
         self.RPMD_parameters['rpmd_simulation_time'] *= units.fs
@@ -1077,6 +1071,12 @@ class read_parameters:
             log_morest.write('\n')
         return self.RPMD_parameters
 
+    def get_barostat_parameters(self):
+        self.barostat_parameters['barostat_pressure'] = \
+            np.array(self.barostat_parameters['barostat_pressure'][:self.barostat_parameters['barostat_number']]) * units.bar
+        for key in ['barostat_space_parameters', 'barostat_space_shape', 'barostat_space_type', 'barostat_action_atoms']:
+            self.barostat_parameters[key] = self.barostat_parameters[key][:self.barostat_parameters['barostat_number']]
+        
     def get_scattering_parameters(self, log_morest=None):
         if self.morest_parameters['morest_initialization'] == True:
            self.scattering_parameters['scattering_initialization'] = True
