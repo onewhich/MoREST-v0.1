@@ -33,6 +33,21 @@ def get_kinetic_temperatures(system):
     T_vibration = 2/3 * E_vibration / system.get_global_number_of_atoms() / units.kB   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
 
     return T_translation, T_rotation, T_vibration
+
+def get_kinetic_energies(system):
+    '''
+    Ek = E_translation + E_rotation + E_vibration
+    '''
+    masses = system.get_masses()
+    translation_velocities, rotation_velocities, vibration_velocities = get_kinetic_velocities(system)
+
+    E_translation = np.sum(0.5 * masses * np.linalg.norm(translation_velocities)**2)
+
+    E_rotation = np.sum(0.5 * masses * np.linalg.norm(rotation_velocities, axis=1)**2)
+
+    E_vibration = np.sum(0.5 * masses * np.linalg.norm(vibration_velocities, axis=1)**2)
+
+    return E_translation, E_rotation, E_vibration
     
 
 
