@@ -96,9 +96,9 @@ def get_rotation_velocities(system):
     # r_vector is not the rotation radius.
     # rotate_radius is the distance fromt the rotation axis to the atom.
     # t = rotate_vector .dot. r_vector / ||rotate_vector||^2
-    # rotate_radius = || r_vector - rotate_vector * t ||
+    # rotate_radius = r_vector - rotate_vector * t
     t_vector = np.array([np.dot(rotate_vector,r_vector[i]) for i in range(n_atom)]) / np.linalg.norm(rotate_vector)**2
-    rotate_radius = np.linalg.norm(r_vector - rotate_vector * t_vector, axis=1)
+    rotate_radius = r_vector - np.array([rotate_vector * t_vector[i] for i in range(n_atom)])
     v_tang = np.cross(rotate_vector, rotate_radius)
     return v_tang
 
@@ -129,9 +129,9 @@ def clean_rotation(system, preserve_temperature=False):
     # r_vector is not the rotation radius.
     # rotate_radius is the distance fromt the rotation axis to the atom.
     # t = rotate_vector .dot. r_vector / ||rotate_vector||^2
-    # rotate_radius = || r_vector - rotate_vector * t ||
+    # rotate_radius = r_vector - rotate_vector * t
     t_vector = np.array([np.dot(rotate_vector,r_vector[i]) for i in range(n_atom)]) / np.linalg.norm(rotate_vector)**2
-    rotate_radius = np.linalg.norm(r_vector - rotate_vector * t_vector, axis=1)
+    rotate_radius = r_vector - np.array([rotate_vector * t_vector[i] for i in range(n_atom)])
     v_tang = np.cross(rotate_vector, rotate_radius)
     new_velocities = v_vector - v_tang
     if preserve_temperature:
@@ -167,9 +167,9 @@ def clean_rotation_vcm(velocities, coordinates, masses):
     # r_vector is not the rotation radius.
     # rotate_radius is the distance fromt the rotation axis to the atom.
     # t = rotate_vector .dot. r_vector / ||rotate_vector||^2
-    # rotate_radius = || r_vector - rotate_vector * t ||
+    # rotate_radius = r_vector - rotate_vector * t
     t_vector = np.array([np.dot(rotate_vector,r_vector[i]) for i in range(n_atom)]) / np.linalg.norm(rotate_vector)**2
-    rotate_radius = np.linalg.norm(r_vector - rotate_vector * t_vector, axis=1)
+    rotate_radius = r_vector - np.array([rotate_vector * t_vector[i] for i in range(n_atom)])
     v_tang = np.cross(rotate_vector, rotate_radius)
     return v_vector - v_tang
 
