@@ -83,59 +83,32 @@ def get_rotation_velocities(system):
     coordinates = system.get_positions()
     n_atom = system.get_global_number_of_atoms()
     center_of_mass = system.get_center_of_mass()
+    masses = system.get_masses()[:,np.newaxis]
     if n_atom == 1:
         return velocities
     r_vector = coordinates - center_of_mass
     v_vector = velocities - get_translation_velocities(system)
-    # r_cross_v : angular velocities
-    # omega = (r x v) / |r|^2
-    r_cross_v = np.cross(r_vector, v_vector)
-    r_2 = np.linalg.norm(r_vector, axis=1)**2
-    omega = np.array([r_cross_v[i]/r_2[i] for i in range(n_atom)])
-    # Rv = omega/n_atom : system total angular velocity
-    rotate_vector = np.sum(omega, axis=0)/n_atom
-    # r_vector is the distance from the center of mass to the atom.
-    # r_vector is not the rotation radius.
-    # rotate_radius is the distance fromt the rotation axis to the atom.
-    # t = rotate_vector .dot. r_vector / ||rotate_vector||^2
-    # rotate_radius = r_vector - rotate_vector * t
-    t_vector = np.array([np.dot(rotate_vector,r_vector[i]) for i in range(n_atom)]) / np.linalg.norm(rotate_vector)**2
-    rotate_radius = r_vector - np.array([rotate_vector * t_vector[i] for i in range(n_atom)])
-    v_tang = np.cross(rotate_vector, rotate_radius)
+    # angular momentum
+    L_vector = np.sum(np.cross(r_vector, masses * v_vector), axis=0)
+    # moment of inertia tensor
+    I_tensor = np.zeros((3,3))
+    for i in range(n_atom):
+        r_i = r_vector[i]
+        m_i = masses[i][0]
+        I_tensor += m_i * (np.linalg.norm(r_i)**2 * np.identity(3) - np.outer(r_i, r_i))
+    # angular velocity
+    # angular velocity is the same for all atoms
+    omega = np.linalg.solve(I_tensor, L_vector)
+    # linear velocity
+    # v = omega x r
+    v_tang = np.cross(omega, r_vector)
     return v_tang
 
 def clean_rotation(system, preserve_temperature=False):
-    '''
-    L = r x p = r x (m v) = r x (omega x (m r)) = m r^2 omega = I omega
-    L : angular momentum
-    omega: angular velocity
-    I : moment of inertia
-    '''
     temperature = system.get_temperature()
     velocities = system.get_velocities()
-    coordinates = system.get_positions()
-    n_atom = system.get_global_number_of_atoms()
-    center_of_mass = system.get_center_of_mass()
-    if n_atom == 1:
-        return velocities
-    r_vector = coordinates - center_of_mass
-    v_vector = velocities - get_translation_velocities(system)
-    # r_cross_v : angular velocities
-    # omega = (r x v) / |r|^2
-    r_cross_v = np.cross(r_vector, v_vector)
-    r_2 = np.linalg.norm(r_vector, axis=1)**2
-    omega = np.array([r_cross_v[i]/r_2[i] for i in range(n_atom)])
-    # Rv = omega/n_atom : system total angular velocity
-    rotate_vector = np.sum(omega, axis=0)/n_atom
-    # r_vector is the distance from the center of mass to the atom.
-    # r_vector is not the rotation radius.
-    # rotate_radius is the distance fromt the rotation axis to the atom.
-    # t = rotate_vector .dot. r_vector / ||rotate_vector||^2
-    # rotate_radius = r_vector - rotate_vector * t
-    t_vector = np.array([np.dot(rotate_vector,r_vector[i]) for i in range(n_atom)]) / np.linalg.norm(rotate_vector)**2
-    rotate_radius = r_vector - np.array([rotate_vector * t_vector[i] for i in range(n_atom)])
-    v_tang = np.cross(rotate_vector, rotate_radius)
-    new_velocities = v_vector - v_tang
+    v_tang = get_rotation_velocities(system)
+    new_velocities = velocities - v_tang
     if preserve_temperature:
         system.set_velocities(new_velocities)
         rescale_T_kinetic(system, temperature)
@@ -154,26 +127,23 @@ def clean_rotation_vcm(velocities, coordinates, masses):
         return velocities
     v_vector = clean_translation_vm(velocities, masses)
     masses = masses[:,np.newaxis]
-    #center_of_mass = np.sum([masses[i]*coordinates[i] for i in range(len(masses))], axis=0)/np.sum(masses)
-    #center_of_mass = np.sum(masses[:,np.newaxis]*coordinates, axis=0)/np.sum(masses)
     center_of_mass = np.sum(masses*coordinates, axis=0)/np.sum(masses)
     r_vector = coordinates - center_of_mass
-    # r_cross_v : angular velocities
-    # omega = (r x v) / |r|^2
-    r_cross_v = np.cross(r_vector, v_vector)
-    r_2 = np.linalg.norm(r_vector, axis=1)**2
-    omega = np.array([r_cross_v[i]/r_2[i] for i in range(n_atom)])
-    # Rv = omega/n_atom : system total angular velocity
-    rotate_vector = np.sum(omega, axis=0)/n_atom
-    # r_vector is the distance from the center of mass to the atom.
-    # r_vector is not the rotation radius.
-    # rotate_radius is the distance fromt the rotation axis to the atom.
-    # t = rotate_vector .dot. r_vector / ||rotate_vector||^2
-    # rotate_radius = r_vector - rotate_vector * t
-    t_vector = np.array([np.dot(rotate_vector,r_vector[i]) for i in range(n_atom)]) / np.linalg.norm(rotate_vector)**2
-    rotate_radius = r_vector - np.array([rotate_vector * t_vector[i] for i in range(n_atom)])
-    v_tang = np.cross(rotate_vector, rotate_radius)
-    return v_vector - v_tang
+    # angular momentum
+    L_vector = np.sum(np.cross(r_vector, masses * v_vector), axis=0)
+    # moment of inertia tensor
+    I_tensor = np.zeros((3,3))
+    for i in range(n_atom):
+        r_i = r_vector[i]
+        m_i = masses[i][0]
+        I_tensor += m_i * (np.linalg.norm(r_i)**2 * np.identity(3) - np.outer(r_i, r_i))
+    # angular velocity
+    # angular velocity is the same for all atoms
+    omega = np.linalg.solve(I_tensor, L_vector)
+    # linear velocity
+    # v = omega x r
+    v_tang = np.cross(omega, r_vector)
+    return velocities - v_tang
 
     
 def rescale_T_kinetic(system, Tf):
