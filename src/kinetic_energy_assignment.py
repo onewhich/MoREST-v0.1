@@ -97,7 +97,7 @@ def get_rotation_velocities(system):
     # rotate_radius is the distance fromt the rotation axis to the atom.
     # t = rotate_vector .dot. r_vector / ||rotate_vector||^2
     # rotate_radius = || r_vector - rotate_vector * t ||
-    t_vector = np.array([np.dot(rotate_vector[i],r_vector[i]) for i in range(n_atom)]) / np.linalg.norm(rotate_vector, axis=1)**2
+    t_vector = np.array([np.dot(rotate_vector,r_vector[i]) for i in range(n_atom)]) / np.linalg.norm(rotate_vector, axis=1)**2
     rotate_radius = np.linalg.norm(r_vector - rotate_vector * t_vector, axis=1)
     v_tang = np.cross(rotate_vector, rotate_radius)
     return v_tang
@@ -130,7 +130,7 @@ def clean_rotation(system, preserve_temperature=False):
     # rotate_radius is the distance fromt the rotation axis to the atom.
     # t = rotate_vector .dot. r_vector / ||rotate_vector||^2
     # rotate_radius = || r_vector - rotate_vector * t ||
-    t_vector = np.array([np.dot(rotate_vector[i],r_vector[i]) for i in range(n_atom)]) / np.linalg.norm(rotate_vector, axis=1)**2
+    t_vector = np.array([np.dot(rotate_vector,r_vector[i]) for i in range(n_atom)]) / np.linalg.norm(rotate_vector, axis=1)**2
     rotate_radius = np.linalg.norm(r_vector - rotate_vector * t_vector, axis=1)
     v_tang = np.cross(rotate_vector, rotate_radius)
     new_velocities = v_vector - v_tang
@@ -168,7 +168,7 @@ def clean_rotation_vcm(velocities, coordinates, masses):
     # rotate_radius is the distance fromt the rotation axis to the atom.
     # t = rotate_vector .dot. r_vector / ||rotate_vector||^2
     # rotate_radius = || r_vector - rotate_vector * t ||
-    t_vector = np.array([np.dot(rotate_vector[i],r_vector[i]) for i in range(n_atom)]) / np.linalg.norm(rotate_vector, axis=1)**2
+    t_vector = np.array([np.dot(rotate_vector,r_vector[i]) for i in range(n_atom)]) / np.linalg.norm(rotate_vector, axis=1)**2
     rotate_radius = np.linalg.norm(r_vector - rotate_vector * t_vector, axis=1)
     v_tang = np.cross(rotate_vector, rotate_radius)
     return v_vector - v_tang
