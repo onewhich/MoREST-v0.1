@@ -52,13 +52,14 @@ def get_kinetic_energies(system):
 
 
 def get_translation_velocities(system):
+    masses = system.get_masses()[:,np.newaxis]
     velocities = system.get_velocities()
-    return np.sum(velocities, axis=0)/len(velocities)
+    return np.sum(velocities*masses, axis=0)/np.sum(masses)
 
 def clean_translation(system, preserve_temperature=False):
     temperature = system.get_temperature()
     velocities = system.get_velocities()
-    total_velocity = np.sum(velocities, axis=0)/len(velocities)
+    total_velocity = get_translation_velocities(system)
     new_velocities = velocities - total_velocity
     if preserve_temperature:
         system.set_velocities(new_velocities)
@@ -66,8 +67,9 @@ def clean_translation(system, preserve_temperature=False):
     else:
         system.set_velocities(new_velocities)
 
-def clean_translation_v(velocities):
-    net_velocity = np.sum(velocities, axis=0)/len(velocities)
+def clean_translation_vm(velocities, masses):
+    masses = masses[:,np.newaxis]
+    net_velocity = np.sum(velocities*masses, axis=0)/np.sum(masses)
     return velocities - net_velocity
 
 def get_rotation_velocities(system):
