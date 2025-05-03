@@ -59,8 +59,8 @@ def get_translation_velocities(system):
 def clean_translation(system, preserve_temperature=False):
     temperature = system.get_temperature()
     velocities = system.get_velocities()
-    total_velocity = get_translation_velocities(system)
-    new_velocities = velocities - total_velocity
+    center_of_mass_velocity = get_translation_velocities(system)
+    new_velocities = velocities - center_of_mass_velocity
     if preserve_temperature:
         system.set_velocities(new_velocities)
         rescale_T_kinetic(system, temperature)
@@ -69,8 +69,8 @@ def clean_translation(system, preserve_temperature=False):
 
 def clean_translation_vm(velocities, masses):
     masses = masses[:,np.newaxis]
-    net_velocity = np.sum(velocities*masses, axis=0)/np.sum(masses)
-    return velocities - net_velocity
+    center_of_mass_velocity = np.sum(velocities*masses, axis=0)/np.sum(masses)
+    return velocities - center_of_mass_velocity
 
 def get_rotation_velocities(system):
     '''
@@ -85,8 +85,8 @@ def get_rotation_velocities(system):
     center_of_mass = system.get_center_of_mass()
     if n_atom == 1:
         return velocities
-    v_vector = velocities
     r_vector = coordinates - center_of_mass
+    v_vector = velocities - get_translation_velocities(system)
     # r_cross_v : angular velocities
     # omega = (r x v) / |r|^2
     r_cross_v = np.cross(r_vector, v_vector)
@@ -118,8 +118,8 @@ def clean_rotation(system, preserve_temperature=False):
     center_of_mass = system.get_center_of_mass()
     if n_atom == 1:
         return velocities
-    v_vector = velocities
     r_vector = coordinates - center_of_mass
+    v_vector = velocities - get_translation_velocities(system)
     # r_cross_v : angular velocities
     # omega = (r x v) / |r|^2
     r_cross_v = np.cross(r_vector, v_vector)
@@ -152,8 +152,8 @@ def clean_rotation_vcm(velocities, coordinates, masses):
     n_atom = len(velocities)
     if n_atom == 1:
         return velocities
+    v_vector = clean_translation_vm(velocities, masses)
     masses = masses[:,np.newaxis]
-    v_vector = velocities
     #center_of_mass = np.sum([masses[i]*coordinates[i] for i in range(len(masses))], axis=0)/np.sum(masses)
     #center_of_mass = np.sum(masses[:,np.newaxis]*coordinates, axis=0)/np.sum(masses)
     center_of_mass = np.sum(masses*coordinates, axis=0)/np.sum(masses)
