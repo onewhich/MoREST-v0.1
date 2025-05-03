@@ -87,7 +87,7 @@ def get_rotation_velocities(system):
     r_vector = coordinates - center_of_mass
     # r_cross_v : angular velocities
     # omega = (r x v) / |r|^2
-    r_cross_v = np.cross(r_vector, v_vector)
+    r_cross_v = np.array([np.cross(r_vector[i], v_vector[i]) for i in range(n_atom)])
     r_2 = np.linalg.norm(r_vector, axis=1)**2
     omega = np.array([r_cross_v[i]/r_2[i] for i in range(n_atom)])
     # Rv = omega/n_atom : system total angular velocity
@@ -99,7 +99,7 @@ def get_rotation_velocities(system):
     # rotate_radius = r_vector - rotate_vector * t
     t_vector = np.array([np.dot(rotate_vector,r_vector[i]) for i in range(n_atom)]) / np.linalg.norm(rotate_vector)**2
     rotate_radius = r_vector - np.array([rotate_vector * t_vector[i] for i in range(n_atom)])
-    v_tang = np.cross(rotate_vector, rotate_radius)
+    v_tang = np.array([np.cross(rotate_vector, rotate_radius[i]) for i in range(n_atom)])
     return v_tang
 
 def clean_rotation(system, preserve_temperature=False):
@@ -120,7 +120,7 @@ def clean_rotation(system, preserve_temperature=False):
     r_vector = coordinates - center_of_mass
     # r_cross_v : angular velocities
     # omega = (r x v) / |r|^2
-    r_cross_v = np.cross(r_vector, v_vector)
+    r_cross_v = np.array([np.cross(r_vector[i], v_vector[i]) for i in range(n_atom)])
     r_2 = np.linalg.norm(r_vector, axis=1)**2
     omega = np.array([r_cross_v[i]/r_2[i] for i in range(n_atom)])
     # Rv = omega/n_atom : system total angular velocity
@@ -132,7 +132,7 @@ def clean_rotation(system, preserve_temperature=False):
     # rotate_radius = r_vector - rotate_vector * t
     t_vector = np.array([np.dot(rotate_vector,r_vector[i]) for i in range(n_atom)]) / np.linalg.norm(rotate_vector)**2
     rotate_radius = r_vector - np.array([rotate_vector * t_vector[i] for i in range(n_atom)])
-    v_tang = np.cross(rotate_vector, rotate_radius)
+    v_tang = np.array([np.cross(rotate_vector, rotate_radius[i]) for i in range(n_atom)])
     new_velocities = v_vector - v_tang
     if preserve_temperature:
         system.set_velocities(new_velocities)
@@ -158,7 +158,7 @@ def clean_rotation_vcm(velocities, coordinates, masses):
     r_vector = coordinates - center_of_mass
     # r_cross_v : angular velocities
     # omega = (r x v) / |r|^2
-    r_cross_v = np.cross(r_vector, v_vector)
+    r_cross_v = np.array([np.cross(r_vector[i], v_vector[i]) for i in range(n_atom)])
     r_2 = np.linalg.norm(r_vector, axis=1)**2
     omega = np.array([r_cross_v[i]/r_2[i] for i in range(n_atom)])
     # Rv = omega/n_atom : system total angular velocity
@@ -170,7 +170,7 @@ def clean_rotation_vcm(velocities, coordinates, masses):
     # rotate_radius = r_vector - rotate_vector * t
     t_vector = np.array([np.dot(rotate_vector,r_vector[i]) for i in range(n_atom)]) / np.linalg.norm(rotate_vector)**2
     rotate_radius = r_vector - np.array([rotate_vector * t_vector[i] for i in range(n_atom)])
-    v_tang = np.cross(rotate_vector, rotate_radius)
+    v_tang = np.array([np.cross(rotate_vector, rotate_radius[i]) for i in range(n_atom)])
     return v_vector - v_tang
 
     
