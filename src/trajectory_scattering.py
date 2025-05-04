@@ -7,6 +7,7 @@ from initialize_calculator import initialize_calculator
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution
 # Stationary and ZeroRotation from ase will not change the total kinetic energy, the vibrational energy will arise after these two processes.
 from kinetic_energy_assignment import clean_translation, clean_rotation
+from numerical_integraion import MD_integration
 from ase import units
 
 class initialize_scattering(initialize_calculator):
@@ -44,7 +45,7 @@ class initialize_scattering(initialize_calculator):
         else:
             self.scattering_log = open('MoREST_scattering.log', 'a', buffering=1)
 
-            
+        self.integration = MD_integration(self.many_body_potential)
         ### kinetic energy at simulation temperature
         #Nf = 3 * self.n_atom
         #self.K_simulation = Nf/2 * units.kB * self.scattering_parameters['scattering_T_target'] # Ek = 1/2 m v^2 = 3/2 kB T for each particle

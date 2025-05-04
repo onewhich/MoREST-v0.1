@@ -34,6 +34,22 @@ class MD_integration:
 
         return next_potential_energy, next_forces
     
+    def Suzuki_Yoshida_4th(self, time_step, current_system, current_forces, masses):
+        '''
+        The 4th-order Suzuki–Yoshida symplectic integrator.
+        Composes three 2nd-order velocity Verlet steps to achieve 4th-order accuracy.
+        '''
+        # Composition coefficient gamma = 1 / (2 - 2^(1/3))
+        gamma = 1.3512071919596578
+        # First Verlet step: step size gamma * time_step
+        current_potential_energy, current_forces = self.velocity_Verlet(gamma * time_step, current_system, current_forces, masses)
+        # Second Verlet step: step size (1 - 2gamma) * time_step
+        current_potential_energy, current_forces = self.velocity_Verlet((1 - 2 * gamma) * time_step, current_system, current_forces, masses)
+        # Third Verlet step: step size gamma * time_step
+        next_potential_energy, next_forces = self.velocity_Verlet(gamma * time_step, current_system, current_forces, masses)
+        
+        return next_potential_energy, next_forces
+    
     def Runge_Kutta_4th(self, time_step, current_system, current_forces, masses):
         '''
         This version comes from classic Runge-Kutta methods:
@@ -76,21 +92,6 @@ class MD_integration:
         ### F(t+dt)
         next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(current_system)
 
-        return next_potential_energy, next_forces
-    
-    def Suzuki_Yoshida_4th(self, time_step, current_system, current_forces, masses):
-        '''
-        The 4th-order Suzuki–Yoshida symplectic integrator.
-        Composes three 2nd-order velocity Verlet steps to achieve 4th-order accuracy.
-        '''
-        # Composition coefficient gamma = 1 / (2 - 2^(1/3))
-        gamma = 1.3512071919596578
-        # First Verlet step: step size gamma * time_step
-        current_potential_energy, current_forces = self.velocity_Verlet(gamma * time_step, current_system, current_forces, masses)
-        # Second Verlet step: step size (1 - 2gamma) * time_step
-        current_potential_energy, current_forces = self.velocity_Verlet((1 - 2 * gamma) * time_step, current_system, current_forces, masses)
-        # Third Verlet step: step size gamma * time_step
-        next_potential_energy, next_forces = self.velocity_Verlet(gamma * time_step, current_system, current_forces, masses)
         return next_potential_energy, next_forces
 
     @staticmethod

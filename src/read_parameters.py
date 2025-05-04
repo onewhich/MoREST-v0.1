@@ -239,7 +239,7 @@ class read_parameters:
                 elif i_parameter.split()[1].upper() == 'False'.upper():
                     self.morest_parameters['molecule_rovibrating'] = False
                 else:
-                    raise Exception('It is not clear whether the  method will be used.')
+                    raise Exception('It is not clear whether the rovibrating method will be used.')
                 
             elif i_parameter.split()[0].upper() == 'Structure_searching'.upper():
                 if i_parameter.split()[1].upper() == 'True'.upper():

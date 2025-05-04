@@ -3,8 +3,8 @@ from glob import glob
 import numpy as np
 from molecular_dynamics_sampling import NVE_VV, NVK_VR, NVT_Berendsen, NVT_Langevin, NVT_SVR, NPH_SVR, NPT_Berendsen, NPT_Langevin, NPT_SVR
 from path_integral_MD_sampling import RP_NVE, RP_NVK_VR, RP_NVT_Langevin, RP_NVT_SVR
-from molecular_dynamics_scattering import scattering_velocity_Verlet, scattering_Runge_Kutta_4th
-from molecule_rovibrating import rovibrating_velocity_Verlet, rovibrating_Runge_Kutta_4th
+from molecular_dynamics_scattering import scattering_velocity_Verlet, scattering_Suzuki_Yoshida_4th, scattering_Runge_Kutta_4th
+from molecule_rovibrating import rovibrating_velocity_Verlet, rovibrating_Suzuki_Yoshida_4th, rovibrating_Runge_Kutta_4th
 from structure_searching import gradient_descent, FIRE_velocity_Verlet
 from enhanced_sampling import RE, ITS
 from wall_potential import repulsive_wall
@@ -124,6 +124,8 @@ class initialize_modules:
 
         if self.scattering_parameters['scattering_method'].upper() in ['VV']:
             self.scattering_job = scattering_velocity_Verlet(self.morest_parameters, self.scattering_parameters, calculator=self.calculator, log_morest=self.log_morest)
+        elif self.scattering_parameters['scattering_method'].upper() in ['SY4']:
+            self.scattering_job = scattering_Suzuki_Yoshida_4th(self.morest_parameters, self.scattering_parameters, calculator=self.calculator, log_morest=self.log_morest)
         elif self.scattering_parameters['scattering_method'].upper() in ['RK4']:
             self.scattering_job = scattering_Runge_Kutta_4th(self.morest_parameters, self.scattering_parameters, calculator=self.calculator, log_morest=self.log_morest)
         else:
@@ -152,6 +154,8 @@ class initialize_modules:
 
         if self.rovibrating_parameters['rovibrating_method'].upper() in ['VV']:
             self.rovibrating_job = rovibrating_velocity_Verlet(self.morest_parameters, self.rovibrating_parameters, calculator=self.calculator, log_morest=self.log_morest)
+        elif self.rovibrating_parameters['rovibrating_method'].upper() in ['SY4']:
+            self.rovibrating_job = rovibrating_Suzuki_Yoshida_4th(self.morest_parameters, self.rovibrating_parameters, calculator=self.calculator, log_morest=self.log_morest)
         elif self.rovibrating_parameters['rovibrating_method'].upper() in ['RK4']:
             self.rovibrating_job = rovibrating_Runge_Kutta_4th(self.morest_parameters, self.rovibrating_parameters, calculator=self.calculator, log_morest=self.log_morest)
         else:

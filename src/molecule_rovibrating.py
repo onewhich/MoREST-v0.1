@@ -143,6 +143,39 @@ class rovibrating_velocity_Verlet(initialize_rovibrating):
         
         return self.current_step, self.current_system
 
+class rovibrating_Suzuki_Yoshida_4th(initialize_rovibrating):
+    '''
+    This class implements Suzuki-Yoshida 4th order algorithm to do microcanonical ensemble (NVE) dynamics.
+    '''
+    
+    def __init__(self, morest_parameters, rovibrating_parameters, calculator=None, log_morest=None):
+        super(rovibrating_Suzuki_Yoshida_4th, self).__init__(morest_parameters, rovibrating_parameters, calculator, log_morest)
+        
+    def generate_new_step(self, bias_forces=None):
+        time_step = self.rovibrating_parameters['rovibrating_time_step']
+        
+        ### F(t) + bias
+        if bias_forces != None:
+            self.current_forces = self.current_forces + bias_forces
+
+        next_potential_energy, next_forces  = self.integration.Suzuki_Yoshida_4th(time_step, self.current_system, self.current_forces, self.masses)
+        
+        self.current_step += 1
+        self.current_forces = next_forces
+        self.current_potential_energy = next_potential_energy
+            
+        try:
+            self.ml_calculator.get_current_step(self.current_step)
+        except:
+            pass
+        
+        if self.current_step % self.rovibrating_parameters['rovibrating_traj_interval'] == 0:
+            #self.current_traj.append(self.current_system)
+            write_xyz_traj(self.traj_file_name, self.current_system)
+            self.write_MD_log(self.MD_log, self.current_step, self.current_system)
+        
+        return self.current_step, self.current_system
+
 class rovibrating_Runge_Kutta_4th(initialize_rovibrating):
     '''
     This class implements Runge-Kutta 4th order algorithm to do microcanonical ensemble (NVE) dynamics.
