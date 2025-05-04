@@ -1,7 +1,7 @@
 import numpy as np
 from structure_io import write_xyz_file, write_xyz_traj
 from phase_space_sampling import RPMD
-from thermostat import velocity_rescaling, Berendsen_velocity_rescaling, stochastic_velocity_rescaling
+from thermostat import velocity_rescaling, Berendsen_velocity_rescaling, Langevin_velocity_rescaling, stochastic_velocity_rescaling
 from barostat import barostat_space, Berendsen_volume_rescaling, stochastic_velocity_volume_rescaling
 
 class RP_NVE(RPMD):
@@ -267,8 +267,8 @@ class RP_NVT_Langevin(RPMD):
 
         # only rescale the centroids velocities
         old_velocities = self.current_system.get_velocities()
-        new_velocities, self.d_Ee, alpha = stochastic_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.K_simulation, \
-                                                                  1, 1/(2*self.sampling_parameters['nvt_Langevin_gamma']), old_velocities)
+        new_velocities, self.d_Ee = Langevin_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.K_simulation, \
+                                                                3*self.n_atom, self.sampling_parameters['nvt_Langevin_gamma'], old_velocities)
         self.current_system.set_velocities(new_velocities)
         d_velocities = new_velocities - old_velocities
         for i in range(self.n_beads):
@@ -347,7 +347,7 @@ class RP_NVT_SVR(RPMD):
         tmp_d_Ee_list = []
         for i in range(self.n_beads):
             old_velocities = self.current_beads[i].get_velocities()
-            new_velocities, tmp_d_Ee, alpha = stochastic_velocity_rescaling(self.time_step, self.current_beads[i].get_kinetic_energy(), self.K_simulation, \
+            new_velocities, tmp_d_Ee = stochastic_velocity_rescaling(self.time_step, self.current_beads[i].get_kinetic_energy(), self.K_simulation, \
                                                                     3*self.n_atom, self.sampling_parameters['nvt_svr_tau'], old_velocities)
             self.current_beads[i].set_velocities(new_velocities)
             tmp_d_Ee_list.append(tmp_d_Ee)

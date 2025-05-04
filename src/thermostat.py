@@ -18,18 +18,44 @@ def Berendsen_velocity_rescaling(time_step, Ek, n_atom, T_simulation, tau, veloc
 
     return new_velocities
 
+def Langevin_velocity_rescaling(time_step, Ek_t, K_simulation, Nf, gamma, velocities):
+    '''
+    This function implements Langevin thermostat (Bussi, Parrinello, CPC (2008)) to do canonical ensenmble sampling (NVT MD).
+    '''
+    
+    ### degree of freedom
+    # Nf = 1                # for Langevin thermostat at each degree of freedom
+    # Nf = 3 * self.n_atom  # for SVR thermostat at total kinetic energy
+        
+    ### Gaussian random number R(t)
+    R_n = np.random.normal(size=(Nf/3,3))
+    
+    ### c = exp(- time_step / tau)
+    c = np.exp(-2 * gamma * time_step )
+    
+    ### kinetic energy K
+    factor = K_simulation / Ek_t
+    
+    ### alpha
+    alpha2 = np.abs(c + (1-c)*(R_n**2)*factor + 2*R_n*np.sqrt(c*(1-c)*factor))
+    sign = np.sign(R_n + np.sqrt(c/(1-c)/factor))
+    alpha = sign * np.sqrt(alpha2)
+    
+    new_velocities = alpha * velocities
+
+    #d_Ee = -1*((self.K_simulation - K_t)*time_step/tau + 2*np.sqrt(K_t*self.K_simulation/Nf/tau)*R_t)
+    d_Ee = Ek_t*(1-alpha2)
+    
+    return new_velocities, d_Ee
+
 def stochastic_velocity_rescaling(time_step, Ek_t, K_simulation, Nf, tau, velocities):
     '''
     This function implements stochastic velocity rescaling algorithm (Bussi, Donadio and Parrinello, JCP (2007); Bussi, Parrinello, CPC (2008)) to do canonical ensenmble sampling (NVT MD).
     '''
     
     ### degree of freedom
-    # Nf = 1                # for Langevin thermostat
-    # Nf = 3 * self.n_atom  # for SVR thermostat
-    #if self.md_parameters['md_clean_translation']:
-    #    Nf = Nf - 3
-    #if self.md_parameters['md_clean_rotation']:
-    #Nf = Nf - 3
+    # Nf = 1                # for Langevin thermostat at each degree of freedom
+    # Nf = 3 * self.n_atom  # for SVR thermostat at total kinetic energy
         
     ### Gaussian random number R(t)
     R = np.random.normal(size=Nf)
@@ -52,4 +78,4 @@ def stochastic_velocity_rescaling(time_step, Ek_t, K_simulation, Nf, tau, veloci
     #d_Ee = -1*((self.K_simulation - K_t)*time_step/tau + 2*np.sqrt(K_t*self.K_simulation/Nf/tau)*R_t)
     d_Ee = Ek_t*(1-alpha2)
     
-    return new_velocities, d_Ee, alpha
+    return new_velocities, d_Ee

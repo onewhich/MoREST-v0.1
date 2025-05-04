@@ -5,7 +5,7 @@ import numpy as np
 from structure_io import  write_xyz_traj
 from ase import units
 from phase_space_sampling import MD
-from thermostat import velocity_rescaling, Berendsen_velocity_rescaling, stochastic_velocity_rescaling
+from thermostat import velocity_rescaling, Berendsen_velocity_rescaling, Langevin_velocity_rescaling, stochastic_velocity_rescaling
 from barostat import barostat_space, Berendsen_volume_rescaling, stochastic_velocity_volume_rescaling
 
 class NVE_VV(MD):
@@ -168,8 +168,8 @@ class NVT_Langevin(MD):
         time_step = self.update_pre_step(time_step, bias_forces, updated_current_system)
             
         next_potential_energy, next_forces = self.integration.velocity_Verlet(time_step, self.current_system, self.current_forces, self.masses)
-        new_velocities, self.d_Ee, alpha = stochastic_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.K_simulation, \
-                                                                  1, 1/(2*self.sampling_parameters['nvt_Langevin_gamma']), self.current_system.get_velocities())
+        new_velocities, self.d_Ee = Langevin_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.K_simulation, \
+                                                                3*self.n_atom, self.sampling_parameters['nvt_Langevin_gamma'], self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
             
         self.update_step(next_potential_energy, next_forces)
@@ -217,7 +217,7 @@ class NVT_SVR(MD):
         time_step = self.update_pre_step(time_step, bias_forces, updated_current_system)
             
         next_potential_energy, next_forces = self.integration.velocity_Verlet(time_step, self.current_system, self.current_forces, self.masses)
-        new_velocities, self.d_Ee, alpha = stochastic_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.K_simulation, \
+        new_velocities, self.d_Ee = stochastic_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.K_simulation, \
                                                                   3*self.n_atom, self.sampling_parameters['nvt_svr_tau'], self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
             
