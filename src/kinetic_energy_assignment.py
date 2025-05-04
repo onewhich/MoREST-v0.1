@@ -98,7 +98,7 @@ def get_rotation_velocities(system):
         I_tensor += m_i * (np.linalg.norm(r_i)**2 * np.identity(3) - np.outer(r_i, r_i))
     # angular velocity
     # angular velocity is the same for all atoms
-    if L_vector.any() < 1e-30:
+    if L_vector.any() < 1e-20:
         omega = np.zeros(3)
     else:
         omega = np.linalg.solve(I_tensor, L_vector)
