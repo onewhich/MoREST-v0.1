@@ -78,6 +78,21 @@ class MD_integration:
 
         return next_potential_energy, next_forces
     
+    def Suzuki_Yoshida_4th(self, time_step, current_system, current_forces, masses):
+        '''
+        The 4th-order Suzuki–Yoshida symplectic integrator.
+        Composes three 2nd-order velocity Verlet steps to achieve 4th-order accuracy.
+        '''
+        # Composition coefficient gamma = 1 / (2 - 2^(1/3))
+        gamma = 1.3512071919596578
+        # First Verlet step: step size gamma * time_step
+        current_potential_energy, current_forces = self.velocity_Verlet(gamma * time_step, current_system, current_forces, masses)
+        # Second Verlet step: step size (1 - 2gamma) * time_step
+        current_potential_energy, current_forces = self.velocity_Verlet((1 - 2 * gamma) * time_step, current_system, current_forces, masses)
+        # Third Verlet step: step size gamma * time_step
+        next_potential_energy, next_forces = self.velocity_Verlet(gamma * time_step, current_system, current_forces, masses)
+        return next_potential_energy, next_forces
+
     @staticmethod
     def propagate_momenta_half(time_step, momenta, forces):
         ### p(t+0.5dt) = p(t) + 0.5 * F(t) * dt ; v(t+0.5dt) = p(t+0.5dt) / m
