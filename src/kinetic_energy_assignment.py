@@ -96,16 +96,15 @@ def get_rotation_velocities(system):
         r_i = r_vector[i]
         m_i = masses[i][0]
         I_tensor += m_i * (np.linalg.norm(r_i)**2 * np.identity(3) - np.outer(r_i, r_i))
+    # angular velocity
+    # angular velocity is the same for all atoms
     if L_vector.any() < 1e-30:
-        #omega = np.zeros(3)
-        v_tang = np.zeros(3)
+        omega = np.zeros(3)
     else:
-        # angular velocity
-        # angular velocity is the same for all atoms
         omega = np.linalg.solve(I_tensor, L_vector)
-        # linear velocity
-        # v = omega x r
-        v_tang = np.cross(omega, r_vector)
+    # linear velocity
+    # v = omega x r
+    v_tang = np.cross(omega, r_vector)
     return v_tang
 
 def clean_rotation(system, preserve_temperature=False):
