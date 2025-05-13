@@ -134,27 +134,24 @@ class RPMD_integration(MD_integration):
         super().__init__(many_body_potential)
         self.omega_n = omega_n
         self.n_beads = n_beads
-
+    
     def beads_harmonic_forces(self, beads_positions, masses):
-        n_beads = len(beads_positions)
-        k = masses*self.omega_n**2
-        forces = []
-        r_1 = beads_positions[0] - beads_positions[-1]
-        r_2 = beads_positions[0] - beads_positions[1]
-        forces.append(-k*r_1 - k*r_2)
-        for i in range(1, n_beads-1):
-            r_1 = beads_positions[i] - beads_positions[i-1]
-            r_2 = beads_positions[i] - beads_positions[i+1]
-            forces.append(-k*r_1 - k*r_2)
-        r_1 = beads_positions[-1] - beads_positions[-2]
-        r_2 = beads_positions[-1] - beads_positions[0]
-        forces.append(-k*r_1 - k*r_2)
-        return np.array(forces)
+        k = masses * self.omega_n**2
+
+        # Use np.roll to get neighbor positions with periodic boundary conditions
+        beads_positions_prev = np.roll(beads_positions, shift=1, axis=0)
+        beads_positions_next = np.roll(beads_positions, shift=-1, axis=0)
+
+        # Force: -k[(q - q_prev) + (q - q_next)]
+        forces = -k * (2 * beads_positions - beads_positions_prev - beads_positions_next)
+
+        return forces
     
     def RP_velocity_Verlet(self, time_step, current_beads, current_beads_forces, masses):
         beads_positions = np.array([i_bead.get_positions() for i_bead in current_beads])
         beads_momenta = np.array([i_bead.get_momenta() for i_bead in current_beads])
-        RP_forces = current_beads_forces + self.beads_harmonic_forces(beads_positions, masses)
+        # scale physical forces by 1/P for each bead
+        RP_forces = current_beads_forces / self.n_beads + self.beads_harmonic_forces(beads_positions, masses)
 
         beads_momenta_half = self.propagate_momenta_half(time_step, beads_momenta, RP_forces)
 
@@ -171,7 +168,7 @@ class RPMD_integration(MD_integration):
         beads_potential_energy = np.array(beads_potential_energy)
         next_beads_forces = np.array(next_beads_forces)
 
-        next_RP_forces = next_beads_forces + self.beads_harmonic_forces(next_beads_positions, masses)
+        next_RP_forces = next_beads_forces / self.n_beads + self.beads_harmonic_forces(next_beads_positions, masses)
         next_beads_momenta = self.propagate_momenta_half(time_step, beads_momenta_half, next_RP_forces)
         for i in range(self.n_beads):
             current_beads[i].set_momenta(next_beads_momenta[i])
