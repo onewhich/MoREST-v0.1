@@ -155,7 +155,7 @@ class RPMD_integration(MD_integration):
 
         beads_momenta_half = self.propagate_momenta_half(time_step, beads_momenta, RP_forces)
 
-        next_beads_positions = self.propagate_positions_p_half(time_step, beads_positions, beads_momenta_half,masses)
+        next_beads_positions = self.propagate_positions_p0(time_step, beads_positions, beads_momenta, RP_forces, masses)
 
         for i in range(self.n_beads):
             current_beads[i].set_positions(next_beads_positions[i])
