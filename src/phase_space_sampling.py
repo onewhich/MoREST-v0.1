@@ -259,7 +259,7 @@ class RPMD(initialize_sampling):
 
         self.integration = RPMD_integration(self.many_body_potential, self.omega_n, self.n_beads)
 
-    def initialize_beads(self):
+    def initialize_beads_nm(self):
         self.current_beads = []
         for i in range(self.n_beads):
             tmp_system = deepcopy(self.current_system)
@@ -283,7 +283,7 @@ class RPMD(initialize_sampling):
 
         self.update_beads_positions(self.current_beads_positions)
 
-    def initialize_beads_ring(self, factor_r=0.7):
+    def initialize_beads(self, factor_r=0.7):
         # r_beads: the average distance from a bead to the neighbor for free particles.
         r_beads = [np.sqrt(self.beta * (self.hbar)**2 / self.n_beads / self.atom_masses[i]) for i in range(self.n_atom)] 
         
