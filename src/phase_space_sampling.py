@@ -215,6 +215,7 @@ class RPMD(initialize_sampling):
         self.beads_file_name = RPMD_parameters['rpmd_beads_file']
         self.time_step = RPMD_parameters['rpmd_time_step']
         self.T_simulation = RPMD_parameters['rpmd_temperature']
+        self.omega_n = RPMD_parameters['omega_n']
         self.omega_k = RPMD_parameters['omega_k']
         self.C_jk = RPMD_parameters['C_jk']
         self.atom_masses = self.masses.flatten()
@@ -238,15 +239,15 @@ class RPMD(initialize_sampling):
             if not self.sampling_parameters['sampling_pre_thermalized']:
                 if 'sampling_initial_E' in self.sampling_parameters:
                     T_thermalized = 2/3 * self.sampling_parameters['sampling_initial_E']/units.kB /self.n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
-                    MaxwellBoltzmannDistribution(self.current_system, temperature_K = T_thermalized, force_temp = True)
+                    for i in range(self.n_beads):
+                        MaxwellBoltzmannDistribution(self.current_beads[i], temperature_K = T_thermalized, force_temp = True)
                 elif 'sampling_initial_T' in self.sampling_parameters:
                     T_thermalized = self.sampling_parameters['sampling_initial_T']
-                    MaxwellBoltzmannDistribution(self.current_system, temperature_K = T_thermalized, force_temp = True)
+                    for i in range(self.n_beads):
+                        MaxwellBoltzmannDistribution(self.current_beads[i], temperature_K = T_thermalized, force_temp = True)
                 else:
-                    MaxwellBoltzmannDistribution(self.current_system, temperature_K = self.T_simulation)
-                total_momenta = self.current_system.get_momenta()
-                for i in range(self.n_beads):
-                    self.current_beads[i].set_momenta(total_momenta)
+                    for i in range(self.n_beads):
+                        MaxwellBoltzmannDistribution(self.current_beads[i], temperature_K = self.T_simulation)
 
         self.current_beads_positions = self.get_beads_positions(self.current_beads)
         self.current_beads_momenta = self.get_beads_momenta(self.current_beads)
@@ -255,9 +256,33 @@ class RPMD(initialize_sampling):
         self.update_centroid_positions_momenta(self.current_beads)
         self.update_centroid_potential_energy_forces(self.current_beads_potential_energy, self.current_beads_forces)
 
-        self.integration = RPMD_integration(self.many_body_potential, RPMD_parameters['omega_n'], self.n_beads)
+        self.integration = RPMD_integration(self.many_body_potential, self.omega_n, self.n_beads)
 
-    def initialize_beads(self, factor_r=0.7):
+    def initialize_beads(self):
+        self.current_beads = []
+        for i in range(self.n_beads):
+            tmp_system = deepcopy(self.current_system)
+            self.current_beads.append(tmp_system)
+        rng = np.random.default_rng()
+
+        # Normal mode frequencies for free ring polymer
+        mode_indices = np.arange(self.n_beads)
+        frequency = 2.0 * self.omega_n * np.sin(np.pi * mode_indices / self.n_beads)
+
+        # Normal mode std deviations for positions
+        sigma_normal_mode = np.zeros(self.n_beads)
+        sigma_normal_mode[1:] = np.sqrt(1.0 / (self.masses[0, 0] * (frequency[1:]**2) * self.beta))
+        sigma_normal_mode[0] = np.sqrt(1.0 / (self.masses[0, 0] * self.beta))  # centroid mode
+
+        # Sample normal mode coordinates: shape (n_beads, n_atom, 3 axis)
+        positions_normal_mode = rng.normal(0.0, sigma_normal_mode[:, None, None], size=(self.n_beads, self.n_atom, 3))
+
+        # Inverse discrete Fourier transform to bead coordinates
+        self.current_beads_positions = np.real(np.fft.ifft(positions_normal_mode, axis=0)) * self.n_beads  # iFFT of normal modes
+
+        self.update_beads_positions(self.current_beads_positions)
+
+    def initialize_beads_ring(self, factor_r=0.7):
         # r_beads: the average distance from a bead to the neighbor for free particles.
         r_beads = [np.sqrt(self.beta * (self.hbar)**2 / self.n_beads / self.atom_masses[i]) for i in range(self.n_atom)] 
         
