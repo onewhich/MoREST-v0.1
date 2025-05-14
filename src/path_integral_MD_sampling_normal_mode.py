@@ -1,7 +1,7 @@
 import numpy as np
 from structure_io import write_xyz_file, write_xyz_traj
 from phase_space_sampling import RPMD_normal_mode
-from thermostat import velocity_rescaling, Berendsen_velocity_rescaling, stochastic_velocity_rescaling
+from thermostat import velocity_rescaling, Berendsen_velocity_rescaling, Langevin_velocity_rescaling, stochastic_velocity_rescaling
 
 class RP_NVE(RPMD_normal_mode):
     def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
@@ -44,7 +44,7 @@ class RP_NVE(RPMD_normal_mode):
                                                                                        self.current_beads_forces, self.C_jk, self.n_atom, \
                                                                                        self.n_beads, self.omega_k, self.atom_masses)
 
-        self.RPMD_update_step(next_beads_momenta, next_beads_positions)
+        self.RPMD_update_step(self.current_beads_potential_energy, self.current_beads_forces, next_beads_positions, next_beads_momenta)
 
         if self.RPMD_clean_translation:
             self.clean_translation_centroid()
@@ -113,7 +113,7 @@ class RP_NVK_VR(RPMD_normal_mode):
                                                                                        self.current_beads_forces, self.C_jk, self.n_atom, \
                                                                                        self.n_beads, self.omega_k, self.atom_masses)
 
-        self.RPMD_update_step(next_beads_momenta, next_beads_positions)
+        self.RPMD_update_step(self.current_beads_potential_energy, self.current_beads_forces, next_beads_positions, next_beads_momenta)
 
         if self.RPMD_clean_translation:
             self.clean_translation_centroid()
@@ -192,7 +192,7 @@ class RP_NVT_Berendsen(RPMD_normal_mode):
                                                                                        self.current_beads_forces, self.C_jk, self.n_atom, \
                                                                                        self.n_beads, self.omega_k, self.atom_masses)
 
-        self.RPMD_update_step(next_beads_momenta, next_beads_positions)
+        self.RPMD_update_step(self.current_beads_potential_energy, self.current_beads_forces, next_beads_positions, next_beads_momenta)
 
         if self.RPMD_clean_translation:
             self.clean_translation_centroid()
@@ -261,7 +261,7 @@ class RP_NVT_Langevin(RPMD_normal_mode):
                                                                                        self.current_beads_forces, self.C_jk, self.n_atom, \
                                                                                        self.n_beads, self.omega_k, self.atom_masses)
 
-        self.RPMD_update_step(next_beads_momenta, next_beads_positions)
+        self.RPMD_update_step(self.current_beads_potential_energy, self.current_beads_forces, next_beads_positions, next_beads_momenta)
 
         if self.RPMD_clean_translation:
             self.clean_translation_centroid()
@@ -270,8 +270,8 @@ class RP_NVT_Langevin(RPMD_normal_mode):
 
         # only rescale the centroids velocities
         old_velocities = self.current_system.get_velocities()
-        new_velocities, self.d_Ee, alpha = stochastic_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.K_simulation, \
-                                                                  1, 1/(2*self.sampling_parameters['nvt_Langevin_gamma']), old_velocities)
+        new_velocities, self.d_Ee = Langevin_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.K_simulation, \
+                                                                3*self.n_atom, self.sampling_parameters['nvt_Langevin_gamma'], old_velocities)
         self.current_system.set_velocities(new_velocities)
         d_velocities = new_velocities - old_velocities
         for i in range(self.n_beads):
@@ -330,7 +330,7 @@ class RP_NVT_SVR(RPMD_normal_mode):
                                                                                        self.current_beads_forces, self.C_jk, self.n_atom, \
                                                                                        self.n_beads, self.omega_k, self.atom_masses)
 
-        self.RPMD_update_step(next_beads_momenta, next_beads_positions)
+        self.RPMD_update_step(self.current_beads_potential_energy, self.current_beads_forces, next_beads_positions, next_beads_momenta)
 
         if self.RPMD_clean_translation:
             self.clean_translation_centroid()
