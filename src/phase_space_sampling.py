@@ -257,7 +257,8 @@ class RPMD(initialize_sampling):
         self.update_centroid_positions_momenta(self.current_beads)
         self.update_centroid_potential_energy_forces(self.current_beads_potential_energy, self.current_beads_forces)
 
-        self.integration = RPMD_normal_mode_integration(self.many_body_potential, self.omega_n, self.n_beads)
+        #self.integration = RPMD_integration(self.many_body_potential, self.omega_n, self.n_beads)
+        self.integration = RPMD_normal_mode_integration()
 
     def initialize_beads(self):
         centroid_positions = self.current_system.get_positions().reshape((1, self.n_atom, 3))
