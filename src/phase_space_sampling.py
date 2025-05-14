@@ -260,31 +260,26 @@ class RPMD(initialize_sampling):
         self.integration = RPMD_integration(self.many_body_potential, self.omega_n, self.n_beads)
 
     def initialize_beads(self):
-        centroid_pos = self.current_system.get_positions()
+        centroid_positions = self.current_system.get_positions().reshape((1, self.n_atom, 3))
+        masses = self.masses.reshape((1, self.n_atom, 1))
         self.current_beads = []
         for i in range(self.n_beads):
             tmp_system = deepcopy(self.current_system)
             self.current_beads.append(tmp_system)
         rng = np.random.default_rng()
+        
+        # Initialize normal mode displacements
+        positions_normal_mode = np.zeros((self.n_beads, self.n_atom, 3))
 
-        # Normal mode frequencies for free ring polymer
-        mode_indices = np.arange(self.n_beads)
-        frequency = 2.0 * self.omega_n * np.sin(np.pi * mode_indices / self.n_beads)
+        for k_mode in range(1, self.n_beads):  # skip k = 0 (centroid)
+            sigma = np.sqrt(1.0 / (masses * self.beta * self.omega_k[k_mode] ** 2))
+            positions_normal_mode[k_mode] = rng.normal(0.0, sigma, size=(1, self.n_atom, 3))
 
-        # Normal mode std deviations for positions
-        sigma_normal_mode = np.zeros(self.n_beads)
-        sigma_normal_mode[1:] = np.sqrt(1.0 / (self.masses[0, 0] * (frequency[1:]**2) * self.beta))
-        sigma_normal_mode[0] = np.sqrt(1.0 / (self.masses[0, 0] * self.beta))  # centroid mode
+        # Inverse Fourier transform (real positions)
+        self.current_beads_positions = np.fft.ifft(positions_normal_mode, axis=0).real * self.n_beads
 
-        # Sample normal mode coordinates: shape (n_beads, n_atom, 3 axis)
-        positions_normal_mode = rng.normal(0.0, sigma_normal_mode[:, None, None], size=(self.n_beads, self.n_atom, 3))
-
-        # Inverse discrete Fourier transform to bead coordinates
-        self.current_beads_positions = np.real(np.fft.ifft(positions_normal_mode, axis=0)) * self.n_beads  # iFFT of normal modes
-
-        for i in range(self.n_beads):
-            # Add the centroid position to each bead position
-            self.current_beads_positions[i] += centroid_pos
+        # Shift to match centroids
+        self.current_beads_positions += centroid_positions - np.mean(self.current_beads_positions, axis=0, keepdims=True)
 
         self.update_beads_positions(self.current_beads_positions)
 

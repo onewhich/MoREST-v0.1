@@ -1044,7 +1044,7 @@ class read_parameters:
         self.RPMD_parameters['beta'] = beta
         self.RPMD_parameters['hbar'] = units_hbar
         self.RPMD_parameters['omega_n'] = n_beads / (beta * units_hbar)
-        self.RPMD_parameters['omega_k'] = 2*self.RPMD_parameters['omega_n']*np.sin(np.linspace(0,n_beads-1,n_beads)*units.pi/n_beads)
+        self.RPMD_parameters['omega_k'] = 2*self.RPMD_parameters['omega_n']*np.sin(np.arange(n_beads)*units.pi/n_beads)
         self.RPMD_parameters['omega_k'][0] = 1e-20
         self.RPMD_parameters['C_jk'] = np.zeros((n_beads,n_beads))
         for k in range(n_beads):
