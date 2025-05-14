@@ -49,9 +49,9 @@ class RP_NVE(RPMD_normal_mode):
         self.RPMD_update_step(next_beads_momenta, next_beads_positions)
 
         if self.RPMD_clean_translation:
-            self.stationary_centroid()
+            self.clean_translation_centroid()
         if self.RPMD_clean_rotation:
-            self.zero_rotation_centroid()
+            self.clean_rotation_centroid()
         
         write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
 
@@ -120,9 +120,9 @@ class RP_NVK_VR(RPMD_normal_mode):
         self.RPMD_update_step(next_beads_momenta, next_beads_positions)
 
         if self.RPMD_clean_translation:
-            self.stationary_centroid()
+            self.clean_translation_centroid()
         if self.RPMD_clean_rotation:
-            self.zero_rotation_centroid()
+            self.clean_rotation_centroid()
 
         # only rescale the centroids velocities
         old_velocities = self.current_system.get_velocities()
@@ -201,9 +201,9 @@ class RP_NVT_Berendsen(RPMD_normal_mode):
         self.RPMD_update_step(next_beads_momenta, next_beads_positions)
 
         if self.RPMD_clean_translation:
-            self.stationary_centroid()
+            self.clean_translation_centroid()
         if self.RPMD_clean_rotation:
-            self.zero_rotation_centroid()
+            self.clean_rotation_centroid()
 
         # only rescale the centroids velocities
         old_velocities = self.current_system.get_velocities()
@@ -272,9 +272,9 @@ class RP_NVT_Langevin(RPMD_normal_mode):
         self.RPMD_update_step(next_beads_momenta, next_beads_positions)
 
         if self.RPMD_clean_translation:
-            self.stationary_centroid()
+            self.clean_translation_centroid()
         if self.RPMD_clean_rotation:
-            self.zero_rotation_centroid()
+            self.clean_rotation_centroid()
 
         # only rescale the centroids velocities
         old_velocities = self.current_system.get_velocities()
@@ -343,9 +343,9 @@ class RP_NVT_SVR(RPMD_normal_mode):
         self.RPMD_update_step(next_beads_momenta, next_beads_positions)
 
         if self.RPMD_clean_translation:
-            self.stationary_centroid()
+            self.clean_translation_centroid()
         if self.RPMD_clean_rotation:
-            self.zero_rotation_centroid()
+            self.clean_rotation_centroid()
 
         # only rescale the centroids 
         old_velocities = self.current_system.get_velocities()

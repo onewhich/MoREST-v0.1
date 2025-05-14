@@ -2,7 +2,7 @@ import os
 from glob import glob
 import numpy as np
 from molecular_dynamics_sampling import NVE_VV, NVK_VR, NVT_Berendsen, NVT_Langevin, NVT_SVR, NPH_SVR, NPT_Berendsen, NPT_Langevin, NPT_SVR
-from path_integral_MD_sampling import RP_NVE, RP_NVK_VR, RP_NVT_Langevin, RP_NVT_SVR
+from path_integral_MD_sampling_normal_mode import RP_NVE, RP_NVK_VR, RP_NVT_Langevin, RP_NVT_SVR
 from molecular_dynamics_scattering import scattering_velocity_Verlet, scattering_Suzuki_Yoshida_4th, scattering_Runge_Kutta_4th
 from molecule_rovibrating import rovibrating_velocity_Verlet, rovibrating_Suzuki_Yoshida_4th, rovibrating_Runge_Kutta_4th
 from structure_searching import gradient_descent, FIRE_velocity_Verlet
