@@ -3,6 +3,7 @@ from glob import glob
 import numpy as np
 from molecular_dynamics_sampling import NVE_VV, NVK_VR, NVT_Berendsen, NVT_Langevin, NVT_SVR, NPH_SVR, NPT_Berendsen, NPT_Langevin, NPT_SVR
 from path_integral_MD_sampling import RP_NVE, RP_NVK_VR, RP_NVT_Langevin, RP_NVT_SVR
+from path_integral_MD_sampling_normal_mode import RP_NVE_normal_mode, RP_NVT_SVR_normal_mode
 from molecular_dynamics_scattering import scattering_velocity_Verlet, scattering_Suzuki_Yoshida_4th, scattering_Runge_Kutta_4th
 from molecule_rovibrating import rovibrating_velocity_Verlet, rovibrating_Suzuki_Yoshida_4th, rovibrating_Runge_Kutta_4th
 from structure_searching import gradient_descent, FIRE_velocity_Verlet
@@ -20,14 +21,14 @@ class initialize_modules:
             self.sampling_parameters = MoREST_parameters.get_sampling_parameters(self.log_morest)
             if self.sampling_parameters['sampling_method'].upper() in ['MD']:
                 self.MD_parameters = MoREST_parameters.get_MD_parameters(self.log_morest)
-            elif self.sampling_parameters['sampling_method'].upper() in ['RPMD']:
+            elif self.sampling_parameters['sampling_method'].upper() in ['RPMD', 'RPMD_NM']:
                 self.RPMD_parameters = MoREST_parameters.get_RPMD_parameters(self.log_morest)
         else:
             try:
                 self.sampling_parameters = np.load('MoREST_sampling_parameters.npy',allow_pickle=True).item()
                 if self.sampling_parameters['sampling_method'].upper() in ['MD']:
                     self.MD_parameters = np.load('MoREST_MD_parameters.npy',allow_pickle=True).item()
-                elif self.sampling_parameters['sampling_method'].upper() in ['RPMD']:
+                elif self.sampling_parameters['sampling_method'].upper() in ['RPMD', 'RPMD_NM']:
                     self.MD_parameters = np.load('MoREST_RPMD_parameters.npy',allow_pickle=True).item()
             except:
                 self.log_morest.write('Can not find parameters files: MoREST_sampling_parameters.npy, MoREST_MD_parameters.npy, MoREST_RPMD_parameters.npy\n \
@@ -35,7 +36,7 @@ class initialize_modules:
                 self.sampling_parameters = MoREST_parameters.get_sampling_parameters(self.log_morest)
                 if self.sampling_parameters['sampling_method'].upper() in ['MD']:
                     self.MD_parameters = MoREST_parameters.get_MD_parameters(self.log_morest)
-                elif self.sampling_parameters['sampling_method'].upper() in ['RPMD']:
+                elif self.sampling_parameters['sampling_method'].upper() in ['RPMD', 'RPMD_NM']:
                     self.MD_parameters = MoREST_parameters.get_RPMD_parameters(self.log_morest)
 
         if self.sampling_parameters['sampling_initialization']:
@@ -45,7 +46,7 @@ class initialize_modules:
                 if self.sampling_parameters['sampling_method'].upper() in ['MD']:
                     for md_file in glob('./MoREST_MD*'):
                         os.remove(md_file)
-                elif self.sampling_parameters['sampling_method'].upper() in ['RPMD']:
+                elif self.sampling_parameters['sampling_method'].upper() in ['RPMD', 'RPMD_NM']:
                     tmp_file_list = ['./MoREST_RPMD.log', './MoREST_RPMD_traj.xyz'] 
                     for tmp_file in glob('./MoREST_RPMD_beads_traj_*'):
                         tmp_file_list.append(tmp_file)
@@ -90,6 +91,24 @@ class initialize_modules:
                 self.sampling_job = NVT_Berendsen(self.morest_parameters, self.sampling_parameters, self.RPMD_parameters, calculator=self.calculator, log_morest=self.log_morest)
             elif self.sampling_parameters['sampling_ensemble'].upper()  in ['NVK_VR']:
                 self.sampling_job = RP_NVK_VR(self.morest_parameters, self.sampling_parameters, self.RPMD_parameters, calculator=self.calculator, log_morest=self.log_morest)
+            elif self.sampling_parameters['sampling_ensemble'].upper()  in ['NPT_Langevin'.upper(), 'NPT_Berendsen'.upper(), 'NPH_SVR', 'NPT_SVR']:
+                self.log_morest.write('The RPMD sampling method only supports NVE and NVT ensemble.\n')
+                self.log_morest.close()
+                raise Exception('The RPMD sampling method only supports NVE and NVT ensemble.')
+            else:
+                self.log_morest.write('It is not clear which ensemble will be used.\n')
+                self.log_morest.close()
+                raise Exception('Which ensemble will you use?')
+        elif self.sampling_parameters['sampling_method'].upper() in ['RPMD_NM']:
+            if self.sampling_parameters['sampling_ensemble'].upper()  in ['NVT_SVR']:
+                self.sampling_job = RP_NVT_SVR_normal_mode(self.morest_parameters, self.sampling_parameters, self.RPMD_parameters, calculator=self.calculator, log_morest=self.log_morest)
+            elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVE_VV']:
+                self.sampling_job = RP_NVE_normal_mode(self.morest_parameters, self.sampling_parameters, self.RPMD_parameters, calculator=self.calculator, log_morest=self.log_morest)
+            elif self.sampling_parameters['sampling_ensemble'].upper()  in ['NVT_Langevin'.upper(), 'NVT_Berendsen'.upper(), 'NVK_VR', \
+                                                                            'NPT_Langevin'.upper(), 'NPT_Berendsen'.upper(), 'NPH_SVR', 'NPT_SVR']:
+                self.log_morest.write('The normal mode sampling method only supports NVE and NVT_SVR ensemble.\n')
+                self.log_morest.close()
+                raise Exception('The normal mode sampling method only supports NVE and NVT_SVR ensemble.')
             else:
                 self.log_morest.write('It is not clear which ensemble will be used.\n')
                 self.log_morest.close()

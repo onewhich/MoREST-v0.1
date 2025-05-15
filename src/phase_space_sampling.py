@@ -262,7 +262,6 @@ class RPMD(initialize_sampling):
         self.update_centroid_potential_energy_forces(self.current_beads_potential_energy, self.current_beads_forces)
 
         self.integration = RPMD_integration(self.many_body_potential, self.omega_n, self.n_beads)
-        #self.integration = RPMD_normal_mode_integration()
 
     def initialize_beads(self): # initialize the beads in normal mode representation
         centroid_positions = self.current_system.get_positions().reshape((1, self.n_atom, 3))
@@ -443,4 +442,4 @@ class RPMD_normal_mode(RPMD):
     '''
     def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, traj_file_name=None, calculator=None, log_morest=None):
         super().__init__(morest_parameters, sampling_parameters, RPMD_parameters, molecule, traj_file_name, calculator, log_morest)
-        self.integration = RPMD_normal_mode_integration()
+        self.integration = RPMD_normal_mode_integration(self.many_body_potential)
