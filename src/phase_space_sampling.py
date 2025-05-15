@@ -234,6 +234,7 @@ class RPMD(initialize_sampling):
             self.initialize_beads()
             log_morest.write('Initialize beads and write to file: '+self.beads_file_name+'\n\n')
         write_xyz_file(self.beads_file_name, self.current_beads)
+        write_xyz_file('MoREST_RPMD_beads_initial.xyz', self.current_beads)
 
         if self.current_step == 0:
             if not self.sampling_parameters['sampling_pre_thermalized']:
