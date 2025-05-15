@@ -150,8 +150,8 @@ class RPMD_integration(MD_integration):
     def RP_velocity_Verlet(self, time_step, current_beads, current_beads_forces, masses):
         beads_positions = np.array([i_bead.get_positions() for i_bead in current_beads])
         beads_momenta = np.array([i_bead.get_momenta() for i_bead in current_beads])
-        # scale physical forces by 1/P for each bead
-        RP_forces = current_beads_forces / self.n_beads + self.beads_harmonic_forces(beads_positions, masses)
+        
+        RP_forces = current_beads_forces + self.beads_harmonic_forces(beads_positions, masses)
 
         beads_momenta_half = self.propagate_momenta_half(time_step, beads_momenta, RP_forces)
 
@@ -168,7 +168,7 @@ class RPMD_integration(MD_integration):
         beads_potential_energy = np.array(beads_potential_energy)
         next_beads_forces = np.array(next_beads_forces)
 
-        next_RP_forces = next_beads_forces / self.n_beads + self.beads_harmonic_forces(next_beads_positions, masses)
+        next_RP_forces = next_beads_forces + self.beads_harmonic_forces(next_beads_positions, masses)
         next_beads_momenta = self.propagate_momenta_half(time_step, beads_momenta_half, next_RP_forces)
         for i in range(self.n_beads):
             current_beads[i].set_momenta(next_beads_momenta[i])
