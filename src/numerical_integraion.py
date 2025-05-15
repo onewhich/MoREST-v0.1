@@ -211,9 +211,9 @@ class RPMD_normal_mode_integration:
         # back transform momenta and positions
         beads_momenta_half = self.normal_mode_to_coordinate_representation(beads_momenta_half_kp, C_jk, n_atom, n_beads)
         next_beads_positions = self.normal_mode_to_coordinate_representation(beads_positions_kp, C_jk, n_atom, n_beads)
-        # calculate forces
         for i in range(n_beads):
             current_beads[i].set_positions(next_beads_positions[i])
+        # calculate forces
         beads_potential_energy = []
         next_beads_forces = []
         for i in range(n_beads):
@@ -224,6 +224,8 @@ class RPMD_normal_mode_integration:
         next_beads_forces = np.array(next_beads_forces)
         # p_j(t+dt) = p_j(t+0.5dt) + 0.5 * dt * F(t)
         next_beads_momenta = beads_momenta_half + 0.5 * time_step * next_beads_forces
+        for i in range(n_beads):
+            current_beads[i].set_momenta(next_beads_momenta[i])
 
         return beads_potential_energy, next_beads_forces, next_beads_positions, next_beads_momenta
 
