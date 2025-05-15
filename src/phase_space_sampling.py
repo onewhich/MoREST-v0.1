@@ -363,6 +363,10 @@ class RPMD(initialize_sampling):
     def update_beads_momenta(self, new_beads_momenta):
         for i in range(self.n_beads):
             self.current_beads[i].set_momenta(new_beads_momenta[i])
+
+    def get_beads_kinetic_energy(self, beads):
+        beads_kinetic_energy = [i_bead.get_kinetic_energy() for i_bead in beads]
+        return np.array(beads_kinetic_energy)
             
     def get_beads_potential_forces(self, beads):
         beads_potential_energy = []

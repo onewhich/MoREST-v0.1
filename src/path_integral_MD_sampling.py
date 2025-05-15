@@ -23,8 +23,9 @@ class RP_NVE(RPMD):
 
         if self.sampling_parameters['sampling_initialization']:
             self.RPMD_log = open(self.log_file_name, 'w', buffering=1)
-            self.RPMD_log.write('# RPMD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
-            self.write_MD_log(self.RPMD_log, self.current_step, np.average(self.current_beads_potential_energy), self.current_system.get_kinetic_energy(), self.masses)
+            self.RPMD_log.write('# RPMD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')
+            self.write_MD_log(self.RPMD_log, self.current_step, np.mean(self.current_beads_potential_energy), \
+                              np.mean(self.get_beads_kinetic_energy(self.current_beads)), self.masses)
         else:
             self.RPMD_log = open(self.log_file_name, 'a', buffering=1)
 
@@ -57,8 +58,9 @@ class RP_NVE(RPMD):
             for i in range(self.n_beads):
                 write_xyz_traj(self.beads_file_head+"traj_"+str(i)+'.xyz',self.current_beads[i])
             write_xyz_traj(self.traj_file_name, self.current_system)
-            self.write_MD_log(self.RPMD_log, self.current_step, np.average(self.current_beads_potential_energy), self.current_system.get_kinetic_energy(), self.masses)
-
+            self.write_MD_log(self.RPMD_log, self.current_step, np.mean(self.current_beads_potential_energy), \
+                              np.mean(self.get_beads_kinetic_energy(self.current_beads)), self.masses)
+            
         return self.current_step, self.current_system
     
 class RP_NVK_VR(RPMD):
@@ -87,8 +89,9 @@ class RP_NVK_VR(RPMD):
 
         if self.sampling_parameters['sampling_initialization']:
             self.RPMD_log = open(self.log_file_name, 'w', buffering=1)
-            self.RPMD_log.write('# RPMD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
-            self.write_MD_log(self.RPMD_log, self.current_step, np.average(self.current_beads_potential_energy), self.current_system.get_kinetic_energy(), self.masses)
+            self.RPMD_log.write('# RPMD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')
+            self.write_MD_log(self.RPMD_log, self.current_step, np.mean(self.current_beads_potential_energy), \
+                              np.mean(self.get_beads_kinetic_energy(self.current_beads)), self.masses)
         else:
             self.RPMD_log = open(self.log_file_name, 'a', buffering=1)
 
@@ -127,7 +130,8 @@ class RP_NVK_VR(RPMD):
             for i in range(self.n_beads):
                 write_xyz_traj(self.beads_file_head+"traj_"+str(i)+'.xyz',self.current_beads[i])
             write_xyz_traj(self.traj_file_name, self.current_system)
-            self.write_MD_log(self.RPMD_log, self.current_step, np.average(self.current_beads_potential_energy), self.current_system.get_kinetic_energy(), self.masses)
+            self.write_MD_log(self.RPMD_log, self.current_step, np.mean(self.current_beads_potential_energy), \
+                              np.mean(self.get_beads_kinetic_energy(self.current_beads)), self.masses)
 
         return self.current_step, self.current_system
     
@@ -157,8 +161,9 @@ class RP_NVT_Berendsen(RPMD):
 
         if self.sampling_parameters['sampling_initialization']:
             self.RPMD_log = open(self.log_file_name, 'w', buffering=1)
-            self.RPMD_log.write('# RPMD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
-            self.write_MD_log(self.RPMD_log, self.current_step, np.average(self.current_beads_potential_energy), self.current_system.get_kinetic_energy(), self.masses)
+            self.RPMD_log.write('# RPMD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')
+            self.write_MD_log(self.RPMD_log, self.current_step, np.mean(self.current_beads_potential_energy), \
+                              np.mean(self.get_beads_kinetic_energy(self.current_beads)), self.masses)
         else:
             self.RPMD_log = open(self.log_file_name, 'a', buffering=1)
 
@@ -197,7 +202,8 @@ class RP_NVT_Berendsen(RPMD):
             for i in range(self.n_beads):
                 write_xyz_traj(self.beads_file_head+"traj_"+str(i)+'.xyz',self.current_beads[i])
             write_xyz_traj(self.traj_file_name, self.current_system)
-            self.write_MD_log(self.RPMD_log, self.current_step, np.average(self.current_beads_potential_energy), self.current_system.get_kinetic_energy(), self.masses)
+            self.write_MD_log(self.RPMD_log, self.current_step, np.mean(self.current_beads_potential_energy), \
+                              np.mean(self.get_beads_kinetic_energy(self.current_beads)), self.masses)
 
         return self.current_step, self.current_system
     
@@ -221,7 +227,8 @@ class RP_NVT_Langevin(RPMD):
         if self.sampling_parameters['sampling_initialization']:
             self.RPMD_log = open(self.log_file_name, 'w', buffering=1)
             self.RPMD_log.write('# RPMD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), Effective energy (eV)\n')   
-            self.Ee = self.write_MD_SVR_log(self.RPMD_log, self.current_step, np.average(self.current_beads_potential_energy), self.current_system.get_kinetic_energy(), self.masses)
+            self.Ee = self.write_MD_SVR_log(self.RPMD_log, self.current_step, np.mean(self.current_beads_potential_energy), \
+                                            np.mean(self.get_beads_kinetic_energy(self.current_beads)), self.masses)
         else:
             self.RPMD_log = open(self.log_file_name, 'a', buffering=1)
 
@@ -253,7 +260,7 @@ class RP_NVT_Langevin(RPMD):
                                                                     3*self.n_atom, self.sampling_parameters['nvt_Langevin_gamma'], old_velocities)
             self.current_beads[i].set_velocities(new_velocities)
             tmp_d_Ee_list.append(tmp_d_Ee)
-        self.d_Ee = np.average(tmp_d_Ee_list)
+        self.d_Ee = np.mean(tmp_d_Ee_list)
         
         self.RPMD_update_step(self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta)
 
@@ -264,7 +271,8 @@ class RP_NVT_Langevin(RPMD):
                 write_xyz_traj(self.beads_file_head+"traj_"+str(i)+'.xyz',self.current_beads[i])
             write_xyz_traj(self.traj_file_name, self.current_system)
             self.kinetic_energy = self.current_system.get_kinetic_energy()
-            self.Ee = self.write_MD_SVR_log(self.RPMD_log, self.current_step, np.average(self.current_beads_potential_energy), self.kinetic_energy, self.masses, self.Ee, self.d_Ee)
+            self.Ee = self.write_MD_SVR_log(self.RPMD_log, self.current_step, np.mean(self.current_beads_potential_energy), \
+                                            np.mean(self.get_beads_kinetic_energy(self.current_beads)), self.masses, self.Ee, self.d_Ee)
             
         return self.current_step, self.current_system
     
@@ -288,7 +296,8 @@ class RP_NVT_SVR(RPMD):
         if self.sampling_parameters['sampling_initialization']:
             self.RPMD_log = open(self.log_file_name, 'w', buffering=1)
             self.RPMD_log.write('# RPMD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), Effective energy (eV)\n')   
-            self.Ee = self.write_MD_SVR_log(self.RPMD_log, self.current_step, np.average(self.current_beads_potential_energy), self.current_system.get_kinetic_energy(), self.masses)
+            self.Ee = self.write_MD_SVR_log(self.RPMD_log, self.current_step, np.mean(self.current_beads_potential_energy), \
+                                            np.mean(self.get_beads_kinetic_energy(self.current_beads)), self.masses)
         else:
             self.RPMD_log = open(self.log_file_name, 'a', buffering=1)
 
@@ -320,7 +329,7 @@ class RP_NVT_SVR(RPMD):
                                                                     3*self.n_atom, self.sampling_parameters['nvt_svr_tau'], old_velocities)
             self.current_beads[i].set_velocities(new_velocities)
             tmp_d_Ee_list.append(tmp_d_Ee)
-        self.d_Ee = np.average(tmp_d_Ee_list)
+        self.d_Ee = np.mean(tmp_d_Ee_list)
         
         self.RPMD_update_step(self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta)
             
@@ -331,6 +340,7 @@ class RP_NVT_SVR(RPMD):
                 write_xyz_traj(self.beads_file_head+"traj_"+str(i)+'.xyz',self.current_beads[i])
             write_xyz_traj(self.traj_file_name, self.current_system)
             self.kinetic_energy = self.current_system.get_kinetic_energy()
-            self.Ee = self.write_MD_SVR_log(self.RPMD_log, self.current_step, np.average(self.current_beads_potential_energy), self.kinetic_energy, self.masses, self.Ee, self.d_Ee)
+            self.Ee = self.write_MD_SVR_log(self.RPMD_log, self.current_step, np.mean(self.current_beads_potential_energy), \
+                                            np.mean(self.get_beads_kinetic_energy(self.current_beads)), self.masses, self.Ee, self.d_Ee)
             
         return self.current_step, self.current_system
