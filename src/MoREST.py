@@ -71,7 +71,7 @@ class morest(initialize_modules):
                     self.enhanced_sampling_RE(simulation_maxsteps)
                 elif self.enhanced_sampling_parameters['enhanced_sampling_method'].upper() in ['its'.upper()]:
                     self.enhanced_sampling_ITS(simulation_maxsteps)
-            elif self.sampling_parameters['sampling_method'].upper() in ['RPMD']:
+            elif self.sampling_parameters['sampling_method'].upper() in ['RPMD','RPMD_NM']:
                 simulation_maxsteps = int(self.RPMD_parameters['rpmd_simulation_time']/self.RPMD_parameters['rpmd_time_step']) + 1
                 raise Exception('Enhanced sampling for RPMD has not been implemented.')
         else:
@@ -79,7 +79,7 @@ class morest(initialize_modules):
             if self.morest_parameters['wall_potential']:
                 if self.sampling_parameters['sampling_method'].upper() in ['MD']:
                     simulation_maxsteps = int(self.MD_parameters['md_simulation_time']/self.MD_parameters['md_time_step']) + 1
-                elif self.sampling_parameters['sampling_method'].upper() in ['RPMD']:
+                elif self.sampling_parameters['sampling_method'].upper() in ['RPMD','RPMD_NM']:
                     simulation_maxsteps = int(self.RPMD_parameters['rpmd_simulation_time']/self.RPMD_parameters['rpmd_time_step']) + 1
                 while current_step <= simulation_maxsteps:
                     general_coordinate = current_system.get_positions()
@@ -88,7 +88,7 @@ class morest(initialize_modules):
             else:
                 if self.sampling_parameters['sampling_method'].upper() in ['MD']:
                     simulation_maxsteps = int(self.MD_parameters['md_simulation_time']/self.MD_parameters['md_time_step']) + 1
-                elif self.sampling_parameters['sampling_method'].upper() in ['RPMD']:
+                elif self.sampling_parameters['sampling_method'].upper() in ['RPMD','RPMD_NM']:
                     simulation_maxsteps = int(self.RPMD_parameters['rpmd_simulation_time']/self.RPMD_parameters['rpmd_time_step']) + 1
                 while current_step <= simulation_maxsteps:
                     current_step, current_system= self.sampling_job.generate_new_step()
