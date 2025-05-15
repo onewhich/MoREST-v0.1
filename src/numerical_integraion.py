@@ -191,9 +191,11 @@ class RPMD_normal_mode_integration:
     def __init__(self, many_body_potential):
         self.many_body_potential = many_body_potential
 
-    def RP_velocity_Verlet(self, time_step, beads_positions, beads_momenta, beads_forces, C_jk, n_atom, n_beads, omega_k, atom_masses):
+    def RP_velocity_Verlet(self, time_step, current_beads, current_beads_forces, C_jk, n_atom, n_beads, omega_k, atom_masses):
+        beads_positions = np.array([i_bead.get_positions() for i_bead in current_beads])
+        beads_momenta = np.array([i_bead.get_momenta() for i_bead in current_beads])
         # p_j(t+0.5dt) = p_j(t) + 0.5 * dt * F(t)
-        beads_momenta_half = beads_momenta + 0.5 * time_step * beads_forces
+        beads_momenta_half = beads_momenta + 0.5 * time_step * current_beads_forces
         # transform momenta and positions from coordinate representation to normal mode representation
         beads_momenta_half_k = self.coordinate_to_normal_mode_representation(beads_momenta_half, C_jk, n_atom, n_beads)
         beads_positions_k = self.coordinate_to_normal_mode_representation(beads_positions, C_jk, n_atom, n_beads)
@@ -211,11 +213,11 @@ class RPMD_normal_mode_integration:
         next_beads_positions = self.normal_mode_to_coordinate_representation(beads_positions_kp, C_jk, n_atom, n_beads)
         # calculate forces
         for i in range(n_beads):
-            self.current_beads[i].set_positions(next_beads_positions[i])
+            current_beads[i].set_positions(next_beads_positions[i])
         beads_potential_energy = []
         next_beads_forces = []
         for i in range(n_beads):
-            tmp_potential_energy, tmp_forces = self.many_body_potential.get_potential_forces(self.current_beads[i])
+            tmp_potential_energy, tmp_forces = self.many_body_potential.get_potential_forces(current_beads[i])
             beads_potential_energy.append(tmp_potential_energy)
             next_beads_forces.append(tmp_forces)
         beads_potential_energy = np.array(beads_potential_energy)
@@ -223,7 +225,7 @@ class RPMD_normal_mode_integration:
         # p_j(t+dt) = p_j(t+0.5dt) + 0.5 * dt * F(t)
         next_beads_momenta = beads_momenta_half + 0.5 * time_step * next_beads_forces
 
-        return next_beads_positions, next_beads_momenta
+        return beads_potential_energy, next_beads_forces, next_beads_positions, next_beads_momenta
 
     @staticmethod
     def propagate_momenta_half(time_step, beads_momenta, beads_forces):
