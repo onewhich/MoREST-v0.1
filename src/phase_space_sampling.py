@@ -252,7 +252,11 @@ class RPMD(initialize_sampling):
                 else:
                     for i in range(self.n_beads):
                         MaxwellBoltzmannDistribution(self.current_system, temperature_K = self.T_simulation)
-
+        
+        if self.RPMD_clean_rotation:
+            self.clean_rotation_centroid()
+        if self.RPMD_clean_translation:
+            self.clean_translation_centroid()
 
         self.current_beads_positions = self.get_beads_positions(self.current_beads)
         self.current_beads_momenta = self.get_beads_momenta(self.current_beads)
