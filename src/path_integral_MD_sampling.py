@@ -24,7 +24,7 @@ class RP_NVE(RPMD):
         if self.sampling_parameters['sampling_initialization']:
             self.RPMD_log = open(self.log_file_name, 'w', buffering=1)
             self.RPMD_log.write('# RPMD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
-            self.write_MD_log(self.RPMD_log, self.current_step, np.average(self.current_beads_potential_energy), self.current_system.get_kinetic_energy(), self.masses)
+            self.write_MD_log(self.RPMD_log, self.current_step, self.current_system.get_potential_energy(), self.current_system.get_kinetic_energy(), self.masses)
         else:
             self.RPMD_log = open(self.log_file_name, 'a', buffering=1)
 
@@ -57,8 +57,7 @@ class RP_NVE(RPMD):
             for i in range(self.n_beads):
                 write_xyz_traj(self.beads_file_head+"traj_"+str(i)+'.xyz',self.current_beads[i])
             write_xyz_traj(self.traj_file_name, self.current_system)
-            self.kinetic_energy = self.current_system.get_kinetic_energy()
-            self.write_MD_log(self.RPMD_log, self.current_step, np.average(self.current_beads_potential_energy), self.kinetic_energy, self.masses)
+            self.write_MD_log(self.RPMD_log, self.current_step, self.current_system.get_potential_energy(), self.current_system.get_kinetic_energy(), self.masses)
 
         return self.current_step, self.current_system
     
@@ -92,7 +91,7 @@ class RP_NVK_VR(RPMD):
         if self.sampling_parameters['sampling_initialization']:
             self.RPMD_log = open(self.log_file_name, 'w', buffering=1)
             self.RPMD_log.write('# RPMD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
-            self.write_MD_log(self.RPMD_log, self.current_step, np.average(self.current_beads_potential_energy), self.current_system.get_kinetic_energy(), self.masses)
+            self.write_MD_log(self.RPMD_log, self.current_step, self.current_system.get_potential_energy(), self.current_system.get_kinetic_energy(), self.masses)
         else:
             self.RPMD_log = open(self.log_file_name, 'a', buffering=1)
 
@@ -135,8 +134,7 @@ class RP_NVK_VR(RPMD):
             for i in range(self.n_beads):
                 write_xyz_traj(self.beads_file_head+"traj_"+str(i)+'.xyz',self.current_beads[i])
             write_xyz_traj(self.traj_file_name, self.current_system)
-            self.kinetic_energy = self.current_system.get_kinetic_energy()
-            self.write_MD_log(self.RPMD_log, self.current_step, np.average(self.current_beads_potential_energy), self.kinetic_energy, self.masses)
+            self.write_MD_log(self.RPMD_log, self.current_step, self.current_system.get_potential_energy(), self.current_system.get_kinetic_energy(), self.masses)
 
         return self.current_step, self.current_system
     
@@ -170,7 +168,7 @@ class RP_NVT_Berendsen(RPMD):
         if self.sampling_parameters['sampling_initialization']:
             self.RPMD_log = open(self.log_file_name, 'w', buffering=1)
             self.RPMD_log.write('# RPMD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)\n')   
-            self.write_MD_log(self.RPMD_log, self.current_step, np.average(self.current_beads_potential_energy), self.current_system.get_kinetic_energy(), self.masses)
+            self.write_MD_log(self.RPMD_log, self.current_step, self.current_system.get_potential_energy(), self.current_system.get_kinetic_energy(), self.masses)
         else:
             self.RPMD_log = open(self.log_file_name, 'a', buffering=1)
 
@@ -213,8 +211,7 @@ class RP_NVT_Berendsen(RPMD):
             for i in range(self.n_beads):
                 write_xyz_traj(self.beads_file_head+"traj_"+str(i)+'.xyz',self.current_beads[i])
             write_xyz_traj(self.traj_file_name, self.current_system)
-            self.kinetic_energy = self.current_system.get_kinetic_energy()
-            self.write_MD_log(self.RPMD_log, self.current_step, np.average(self.current_beads_potential_energy), self.kinetic_energy, self.masses)
+            self.write_MD_log(self.RPMD_log, self.current_step, self.current_system.get_potential_energy(), self.current_system.get_kinetic_energy(), self.masses)
 
         return self.current_step, self.current_system
     
