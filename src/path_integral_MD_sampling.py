@@ -41,11 +41,13 @@ class RP_NVE(RPMD):
         if type(time_step) == type(None):
             time_step = self.time_step
 
-        write_xyz_traj('debug_current_beads_'+str(self.current_step)+'.xyz', self.current_beads) #DEBUG
+        write_xyz_traj('debug_current_beads_'+str(self.current_step)+'_before.xyz', self.current_beads) #DEBUG
         self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta = \
             self.integration.RP_velocity_Verlet(time_step, self.current_beads, self.current_beads_forces, self.masses)
         
         self.RPMD_update_step(self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta)
+
+        write_xyz_traj('debug_current_beads_'+str(self.current_step)+'_after.xyz', self.current_beads) #DEBUG
 
         if self.RPMD_clean_rotation:
             self.clean_rotation_centroid()
