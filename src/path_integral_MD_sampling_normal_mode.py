@@ -29,8 +29,8 @@ class RP_NVE_normal_mode(RPMD_normal_mode):
         time_step = self.RPMD_update_pre_step(time_step, bias_forces, updated_current_beads)
 
         self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta = \
-            self.integration.RP_velocity_Verlet(time_step, self.current_beads_positions, self.current_beads_momenta, \
-                                                self.current_beads_forces, self.C_jk, self.n_atom, self.n_beads, self.omega_k, self.atom_masses)
+            self.integration.RP_velocity_Verlet(time_step, self.current_beads, self.current_beads_forces, \
+                                                self.C_jk, self.n_atom, self.n_beads, self.omega_k, self.atom_masses)
         
         self.RPMD_update_step(self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta)
 
@@ -69,8 +69,8 @@ class RP_NVT_SVR_normal_mode(RPMD_normal_mode):
         time_step = self.RPMD_update_pre_step(time_step, bias_forces, updated_current_beads)
 
         self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta = \
-            self.integration.RP_velocity_Verlet(time_step, self.current_beads_positions, self.current_beads_momenta, \
-                                                self.current_beads_forces, self.C_jk, self.n_atom, self.n_beads, self.omega_k, self.atom_masses)
+            self.integration.RP_velocity_Verlet(time_step, self.current_beads, self.current_beads_forces, \
+                                                self.C_jk, self.n_atom, self.n_beads, self.omega_k, self.atom_masses)
 
         self.RPMD_update_step(self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta)
 
