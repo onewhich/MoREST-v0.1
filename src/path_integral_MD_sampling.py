@@ -16,9 +16,6 @@ class RP_NVE(RPMD):
         else:
             self.traj_file_name = traj_file_name
 
-        self.RPMD_clean_translation = RPMD_parameters['rpmd_clean_translation']
-        self.RPMD_clean_rotation = RPMD_parameters['rpmd_clean_rotation']
-
         super().__init__(morest_parameters, sampling_parameters, RPMD_parameters, molecule, traj_file_name, calculator, log_morest)
 
         if self.sampling_parameters['sampling_initialization']:
@@ -30,29 +27,12 @@ class RP_NVE(RPMD):
             self.RPMD_log = open(self.log_file_name, 'a', buffering=1)
 
     def generate_new_step(self, time_step=None, bias_forces=None, updated_current_beads=None):
-        if type(updated_current_beads) != type(None):
-            self.current_beads = updated_current_beads
-        
-        ### F(t) + bias
-        if type(bias_forces) != type(None):
-            for i in range(self.n_beads):
-                current_forces = self.current_beads_forces[i]
-                self.current_beads_forces[i] = current_forces + bias_forces
-            
-        if type(time_step) == type(None):
-            time_step = self.time_step
+        time_step = self.RPMD_update_pre_step(time_step, bias_forces, updated_current_beads)
 
         self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta = \
             self.integration.RP_velocity_Verlet(time_step, self.current_beads, self.current_beads_forces, self.masses)
-
-        if self.RPMD_clean_rotation:
-            self.clean_rotation_centroid()
-        if self.RPMD_clean_translation:
-            self.clean_translation_centroid()
         
         self.RPMD_update_step(self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta)
-        
-        write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
 
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             for i in range(self.n_beads):
@@ -75,9 +55,6 @@ class RP_NVK_VR(RPMD):
         else:
             self.traj_file_name = traj_file_name
 
-        self.RPMD_clean_translation = RPMD_parameters['rpmd_clean_translation']
-        self.RPMD_clean_rotation = RPMD_parameters['rpmd_clean_rotation']
-
         super().__init__(morest_parameters, sampling_parameters, RPMD_parameters, molecule, traj_file_name, calculator, log_morest)
 
         for i in range(self.n_beads):
@@ -96,25 +73,10 @@ class RP_NVK_VR(RPMD):
             self.RPMD_log = open(self.log_file_name, 'a', buffering=1)
 
     def generate_new_step(self, time_step=None, bias_forces=None, updated_current_beads=None):
-        if type(updated_current_beads) != type(None):
-            self.current_beads = updated_current_beads
-        
-        ### F(t) + bias
-        if type(bias_forces) != type(None):
-            for i in range(self.n_beads):
-                current_forces = self.current_beads_forces[i]
-                self.current_beads_forces[i] = current_forces + bias_forces
-            
-        if type(time_step) == type(None):
-            time_step = self.time_step
+        time_step = self.RPMD_update_pre_step(time_step, bias_forces, updated_current_beads)
 
         self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta = \
             self.integration.RP_velocity_Verlet(time_step, self.current_beads, self.current_beads_forces, self.masses)
-
-        if self.RPMD_clean_rotation:
-            self.clean_rotation_centroid()
-        if self.RPMD_clean_translation:
-            self.clean_translation_centroid()
 
         for i in range(self.n_beads):
             old_velocities = self.current_beads[i].get_velocities()
@@ -123,8 +85,6 @@ class RP_NVK_VR(RPMD):
             self.current_beads[i].set_velocities(new_velocities)
         
         self.RPMD_update_step(self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta)
-        
-        write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
 
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             for i in range(self.n_beads):
@@ -147,9 +107,6 @@ class RP_NVT_Berendsen(RPMD):
         else:
             self.traj_file_name = traj_file_name
 
-        self.RPMD_clean_translation = RPMD_parameters['rpmd_clean_translation']
-        self.RPMD_clean_rotation = RPMD_parameters['rpmd_clean_rotation']
-
         super().__init__(morest_parameters, sampling_parameters, RPMD_parameters, molecule, traj_file_name, calculator, log_morest)
 
         for i in range(self.n_beads):
@@ -168,25 +125,10 @@ class RP_NVT_Berendsen(RPMD):
             self.RPMD_log = open(self.log_file_name, 'a', buffering=1)
 
     def generate_new_step(self, time_step=None, bias_forces=None, updated_current_beads=None):
-        if type(updated_current_beads) != type(None):
-            self.current_beads = updated_current_beads
-        
-        ### F(t) + bias
-        if type(bias_forces) != type(None):
-            for i in range(self.n_beads):
-                current_forces = self.current_beads_forces[i]
-                self.current_beads_forces[i] = current_forces + bias_forces
-            
-        if type(time_step) == type(None):
-            time_step = self.time_step
+        time_step = self.RPMD_update_pre_step(time_step, bias_forces, updated_current_beads)
 
         self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta = \
             self.integration.RP_velocity_Verlet(time_step, self.current_beads, self.current_beads_forces, self.masses)
-
-        if self.RPMD_clean_rotation:
-            self.clean_rotation_centroid()
-        if self.RPMD_clean_translation:
-            self.clean_translation_centroid()
 
         for i in range(self.n_beads):
             old_velocities = self.current_beads[i].get_velocities()
@@ -195,8 +137,6 @@ class RP_NVT_Berendsen(RPMD):
             self.current_beads[i].set_velocities(new_velocities)
         
         self.RPMD_update_step(self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta)
-        
-        write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
 
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             for i in range(self.n_beads):
@@ -219,9 +159,6 @@ class RP_NVT_Langevin(RPMD):
         else:
             self.traj_file_name = traj_file_name
 
-        self.RPMD_clean_translation = RPMD_parameters['rpmd_clean_translation']
-        self.RPMD_clean_rotation = RPMD_parameters['rpmd_clean_rotation']
-
         super().__init__(morest_parameters, sampling_parameters, RPMD_parameters, molecule, traj_file_name, calculator, log_morest)
 
         if self.sampling_parameters['sampling_initialization']:
@@ -233,25 +170,10 @@ class RP_NVT_Langevin(RPMD):
             self.RPMD_log = open(self.log_file_name, 'a', buffering=1)
 
     def generate_new_step(self, time_step=None, bias_forces=None, updated_current_beads=None):
-        if type(updated_current_beads) != type(None):
-            self.current_beads = updated_current_beads
-        
-        ### F(t) + bias
-        if type(bias_forces) != type(None):
-            for i in range(self.n_beads):
-                current_forces = self.current_beads_forces[i]
-                self.current_beads_forces[i] = current_forces + bias_forces
-            
-        if type(time_step) == type(None):
-            time_step = self.time_step
+        time_step = self.RPMD_update_pre_step(time_step, bias_forces, updated_current_beads)
 
         self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta = \
             self.integration.RP_velocity_Verlet(time_step, self.current_beads, self.current_beads_forces, self.masses)
-
-        if self.RPMD_clean_rotation:
-            self.clean_rotation_centroid()
-        if self.RPMD_clean_translation:
-            self.clean_translation_centroid()
 
         tmp_d_Ee_list = []
         for i in range(self.n_beads):
@@ -263,8 +185,6 @@ class RP_NVT_Langevin(RPMD):
         self.d_Ee = np.mean(tmp_d_Ee_list)
         
         self.RPMD_update_step(self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta)
-
-        write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
 
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             for i in range(self.n_beads):
@@ -288,9 +208,6 @@ class RP_NVT_SVR(RPMD):
         else:
             self.traj_file_name = traj_file_name
 
-        self.RPMD_clean_translation = RPMD_parameters['rpmd_clean_translation']
-        self.RPMD_clean_rotation = RPMD_parameters['rpmd_clean_rotation']
-
         super().__init__(morest_parameters, sampling_parameters, RPMD_parameters, molecule, traj_file_name, calculator, log_morest)
 
         if self.sampling_parameters['sampling_initialization']:
@@ -302,25 +219,10 @@ class RP_NVT_SVR(RPMD):
             self.RPMD_log = open(self.log_file_name, 'a', buffering=1)
 
     def generate_new_step(self, time_step=None, bias_forces=None, updated_current_beads=None):
-        if type(updated_current_beads) != type(None):
-            self.current_beads = updated_current_beads
-        
-        ### F(t) + bias
-        if type(bias_forces) != type(None):
-            for i in range(self.n_beads):
-                current_forces = self.current_beads_forces[i]
-                self.current_beads_forces[i] = current_forces + bias_forces
-            
-        if type(time_step) == type(None):
-            time_step = self.time_step
+        time_step = self.RPMD_update_pre_step(time_step, bias_forces, updated_current_beads)
 
         self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta = \
             self.integration.RP_velocity_Verlet(time_step, self.current_beads, self.current_beads_forces, self.masses)
-
-        if self.RPMD_clean_rotation:
-            self.clean_rotation_centroid()
-        if self.RPMD_clean_translation:
-            self.clean_translation_centroid()
 
         tmp_d_Ee_list = []
         for i in range(self.n_beads):
@@ -332,8 +234,6 @@ class RP_NVT_SVR(RPMD):
         self.d_Ee = np.mean(tmp_d_Ee_list)
         
         self.RPMD_update_step(self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta)
-            
-        write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
 
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             for i in range(self.n_beads):

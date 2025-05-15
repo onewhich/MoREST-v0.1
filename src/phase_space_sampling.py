@@ -169,7 +169,6 @@ class MD(initialize_sampling):
         
     def update_step(self, next_potential_energy, next_forces):
         
-        self.current_step += 1
         self.current_forces = next_forces
         self.current_potential_energy = next_potential_energy
             
@@ -182,6 +181,8 @@ class MD(initialize_sampling):
             clean_rotation(self.current_system, preserve_temperature=True)
         if self.MD_parameters['md_clean_translation']:
             clean_translation(self.current_system, preserve_temperature=True)
+            
+        self.current_step += 1
         
         if not self.re_simulation:
             write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
@@ -218,6 +219,8 @@ class RPMD(initialize_sampling):
         self.omega_n = RPMD_parameters['omega_n']
         self.omega_k = RPMD_parameters['omega_k']
         self.C_jk = RPMD_parameters['C_jk']
+        self.RPMD_clean_translation = RPMD_parameters['rpmd_clean_translation']
+        self.RPMD_clean_rotation = RPMD_parameters['rpmd_clean_rotation']
         self.atom_masses = self.masses.flatten()
         self.current_system.calc = calculator
 
@@ -325,20 +328,44 @@ class RPMD(initialize_sampling):
             tmp_system.set_positions(tmp_pos)
             self.current_beads.append(tmp_system)
 
+    def RPMD_update_pre_step(self, time_step=None, bias_forces=None, updated_current_beads=None):
+        if type(updated_current_beads) != type(None):
+            self.current_beads = updated_current_beads
+        
+        ### F(t) + bias
+        if type(bias_forces) != type(None):
+            for i in range(self.n_beads):
+                current_forces = self.current_beads_forces[i]
+                self.current_beads_forces[i] = current_forces + bias_forces
+            
+        if type(time_step) == type(None):
+            time_step = self.time_step
+
+        return time_step
+
     def RPMD_update_step(self, current_beads_potential_energy, current_beads_forces, next_beads_positions, next_beads_momenta):
+
         self.update_beads_positions(next_beads_positions)
         self.current_beads_positions = next_beads_positions
         self.update_beads_momenta(next_beads_momenta)
         self.current_beads_momenta = next_beads_momenta
-        write_xyz_file(self.beads_file_name, self.current_beads)
-        self.current_step += 1
         self.update_centroid_positions_momenta(self.current_beads)
         self.update_centroid_potential_energy_forces(current_beads_potential_energy, current_beads_forces)
+        
+        if self.RPMD_clean_rotation:
+            self.clean_rotation_centroid()
+        if self.RPMD_clean_translation:
+            self.clean_translation_centroid()
             
         try:
             self.ml_calculator.get_current_step(self.current_step)
         except:
             pass
+        
+        self.current_step += 1
+
+        write_xyz_file(self.beads_file_name, self.current_beads)
+        write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
 
     def pre_thermalization(self, Tf):
         for i in range(self.n_beads):
@@ -392,7 +419,7 @@ class RPMD(initialize_sampling):
     # only remove the centroid translational motion
     def clean_translation_centroid(self):
         centroid_velocity = self.current_system.get_velocities()
-        clean_translation(self.current_system)
+        clean_translation(self.current_system, preserve_temperature=True)
         new_velocity = self.current_system.get_velocities()
         d_velocity = new_velocity - centroid_velocity
         for i_bead in self.current_beads:
@@ -402,7 +429,7 @@ class RPMD(initialize_sampling):
     # only remove the centroid rotational motion
     def clean_rotation_centroid(self):
         centroid_velocity = self.current_system.get_velocities()
-        clean_rotation(self.current_system)
+        clean_rotation(self.current_system, preserve_temperature=True)
         new_velocity = self.current_system.get_velocities()
         d_velocity = new_velocity - centroid_velocity
         for i_bead in self.current_beads:
