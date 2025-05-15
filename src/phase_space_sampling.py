@@ -325,7 +325,7 @@ class RPMD(initialize_sampling):
             tmp_system.set_positions(tmp_pos)
             self.current_beads.append(tmp_system)
 
-    def RPMD_update_step(self, current_beads_potential_energy, current_beads_forces, next_beads_momenta, next_beads_positions):
+    def RPMD_update_step(self, current_beads_potential_energy, current_beads_forces, next_beads_positions, next_beads_momenta):
         self.update_beads_positions(next_beads_positions)
         self.current_beads_positions = next_beads_positions
         self.update_beads_momenta(next_beads_momenta)
