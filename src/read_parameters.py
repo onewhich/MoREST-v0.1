@@ -277,7 +277,7 @@ class read_parameters:
                     if self.sampling_parameters['sampling_method'].upper() in ['MD']:
                         self.read_MD_parameters(i_parameter)
                     ########################## Ring Polymer MD ############################
-                    elif self.sampling_parameters['sampling_method'].upper() in ['RPMD']:
+                    elif self.sampling_parameters['sampling_method'].upper() in ['RPMD','RPMD_NM']:
                         self.read_RPMD_parameters(i_parameter)
                     if 'sampling_ensemble' in self.sampling_parameters:
                         if self.sampling_parameters['sampling_ensemble'].upper() in ['NPT_Berendsen'.upper(), 'NPT_Langevin'.upper(), \
