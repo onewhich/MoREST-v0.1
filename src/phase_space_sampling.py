@@ -234,7 +234,7 @@ class RPMD(initialize_sampling):
             if len(self.current_beads) != self.n_beads:
                 raise Exception('The number of structures in beads file does not fit the number of beads given by the parameter file. Please check.')
         else:
-            self.initialize_beads()
+            self.initialize_beads_noraml_mode()
             log_morest.write('Initialize beads and write to file: '+self.beads_file_name+'\n\n')
         write_xyz_file(self.beads_file_name, self.current_beads)
         write_xyz_file('MoREST_RPMD_beads_initial.xyz', self.current_beads)
@@ -243,15 +243,15 @@ class RPMD(initialize_sampling):
             if not self.sampling_parameters['sampling_pre_thermalized']:
                 if 'sampling_initial_E' in self.sampling_parameters:
                     T_thermalized = 2/3 * self.sampling_parameters['sampling_initial_E']/units.kB /self.n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
-                    MaxwellBoltzmannDistribution(self.current_system, temperature_K = T_thermalized, force_temp = True)
+                    for i in range(self.n_beads):
+                        MaxwellBoltzmannDistribution(self.current_beads[i], temperature_K = T_thermalized, force_temp = True)
                 elif 'sampling_initial_T' in self.sampling_parameters:
                     T_thermalized = self.sampling_parameters['sampling_initial_T']
-                    MaxwellBoltzmannDistribution(self.current_system, temperature_K = T_thermalized, force_temp = True)
+                    for i in range(self.n_beads):
+                        MaxwellBoltzmannDistribution(self.current_beads[i], temperature_K = T_thermalized, force_temp = True)
                 else:
-                    MaxwellBoltzmannDistribution(self.current_system, temperature_K = self.T_simulation)
-                centroid_velocity = self.current_system.get_velocities()
-                for i in range(self.n_beads):
-                    self.current_beads[i].set_velocities(centroid_velocity)
+                    for i in range(self.n_beads):
+                        MaxwellBoltzmannDistribution(self.current_system, temperature_K = self.T_simulation)
 
 
         self.current_beads_positions = self.get_beads_positions(self.current_beads)
@@ -263,7 +263,7 @@ class RPMD(initialize_sampling):
 
         self.integration = RPMD_integration(self.many_body_potential, self.omega_n, self.n_beads)
 
-    def initialize_beads(self): # initialize the beads in normal mode representation
+    def initialize_beads_noraml_mode(self):
         centroid_positions = self.current_system.get_positions().reshape((1, self.n_atom, 3))
         masses = self.masses.reshape((1, self.n_atom, 1))
         self.current_beads = []
@@ -287,7 +287,7 @@ class RPMD(initialize_sampling):
 
         self.update_beads_positions(self.current_beads_positions)
 
-    def initialize_beads_realspace(self, factor_r=0.7):
+    def initialize_beads_real_space(self, factor_r=0.7):
         # r_beads: the average distance from a bead to the neighbor for free particles.
         r_beads = [np.sqrt(self.beta * (self.hbar)**2 / self.n_beads / self.atom_masses[i]) for i in range(self.n_atom)] 
         
