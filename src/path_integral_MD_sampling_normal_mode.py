@@ -91,8 +91,8 @@ class RP_NVT_SVR_normal_mode(RPMD_normal_mode):
             for i in range(self.n_beads):
                 write_xyz_traj(self.beads_file_head+"traj_"+str(i)+'.xyz',self.current_beads[i])
             write_xyz_traj(self.traj_file_name, self.current_system)
-            self.kinetic_energy = self.current_system.get_kinetic_energy()
-            self.Ee = self.write_MD_SVR_log(self.RPMD_log, self.current_step, np.average(self.current_beads_potential_energy), self.kinetic_energy, self.masses, self.Ee, self.d_Ee)
+            self.Ee = self.write_MD_SVR_log(self.RPMD_log, self.current_step, np.mean(self.current_beads_potential_energy), \
+                                            np.mean(self.get_beads_kinetic_energy(self.current_beads)), self.masses, self.Ee, self.d_Ee)
             
         return self.current_step, self.current_system
     
