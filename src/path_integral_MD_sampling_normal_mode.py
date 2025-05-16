@@ -44,7 +44,7 @@ class RP_NVE_normal_mode(RPMD_normal_mode):
 
         return self.current_step, self.current_system
 
-class RP_NVK_normal_mode(RPMD_normal_mode):
+class RP_NVK_VR_normal_mode(RPMD_normal_mode):
     def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
                 
         if type(log_file_name) == type(None):
