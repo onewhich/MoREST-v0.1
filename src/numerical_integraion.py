@@ -270,3 +270,77 @@ class RPMD_normal_mode_integration:
         return np.array([[np.sum([beads_vectors[j,i,:]*C_jk[k,j] for j in range(n_beads)],axis=0) \
                           for i in range(n_atom)] for k in range(n_beads)])
     
+class RPMD_normal_mode_integration_vectorized:
+    '''
+    Implement RPMD time evolution based on normal mode representation with modified velocity Verlet.
+    @article{ceriotti2010efficient,
+        title={Efficient stochastic thermostatting of path integral molecular dynamics},
+        author={Ceriotti, Michele and Parrinello, Michele and Markland, Thomas E and Manolopoulos, David E},
+        journal={The Journal of chemical physics},
+        volume={133},
+        number={12},
+        year={2010},
+        publisher={AIP Publishing}
+    }
+    '''
+    def __init__(self, many_body_potential):
+        self.many_body_potential = many_body_potential
+
+    def RP_velocity_Verlet(self, time_step, current_beads, current_beads_forces, C_jk, n_beads, omega_k, atom_masses):
+        # Extract positions and momenta
+        beads_positions = np.array([i_bead.get_positions() for i_bead in current_beads])     # (P, N, D)
+        beads_momenta = np.array([i_bead.get_momenta() for i_bead in current_beads])         # (P, N, D)
+
+        # Half-step momentum update
+        beads_momenta_half = beads_momenta + 0.5 * time_step * current_beads_forces                   # (P, N, D)
+
+        # Normal mode transform
+        beads_positions_k = self.coordinate_to_normal_mode(beads_positions, C_jk)              # (P, N, D)
+        beads_momenta_k = self.coordinate_to_normal_mode(beads_momenta_half, C_jk)
+
+        # Free ring polymer evolution in normal mode
+        omega_k = omega_k[:, None, None]                                           # (P, 1, 1)
+        atom_masses = atom_masses[None, :, None]                                   # (1, N, 1)
+
+        cos_term = np.cos(omega_k * time_step)
+        sin_term = np.sin(omega_k * time_step)
+
+        beads_momenta_kp = cos_term * beads_momenta_k - sin_term * atom_masses * omega_k * beads_positions_k
+        beads_positions_kp = cos_term * beads_positions_k + sin_term / (atom_masses * omega_k) * beads_momenta_k
+
+        # Back to Cartesian
+        next_beads_positions = self.normal_mode_to_coordinate(beads_positions_kp, C_jk)
+        beads_momenta_half = self.normal_mode_to_coordinate(beads_momenta_kp, C_jk)
+
+        # Update bead positions
+        for i in range(n_beads):
+            current_beads[i].set_positions(next_beads_positions[i])
+
+        # Compute new forces and potential
+        beads_potential_energy = []
+        next_beads_forces = []
+        for i_bead in current_beads:
+            tmp_potential_energy, tmp_forces = self.many_body_potential.get_potential_forces(i_bead)
+            beads_potential_energy.append(tmp_potential_energy)
+            next_beads_forces.append(tmp_forces)
+        beads_potential_energy = np.array(beads_potential_energy)
+        next_beads_forces = np.array(next_beads_forces)
+
+        # Final half-step momentum update
+        next_beads_momenta = beads_momenta_half + 0.5 * time_step * next_beads_forces
+
+        # Update bead momenta
+        for i in range(n_beads):
+            current_beads[i].set_momenta(next_beads_momenta[i])
+
+        return beads_potential_energy, next_beads_forces, next_beads_positions, next_beads_momenta
+
+    @staticmethod
+    def coordinate_to_normal_mode(beads_vectors, C_jk):
+        '''(P, N, D) -> (P, N, D) in normal mode representation'''
+        return np.tensordot(C_jk.T, beads_vectors, axes=(1, 0))  # C^T · beads_vectors
+
+    @staticmethod
+    def normal_mode_to_coordinate(beads_vectors_k, C_jk):
+        '''(P, N, D) in normal mode -> (P, N, D) in Cartesian'''
+        return np.tensordot(C_jk, beads_vectors_k, axes=(1, 0))  # C · beads_vectors_k
