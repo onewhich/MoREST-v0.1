@@ -84,8 +84,6 @@ class RP_NVT_SVR_normal_mode(RPMD_normal_mode):
             self.current_beads[i].set_velocities(new_velocities)
             tmp_d_Ee_list.append(tmp_d_Ee)
         self.d_Ee = np.mean(tmp_d_Ee_list)
-        
-        self.RPMD_update_step(self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta)
 
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             for i in range(self.n_beads):
