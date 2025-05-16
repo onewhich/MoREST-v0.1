@@ -286,7 +286,8 @@ class RPMD_normal_mode_integration_vectorized:
     def __init__(self, many_body_potential):
         self.many_body_potential = many_body_potential
 
-    def RP_velocity_Verlet(self, time_step, current_beads, current_beads_forces, C_jk, n_beads, omega_k, atom_masses):
+    def RP_velocity_Verlet(self, time_step, current_beads, current_beads_forces, C_jk, n_beads, omega_k, atom_masses, \
+                           NVT_SVR=False, thermostat_SVR=None):
         # Extract positions and momenta
         beads_positions = np.array([i_bead.get_positions() for i_bead in current_beads])     # (P, N, D)
         beads_momenta = np.array([i_bead.get_momenta() for i_bead in current_beads])         # (P, N, D)
@@ -297,6 +298,10 @@ class RPMD_normal_mode_integration_vectorized:
         # Normal mode transform
         beads_positions_k = self.coordinate_to_normal_mode(beads_positions, C_jk)              # (P, N, D)
         beads_momenta_k = self.coordinate_to_normal_mode(beads_momenta_half, C_jk)
+
+        # === SVR Thermostat ===
+        if NVT_SVR:
+            beads_momenta_k = thermostat_SVR(beads_momenta_k)
 
         # Free ring polymer evolution in normal mode
         omega_k = omega_k[:, None, None]                                           # (P, 1, 1)
@@ -344,3 +349,4 @@ class RPMD_normal_mode_integration_vectorized:
     def normal_mode_to_coordinate(beads_vectors_k, C_jk):
         '''(P, N, D) in normal mode -> (P, N, D) in Cartesian'''
         return np.tensordot(C_jk, beads_vectors_k, axes=(1, 0))  # C · beads_vectors_k
+

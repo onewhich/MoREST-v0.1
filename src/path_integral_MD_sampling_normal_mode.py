@@ -2,6 +2,7 @@ import numpy as np
 from structure_io import write_xyz_file, write_xyz_traj
 from phase_space_sampling import RPMD_normal_mode
 from thermostat import velocity_rescaling, Berendsen_velocity_rescaling, Langevin_velocity_rescaling, stochastic_velocity_rescaling
+from ase import units
 
 class RP_NVE_normal_mode(RPMD_normal_mode):
     def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
@@ -30,7 +31,7 @@ class RP_NVE_normal_mode(RPMD_normal_mode):
 
         self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta = \
             self.integration.RP_velocity_Verlet(time_step, self.current_beads, self.current_beads_forces, \
-                                                self.C_jk, self.n_atom, self.n_beads, self.omega_k, self.atom_masses)
+                                                self.C_jk, self.n_beads, self.omega_k, self.atom_masses, NVT_SVR=False)
         
         self.RPMD_update_step(self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta)
 
@@ -70,7 +71,8 @@ class RP_NVT_SVR_normal_mode(RPMD_normal_mode):
 
         self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta = \
             self.integration.RP_velocity_Verlet(time_step, self.current_beads, self.current_beads_forces, \
-                                                self.C_jk, self.n_atom, self.n_beads, self.omega_k, self.atom_masses)
+                                                self.C_jk, self.n_beads, self.omega_k, self.atom_masses, \
+                                                    NVT_SVR=False, thermostat_SVR=self.thermostat_SVR)
 
         self.RPMD_update_step(self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta)
 
@@ -93,3 +95,27 @@ class RP_NVT_SVR_normal_mode(RPMD_normal_mode):
             self.Ee = self.write_MD_SVR_log(self.RPMD_log, self.current_step, np.average(self.current_beads_potential_energy), self.kinetic_energy, self.masses, self.Ee, self.d_Ee)
             
         return self.current_step, self.current_system
+    
+    def thermostat_SVR(self, current_momenta_k):
+        '''
+        Applies Stochastic Velocity Rescaling (SVR) to internal modes (k > 0).
+        '''
+        for k in range(1, self.n_beads):  # skip centroid (k = 0)
+            for i in range(self.n_atom):
+                p = current_momenta_k[k, i]
+                m = self.atom_masses[i]
+                KE = 0.5 * np.sum(p**2) / m
+                dof = 3  # degrees of freedom per atom
+
+                if KE == 0:
+                    continue  # avoid division by zero
+
+                c = np.exp(-self.time_step / self.sampling_parameters['nvt_svr_tau'])
+                T_inst = (2 * KE) / (dof * units.kB)
+                xi = np.random.normal()
+                chi = np.random.chisquare(dof - 1)
+                alpha_sq = c + (1 - c) * (self.T_simulation / T_inst) * (chi + xi**2) / (dof)
+                alpha = np.sqrt(alpha_sq)
+
+                current_momenta_k[k, i] = alpha * p
+        return current_momenta_k
