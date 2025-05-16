@@ -31,7 +31,7 @@ class RP_NVE_normal_mode(RPMD_normal_mode):
 
         self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta = \
             self.integration.RP_velocity_Verlet(time_step, self.current_beads, self.current_beads_forces, \
-                                                self.C_jk, self.n_beads, self.omega_k, self.atom_masses, NVT_SVR=False)
+                                                self.C_jk, self.n_beads, self.omega_k, self.atom_masses)#, NVT_SVR=False)
         
         self.RPMD_update_step(self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta)
 
@@ -71,32 +71,33 @@ class RP_NVT_SVR_normal_mode(RPMD_normal_mode):
 
         self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta = \
             self.integration.RP_velocity_Verlet(time_step, self.current_beads, self.current_beads_forces, \
-                                                self.C_jk, self.n_beads, self.omega_k, self.atom_masses, \
-                                                    NVT_SVR=True, thermostat_SVR=self.thermostat_SVR)
+                                                self.C_jk, self.n_beads, self.omega_k, self.atom_masses)
+                                                    #NVT_SVR=True, thermostat_SVR=self.thermostat_SVR)
 
         self.RPMD_update_step(self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta)
 
-        #tmp_d_Ee_list = []
-        #for i in range(self.n_beads):
-        #    old_velocities = self.current_beads[i].get_velocities()
-        #    new_velocities, tmp_d_Ee = stochastic_velocity_rescaling(self.time_step, self.current_beads[i].get_kinetic_energy(), self.K_simulation, \
-        #                                                            3*self.n_atom, self.sampling_parameters['nvt_svr_tau'], old_velocities)
-        #    self.current_beads[i].set_velocities(new_velocities)
-        #    tmp_d_Ee_list.append(tmp_d_Ee)
-        #self.d_Ee = np.mean(tmp_d_Ee_list)
+        tmp_d_Ee_list = []
+        for i in range(self.n_beads):
+            old_velocities = self.current_beads[i].get_velocities()
+            new_velocities, tmp_d_Ee = stochastic_velocity_rescaling(self.time_step, self.current_beads[i].get_kinetic_energy(), self.K_simulation, \
+                                                                    3*self.n_atom, self.sampling_parameters['nvt_svr_tau'], old_velocities)
+            self.current_beads[i].set_velocities(new_velocities)
+            tmp_d_Ee_list.append(tmp_d_Ee)
+        self.d_Ee = np.mean(tmp_d_Ee_list)
 
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             for i in range(self.n_beads):
                 write_xyz_traj(self.beads_file_head+"traj_"+str(i)+'.xyz',self.current_beads[i])
             write_xyz_traj(self.traj_file_name, self.current_system)
             self.Ee = self.write_MD_SVR_log(self.RPMD_log, self.current_step, np.mean(self.current_beads_potential_energy), \
-                                            np.mean(self.get_beads_kinetic_energy(self.current_beads)), self.masses)#, self.Ee, self.d_Ee)
+                                            np.mean(self.get_beads_kinetic_energy(self.current_beads)), self.masses, self.Ee, self.d_Ee)
             
         return self.current_step, self.current_system
     
     def thermostat_SVR(self, current_momenta_k):
         '''
         Applies Stochastic Velocity Rescaling (SVR) to internal modes (k > 0).
+        Does not work well, discarded.
         '''
         for k in range(1, self.n_beads):  # skip centroid (k = 0)
             for i in range(self.n_atom):
