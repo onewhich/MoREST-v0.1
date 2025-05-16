@@ -120,7 +120,7 @@ Searching_starting_point          MoREST_searching.xyz # The input of the struct
 Searching_convergence             5e-3 # unit in eV/AA. The convergence criteria of forces when searching.
 Searching_max_steps               100 # The maximum steps for structure searching.
 Searching_constrained             False #TODO: whether constrained optimization is used.
-Searching_method                  FIRE # GD: steepest/gradient descent; CG: conjugate gradient descent; BFGS; FIRE; dimer: for transition state; SGD: stochastic gradient descent.
+Searching_method                  FIRE # GD: steepest/gradient descent; CG: conjugate gradient descent; BFGS; FIRE; dimer: for transition state; SGD: stochastic gradient descent; RP_BFGS: BFGS for ring polymer
 Gradient_step_size                3
 FIRE_equal_masses                 True # Setting all the atom masses equal.
 FIRE_time_step                    1 # unit in fs
@@ -130,6 +130,8 @@ FIRE_N_min                        5
 FIRE_f_increase                   1.1
 FIRE_f_decrease                   0.5
 FIRE_f_alpha                      0.99
+#TODO RP_number_of_beads          10
+#TODO RP_temperature              1
 
 Enhanced_sampling                 False
 Enhanced_sampling_method          RE   # RE; ITS; RP: ring polymer; pRE: parrallel running version of replica exchange; SA: simulated annealing; ST: simulated tempering; aMD: accelerated MD; Wang-Landau; NS: nested sampling; 
