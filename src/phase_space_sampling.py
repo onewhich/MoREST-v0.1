@@ -3,7 +3,7 @@ from copy import deepcopy
 import numpy as np
 from structure_io import read_xyz_file, read_xyz_traj, write_xyz_file, write_xyz_traj
 from initialize_calculator import initialize_calculator
-from numerical_integraion import MD_integration, RPMD_integration, RPMD_normal_mode_integration
+from numerical_integraion import MD_integration, RPMD_integration, RPMD_normal_mode_integration, RPMD_normal_mode_integration_vectorized
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution
 # Stationary and ZeroRotation from ase will not change the total kinetic energy, the vibrational energy will arise after these two processes.
 from kinetic_energy_assignment import clean_translation, clean_rotation
@@ -446,4 +446,4 @@ class RPMD_normal_mode(RPMD):
     '''
     def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, traj_file_name=None, calculator=None, log_morest=None):
         super().__init__(morest_parameters, sampling_parameters, RPMD_parameters, molecule, traj_file_name, calculator, log_morest)
-        self.integration = RPMD_normal_mode_integration(self.many_body_potential)
+        self.integration = RPMD_normal_mode_integration_vectorized(self.many_body_potential)
