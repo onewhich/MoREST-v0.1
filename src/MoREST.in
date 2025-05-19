@@ -34,14 +34,14 @@ Sampling_pre_thermalized          False # True: the initial structures with ther
 Sampling_initial_T                20 # unit in K. The initial instantaneous temperature of the molecule.
 Sampling_initial_E                1 # unit in eV. The initial kinetic energy of the molecule. "Sampling_initial_T" will be ignored, if "Sampling_initial_E" is defined.
 Sampling_ensemble                 NVT_SVR  10   # Choose the ensemble, e.g. NVE_VV: velocity Verlet;
-                                                #                           NPH_SVR 5:BZP stochastic volume rescaling barostat with NPH_SVR_tau=5;
+                                                #                           NPH_SVR 5:BZP stochastic velocity rescaling barostat with NPH_SVR_tau=5;
                                                 #                           NVK_VR 10: velocity Verlet with velocity rescaling, with parameter NVK_VR_dT=10;
                                                 #                           NVT_Berendsen 10: Berendsen thermostat with NVT_Berendsen_tau=10;
                                                 #                           NVT_Langevin 0.05: Langevin thermostat with NVT_Langevin_gamma=0.05;
                                                 #                           NVT_SVR 10: BDP stochastic velocity rescaling thermostat, with parameter NVT_SVR_tau=10;
                                                 #                           NPT_Berendsen 10 5 1: Berendsen isothermal-isobaric sampling with NPT_Berendsen_tau_T=10 fs, NPT_Berendsen_tau_P=5 fs, NPT_Berendsen_compressibility=1 bar^-1;
                                                 #                           NPT_Langevin    TODO: Langevin isothermal-isobaric sampling
-                                                #                           NPT_SVR 10 5: BZP stochastic velocity-volume rescaling thermostat and barostat with NPT_SVR_tau_T=10 fs, NPT_SVR_tau_P=5 fs;
+                                                #                           NPT_SVR 10 5: BZP stochastic velocity rescaling thermostat and barostat with NPT_SVR_tau_T=10 fs, NPT_SVR_tau_P=5 fs;
 MD_clean_translation              True
 MD_clean_rotation                 True
 MD_time_step                      1   # unit in fs
