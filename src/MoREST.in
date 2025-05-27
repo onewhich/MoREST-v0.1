@@ -120,7 +120,9 @@ Searching_starting_point          MoREST_searching.xyz # The input of the struct
 Searching_convergence             5e-3 # unit in eV/AA. The convergence criteria of forces when searching.
 Searching_max_steps               100 # The maximum steps for structure searching.
 Searching_constrained             False #TODO: whether constrained optimization is used.
-Searching_method                  FIRE # GD: steepest/gradient descent; CG: conjugate gradient descent; BFGS; FIRE; dimer: for transition state; SGD: stochastic gradient descent; RP_BFGS: BFGS for ring polymer
+Searching_method                  FIRE # for local minimum: GD: steepest/gradient descent; CG: conjugate gradient descent; BFGS; FIRE; RP_BFGS: BFGS for ring polymer
+                                       # for transition state: BFGS: quasi-Newton variants for transition states; dimer; GAD: Gentle Ascent Dynamics;
+                                       # for global minimum: SGD: stochastic gradient descent;
 Gradient_step_size                3
 FIRE_equal_masses                 True # Setting all the atom masses equal.
 FIRE_time_step                    1 # unit in fs
@@ -134,8 +136,9 @@ FIRE_f_alpha                      0.99
 #TODO RP_temperature              1
 
 Enhanced_sampling                 False
-Enhanced_sampling_method          RE   # RE; ITS; RP: ring polymer; pRE: parrallel running version of replica exchange; SA: simulated annealing; ST: simulated tempering; aMD: accelerated MD; Wang-Landau; NS: nested sampling; 
-                                  # TPS: for scattering; TIS; BH: basin hopping for searching; MH: minima hopping for searching.
+Enhanced_sampling_method          RE   # for sampling: RE; ITS; pRE: parrallel running version of replica exchange; ST: simulated tempering; aMD: accelerated MD; Wang-Landau; NS: nested sampling; 
+                                       # for scattering: TPS; TIS;
+                                       # for searching: BH: basin hopping; MH: minima hopping; SA: simulated annealing;
 RE_initialization                 True  # True will remove files with the title of 'MoREST_RE_'
 RE_lower_bound_temperature        400
 RE_upper_bound_temperature        100000
