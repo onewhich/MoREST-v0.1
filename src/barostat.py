@@ -13,7 +13,8 @@ class barostat_space:
         self.initialize_barostat_space_wall()
 
     def initialize_barostat_space_size(self):
-        Eks = self.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
+        Eks = self.current_system.get_kinetic_energy()
+        #Eks = self.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
         all_forces = self.current_system.get_forces()
         all_coordinates = self.current_system.get_positions()
         for i in range(self.barostat_parameters['barostat_number']):
@@ -67,16 +68,16 @@ class barostat_space:
         return Eks
 
     @staticmethod
-    def get_internal_virial(index, all_coordinates, all_forces):
+    def get_internal_virial(atom_index, all_coordinates, all_forces):
         index_all = np.arange(len(all_coordinates))
-        index_exclude = np.setdiff1d(index_all, index)
-        coordinates = all_coordinates[index]
-        forces = all_forces[index]
-        n_atom = len(index)
+        index_exclude = np.setdiff1d(index_all, atom_index)
+        coordinates = all_coordinates[atom_index]
+        forces = all_forces[atom_index]
+        n_atom = len(atom_index)
         # virial belonged to the specified barostat
         inner_virial = -np.sum([(coordinates[i]-coordinates[j]) @ forces[i] for i in range(n_atom-1) for j in range(i+1,n_atom)])/2
         # virial belonged to the interaction between specified barostat and other barostat
-        outer_virial = -np.sum([(all_coordinates[i]-all_coordinates[j]) @ all_forces[i] for i in index for j in index_exclude])/2
+        outer_virial = -np.sum([(all_coordinates[i]-all_coordinates[j]) @ all_forces[i] for i in atom_index for j in index_exclude])/2
         outer_virial /= 2
         return inner_virial+outer_virial
 
@@ -112,39 +113,39 @@ class barostat_space:
                 barostat_bias_forces[index[j]] += j_bias
         return barostat_bias_forces
 
-def Berendsen_volume_rescaling(barostat_parameters, time_step, all_coordinates, all_forces, velocities, masses, P_simulation, tau_P, beta, factor_miu):
+def Berendsen_volume_rescaling(barostat_parameters, time_step, all_coordinates, all_forces, velocities, masses, P_simulation, tau_P, beta):
     Eks = barostat_space.get_atom_kinetic_energies(velocities, masses)
-    next_miu = []
+    factor_miu = []
     P_current = []
     for i in range(barostat_parameters['barostat_number']):
-        index = barostat_parameters['barostat_action_atoms'][i]
-        internal_virial = barostat_space.get_internal_virial(index, all_coordinates, all_forces)
+        atom_index = barostat_parameters['barostat_action_atoms'][i]
+        internal_virial = barostat_space.get_internal_virial(atom_index, all_coordinates, all_forces)
         volume = barostat_space.get_volume(barostat_parameters['barostat_space_shape'][i], barostat_parameters['barostat_space_size'][i])
-        P_current.append(barostat_space.get_pressure(Eks[index], internal_virial, volume))
-        tmp_miu = np.power(1+(time_step/tau_P)*beta*(P_current-P_simulation[i]),1./3.)
-        next_miu.append(tmp_miu)
+        P_current.append(barostat_space.get_pressure(Eks[atom_index], internal_virial, volume))
+        tmp_miu = 1-time_step*beta/tau_P/3.*(P_simulation[i]-P_current[i])
+        factor_miu.append(tmp_miu)
 
         if barostat_parameters['barostat_space_type'][i].upper() == 'gas'.upper():
             barostat_parameters['barostat_space_size'][i] *= factor_miu[i]
         elif barostat_parameters['barostat_space_type'][i].upper() == 'condensed'.upper():
             barostat_parameters['barostat_space_size'][i] *= factor_miu[i]
-            all_coordinates[index] *= factor_miu[i]
+            all_coordinates[atom_index] *= factor_miu[i]
 
-    return all_coordinates, np.array(next_miu), np.array(P_current)
+    return all_coordinates, np.array(factor_miu), np.array(P_current)
     
 def stochastic_velocity_volume_rescaling(barostat_parameters, time_step, half_time_step, all_coordinates, all_forces, velocities, eta, momenta, \
                                          masses, W_barostat, T_current, P_simulation):
     Eks = barostat_space.get_atom_kinetic_energies(velocities, masses)
     P_current = []
     for i in range(barostat_parameters['barostat_number']):
-        index = barostat_parameters['barostat_action_atoms'][i]
+        atom_index = barostat_parameters['barostat_action_atoms'][i]
 
         # stage 2
-        internal_virial = barostat_space.get_internal_virial(index, all_coordinates, all_forces)
+        internal_virial = barostat_space.get_internal_virial(atom_index, all_coordinates, all_forces)
         volume = barostat_space.get_volume(barostat_parameters['barostat_space_shape'][i], barostat_parameters['barostat_space_size'][i])
-        P_current.append(barostat_space.get_pressure(Eks[index], internal_virial, volume))
+        P_current.append(barostat_space.get_pressure(Eks[atom_index], internal_virial, volume))
         eta_half, momenta_half = SVR_stage_2_4(eta[i], volume, P_current[i], P_simulation[i], T_current, half_time_step, W_barostat, \
-                                               all_forces[index], momenta[index], masses[index], index)
+                                               all_forces[atom_index], momenta[atom_index], masses[atom_index], atom_index)
         # stage 3
         eta_half_time_step = eta_half*time_step
         volume *= np.exp(3*eta_half_time_step)
@@ -153,17 +154,17 @@ def stochastic_velocity_volume_rescaling(barostat_parameters, time_step, half_ti
             barostat_parameters['barostat_space_size'][i] *= np.exp(eta_half_time_step)
         elif barostat_parameters['barostat_space_type'][i].upper() == 'condensed'.upper():
             barostat_parameters['barostat_space_size'][i] *= np.exp(eta_half_time_step)
-            all_coordinates[index] = np.exp(eta_half_time_step)*all_coordinates[index] + \
+            all_coordinates[atom_index] = np.exp(eta_half_time_step)*all_coordinates[atom_index] + \
                                      np.sinh(eta_half_time_step)/eta_half * \
-                                     (momenta_half/masses[index])
+                                     (momenta_half/masses[atom_index])
         # stage 4
-        internal_virial = barostat_space.get_internal_virial(index, all_coordinates, all_forces)
-        P_current[i] = barostat_space.get_pressure(0.5*momenta_half**2/masses[index], internal_virial, volume)
+        internal_virial = barostat_space.get_internal_virial(atom_index, all_coordinates, all_forces)
+        P_current[i] = barostat_space.get_pressure(0.5*momenta_half**2/masses[atom_index], internal_virial, volume)
         new_eta, new_momenta = SVR_stage_2_4(eta_half, volume, P_current[i], P_simulation[i], T_current, half_time_step, W_barostat, \
-                                               all_forces[index], momenta_half, masses[index], index)
+                                               all_forces[atom_index], momenta_half, masses[atom_index], atom_index)
 
         eta[i] = new_eta
-        momenta[index] = new_momenta
+        momenta[atom_index] = new_momenta
 
     return all_coordinates, momenta, eta, P_current
 

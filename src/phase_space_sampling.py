@@ -21,6 +21,7 @@ class initialize_sampling(initialize_calculator):
             except:
                 pass
             self.current_system = self.get_current_structure(molecule)
+            self.current_system.info['step'] = self.current_step
         else:
             try:
                 self.current_traj = read_xyz_traj(traj_file_name)
@@ -30,6 +31,7 @@ class initialize_sampling(initialize_calculator):
                 except:
                     pass
                 self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
+                self.current_system.info['step'] = self.current_step
             except:
                 self.current_step = 0
                 try:
@@ -37,6 +39,7 @@ class initialize_sampling(initialize_calculator):
                 except:
                     pass
                 self.current_system = self.get_current_structure(molecule)
+                self.current_system.info['step'] = self.current_step
             
     def get_current_structure(self, molecule=None):
         if self.sampling_parameters['sampling_initialization']:
@@ -168,7 +171,8 @@ class MD(initialize_sampling):
         return time_step
         
     def update_step(self, next_potential_energy, next_forces):
-        
+
+        self.current_system.info['step'] = self.current_step
         self.current_forces = next_forces
         self.current_potential_energy = next_potential_energy
             
@@ -352,8 +356,11 @@ class RPMD(initialize_sampling):
         self.current_beads_positions = next_beads_positions
         self.update_beads_momenta(next_beads_momenta)
         self.current_beads_momenta = next_beads_momenta
+        for i in range(self.n_beads):
+            self.current_beads[i].info['step'] = self.current_step
         self.update_centroid_positions_momenta(self.current_beads)
         self.update_centroid_potential_energy_forces(current_beads_potential_energy, current_beads_forces)
+        self.current_system.info['step'] = self.current_step
         
         if self.RPMD_clean_rotation:
             self.clean_rotation_centroid()

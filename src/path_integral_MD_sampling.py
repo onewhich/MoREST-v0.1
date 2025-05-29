@@ -77,14 +77,14 @@ class RP_NVK_VR(RPMD):
 
         self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta = \
             self.integration.RP_velocity_Verlet(time_step, self.current_beads, self.current_beads_forces, self.masses)
-        
-        self.RPMD_update_step(self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta)
 
         for i in range(self.n_beads):
             old_velocities = self.current_beads[i].get_velocities()
             new_velocities = velocity_rescaling(self.sampling_parameters['nvk_vr_dt'], self.T_simulation, \
                                                 self.current_beads[i].get_kinetic_energy(), self.n_atom, old_velocities)
             self.current_beads[i].set_velocities(new_velocities)
+        
+        self.RPMD_update_step(self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta)
 
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             for i in range(self.n_beads):
@@ -129,14 +129,14 @@ class RP_NVT_Berendsen(RPMD):
 
         self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta = \
             self.integration.RP_velocity_Verlet(time_step, self.current_beads, self.current_beads_forces, self.masses)
-        
-        self.RPMD_update_step(self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta)
 
         for i in range(self.n_beads):
             old_velocities = self.current_beads[i].get_velocities()
             new_velocities = Berendsen_velocity_rescaling(self.time_step, self.current_beads[i].get_kinetic_energy(), self.n_atom, \
                                                       self.T_simulation, self.sampling_parameters['nvt_berendsen_tau'], old_velocities)
             self.current_beads[i].set_velocities(new_velocities)
+        
+        self.RPMD_update_step(self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta)
 
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             for i in range(self.n_beads):
@@ -161,11 +161,21 @@ class RP_NVT_Langevin(RPMD):
 
         super().__init__(morest_parameters, sampling_parameters, RPMD_parameters, molecule, traj_file_name, calculator, log_morest)
 
+        tmp_d_Ee_list = []
+        for i in range(self.n_beads):
+            old_velocities = self.current_beads[i].get_velocities()
+            new_velocities, tmp_d_Ee = Langevin_velocity_rescaling(self.time_step, self.current_beads[i].get_kinetic_energy(), self.K_simulation, \
+                                                                    3*self.n_atom, self.sampling_parameters['nvt_Langevin_gamma'], old_velocities)
+            self.current_beads[i].set_velocities(new_velocities)
+            tmp_d_Ee_list.append(tmp_d_Ee)
+        self.d_Ee = np.mean(tmp_d_Ee_list)
+        self.update_centroid_positions_momenta(self.current_beads)
+
         if self.sampling_parameters['sampling_initialization']:
             self.RPMD_log = open(self.log_file_name, 'w', buffering=1)
             self.RPMD_log.write('# RPMD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), Effective energy (eV)\n')
             self.Ee = self.write_MD_SVR_log(self.RPMD_log, self.current_step, np.mean(self.current_beads_potential_energy), \
-                                            np.mean(self.get_beads_kinetic_energy(self.current_beads)), self.masses)
+                                            np.mean(self.get_beads_kinetic_energy(self.current_beads)), self.masses, 0, self.d_Ee)
         else:
             self.RPMD_log = open(self.log_file_name, 'a', buffering=1)
 
@@ -174,8 +184,6 @@ class RP_NVT_Langevin(RPMD):
 
         self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta = \
             self.integration.RP_velocity_Verlet(time_step, self.current_beads, self.current_beads_forces, self.masses)
-        
-        self.RPMD_update_step(self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta)
 
         tmp_d_Ee_list = []
         for i in range(self.n_beads):
@@ -185,6 +193,8 @@ class RP_NVT_Langevin(RPMD):
             self.current_beads[i].set_velocities(new_velocities)
             tmp_d_Ee_list.append(tmp_d_Ee)
         self.d_Ee = np.mean(tmp_d_Ee_list)
+        
+        self.RPMD_update_step(self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta)
 
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             for i in range(self.n_beads):
@@ -210,11 +220,21 @@ class RP_NVT_SVR(RPMD):
 
         super().__init__(morest_parameters, sampling_parameters, RPMD_parameters, molecule, traj_file_name, calculator, log_morest)
 
+        tmp_d_Ee_list = []
+        for i in range(self.n_beads):
+            old_velocities = self.current_beads[i].get_velocities()
+            new_velocities, tmp_d_Ee = stochastic_velocity_rescaling(self.time_step, self.current_beads[i].get_kinetic_energy(), self.K_simulation, \
+                                                                    3*self.n_atom, self.sampling_parameters['nvt_svr_tau'], old_velocities)
+            self.current_beads[i].set_velocities(new_velocities)
+            tmp_d_Ee_list.append(tmp_d_Ee)
+        self.d_Ee = np.mean(tmp_d_Ee_list)
+        self.update_centroid_positions_momenta(self.current_beads)
+
         if self.sampling_parameters['sampling_initialization']:
             self.RPMD_log = open(self.log_file_name, 'w', buffering=1)
             self.RPMD_log.write('# RPMD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV), Effective energy (eV)\n')
             self.Ee = self.write_MD_SVR_log(self.RPMD_log, self.current_step, np.mean(self.current_beads_potential_energy), \
-                                            np.mean(self.get_beads_kinetic_energy(self.current_beads)), self.masses)
+                                            np.mean(self.get_beads_kinetic_energy(self.current_beads)), self.masses, 0, self.d_Ee)
         else:
             self.RPMD_log = open(self.log_file_name, 'a', buffering=1)
 
@@ -223,8 +243,6 @@ class RP_NVT_SVR(RPMD):
 
         self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta = \
             self.integration.RP_velocity_Verlet(time_step, self.current_beads, self.current_beads_forces, self.masses)
-        
-        self.RPMD_update_step(self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta)
 
         tmp_d_Ee_list = []
         for i in range(self.n_beads):
@@ -234,6 +252,8 @@ class RP_NVT_SVR(RPMD):
             self.current_beads[i].set_velocities(new_velocities)
             tmp_d_Ee_list.append(tmp_d_Ee)
         self.d_Ee = np.mean(tmp_d_Ee_list)
+        
+        self.RPMD_update_step(self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta)
 
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             for i in range(self.n_beads):
