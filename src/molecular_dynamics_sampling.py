@@ -281,14 +281,14 @@ class NPH_SVR(MD):
             self.Ee = 0
 
     def generate_new_step(self, time_step=None, bias_forces=None, updated_current_system=None):
-        time_step = self.update_pre_step(time_step, bias_forces, updated_current_system)
-        
         NPT_bias_forces = self.NPH_space.get_barostat_space_bias_forces()
         if type(bias_forces) != type(None):
             bias_forces += NPT_bias_forces
         else:
             bias_forces = NPT_bias_forces
 
+        time_step = self.update_pre_step(time_step, bias_forces, updated_current_system)
+        
         next_potential_energy, next_forces = self.integration.velocity_Verlet(time_step, self.current_system, self.current_forces, self.masses)
 
         T_current = self.current_system.get_temperature()
@@ -356,13 +356,13 @@ class NPT_Berendsen(MD):
             self.MD_log = open(self.log_file_name, 'a', buffering=1)
 
     def generate_new_step(self, time_step=None, bias_forces=None, updated_current_system=None):
-        time_step = self.update_pre_step(time_step, bias_forces, updated_current_system)
-
         NPT_bias_forces = self.NPT_space.get_barostat_space_bias_forces()
         if type(bias_forces) != type(None):
             bias_forces += NPT_bias_forces
         else:
             bias_forces = NPT_bias_forces
+
+        time_step = self.update_pre_step(time_step, bias_forces, updated_current_system)
 
         next_potential_energy, next_forces = self.integration.velocity_Verlet(time_step, self.current_system, self.current_forces, self.masses)
 
@@ -441,14 +441,14 @@ class NPT_SVR(MD):
             self.Ee = 0
 
     def generate_new_step(self, time_step=None, bias_forces=None, updated_current_system=None):
-        time_step = self.update_pre_step(time_step, bias_forces, updated_current_system)
-        
         NPT_bias_forces = self.NPT_space.get_barostat_space_bias_forces()
         if type(bias_forces) != type(None):
             bias_forces += NPT_bias_forces
         else:
             bias_forces = NPT_bias_forces
 
+        time_step = self.update_pre_step(time_step, bias_forces, updated_current_system)
+        
         next_potential_energy, next_forces = self.integration.velocity_Verlet(time_step, self.current_system, self.current_forces, self.masses)
 
         # stage 1: propagate 1/2 time step thermostat
