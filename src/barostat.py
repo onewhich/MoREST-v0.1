@@ -131,7 +131,7 @@ def Berendsen_volume_rescaling(barostat_parameters, time_step, all_coordinates, 
             barostat_parameters['barostat_space_size'][i] *= factor_miu[i]
             all_coordinates[atom_index] *= factor_miu[i]
 
-    return all_coordinates, np.array(factor_miu), np.array(P_current)
+    return all_coordinates
     
 def stochastic_velocity_volume_rescaling(barostat_parameters, time_step, half_time_step, all_coordinates, all_forces, velocities, eta, momenta, \
                                          masses, W_barostat, T_current, P_simulation):
