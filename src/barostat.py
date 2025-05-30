@@ -24,8 +24,10 @@ class barostat_space:
                 self.barostat_parameters['barostat_action_atoms'][i] = index
             internal_virial = self.get_internal_virial(index, coordinates_all, forces_all)
             volume = 2*(Eks[i] - internal_virial)/(3*self.P_simulation[i])
-            if self.barostat_parameters['barostat_space_shape'][i].upper() == 'sphere'.upper():
-                self.barostat_parameters['barostat_space_size'].append(np.pow((3/4 * volume / np.pi), 1./3.))  # V = 4/3 * Pi * r^3; r = (3/4 * V/Pi)^(1/3)
+            if self.barostat_parameters['barostat_space_shape'][i].lower() == 'sphere':
+                self.barostat_parameters['barostat_space_size'].append(np.power((3*volume)/(4*np.pi), 1./3.))  # V = 4/3 * Pi * r^3; r = (3V/(4Pi))^(1/3)
+            else:
+                raise ValueError(f"Unsupported space shape: '{self.barostat_parameters['barostat_space_shape'][i]}'")
 
     def initialize_barostat_space_wall(self):
         self.barostat_space_wall_parameters = {}
@@ -39,7 +41,7 @@ class barostat_space:
         self.barostat_space_wall_parameters['wall_action_atoms'] = []
         self.barostat_space_wall_parameters['wall_shape_parameters'] = []
         for i, barostat_space in enumerate(self.barostat_parameters['barostat_space_parameters']):
-            if self.barostat_parameters['barostat_space_shape'][i].upper() == 'sphere'.upper():
+            if self.barostat_parameters['barostat_space_shape'][i].lower() == 'sphere':
                 self.barostat_space_wall_parameters['wall_number'] += 1
                 self.barostat_space_wall_parameters['wall_collective_variable'].append(self.barostat_parameters['barostat_collective_variable'][i])
                 self.barostat_space_wall_parameters['wall_shape'].append('spherical')
@@ -52,10 +54,10 @@ class barostat_space:
                 tmp_parameters['spherical_wall_center'] = barostat_space['barostat_sphere_center']
                 tmp_parameters['spherical_wall_radius'] = self.barostat_parameters['barostat_space_size'][i]
                 self.barostat_space_wall_parameters['wall_shape_parameters'].append(tmp_parameters)
-            elif self.barostat_parameters['barostat_space_shape'][i].upper() == 'cuboid'.upper():
+            elif self.barostat_parameters['barostat_space_shape'][i].lower() == 'cuboid':
                 self.barostat_space_wall_parameters['wall_number'] += 6
                 raise Exception('Cuboidal space has not been implemented yet.')
-            elif self.barostat_parameters['barostat_space_shape'][i].upper() == 'plane'.upper():
+            elif self.barostat_parameters['barostat_space_shape'][i].lower() == 'plane':
                 self.barostat_space_wall_parameters['wall_number'] += 1
                 raise Exception('Planar space has not been implemented yet.')
             
@@ -188,20 +190,26 @@ class barostat_space:
 
     def update_barostat_space_wall(self):
         for i in range(self.barostat_parameters['barostat_number']):
-            if self.barostat_parameters['barostat_space_shape'][i].upper() == 'sphere'.upper():
+            if self.barostat_parameters['barostat_space_shape'][i].lower() == 'sphere':
                 self.barostat_space_wall_parameters['wall_shape_parameters'][i]['spherical_wall_radius'] = \
                                                                                 self.barostat_parameters['barostat_space_size'][i]
         self.barostat_space_wall.update_wall_parameters(self.barostat_space_wall_parameters)
 
     def get_barostat_space_bias_forces(self):
+        """
+        Calculate the cumulative repulsive wall forces acting on atoms in barostat regions.
+
+        Returns:
+            np.ndarray: shape (n_atom, 3), total bias forces on each atom from barostat space walls.
+        """
         coordinates_all = self.current_system.get_positions()
         barostat_bias_forces = np.zeros((self.n_atom,3))
         for i in range(self.barostat_parameters['barostat_number']):
-            index = self.barostat_parameters['barostat_action_atoms'][i]
-            coordinates = coordinates_all[index]
+            index_atom = self.barostat_parameters['barostat_action_atoms'][i]
+            coordinates = coordinates_all[index_atom]
             tmp_bias = np.array([self.barostat_space_wall.get_repulsive_wall_force(i_coordinate) for i_coordinate in coordinates])
             for j, j_bias in enumerate(tmp_bias):
-                barostat_bias_forces[index[j]] += j_bias
+                barostat_bias_forces[index_atom[j]] += j_bias
         return barostat_bias_forces
 
 def Berendsen_volume_rescaling(barostat_parameters, time_step, coordinates_all, forces_all, velocities, masses, P_simulation, tau_P, factor_Z):
