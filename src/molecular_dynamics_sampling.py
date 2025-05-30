@@ -337,14 +337,14 @@ class NPT_Berendsen(MD):
         self.P_simulation = self.MD_parameters['barostat_pressure']
         self.tau_T = self.sampling_parameters['npt_Berendsen_tau_t']
         self.tau_P = self.sampling_parameters['npt_Berendsen_tau_p']
-        self.beta = self.sampling_parameters['npt_Berendsen_compressibility']
+        self.factor_Z = self.sampling_parameters['npt_Berendsen_compressibility']
         #init_miu = np.ones(self.MD_parameters['barostat_number']) # the first rescaling factor should be one for each barostat space
 
         new_velocities = Berendsen_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.n_atom, \
                                                       self.T_simulation, self.tau_T, self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
         new_coordinates = Berendsen_volume_rescaling(self.MD_parameters, self.time_step, self.current_system.get_positions(), \
-                                                               self.current_system.get_forces(), new_velocities, self.masses, self.P_simulation, self.tau_P, self.beta)
+                                                               self.current_system.get_forces(), new_velocities, self.masses, self.P_simulation, self.tau_P, self.factor_Z)
         self.current_system.set_positions(new_coordinates)
         self.NPT_space.update_barostat_space_wall()
 
@@ -370,7 +370,7 @@ class NPT_Berendsen(MD):
                                                       self.T_simulation, self.tau_T, self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
         new_coordinates = Berendsen_volume_rescaling(self.MD_parameters, self.time_step, self.current_system.get_positions(), \
-                                                               self.current_system.get_forces(), new_velocities, self.masses, self.P_simulation, self.tau_P, self.beta)
+                                                               self.current_system.get_forces(), new_velocities, self.masses, self.P_simulation, self.tau_P, self.factor_Z)
         self.current_system.set_positions(new_coordinates)
         self.NPT_space.update_barostat_space_wall()
         

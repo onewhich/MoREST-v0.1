@@ -113,23 +113,30 @@ class barostat_space:
                 barostat_bias_forces[index[j]] += j_bias
         return barostat_bias_forces
 
-def Berendsen_volume_rescaling(barostat_parameters, time_step, all_coordinates, all_forces, velocities, masses, P_simulation, tau_P, beta):
+def Berendsen_volume_rescaling(barostat_parameters, time_step, all_coordinates, all_forces, velocities, masses, P_simulation, tau_P, factor_Z):
     Eks = barostat_space.get_atom_kinetic_energies(velocities, masses)
-    factor_miu = []
+    center_of_mass = (all_coordinates*masses).sum(axis=0) / masses.sum()
     P_current = []
     for i in range(barostat_parameters['barostat_number']):
         atom_index = barostat_parameters['barostat_action_atoms'][i]
         internal_virial = barostat_space.get_internal_virial(atom_index, all_coordinates, all_forces)
         volume = barostat_space.get_volume(barostat_parameters['barostat_space_shape'][i], barostat_parameters['barostat_space_size'][i])
         P_current.append(barostat_space.get_pressure(Eks[atom_index], internal_virial, volume))
-        tmp_miu = 1-time_step*beta/tau_P/3.*(P_simulation[i]-P_current[i])
-        factor_miu.append(tmp_miu)
+        factor_miu = 1-time_step*factor_Z/tau_P/3.*(P_simulation[i]-P_current[i])
+        # It can become unstable if:
+        # The time step (time_step) is too large,
+        # The pressure relaxation time (tau_P) is too short,
+        # The pressure difference is too big.
+        # This might result in tmp_miu becoming negative or unreasonably small/large, causing unphysical behavior or numerical divergence.
+        # To ensure numerical stability, add clamping:
+        factor_miu = max(0.9, min(1.1, factor_miu))
 
-        if barostat_parameters['barostat_space_type'][i].upper() == 'gas'.upper():
-            barostat_parameters['barostat_space_size'][i] *= factor_miu[i]
-        elif barostat_parameters['barostat_space_type'][i].upper() == 'condensed'.upper():
-            barostat_parameters['barostat_space_size'][i] *= factor_miu[i]
-            all_coordinates[atom_index] *= factor_miu[i]
+        if barostat_parameters['barostat_space_type'][i].upper() == 'equilibrium'.upper():
+            barostat_parameters['barostat_space_size'][i] *= factor_miu
+            new_coordinates = (all_coordinates[atom_index] - center_of_mass) * factor_miu + center_of_mass
+            all_coordinates[atom_index] = new_coordinates
+        elif barostat_parameters['barostat_space_type'][i].upper() == 'ultrafast'.upper():
+            barostat_parameters['barostat_space_size'][i] *= factor_miu
 
     return all_coordinates
     
