@@ -93,6 +93,39 @@ class MD_integration:
         next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(current_system)
 
         return next_potential_energy, next_forces
+    
+    def Langevin_BAOAB(self, time_step, current_system, current_forces, masses, gamma, temperature, noise=None):
+        '''
+        This function implements the BAOAB integrator for Langevin dynamics.
+        '''
+        # x(t), v(t) = p(t) / m
+        current_positions = current_system.get_positions()
+        current_momenta = current_system.get_momenta()
+
+        # p(t+0.5dt) = p(t) + 0.5 * F(t) * dt
+        # v(t+0.5dt) = p(t+0.5dt) / m
+        momenta_half = self.propagate_momenta_half(time_step, current_momenta, current_forces)
+        velocities_half = momenta_half / masses
+
+        # x(t+0.5dt) = x(t) + 0.5 * v(t) * dt
+        positions_half = self.propagate_positions_half(time_step, current_positions, momenta_half, masses)
+
+        # Random velocities at t+0.5dt
+        velocities_half = self.propagate_random_velocities(time_step, velocities_half, gamma, temperature, masses, noise)
+        momenta_half = velocities_half * masses
+
+        # x(t+dt) = x(t+0.5dt) + v(t+0.5dt) * dt
+        next_positions = self.propagate_positions_half(time_step, positions_half, momenta_half, masses)
+        current_system.set_positions(next_positions)
+
+        next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(current_system)
+        # p(t+dt) = p(t+0.5dt) + 0.5 * F(t+dt) * dt
+        next_momenta = self.propagate_momenta_half(time_step, momenta_half, next_forces)
+
+        # Update system state
+        current_system.set_momenta(next_momenta)
+        
+        return next_potential_energy, next_forces
 
     @staticmethod
     def propagate_momenta_half(time_step, momenta, forces):
@@ -116,15 +149,29 @@ class MD_integration:
         return positions + (momenta * time_step + 0.5 * forces * time_step**2) / masses
     
     @staticmethod
-    def propagate_random_velocities(time_step, velocities, gamma, kBT, noise=None):
-        if noise == None:
-            noise_vector = np.random.normal(size=np.shape(velocities))
-            noise_vector = noise_vector / np.linalg.norm(noise_vector,axis=-1)[:,np.newaxis]
-            noise = np.random.normal(size=(len(velocities),1)) * noise_vector
-        c_1 = np.exp(-gamma*time_step)
-        c_2 = np.sqrt(kBT*(1-c_1**2))
-        next_velocities =  c_1*velocities+c_2*noise
-        return next_velocities
+    def propagate_random_velocities(time_step, velocities, gamma, temperature, masses, noise=None):
+        """
+        Langevin velocity update
+
+        Parameters:
+            time_step (float): timestep
+            velocities (ndarray): shape (N, 3)
+            gamma (float): damping coefficient
+            temperature (float): in Kelvin
+            masses (ndarray): shape (N, 1)
+            noise (ndarray, optional): precomputed noise
+
+        Returns:
+            ndarray: updated velocities (N, 3)
+        """
+        kBT = 8.617333262e-5 * temperature  # eV
+        if noise is None:
+            noise = np.random.normal(size=np.shape(velocities))
+        c_1 = np.exp(-gamma * time_step)
+        c_2 = np.sqrt(kBT * (1 - c_1**2) / masses)  # (N, 1)
+        new_velocities = c_1 * velocities + c_2 * noise
+        return new_velocities
+
 
 class RPMD_integration(MD_integration):
     '''

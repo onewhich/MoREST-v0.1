@@ -1,6 +1,5 @@
 from structure_io import write_xyz_traj
 from trajectory_scattering import initialize_scattering
-from kinetic_energy_assignment import clean_translation
 
 class scattering_velocity_Verlet(initialize_scattering):
     '''
@@ -11,26 +10,11 @@ class scattering_velocity_Verlet(initialize_scattering):
         super(scattering_velocity_Verlet, self).__init__(morest_parameters, scattering_parameters, calculator, log_morest)
         
     def generate_new_step(self, bias_forces=None):
-        time_step = self.scattering_parameters['scattering_time_step']
-        
-        ### F(t) + bias
-        if bias_forces != None:
-            self.current_forces = self.current_forces + bias_forces
+        time_step = self.update_pre_step(bias_forces)
 
         next_potential_energy, next_forces  = self.integration.velocity_Verlet(time_step, self.current_system, self.current_forces, self.masses)
-        if self.scattering_parameters['scattering_fix_target']:
-            next_momenta = self.current_system.get_momenta()
-            next_momenta[0:self.n_atom_target] = clean_translation(next_momenta[0:self.n_atom_target])
-            self.current_system.set_momenta(next_momenta)
-        
-        self.current_step += 1
-        self.current_forces = next_forces
-        self.current_potential_energy = next_potential_energy
-            
-        try:
-            self.ml_calculator.get_current_step(self.current_step)
-        except:
-            pass
+
+        self.update_step(time_step, next_potential_energy, next_forces)
         
         if self.current_step % self.scattering_parameters['scattering_traj_interval'] == 0:
             #self.current_traj.append(self.current_system)
@@ -49,26 +33,11 @@ class scattering_Suzuki_Yoshida_4th(initialize_scattering):
         super(scattering_Suzuki_Yoshida_4th, self).__init__(morest_parameters, scattering_parameters, calculator, log_morest)
         
     def generate_new_step(self, bias_forces=None):
-        time_step = self.scattering_parameters['scattering_time_step']
-        
-        ### F(t) + bias
-        if bias_forces != None:
-            self.current_forces = self.current_forces + bias_forces
+        time_step = self.update_pre_step(bias_forces)
 
         next_potential_energy, next_forces  = self.integration.Suzuki_Yoshida_4th(time_step, self.current_system, self.current_forces, self.masses)
-        if self.scattering_parameters['scattering_fix_target']:
-            next_momenta = self.current_system.get_momenta()
-            next_momenta[0:self.n_atom_target] = clean_translation(next_momenta[0:self.n_atom_target])
-            self.current_system.set_momenta(next_momenta)
-        
-        self.current_step += 1
-        self.current_forces = next_forces
-        self.current_potential_energy = next_potential_energy
-            
-        try:
-            self.ml_calculator.get_current_step(self.current_step)
-        except:
-            pass
+
+        self.update_step(time_step, next_potential_energy, next_forces)
         
         if self.current_step % self.scattering_parameters['scattering_traj_interval'] == 0:
             #self.current_traj.append(self.current_system)
@@ -92,26 +61,37 @@ class scattering_Runge_Kutta_4th(initialize_scattering):
         Runge–Kutta methods. (2022, September 6). In Wikipedia. https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods
          https://www.haroldserrano.com/blog/visualizing-the-runge-kutta-method
         '''
-        time_step = self.scattering_parameters['scattering_time_step']
-        
-        ### F(t) + bias
-        if bias_forces != None:
-            self.current_forces = self.current_forces + bias_forces
+        time_step = self.update_pre_step(bias_forces)
         
         next_potential_energy, next_forces  = self.integration.Runge_Kutta_4th(time_step, self.current_system, self.current_forces, self.masses)
-        if self.scattering_parameters['scattering_fix_target']:
-            next_momenta = self.current_system.get_momenta()
-            next_momenta[0:self.n_atom_target] = clean_translation(next_momenta[0:self.n_atom_target])
-            self.current_system.set_momenta(next_momenta)
+
+        self.update_step(time_step, next_potential_energy, next_forces)
         
-        self.current_step += 1
-        self.current_forces = next_forces
-        self.current_potential_energy = next_potential_energy
-            
-        try:
-            self.ml_calculator.get_current_step(self.current_step)
-        except:
-            pass
+        if self.current_step % self.scattering_parameters['scattering_traj_interval'] == 0:
+            #self.current_traj.append(self.current_system)
+            write_xyz_traj(self.traj_filename, self.current_system)
+            kinetic_energy = self.current_system.get_kinetic_energy()
+            self.write_MD_log(self.MD_log, self.current_step, self.current_potential_energy, kinetic_energy, self.masses)
+        
+        return self.current_step, self.current_system
+
+class scattering_Langevin_dynamics(initialize_scattering):
+    '''
+    This class implements Langevin_dynamics to do microcanonical ensemble (NVE) dynamics.
+    '''
+    
+    def __init__(self, morest_parameters, scattering_parameters, calculator=None, log_morest=None):
+        super(scattering_Langevin_dynamics, self).__init__(morest_parameters, scattering_parameters, calculator, log_morest)
+        self.gamma = self.scattering_parameters['scattering_LD_gamma']
+        self.temperature = self.scattering_parameters['scattering_LD_temperature']
+        
+    def generate_new_step(self, bias_forces=None):
+        time_step = self.update_pre_step(bias_forces)
+
+        next_potential_energy, next_forces  = self.integration.Langevin_BAOAB(time_step, self.current_system, self.current_forces, self.masses, \
+                                                                              self.gamma, self.temperature, noise=None)
+
+        self.update_step(time_step, next_potential_energy, next_forces)
         
         if self.current_step % self.scattering_parameters['scattering_traj_interval'] == 0:
             #self.current_traj.append(self.current_system)

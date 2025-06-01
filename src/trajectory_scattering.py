@@ -194,6 +194,34 @@ class initialize_scattering(initialize_calculator):
         self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(system)
 
         return system
+
+    def update_pre_step(self, time_step=None, bias_forces=None):
+        if type(time_step) == type(None):
+            time_step = self.scattering_parameters['scattering_time_step']
+
+        ### F(t) + bias
+        if type(bias_forces) != type(None):
+            self.current_forces = self.current_forces + bias_forces
+
+        return time_step
+        
+    def update_step(self, next_potential_energy, next_forces):
+
+        if self.scattering_parameters['scattering_fix_target']:
+            next_momenta = self.current_system.get_momenta()
+            next_momenta[0:self.n_atom_target] = clean_translation(next_momenta[0:self.n_atom_target])
+            self.current_system.set_momenta(next_momenta)
+        
+        self.current_system.info['step'] = self.current_step
+        self.current_forces = next_forces
+        self.current_potential_energy = next_potential_energy
+            
+        try:
+            self.ml_calculator.get_current_step(self.current_step)
+        except:
+            pass
+        
+        self.current_step += 1
     
     @staticmethod
     def reset_geometric_center(system):

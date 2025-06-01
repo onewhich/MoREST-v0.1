@@ -76,7 +76,8 @@ Trajectory_scattering             False
 Scattering_initialization         False
 Scattering_pre_thermalized        False # If true, the thermalization trajectories of the target and incident molecules are required. Otherwise, the initial structures are required.
 Scattering_traj_number            2000 # The number of trajectories for the scattering.
-Scattering_method                 VV # VV: velocity Verlet; RK4: Runge-Kutta 4th; SY4: Suzuki-Yoshida 4th; LD: Langevin dynamics;
+Scattering_method                 VV # VV: velocity Verlet; RK4: Runge-Kutta 4th; SY4: Suzuki-Yoshida 4th;
+                                     # LD 5 300: Langevin dynamics with scattering_LD_gamma=5, scattering_LD_temperature=300;
 Scattering_time_step              0.5 # fs
 Scattering_traj_interval          10    # Record sampling every traj_interval steps
 Scattering_V_collision            1e-2 # Initial collision velocity in AA/fs ( 1 AA/fs = 1e5 m/s ). This velocity defines the translational energy of the incident molecule, while the target molecule is static.

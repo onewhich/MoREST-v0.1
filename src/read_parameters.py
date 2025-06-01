@@ -543,6 +543,9 @@ class read_parameters:
                 
         elif i_parameter.split()[0].upper() == 'Scattering_method'.upper():
             self.scattering_parameters['scattering_method'] = str(i_parameter.split()[1])
+            if self.scattering_parameters['scattering_method'].upper() in ['LD']:
+                self.scattering_parameters['scattering_LD_gamma'] = float(i_parameter.split()[2])
+                self.scattering_parameters['scattering_LD_temperature'] = float(i_parameter.split()[3])
 
         elif i_parameter.split()[0].upper() == 'Scattering_time_step'.upper():
             self.scattering_parameters['scattering_time_step'] = float(i_parameter.split()[1])
@@ -1081,6 +1084,7 @@ class read_parameters:
         if self.morest_parameters['morest_initialization'] == True:
            self.scattering_parameters['scattering_initialization'] = True
         self.scattering_parameters['scattering_time_step'] *= units.fs
+        self.scattering_parameters['scattering_LD_gamma'] /= units.fs
         if 'scattering_V_collision' in self.scattering_parameters:
             self.scattering_parameters['scattering_V_collision'] /= units.fs
         if not (('scattering_V_collision' in self.scattering_parameters) or ('scattering_E_collision' in self.scattering_parameters)):
