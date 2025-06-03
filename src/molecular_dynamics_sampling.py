@@ -342,6 +342,8 @@ class NPH_SVR(MD):
                                                             self.P_simulation, T_current, self.W_barostat, index_forces, index_masses)
             self.eta[i] = current_eta
             momenta_all[index_atom] = index_momenta
+            
+        self.current_system.set_momenta(momenta_all)
         
         self.NPH_space.update_barostat_space_wall()
         self.update_step(next_potential_energy, next_forces)
@@ -552,6 +554,8 @@ class NPT_SVR(MD):
                                                             self.P_simulation, T_current, self.W_barostat, index_forces, index_masses)
             self.eta[i] = current_eta
             momenta_all[index_atom] = index_momenta
+
+        self.current_system.set_momenta(momenta_all)
 
         # stage 5: propagate 1/2 time step thermostat (again)
         alpha = SVR_stage_1_propagate_thermostat(half_time_step, self.current_system.get_kinetic_energy(), \
