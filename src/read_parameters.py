@@ -384,7 +384,9 @@ class read_parameters:
             elif self.sampling_parameters['sampling_ensemble'].upper() in ['NPT_Berendsen'.upper()]:
                 self.sampling_parameters['npt_Berendsen_tau_t'] = float(i_parameter.split()[2])
                 self.sampling_parameters['npt_Berendsen_tau_p'] = float(i_parameter.split()[3])
-                self.sampling_parameters['npt_Berendsen_compressibility'] = float(i_parameter.split()[4])
+                # factor_z (compressibility) and tau_p can be combined into single parameter, tau_P,
+                # because factor_Z is only used in conjunction with tau_P.
+                #self.sampling_parameters['npt_Berendsen_compressibility'] = float(i_parameter.split()[4])
             elif self.sampling_parameters['sampling_ensemble'].upper() in ['NPT_SVR'.upper()]:
                 self.sampling_parameters['npt_svr_tau_t'] = float(i_parameter.split()[2])
                 self.sampling_parameters['npt_svr_tau_p'] = float(i_parameter.split()[3])
