@@ -387,6 +387,9 @@ class read_parameters:
                 # factor_z (compressibility) and tau_p can be combined into single parameter, tau_P,
                 # because factor_Z is only used in conjunction with tau_P.
                 #self.sampling_parameters['npt_Berendsen_compressibility'] = float(i_parameter.split()[4])
+            elif self.sampling_parameters['sampling_ensemble'].upper() in ['NPT_Langevin'.upper()]:
+                self.sampling_parameters['npt_Langevin_tau_t'] = 1/float(i_parameter.split()[2])
+                self.sampling_parameters['npt_Langevin_tau_p'] = 1/float(i_parameter.split()[3])
             elif self.sampling_parameters['sampling_ensemble'].upper() in ['NPT_SVR'.upper()]:
                 self.sampling_parameters['npt_svr_tau_t'] = float(i_parameter.split()[2])
                 self.sampling_parameters['npt_svr_tau_p'] = float(i_parameter.split()[3])
@@ -1003,15 +1006,25 @@ class read_parameters:
             self.sampling_parameters['nvt_Langevin_gamma'] /= units.fs
         elif self.sampling_parameters['sampling_ensemble'].upper() in ['NVT_SVR']:
             self.sampling_parameters['nvt_svr_tau'] *= units.fs
+        elif self.sampling_parameters['sampling_ensemble'].upper() in ['NPH_SVR']:
+            self.sampling_parameters['nph_svr_tau'] *= units.fs
         elif self.sampling_parameters['sampling_ensemble'].upper() in ['NPT_Berendsen'.upper()]:
             self.sampling_parameters['npt_Berendsen_tau_t'] *= units.fs
             self.sampling_parameters['npt_Berendsen_tau_p'] *= units.fs
-            self.sampling_parameters['npt_Berendsen_compressibility'] /= units.bar
+            #self.sampling_parameters['npt_Berendsen_compressibility'] /= units.bar
+        elif self.sampling_parameters['sampling_ensemble'].upper() in ['NPT_Langevin'.upper()]:
+            self.sampling_parameters['npt_Langevin_tau_t'] *= units.fs
+            self.sampling_parameters['npt_Langevin_tau_p'] *= units.fs
+        elif self.sampling_parameters['sampling_ensemble'].upper() in ['NPT_SVR']:
+            self.sampling_parameters['npt_svr_tau_t'] *= units.fs
+            self.sampling_parameters['npt_svr_tau_p'] *= units.fs
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_sampling_parameters.npy', self.sampling_parameters)
         if log_morest != None:
             for key in self.sampling_parameters:
-                if key in ['nvt_berendsen_tau','nvt_svr_tau']:
+                if key in ['nvt_berendsen_tau','nvt_svr_tau', 'nph_svr_tau', 'npt_Berendsen_tau_t', \
+                           'npt_Berendsen_tau_p', 'npt_Langevin_tau_t', 'npt_Langevin_tau_p', \
+                           'npt_svr_tau_t', 'npt_svr_tau_p']:
                     log_morest.write(key+' : '+str(self.sampling_parameters[key]/units.fs)+'\n')
                 elif key in ['nvt_Langevin_gamma']:
                     log_morest.write(key+' : '+str(self.sampling_parameters[key]*units.fs)+'\n')

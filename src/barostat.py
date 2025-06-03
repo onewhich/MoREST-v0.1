@@ -214,10 +214,10 @@ class barostat_space:
 
 def Berendsen_volume_rescaling(barostat_parameters, time_step, coordinates_all, forces_all, velocities, masses, P_simulation, tau_P):
     Eks = barostat_space.get_atom_kinetic_energies(velocities, masses)
-    center_of_mass = (coordinates_all*masses).sum(axis=0) / masses.sum()
     P_current = []
     for i in range(barostat_parameters['barostat_number']):
         index_atom = barostat_parameters['barostat_action_atoms'][i]
+        center_of_mass = (coordinates_all[index_atom]*masses[index_atom]).sum(axis=0) / masses[index_atom].sum()
         internal_virial = barostat_space.get_internal_virial(index_atom, coordinates_all, forces_all)
         volume = barostat_space.get_volume(barostat_parameters['barostat_space_shape'][i], barostat_parameters['barostat_space_size'][i])
         P_current.append(barostat_space.get_pressure(Eks[index_atom], internal_virial, volume))
@@ -242,7 +242,23 @@ def Berendsen_volume_rescaling(barostat_parameters, time_step, coordinates_all, 
 
     return coordinates_all, np.array(P_current)
 
+def Langevin_stage_1_propagate_thermostat(half_time_step, masses, T_simulation, Nf, tau_T, momenta, eta, W_barostat):
+    '''
+    This function implements Langevin thermostat (Bussi, Zykova-Timan and Parrinello, JCP (2009)) to do isothermal–isobaric ensemble sampling (NPT MD).
+    '''
+    c = np.exp(-half_time_step / tau_T)
+
+    R_t = np.random.randn(Nf-1).reshape(-1, 3)
+
+    momenta = c*momenta + np.sqrt((1-c**2)*masses/(units.kB*T_simulation)) * R_t
+    eta = c*eta + np.sqrt((1-c**2)/(units.kB*T_simulation)/W_barostat) * np.random.randn()
+
+    return momenta, eta
+
 def SVR_stage_1_propagate_thermostat(half_time_step, Ek_t, T_simulation, Nf, tau_T, eta, W_barostat):
+    '''
+    This function implements stochastic velocity rescaling algorithm (Bussi, Zykova-Timan and Parrinello, JCP (2009)) to do isothermal–isobaric ensenmble sampling (NPT MD).
+    '''
     Ek_eta = 0.5 * W_barostat * eta**2
     K_total = Ek_t + Ek_eta
 
@@ -261,6 +277,9 @@ def SVR_stage_1_propagate_thermostat(half_time_step, Ek_t, T_simulation, Nf, tau
     return alpha
 
 def SVR_stage_2_propagate_momenta_eta(half_time_step, eta, momenta, volume, P_current, P_simulation, T_current, W_barostat, forces, masses):
+    '''
+    This function implements stochastic velocity rescaling algorithm (Bussi, Zykova-Timan and Parrinello, JCP (2009)) to do isothermal–isobaric ensenmble sampling (NPT MD).
+    '''
     dot_fp = np.einsum('ij,ij->i', forces, momenta)
     force_sq = np.einsum('ij,ij->i', forces, forces)
     term1 = np.sum(dot_fp / masses)                # ⟨f · p / m⟩
@@ -277,12 +296,16 @@ def SVR_stage_2_propagate_momenta_eta(half_time_step, eta, momenta, volume, P_cu
     return eta_half, momenta_half
 
 def SVR_stage_3_propagate_position_volume(time_step, coordinates, momenta, eta, masses, barostat_space_size, barostat_space_type):
+    '''
+    This function implements stochastic velocity rescaling algorithm (Bussi, Zykova-Timan and Parrinello, JCP (2009)) to do isothermal–isobaric ensenmble sampling (NPT MD).
+    '''
     eta_time_step = eta*time_step
     exp_eta_time_step = np.exp(eta_time_step)
+    center_of_mass = (coordinates*masses).sum(axis=0) / masses.sum()
 
     if barostat_space_type.lower() == 'equilibrium':
         barostat_space_size *= exp_eta_time_step
-        coordinates = exp_eta_time_step*coordinates + np.sinh(eta_time_step)/eta * (momenta/masses)
+        coordinates = exp_eta_time_step*(coordinates-center_of_mass) + np.sinh(eta_time_step)/eta * (momenta/masses) + center_of_mass
     elif barostat_space_type.lower() == 'ultrafast':
         barostat_space_size *= np.exp(eta_time_step)
 
@@ -291,6 +314,24 @@ def SVR_stage_3_propagate_position_volume(time_step, coordinates, momenta, eta, 
     momenta *= np.exp(-eta_time_step)
 
     return coordinates, volume, momenta, barostat_space_size
+
+def SVR_effective_enthalpy(momenta, masses, coordinates, eta, volume, T_target, P_ext, W_barostat):
+    """
+    Compute effective enthalpy as defined in Eq. (14) of the paper.
+    """
+    # kinetic energy K = 0.5 * ∑ p_i^2 / m_i
+    K = 0.5 * np.sum(np.sum(momenta**2, axis=1) / masses)
+
+    # simplified potential energy (using U = 0.5 ∑ r_i^2 as a placeholder)
+    # replace this term with the actual potential energy function if available
+    U = 0.5 * np.sum(np.sum(coordinates**2, axis=1))
+
+    # β⁻¹ = k_B T
+    beta = 1 / (units.kB * T_target)
+
+    # effective enthalpy
+    H_eff = K + U + P_ext * volume - (2 / beta) * np.log(volume) + 0.5 * W_barostat * eta**2
+    return H_eff
 
 
 def SVR_stage_2_4_old(eta, volume, P_current, P_simulation, T_current, half_time_step, W_barostat, forces, momenta, masses, index):
