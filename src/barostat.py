@@ -315,22 +315,15 @@ def SVR_stage_3_propagate_position_volume(time_step, coordinates, momenta, eta, 
 
     return coordinates, volume, momenta, barostat_space_size
 
-def SVR_effective_enthalpy(momenta, masses, coordinates, eta, volume, T_target, P_ext, W_barostat):
+def SVR_effective_enthalpy(Ek_t, Ep_t, coordinates, eta, volume, T_simulation, P_simulation, W_barostat):
     """
     Compute effective enthalpy as defined in Eq. (14) of the paper.
     """
-    # kinetic energy K = 0.5 * ∑ p_i^2 / m_i
-    K = 0.5 * np.sum(np.sum(momenta**2, axis=1) / masses)
-
-    # simplified potential energy (using U = 0.5 ∑ r_i^2 as a placeholder)
-    # replace this term with the actual potential energy function if available
-    U = 0.5 * np.sum(np.sum(coordinates**2, axis=1))
-
     # β⁻¹ = k_B T
-    beta = 1 / (units.kB * T_target)
+    beta = 1 / (units.kB * T_simulation)
 
     # effective enthalpy
-    H_eff = K + U + P_ext * volume - (2 / beta) * np.log(volume) + 0.5 * W_barostat * eta**2
+    H_eff = Ek_t + Ep_t + P_simulation * volume - (2 / beta) * np.log(volume) + 0.5 * W_barostat * np.sum(eta**2)
     return H_eff
 
 
