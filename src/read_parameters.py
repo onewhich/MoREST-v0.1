@@ -468,7 +468,7 @@ class read_parameters:
 
         elif i_parameter.split()[0].upper() == 'Barostat_action_atoms'.upper():
             tmp_atoms = str(i_parameter.split()[1])
-            if tmp_atoms.upper() == 'all'.upper():
+            if tmp_atoms.lower() == 'all':
                 tmp_atoms = 'all'
             else:
                 tmp_atoms = np.array(tmp_atoms.split(','), dtype='int')

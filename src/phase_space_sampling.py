@@ -98,6 +98,23 @@ class initialize_sampling(initialize_calculator):
         return Ee
     
     @staticmethod
+    def write_MD_NPT_log(log_file, step, Ep, Ek, masses, n_barostat, P_current, enthalpy):
+        try:
+            if len(Ep) >= 1:
+                Ep = Ep[0]
+        except:
+            pass
+        n_atom = len(masses)
+        #Ek = np.sum([0.5 * masses[i] * np.linalg.norm(velocities[i])**2 for i in range(n_atom)])
+        #Ek = np.sum(0.5 * masses * np.linalg.norm(velocities)**2)
+        T = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+        Et = Ek + Ep
+        log_file.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et))
+        for i in range(n_barostat):
+            log_file.write('    '+str(P_current[i]+'    '+str(enthalpy[i])))
+        log_file.write('\n')
+    
+    @staticmethod
     def write_MD_SVR_log_old(log_file, step, Ep, Ek, masses, K_simulation, time_step, tau, d_Ee, Wt):
         try:
             if len(Ep) >= 1:

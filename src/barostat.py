@@ -13,8 +13,7 @@ class barostat_space:
         self.initialize_barostat_space_wall()
 
     def initialize_barostat_space_size(self):
-        Eks = self.current_system.get_kinetic_energy()
-        #Eks = self.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
+        Eks = self.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
         forces_all = self.current_system.get_forces()
         coordinates_all = self.current_system.get_positions()
         for i in range(self.barostat_parameters['barostat_number']):
@@ -23,7 +22,7 @@ class barostat_space:
                 index = np.arange(self.n_atom)
                 self.barostat_parameters['barostat_action_atoms'][i] = index
             internal_virial = self.get_internal_virial(index, coordinates_all, forces_all)
-            volume = 2*(Eks[i] - internal_virial)/(3*self.P_simulation[i])
+            volume = 2*(np.sum(Eks[index]) - internal_virial)/(3*self.P_simulation[i])
             if self.barostat_parameters['barostat_space_shape'][i].lower() == 'sphere':
                 self.barostat_parameters['barostat_space_size'].append(np.power((3*volume)/(4*np.pi), 1./3.))  # V = 4/3 * Pi * r^3; r = (3V/(4Pi))^(1/3)
             else:
@@ -48,7 +47,7 @@ class barostat_space:
                 self.barostat_space_wall_parameters['wall_type'].append('power_wall')
                 self.barostat_space_wall_parameters['power_wall_direction'].append(-1)
                 self.barostat_space_wall_parameters['wall_scaling'].append(1)
-                self.barostat_space_wall_parameters['wall_scope'].append(2)
+                self.barostat_space_wall_parameters['wall_scope'].append(4)
                 self.barostat_space_wall_parameters['wall_action_atoms'].append(self.barostat_parameters['barostat_number'][i])
                 tmp_parameters = {}
                 tmp_parameters['spherical_wall_center'] = barostat_space['barostat_sphere_center']
@@ -139,7 +138,7 @@ class barostat_space:
 
 
     @staticmethod    
-    def get_volume(space_shape: str, space_size) -> float:
+    def get_volume(space_shape, space_size):
         """
         Compute volume of a defined simulation region.
 
@@ -213,14 +212,18 @@ class barostat_space:
         return barostat_bias_forces
 
 def Berendsen_volume_rescaling(barostat_parameters, time_step, coordinates_all, forces_all, velocities, masses, P_simulation, tau_P):
+    '''
+    Perform Berendsen volume rescaling for NPT ensemble, defined in Berendsen et al. (1984).
+    '''
     Eks = barostat_space.get_atom_kinetic_energies(velocities, masses)
-    P_current = []
+    P_current = np.zeros(len(P_simulation))
+    volume = np.zeros(len(P_simulation))
     for i in range(barostat_parameters['barostat_number']):
         index_atom = barostat_parameters['barostat_action_atoms'][i]
         center_of_mass = (coordinates_all[index_atom]*masses[index_atom]).sum(axis=0) / masses[index_atom].sum()
         internal_virial = barostat_space.get_internal_virial(index_atom, coordinates_all, forces_all)
-        volume = barostat_space.get_volume(barostat_parameters['barostat_space_shape'][i], barostat_parameters['barostat_space_size'][i])
-        P_current.append(barostat_space.get_pressure(Eks[index_atom], internal_virial, volume))
+        volume[i] = barostat_space.get_volume(barostat_parameters['barostat_space_shape'][i], barostat_parameters['barostat_space_size'][i])
+        P_current[i] = barostat_space.get_pressure(Eks[index_atom], internal_virial, volume[i])
         # factor_mu = 1-time_step*factor_Z/tau_P/3.*(P_simulation[i]-P_current[i])
         # factor_z (compressibility) and tau_p can be combined into single parameter, tau_P,
         # because factor_Z is only used in conjunction with tau_P.
@@ -240,7 +243,13 @@ def Berendsen_volume_rescaling(barostat_parameters, time_step, coordinates_all, 
         elif barostat_parameters['barostat_space_type'][i].lower() == 'ultrafast':
             barostat_parameters['barostat_space_size'][i] *= factor_mu
 
-    return coordinates_all, np.array(P_current)
+    return coordinates_all, P_current, volume
+
+def Berendsen_enthalpy(Ek_t, Ep_t, pressure, volume):
+    H_enthalpy = np.zeros_like(pressure)
+    for i in range(len(pressure)):
+        H_enthalpy[i] = Ek_t + Ep_t + pressure[i] * volume[i]
+    return H_enthalpy
 
 def Langevin_stage_1_propagate_thermostat(half_time_step, masses, T_simulation, Nf, tau_T, momenta, eta, W_barostat):
     '''
@@ -295,7 +304,7 @@ def SVR_stage_2_propagate_momenta_eta(half_time_step, eta, momenta, volume, P_cu
 
     return eta_half, momenta_half
 
-def SVR_stage_3_propagate_position_volume(time_step, coordinates, momenta, eta, masses, barostat_space_size, barostat_space_type):
+def SVR_stage_3_propagate_position_volume(time_step, coordinates, momenta, eta, masses, volume, barostat_space_size, barostat_space_type):
     '''
     This function implements stochastic velocity rescaling algorithm (Bussi, Zykova-Timan and Parrinello, JCP (2009)) to do isothermal–isobaric ensenmble sampling (NPT MD).
     '''
@@ -315,15 +324,17 @@ def SVR_stage_3_propagate_position_volume(time_step, coordinates, momenta, eta, 
 
     return coordinates, volume, momenta, barostat_space_size
 
-def SVR_effective_enthalpy(Ek_t, Ep_t, coordinates, eta, volume, T_simulation, P_simulation, W_barostat):
+def SVR_effective_enthalpy(Ek_t, Ep_t, eta, volume, T_simulation, pressure, W_barostat):
     """
-    Compute effective enthalpy as defined in Eq. (14) of the paper.
+    Compute effective enthalpy as defined in Eq. (14) of Bussi, Zykova-Timan and Parrinello, JCP (2009).
     """
     # β⁻¹ = k_B T
     beta = 1 / (units.kB * T_simulation)
 
+    H_eff = np.zeros_like(pressure)
     # effective enthalpy
-    H_eff = Ek_t + Ep_t + P_simulation * volume - (2 / beta) * np.log(volume) + 0.5 * W_barostat * np.sum(eta**2)
+    for i in range(len(pressure)):
+        H_eff[i] = Ek_t + Ep_t + pressure[i] * volume[i] - (2 / beta) * np.log(volume[i]) + 0.5 * W_barostat * eta[i]**2
     return H_eff
 
 

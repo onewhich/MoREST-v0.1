@@ -12,6 +12,10 @@ def velocity_rescaling(dT, T_simulation, Ek, n_atom, velocities):
     return new_velocities
 
 def Berendsen_velocity_rescaling(time_step, Ek, n_atom, T_simulation, tau, velocities):
+    '''
+    This function implements Berendsen thermostat (Berendsen, Postma, van Gunsteren, DiNola and Haak, JCP (1984))
+    to do canonical ensemble sampling (NVT MD).
+    '''
     Ti = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
     factor = np.sqrt(1 + time_step/tau * (T_simulation/Ti -1))
     new_velocities = factor * velocities
@@ -20,7 +24,7 @@ def Berendsen_velocity_rescaling(time_step, Ek, n_atom, T_simulation, tau, veloc
 
 def Langevin_velocity_rescaling(time_step, Ek_t, K_simulation, Nf, gamma, velocities):
     '''
-    This function implements Langevin thermostat (Bussi, Parrinello, CPC (2008)) to do canonical ensenmble sampling (NVT MD).
+    This function implements Langevin thermostat (Bussi, Parrinello, CPC (2008)) to do canonical ensemble sampling (NVT MD).
     '''
     
     ### degree of freedom
@@ -50,9 +54,10 @@ def Langevin_velocity_rescaling(time_step, Ek_t, K_simulation, Nf, gamma, veloci
 
 def stochastic_velocity_rescaling(time_step, Ek_t, K_simulation, Nf, tau, velocities):
     '''
-    This function implements stochastic velocity rescaling algorithm (Bussi, Donadio and Parrinello, JCP (2007); Bussi, Parrinello, CPC (2008)) to do canonical ensenmble sampling (NVT MD).
+    This function implements stochastic velocity rescaling algorithm (Bussi, Donadio and Parrinello, JCP (2007);
+    Bussi, Parrinello, CPC (2008)) to do canonical ensemble sampling (NVT MD).
     '''
-    
+
     ### degree of freedom
     # Nf = 1                # for Langevin thermostat at each degree of freedom
     # Nf = 3 * self.n_atom  # for SVR thermostat at total kinetic energy
