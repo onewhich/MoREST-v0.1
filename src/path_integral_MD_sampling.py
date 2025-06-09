@@ -1,8 +1,7 @@
 import numpy as np
-from structure_io import write_xyz_file, write_xyz_traj
+from structure_io import write_xyz_traj
 from phase_space_sampling import RPMD
 from thermostat import velocity_rescaling, Berendsen_velocity_rescaling, Langevin_velocity_rescaling, stochastic_velocity_rescaling
-from barostat import barostat_space, Berendsen_volume_rescaling, stochastic_velocity_volume_rescaling
 
 class RP_NVE(RPMD):
     def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
