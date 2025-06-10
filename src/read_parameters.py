@@ -460,7 +460,7 @@ class read_parameters:
             self.barostat_parameters['barostat_pressure'].append(float(i_parameter.split()[1]))
 
         elif i_parameter.split()[0].upper() == 'Barostat_space_shape'.upper():
-            tmp_space_parameter = {} # It is used to record the parameters and saved in 'barostat_space_parameters'
+            self.tmp_space_parameter = {} # It is used to record the parameters and saved in 'barostat_space_parameters'
             self.barostat_parameters['barostat_space_shape'].append(str(i_parameter.split()[1]))
 
         elif i_parameter.split()[0].upper() == 'Barostat_space_type'.upper():
@@ -479,52 +479,52 @@ class read_parameters:
             tmp_center = []
             for i in range(3):
                 tmp_center.append(float(i_parameter.split()[i+1]))
-            tmp_space_parameter['barostat_sphere_center'] = np.array(tmp_center)
-            self.barostat_parameters['barostat_space_parameters'].append(tmp_space_parameter)
+            self.tmp_space_parameter['barostat_sphere_center'] = np.array(tmp_center)
+            self.barostat_parameters['barostat_space_parameters'].append(self.tmp_space_parameter)
         
         ########################## cuboidal space ###################################
         elif i_parameter.split()[0].upper() == 'Barostat_cuboid_center'.upper():
             tmp_center = []
             for i in range(3):
                 tmp_center.append(float(i_parameter.split()[i+1]))
-            tmp_space_parameter['barostat_cuboid_center'] = np.array(tmp_center)
-            if 'barostat_cuboid_normal_vector' in tmp_space_parameter and 'barostat_cuboid_length_ratio' in tmp_space_parameter:
-                self.barostat_parameters['barostat_space_parameters'].append(tmp_space_parameter)
+            self.tmp_space_parameter['barostat_cuboid_center'] = np.array(tmp_center)
+            if 'barostat_cuboid_normal_vector' in self.tmp_space_parameter and 'barostat_cuboid_length_ratio' in self.tmp_space_parameter:
+                self.barostat_parameters['barostat_space_parameters'].append(self.tmp_space_parameter)
         
         elif i_parameter.split()[0].upper() == 'Barostat_cuboid_normal_vector'.upper():
             tmp_normal_vector = []
             for i in range(3):
                 tmp_normal_vector.append(float(i_parameter.split()[i+1]))
             tmp_normal_vector = np.array(tmp_normal_vector)
-            tmp_space_parameter['barostat_cuboid_normal_vector'] = tmp_normal_vector / np.linalg.norm(tmp_normal_vector)
-            if 'barostat_cuboid_center' in tmp_space_parameter and  'barostat_cuboid_length_ratio' in tmp_space_parameter:
-                self.barostat_parameters['barostat_space_parameters'].append(tmp_space_parameter)
+            self.tmp_space_parameter['barostat_cuboid_normal_vector'] = tmp_normal_vector / np.linalg.norm(tmp_normal_vector)
+            if 'barostat_cuboid_center' in self.tmp_space_parameter and  'barostat_cuboid_length_ratio' in self.tmp_space_parameter:
+                self.barostat_parameters['barostat_space_parameters'].append(self.tmp_space_parameter)
 
         elif i_parameter.split()[0].upper() == 'Barostat_cuboid_length_ratio'.upper():
             tmp_center = []
             for i in range(3):
                 tmp_center.append(float(i_parameter.split()[i+1]))
-            tmp_space_parameter['barostat_cuboid_length_ratio'] = np.array(tmp_center)
-            if 'barostat_cuboid_center' in tmp_space_parameter and 'barostat_cuboid_normal_vector' in tmp_space_parameter:
-                self.barostat_parameters['barostat_space_parameters'].append(tmp_space_parameter)
+            self.tmp_space_parameter['barostat_cuboid_length_ratio'] = np.array(tmp_center)
+            if 'barostat_cuboid_center' in self.tmp_space_parameter and 'barostat_cuboid_normal_vector' in self.tmp_space_parameter:
+                self.barostat_parameters['barostat_space_parameters'].append(self.tmp_space_parameter)
 
         ########################## plane wall #######################################
         elif i_parameter.split()[0].upper() == 'Barostat_plane_point'.upper():
             tmp_center = []
             for i in range(3):
                 tmp_center.append(float(i_parameter.split()[i+1]))
-            tmp_space_parameter['barostat_plane_point'] = np.array(tmp_center)
-            if 'barostat_plane_normal_vector' in tmp_space_parameter:
-                self.barostat_parameters['barostat_space_parameters'].append(tmp_space_parameter)
+            self.tmp_space_parameter['barostat_plane_point'] = np.array(tmp_center)
+            if 'barostat_plane_normal_vector' in self.tmp_space_parameter:
+                self.barostat_parameters['barostat_space_parameters'].append(self.tmp_space_parameter)
         
         elif i_parameter.split()[0].upper() == 'Barostat_plane_normal_vector'.upper():
             tmp_normal_vector = []
             for i in range(3):
                 tmp_normal_vector.append(float(i_parameter.split()[i+1]))
             tmp_normal_vector = np.array(tmp_normal_vector)
-            tmp_space_parameter['barostat_plane_normal_vector'] = tmp_normal_vector / np.linalg.norm(tmp_normal_vector)
-            if 'barostat_plane_point' in tmp_space_parameter:
-                self.barostat_parameters['barostat_space_parameters'].append(tmp_space_parameter)
+            self.tmp_space_parameter['barostat_plane_normal_vector'] = tmp_normal_vector / np.linalg.norm(tmp_normal_vector)
+            if 'barostat_plane_point' in self.tmp_space_parameter:
+                self.barostat_parameters['barostat_space_parameters'].append(self.tmp_space_parameter)
 
     def read_scattering_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'Scattering_initialization'.upper():
