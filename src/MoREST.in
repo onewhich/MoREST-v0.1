@@ -187,7 +187,7 @@ Wall_shape                        spherical    # planar, spherical, dot, linear,
 Wall_type                         power_wall  -1  # opaque_wall, translucent_wall, power_wall 1: power_wall acts on (b dot norm_vec) > 0, -1: power_wall acts on (b dot norm_vec) < 0.
 Wall_scaling                      0.1      # This is parameter an in the potential
 Wall_scope                        10      # This is parameter c in the potential
-Wall_action_atoms                 all    #TODO all; 1 ; 0,2,4,7.  Indicating the atoms affected by the wall potential.
+Wall_action_atoms                 all    # all; 1 ; 0,2,4,7.  Indicating the atoms affected by the wall potential.
 Spherical_wall_center             0 0 0 # This point and radius determine the parameter b in the spherical potential.
 Spherical_wall_radius             20 # The radius and center point determine the parameter b in the spherical potential.
 Planar_wall_point                 0 0 3 # This point and normal vector determine the parameter b in the planar potential.
