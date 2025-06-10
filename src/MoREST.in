@@ -185,7 +185,7 @@ Wall_number                       1    # the number of walls added in the simula
 Wall_collective_variable          False
 Wall_shape                        spherical    # planar, spherical, dot, linear, circular
 Wall_type                         power_wall  -1  # opaque_wall, translucent_wall, power_wall 1: power_wall acts on (b dot norm_vec) > 0, -1: power_wall acts on (b dot norm_vec) < 0.
-Wall_scaling                      0.1      # This is parameter an in the potential
+Wall_scaling                      0.1      # This is parameter a in the potential
 Wall_scope                        10      # This is parameter c in the potential
 Wall_action_atoms                 all    # all; 1 ; 0,2,4,7.  Indicating the atoms affected by the wall potential.
 Spherical_wall_center             0 0 0 # This point and radius determine the parameter b in the spherical potential.
