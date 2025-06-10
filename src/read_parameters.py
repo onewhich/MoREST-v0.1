@@ -838,7 +838,7 @@ class read_parameters:
             
         elif i_parameter.split()[0].upper() == 'Wall_type'.upper():
             self.wall_potential_parameters['wall_type'].append(str(i_parameter.split()[1]).lower())
-            if i_parameter.split()[1].upper() in ['power_wall'.upper()]:
+            if i_parameter.split()[1].lower() in ['power_wall']:
                 self.wall_potential_parameters['power_wall_direction'].append(np.sign(int(i_parameter.split()[2])))
             else:
                 self.wall_potential_parameters['power_wall_direction'].append(0)
@@ -851,7 +851,7 @@ class read_parameters:
             
         elif i_parameter.split()[0].upper() == 'Wall_action_atoms'.upper():
             tmp_atoms = str(i_parameter.split()[1])
-            if tmp_atoms.upper() == 'all'.upper():
+            if tmp_atoms.lower() == 'all':
                 tmp_atoms = 'all'
             else:
                 tmp_atoms = np.array(tmp_atoms.split(','), dtype='int')
