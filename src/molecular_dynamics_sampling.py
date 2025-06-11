@@ -526,7 +526,7 @@ class NPT_Langevin(MD):
             P_current.append(self.NPT_space.get_pressure(Ek_atoms[index_atom], internal_virial, current_volume))
             T_current = self.current_system.get_temperature()
             current_eta, index_momenta = SVR_stage_2_propagate_momenta_eta(half_time_step, current_eta, index_momenta, current_volume, P_current[i], \
-                                                            self.P_simulation, T_current, self.W_barostat, index_forces, index_masses)
+                                                            self.P_simulation[i], T_current, self.W_barostat, index_forces, index_masses)
 
             # stage 3: propagate 1 time step position, volume, momenta
             index_coordinates, current_volume, index_momenta, barostat_space_size = SVR_stage_3_propagate_position_volume(
@@ -559,7 +559,7 @@ class NPT_Langevin(MD):
             P_current[i] = self.NPT_space.get_pressure(Ek_atoms[index_atom], internal_virial, current_volume)
             T_current = self.current_system.get_temperature()
             current_eta, index_momenta = SVR_stage_2_propagate_momenta_eta(half_time_step, current_eta, index_momenta, current_volume, P_current[i], \
-                                                            self.P_simulation, T_current, self.W_barostat, index_forces, index_masses)
+                                                            self.P_simulation[i], T_current, self.W_barostat, index_forces, index_masses)
 
             # stage 5: propagate 1/2 time step thermostat (again)
             index_momenta, current_eta = Langevin_stage_1_propagate_thermostat(half_time_step, index_masses, self.T_simulation, \
@@ -666,7 +666,7 @@ class NPT_SVR(MD):
             P_current.append(self.NPT_space.get_pressure(Ek_atoms[index_atom], internal_virial, current_volume))
             T_current = self.current_system.get_temperature()
             current_eta, index_momenta = SVR_stage_2_propagate_momenta_eta(half_time_step, current_eta, index_momenta, current_volume, P_current[i], \
-                                                            self.P_simulation, T_current, self.W_barostat, index_forces, index_masses)
+                                                            self.P_simulation[i], T_current, self.W_barostat, index_forces, index_masses)
 
             # stage 3: propagate 1 time step position, volume, momenta
             index_coordinates, current_volume, index_momenta, barostat_space_size = SVR_stage_3_propagate_position_volume(
@@ -699,7 +699,7 @@ class NPT_SVR(MD):
             P_current[i] = self.NPT_space.get_pressure(Ek_atoms[index_atom], internal_virial, current_volume)
             T_current = self.current_system.get_temperature()
             current_eta, index_momenta = SVR_stage_2_propagate_momenta_eta(half_time_step, current_eta, index_momenta, current_volume, P_current[i], \
-                                                            self.P_simulation, T_current, self.W_barostat, index_forces, index_masses)
+                                                            self.P_simulation[i], T_current, self.W_barostat, index_forces, index_masses)
 
             # stage 5: propagate 1/2 time step thermostat (again)
             alpha = SVR_stage_1_propagate_thermostat(half_time_step, np.sum(Ek_atoms[index_atom]), self.T_simulation, \
