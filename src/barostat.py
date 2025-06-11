@@ -312,6 +312,8 @@ def SVR_stage_3_propagate_position_volume(time_step, coordinates, momenta, eta, 
     This function implements stochastic velocity rescaling algorithm (Bussi, Zykova-Timan and Parrinello, JCP (2009)) to do isothermal–isobaric ensenmble sampling (NPT MD).
     '''
     eta_time_step = eta*time_step
+    print(f"eta: {eta}")
+    print(f"time_step: {time_step}")
     print(f"eta_time_step: {eta_time_step}")
     exp_eta_time_step = np.exp(eta_time_step)
     print(f"exp_eta_time_step: {exp_eta_time_step}")
