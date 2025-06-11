@@ -59,7 +59,7 @@ class read_parameters:
         self.barostat_parameters['barostat_pressure'] = []
         self.barostat_parameters['barostat_space_shape'] = []
         #self.barostat_parameters['barostat_space_type'] = []
-        #self.barostat_parameters['barostat_space_size'] = []
+        self.barostat_parameters['barostat_space_size'] = [] # This parameter is not read from input file, but calculated in the code.
         self.barostat_parameters['barostat_action_atoms'] = []
         self.barostat_parameters['barostat_space_parameters'] = []
         self.RPMD_parameters = {}
