@@ -668,7 +668,17 @@ class NPT_SVR(MD):
                                                      index_Nf, self.tau_T, current_eta, self.W_barostat)
             index_momenta *= alpha
             current_eta *= alpha
+            
+            print('half_time_step:', half_time_step) #DEBUG
             print('current_eta:', current_eta) #DEBUG
+            print('index_momenta:', index_momenta) #DEBUG
+            print('current_volume:', current_volume) #DEBUG
+            print('P_current:', self.P_current[i]) #DEBUG
+            print('P_simulation:', self.P_simulation[i]) #DEBUG
+            print('T_current:', T_current) #DEBUG
+            print('W_barostat:', self.W_barostat) #DEBUG
+            print('index_forces:', index_forces) #DEBUG
+            print('index_masses:', index_masses) #DEBUG
 
             # stage 2: propagate 1/2 time step momenta & eta
             internal_virial = self.NPT_space.get_internal_virial(index_atom, coordinates_all, forces_all)
@@ -677,7 +687,17 @@ class NPT_SVR(MD):
             T_current = self.current_system.get_temperature()
             current_eta, index_momenta = SVR_stage_2_propagate_momenta_eta(half_time_step, current_eta, index_momenta, current_volume, self.P_current[i], \
                                                             self.P_simulation[i], T_current, self.W_barostat, index_forces, index_masses)
+            
+            print('half_time_step:', half_time_step) #DEBUG
             print('current_eta:', current_eta) #DEBUG
+            print('index_momenta:', index_momenta) #DEBUG
+            print('current_volume:', current_volume) #DEBUG
+            print('P_current:', self.P_current[i]) #DEBUG
+            print('P_simulation:', self.P_simulation[i]) #DEBUG
+            print('T_current:', T_current) #DEBUG
+            print('W_barostat:', self.W_barostat) #DEBUG
+            print('index_forces:', index_forces) #DEBUG
+            print('index_masses:', index_masses) #DEBUG
 
             # stage 3: propagate 1 time step position, volume, momenta
             index_coordinates, current_volume, index_momenta, barostat_space_size = SVR_stage_3_propagate_position_volume(
