@@ -608,15 +608,22 @@ class NPT_SVR(MD):
         self.tau_P = self.sampling_parameters['npt_svr_tau_p']
         self.eta = np.zeros(self.MD_parameters['barostat_number'])
         self.volume = np.zeros(self.MD_parameters['barostat_number'])
+        self.P_current = np.zeros(self.MD_parameters['barostat_number'])
         # N_f = 3 * N - 3 + 1, remove the center of mass DOF, add the barostat volume DOF
         self.Nf_all = 3*self.n_atom - 2
         self.W_barostat = self.Nf_all * units.kB * self.T_simulation * self.tau_P**2
 
+        Ek_atoms = self.NPT_space.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
         Ek_t = self.current_system.get_kinetic_energy()
         Ep_t = self.current_potential_energy
         for i in range(self.MD_parameters['barostat_number']):
+            coordinates_all = self.current_system.get_positions()
+            forces_all = self.current_forces
+            index_atom = self.MD_parameters['barostat_action_atoms'][i]
+            internal_virial = self.NPT_space.get_internal_virial(index_atom, coordinates_all, forces_all)
             self.volume[i] = self.NPT_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i])
-        H_effective = SVR_effective_enthalpy(Ek_t, Ep_t, self.eta, self.volume, self.T_simulation, self.P_simulation, self.W_barostat)
+            self.P_current[i] = self.NPT_space.get_pressure(Ek_atoms[index_atom], internal_virial, self.volume[i])
+        H_effective = SVR_effective_enthalpy(Ek_t, Ep_t, self.eta, self.volume, self.T_simulation, self.P_current, self.W_barostat)
 
         if self.sampling_parameters['sampling_initialization']:
             self.MD_log = open(self.log_file_name, 'w', buffering=1)
@@ -625,7 +632,7 @@ class NPT_SVR(MD):
                 self.MD_log.write(', Pressure (bar), Enthalpy (eV)')
             self.MD_log.write('\n')
             self.write_MD_NPT_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses, \
-                                                self.MD_parameters['barostat_number'], self.P_simulation, H_effective)
+                                                self.MD_parameters['barostat_number'], self.P_current, H_effective)
         else:
             self.MD_log = open(self.log_file_name, 'a', buffering=1)
 
@@ -644,7 +651,6 @@ class NPT_SVR(MD):
         forces_all = self.current_forces
 
         Ek_atoms = self.NPT_space.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
-        P_current = []
         for i in range(self.MD_parameters['barostat_number']):
             index_atom = self.MD_parameters['barostat_action_atoms'][i]
             current_eta = self.eta[i]
@@ -663,9 +669,9 @@ class NPT_SVR(MD):
             # stage 2: propagate 1/2 time step momenta & eta
             internal_virial = self.NPT_space.get_internal_virial(index_atom, coordinates_all, forces_all)
             current_volume = self.NPT_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i])
-            P_current.append(self.NPT_space.get_pressure(Ek_atoms[index_atom], internal_virial, current_volume))
+            self.P_current[i] = self.NPT_space.get_pressure(Ek_atoms[index_atom], internal_virial, current_volume)
             T_current = self.current_system.get_temperature()
-            current_eta, index_momenta = SVR_stage_2_propagate_momenta_eta(half_time_step, current_eta, index_momenta, current_volume, P_current[i], \
+            current_eta, index_momenta = SVR_stage_2_propagate_momenta_eta(half_time_step, current_eta, index_momenta, current_volume, self.P_current[i], \
                                                             self.P_simulation[i], T_current, self.W_barostat, index_forces, index_masses)
 
             # stage 3: propagate 1 time step position, volume, momenta
@@ -696,9 +702,9 @@ class NPT_SVR(MD):
             # stage 4: propagate 1/2 time step momenta & eta (again)
             internal_virial = self.NPT_space.get_internal_virial(index_atom, coordinates_all, forces_all)
             current_volume = self.NPT_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i])
-            P_current[i] = self.NPT_space.get_pressure(Ek_atoms[index_atom], internal_virial, current_volume)
+            self.P_current[i] = self.NPT_space.get_pressure(Ek_atoms[index_atom], internal_virial, current_volume)
             T_current = self.current_system.get_temperature()
-            current_eta, index_momenta = SVR_stage_2_propagate_momenta_eta(half_time_step, current_eta, index_momenta, current_volume, P_current[i], \
+            current_eta, index_momenta = SVR_stage_2_propagate_momenta_eta(half_time_step, current_eta, index_momenta, current_volume, self.P_current[i], \
                                                             self.P_simulation[i], T_current, self.W_barostat, index_forces, index_masses)
 
             # stage 5: propagate 1/2 time step thermostat (again)
@@ -718,12 +724,12 @@ class NPT_SVR(MD):
         
         Ek_t = self.current_system.get_kinetic_energy()
         Ep_t = self.current_potential_energy
-        H_effective = SVR_effective_enthalpy(Ek_t, Ep_t, self.eta, self.volume, self.T_simulation, P_current, self.W_barostat)
-        
+        H_effective = SVR_effective_enthalpy(Ek_t, Ep_t, self.eta, self.volume, self.T_simulation, self.P_current, self.W_barostat)
+
         if self.current_step % self.sampling_parameters['sampling_traj_interval'] == 0:
             write_xyz_traj(self.traj_file_name, self.current_system)
             self.kinetic_energy = self.current_system.get_kinetic_energy()
             self.write_MD_NPT_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses, \
-                                                self.MD_parameters['barostat_number'], P_current, H_effective)
-        
+                                                self.MD_parameters['barostat_number'], self.P_current, H_effective)
+
         return self.current_step, self.current_system
