@@ -1161,7 +1161,7 @@ class read_parameters:
                     tmp_stop.append(int(self.traj_stop_parameter[1+i_loc]))
                     tmp_stop.append(float(self.traj_stop_parameter[2+i_loc]))
                     N_check = self.traj_stop_parameter[3+i_loc]
-                    if N_check.upper() == 'all'.upper():
+                    if N_check.lower() == 'all':
                         tmp_stop.append(N_check)
                         i_loc += 4
                         traj_stop_CVs.append(tmp_stop)
@@ -1180,7 +1180,7 @@ class read_parameters:
                     tmp_stop.append(int(self.traj_stop_parameter[1+i_loc]))
                     tmp_stop.append(float(self.traj_stop_parameter[2+i_loc]))
                     N_check = self.traj_stop_parameter[3+i_loc]
-                    if N_check.upper() == 'all'.upper():
+                    if N_check.lower() == 'all':
                         tmp_stop.append(N_check)
                         i_loc += 4
                         traj_stop_CVs.append(tmp_stop)

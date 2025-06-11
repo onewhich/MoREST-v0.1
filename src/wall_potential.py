@@ -126,3 +126,12 @@ class repulsive_wall:
 
     #def mirror_potential(a, c):
     
+def CV_to_XYZ(collective_variable):
+    '''
+    HASE NOT IMPLEMENTED YET
+    This function converts the collective variable to xyz_coordinate.
+    It is a placeholder function and should be implemented based on the specific collective variable to xyz conversion.
+    '''
+    # Placeholder implementation
+    # In practice, this function should convert the collective variable to Cartesian coordinates
+    return collective_variable  # Assuming collective_variable is already in Cartesian form for now
