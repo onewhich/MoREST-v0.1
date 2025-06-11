@@ -58,8 +58,8 @@ class read_parameters:
         self.barostat_parameters['barostat_collective_variable'] = []
         self.barostat_parameters['barostat_pressure'] = []
         self.barostat_parameters['barostat_space_shape'] = []
-        self.barostat_parameters['barostat_space_type'] = []
-        self.barostat_parameters['barostat_space_size'] = []
+        #self.barostat_parameters['barostat_space_type'] = []
+        #self.barostat_parameters['barostat_space_size'] = []
         self.barostat_parameters['barostat_action_atoms'] = []
         self.barostat_parameters['barostat_space_parameters'] = []
         self.RPMD_parameters = {}
@@ -455,16 +455,24 @@ class read_parameters:
     def read_barostat_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'Barostat_number'.upper():
             self.barostat_parameters['barostat_number'] = int(i_parameter.split()[1])
+    
+        elif i_parameter.split()[0].upper() == 'Barostat_collective_variable'.upper():
+            if i_parameter.split()[1].upper() == 'True'.upper():
+                self.barostat_parameters['barostat_collective_variable'].append(True)
+            elif i_parameter.split()[1].upper() == 'False'.upper():
+                self.barostat_parameters['barostat_collective_variable'].append(False)
+            else:
+                raise Exception('It is not clear whether the collective variable will be used.')
 
         elif i_parameter.split()[0].upper() == 'Barostat_pressure'.upper():
             self.barostat_parameters['barostat_pressure'].append(float(i_parameter.split()[1]))
 
         elif i_parameter.split()[0].upper() == 'Barostat_space_shape'.upper():
-            self.tmp_space_parameter = {} # It is used to record the parameters and saved in 'barostat_space_parameters'
+            self.tmp_space_parameter = {} # It is used to record the parameters for each space and saved in 'barostat_space_parameters'
             self.barostat_parameters['barostat_space_shape'].append(str(i_parameter.split()[1]))
 
-        elif i_parameter.split()[0].upper() == 'Barostat_space_type'.upper():
-            self.barostat_parameters['barostat_space_type'].append(str(i_parameter.split()[1]))
+        #elif i_parameter.split()[0].upper() == 'Barostat_space_type'.upper():
+        #    self.barostat_parameters['barostat_space_type'].append(str(i_parameter.split()[1]))
 
         elif i_parameter.split()[0].upper() == 'Barostat_action_atoms'.upper():
             tmp_atoms = str(i_parameter.split()[1])
@@ -833,7 +841,7 @@ class read_parameters:
                 raise Exception('It is not clear whether the collective variable will be used.')
             
         elif i_parameter.split()[0].upper() == 'Wall_shape'.upper():
-            self.tmp_wall_parameter = {} # It is used to record the shape parameters and saved in 'wall_shape_parameters'
+            self.tmp_wall_parameter = {} # It is used to record the shape parameters of each space and saved in 'wall_shape_parameters'
             self.wall_potential_parameters['wall_shape'].append(str(i_parameter.split()[1]).lower())
             
         elif i_parameter.split()[0].upper() == 'Wall_type'.upper():
@@ -1092,7 +1100,7 @@ class read_parameters:
     def get_barostat_parameters(self):
         self.barostat_parameters['barostat_pressure'] = \
             np.array(self.barostat_parameters['barostat_pressure'][:self.barostat_parameters['barostat_number']]) * units.bar
-        for key in ['barostat_space_parameters', 'barostat_space_shape', 'barostat_space_type', 'barostat_action_atoms']:
+        for key in ['barostat_space_parameters', 'barostat_space_shape', 'barostat_action_atoms']:#, 'barostat_space_type']:
             self.barostat_parameters[key] = self.barostat_parameters[key][:self.barostat_parameters['barostat_number']]
         
     def get_scattering_parameters(self, log_morest=None):
