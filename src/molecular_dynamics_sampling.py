@@ -656,6 +656,7 @@ class NPT_SVR(MD):
         for i in range(self.MD_parameters['barostat_number']):
             index_atom = self.MD_parameters['barostat_action_atoms'][i]
             current_eta = self.eta[i]
+            print('current_eta:', current_eta) #DEBUG
             index_momenta = momenta_all[index_atom]
             index_coordinates = coordinates_all[index_atom]
             index_forces = forces_all[index_atom]
@@ -667,6 +668,7 @@ class NPT_SVR(MD):
                                                      index_Nf, self.tau_T, current_eta, self.W_barostat)
             index_momenta *= alpha
             current_eta *= alpha
+            print('current_eta:', current_eta) #DEBUG
 
             # stage 2: propagate 1/2 time step momenta & eta
             internal_virial = self.NPT_space.get_internal_virial(index_atom, coordinates_all, forces_all)
@@ -675,6 +677,7 @@ class NPT_SVR(MD):
             T_current = self.current_system.get_temperature()
             current_eta, index_momenta = SVR_stage_2_propagate_momenta_eta(half_time_step, current_eta, index_momenta, current_volume, self.P_current[i], \
                                                             self.P_simulation[i], T_current, self.W_barostat, index_forces, index_masses)
+            print('current_eta:', current_eta) #DEBUG
 
             # stage 3: propagate 1 time step position, volume, momenta
             index_coordinates, current_volume, index_momenta, barostat_space_size = SVR_stage_3_propagate_position_volume(
@@ -695,6 +698,7 @@ class NPT_SVR(MD):
         for i in range(self.MD_parameters['barostat_number']):
             index_atom = self.MD_parameters['barostat_action_atoms'][i]
             current_eta = self.eta[i]
+            print('current_eta:', current_eta) #DEBUG
             index_momenta = momenta_all[index_atom]
             index_coordinates = coordinates_all[index_atom]
             index_forces = forces_all[index_atom]
@@ -708,12 +712,14 @@ class NPT_SVR(MD):
             T_current = self.current_system.get_temperature()
             current_eta, index_momenta = SVR_stage_2_propagate_momenta_eta(half_time_step, current_eta, index_momenta, current_volume, self.P_current[i], \
                                                             self.P_simulation[i], T_current, self.W_barostat, index_forces, index_masses)
+            print('current_eta:', current_eta) #DEBUG
 
             # stage 5: propagate 1/2 time step thermostat (again)
             alpha = SVR_stage_1_propagate_thermostat(half_time_step, np.sum(Ek_atoms[index_atom]), self.T_simulation, \
                                                      index_Nf, self.tau_T, current_eta, self.W_barostat)
             index_momenta *= alpha
             current_eta *= alpha
+            print('current_eta:', current_eta) #DEBUG
 
             self.eta[i] = current_eta
             self.volume[i] = current_volume
