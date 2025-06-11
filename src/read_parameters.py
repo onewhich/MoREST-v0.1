@@ -58,7 +58,7 @@ class read_parameters:
         self.barostat_parameters['barostat_collective_variable'] = []
         self.barostat_parameters['barostat_pressure'] = []
         self.barostat_parameters['barostat_space_shape'] = []
-        #self.barostat_parameters['barostat_space_type'] = []
+        self.barostat_parameters['barostat_space_type'] = []
         self.barostat_parameters['barostat_space_size'] = [] # This parameter is not read from input file, but calculated in the code.
         self.barostat_parameters['barostat_action_atoms'] = []
         self.barostat_parameters['barostat_space_parameters'] = []
@@ -471,8 +471,8 @@ class read_parameters:
             self.tmp_space_parameter = {} # It is used to record the parameters for each space and saved in 'barostat_space_parameters'
             self.barostat_parameters['barostat_space_shape'].append(str(i_parameter.split()[1]))
 
-        #elif i_parameter.split()[0].upper() == 'Barostat_space_type'.upper():
-        #    self.barostat_parameters['barostat_space_type'].append(str(i_parameter.split()[1]))
+        elif i_parameter.split()[0].upper() == 'Barostat_space_type'.upper():
+            self.barostat_parameters['barostat_space_type'].append(str(i_parameter.split()[1]))
 
         elif i_parameter.split()[0].upper() == 'Barostat_action_atoms'.upper():
             tmp_atoms = str(i_parameter.split()[1])
@@ -1100,7 +1100,7 @@ class read_parameters:
     def get_barostat_parameters(self):
         self.barostat_parameters['barostat_pressure'] = \
             np.array(self.barostat_parameters['barostat_pressure'][:self.barostat_parameters['barostat_number']]) * units.bar
-        for key in ['barostat_space_parameters', 'barostat_space_shape', 'barostat_action_atoms']:#, 'barostat_space_type']:
+        for key in ['barostat_space_parameters', 'barostat_space_shape', 'barostat_action_atoms', 'barostat_space_type']:
             self.barostat_parameters[key] = self.barostat_parameters[key][:self.barostat_parameters['barostat_number']]
         
     def get_scattering_parameters(self, log_morest=None):
