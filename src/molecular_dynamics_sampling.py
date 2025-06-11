@@ -607,6 +607,7 @@ class NPT_SVR(MD):
         self.tau_T = self.sampling_parameters['npt_svr_tau_t']
         self.tau_P = self.sampling_parameters['npt_svr_tau_p']
         self.eta = np.zeros(self.MD_parameters['barostat_number'])
+        print('eta:', self.eta) #DEBUG
         self.volume = np.zeros(self.MD_parameters['barostat_number'])
         self.P_current = np.zeros(self.MD_parameters['barostat_number'])
         # N_f = 3 * N - 3 + 1, remove the center of mass DOF, add the barostat volume DOF
@@ -651,6 +652,7 @@ class NPT_SVR(MD):
         forces_all = self.current_forces
 
         Ek_atoms = self.NPT_space.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
+        print('eta:', self.eta) #DEBUG
         for i in range(self.MD_parameters['barostat_number']):
             index_atom = self.MD_parameters['barostat_action_atoms'][i]
             current_eta = self.eta[i]
