@@ -8,7 +8,7 @@ class barostat_space:
         self.current_system = current_system
         self.n_atom = current_system.get_global_number_of_atoms()
         self.masses = current_system.get_masses()[:,np.newaxis]
-        self.initialize_barostat_space_size()
+        #self.initialize_barostat_space_size()
         self.initialize_barostat_space_wall()
 
     def initialize_barostat_space_size(self):
