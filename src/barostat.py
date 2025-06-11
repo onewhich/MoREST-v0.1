@@ -12,10 +12,12 @@ class barostat_space:
         self.initialize_barostat_space_wall()
 
     def initialize_barostat_space_size(self):
+        self.P_simulation = []
         Eks = self.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
         forces_all = self.current_system.get_forces()
         coordinates_all = self.current_system.get_positions()
         for i in range(self.barostat_parameters['barostat_number']):
+            self.P_simulation.append(self.barostat_parameters['barostat_pressure'][i])
             index = self.barostat_parameters['barostat_action_atoms'][i]
             if index == 'all':
                 index = np.arange(self.n_atom)
@@ -28,7 +30,6 @@ class barostat_space:
                 raise ValueError(f"Unsupported space shape: '{self.barostat_parameters['barostat_space_shape'][i]}'")
 
     def initialize_barostat_space_wall(self):
-        self.P_simulation = []
         self.barostat_space_wall_parameters = {}
         self.barostat_space_wall_parameters['wall_number'] = 0
         self.barostat_space_wall_parameters['wall_collective_variable'] = []
@@ -40,16 +41,15 @@ class barostat_space:
         self.barostat_space_wall_parameters['wall_action_atoms'] = []
         self.barostat_space_wall_parameters['wall_shape_parameters'] = []
         for i, barostat_space in enumerate(self.barostat_parameters['barostat_space_parameters']):
-            self.P_simulation.append(barostat_space['barostat_pressure'][i])
             self.barostat_space_wall_parameters['wall_number'] += 1
             self.barostat_space_wall_parameters['wall_collective_variable'].append(self.barostat_parameters['barostat_collective_variable'][i])
-            self.barostat_space_wall_parameters['wall_shape'].append('spherical')
             self.barostat_space_wall_parameters['wall_type'].append('power_wall')
             self.barostat_space_wall_parameters['power_wall_direction'].append(-1)
             self.barostat_space_wall_parameters['wall_scaling'].append(1)
             self.barostat_space_wall_parameters['wall_scope'].append(4)
             self.barostat_space_wall_parameters['wall_action_atoms'].append(self.barostat_parameters['barostat_action_atoms'][i])
             if self.barostat_parameters['barostat_space_shape'][i].lower() == 'sphere':
+                self.barostat_space_wall_parameters['wall_shape'].append('spherical')
                 tmp_parameters = {}
                 tmp_parameters['spherical_wall_center'] = barostat_space['barostat_sphere_center']
                 tmp_parameters['spherical_wall_radius'] = self.barostat_parameters['barostat_space_size'][i]
