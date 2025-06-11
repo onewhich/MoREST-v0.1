@@ -672,13 +672,7 @@ class NPT_SVR(MD):
             print('half_time_step:', half_time_step) #DEBUG
             print('current_eta:', current_eta) #DEBUG
             print('index_momenta:', index_momenta) #DEBUG
-            print('current_volume:', current_volume) #DEBUG
-            print('P_current:', self.P_current[i]) #DEBUG
             print('P_simulation:', self.P_simulation[i]) #DEBUG
-            print('T_current:', T_current) #DEBUG
-            print('W_barostat:', self.W_barostat) #DEBUG
-            print('index_forces:', index_forces) #DEBUG
-            print('index_masses:', index_masses) #DEBUG
 
             # stage 2: propagate 1/2 time step momenta & eta
             internal_virial = self.NPT_space.get_internal_virial(index_atom, coordinates_all, forces_all)
