@@ -189,6 +189,7 @@ class MD(initialize_sampling):
         
     def update_step(self, next_potential_energy, next_forces):
 
+        self.current_step += 1
         self.current_system.info['step'] = self.current_step
         self.current_forces = next_forces
         self.current_potential_energy = next_potential_energy
@@ -202,8 +203,6 @@ class MD(initialize_sampling):
             clean_rotation(self.current_system, preserve_temperature=True)
         if self.MD_parameters['md_clean_translation']:
             clean_translation(self.current_system, preserve_temperature=True)
-            
-        self.current_step += 1
         
         if not self.re_simulation:
             write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
@@ -369,6 +368,7 @@ class RPMD(initialize_sampling):
 
     def RPMD_update_step(self, current_beads_potential_energy, current_beads_forces, next_beads_positions, next_beads_momenta):
 
+        self.current_step += 1
         self.update_beads_positions(next_beads_positions)
         self.current_beads_positions = next_beads_positions
         self.update_beads_momenta(next_beads_momenta)
@@ -388,8 +388,6 @@ class RPMD(initialize_sampling):
             self.ml_calculator.get_current_step(self.current_step)
         except:
             pass
-        
-        self.current_step += 1
 
         write_xyz_file(self.beads_file_name, self.current_beads)
         write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
