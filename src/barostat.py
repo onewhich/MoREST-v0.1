@@ -232,7 +232,7 @@ def Berendsen_volume_rescaling(barostat_parameters, time_step, coordinates_all, 
         # because factor_Z is only used in conjunction with tau_P.
         print(f"Barostat {i}: P_current = {P_current[i]}, P_simulation = {P_simulation[i]}, volume = {volume[i]}")
         print(f"time_step = {time_step}, tau_P = {tau_P}")
-        factor_mu = (1-time_step/tau_P*(P_simulation[i]-P_current[i]))**(1./3.)
+        factor_mu = 1-time_step/tau_P*(P_simulation[i]-P_current[i])**(1./3.)
         print(f"Barostat {i}: factor_mu = {factor_mu}")
         # It can become unstable if:
         # The time step (time_step) is too large,
