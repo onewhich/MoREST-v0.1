@@ -122,7 +122,7 @@ class repulsive_wall:
                 return wall_force, wall_potential
         
     def update_wall_parameters(self, wall_potential_parameters):
-        self.__init__(self, wall_potential_parameters)
+        self.__init__(wall_potential_parameters)
 
     #def mirror_potential(a, c):
     
