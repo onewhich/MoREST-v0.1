@@ -237,7 +237,7 @@ def Berendsen_volume_rescaling(barostat_parameters, time_step, coordinates_all, 
         # The pressure difference is too big.
         # This might result in tmp_miu becoming negative or unreasonably small/large, causing unphysical behavior or numerical divergence.
         # To ensure numerical stability, add clamping:
-        factor_mu = max(0.9, min(1.1, factor_mu))
+        # factor_mu = max(0.9, min(1.1, factor_mu))
 
         if barostat_parameters['barostat_space_type'][i].lower() == 'equilibrium':
             barostat_parameters['barostat_space_size'][i] *= factor_mu
