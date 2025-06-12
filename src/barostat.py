@@ -47,7 +47,7 @@ class barostat_space:
             self.barostat_space_wall_parameters['wall_number'] += 1
             self.barostat_space_wall_parameters['wall_collective_variable'].append(self.barostat_parameters['barostat_collective_variable'][i])
             self.barostat_space_wall_parameters['wall_type'].append('power_wall')
-            self.barostat_space_wall_parameters['power_wall_direction'].append(-1)
+            self.barostat_space_wall_parameters['power_wall_direction'].append(1)
             self.barostat_space_wall_parameters['wall_scaling'].append(1)
             self.barostat_space_wall_parameters['wall_scope'].append(4)
             self.barostat_space_wall_parameters['wall_action_atoms'].append(self.barostat_parameters['barostat_action_atoms'][i])
