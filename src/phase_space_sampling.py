@@ -98,7 +98,7 @@ class initialize_sampling(initialize_calculator):
         return Ee
     
     @staticmethod
-    def write_MD_NPT_log(log_file, step, Ep, Ek, masses, n_barostat, P_current, enthalpy):
+    def write_MD_NPT_log(log_file, step, Ep, Ek, masses, n_barostat, P_current, barostat_size, enthalpy):
         try:
             if len(Ep) >= 1:
                 Ep = Ep[0]
@@ -111,7 +111,7 @@ class initialize_sampling(initialize_calculator):
         Et = Ek + Ep
         log_file.write(str(step)+'    '+str(Ep)+'    '+str(Ek)+'    '+str(T)+'    '+str(Et))
         for i in range(n_barostat):
-            log_file.write('    '+str(P_current[i]/units.bar)+'    '+str(enthalpy[i]))
+            log_file.write('    '+str(P_current[i]/units.bar)+'    '+str(barostat_size[i])+'    '+str(enthalpy[i]))
         log_file.write('\n')
     
     @staticmethod

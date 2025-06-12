@@ -267,7 +267,7 @@ class NPH_SVR(MD):
                 self.MD_log.write(', Pressure (bar), Enthalpy (eV)')
             self.MD_log.write('\n')
             self.write_MD_NPT_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses, \
-                                                self.MD_parameters['barostat_number'], self.P_simulation, H_effective)
+                                                self.MD_parameters['barostat_number'], self.P_simulation, self.MD_parameters['barostat_space_size'], H_effective)
         else:
             self.MD_log = open(self.log_file_name, 'a', buffering=1)
 
@@ -351,7 +351,7 @@ class NPH_SVR(MD):
             write_xyz_traj(self.traj_file_name, self.current_system)
             self.kinetic_energy = self.current_system.get_kinetic_energy()
             self.write_MD_NPT_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses, \
-                                                self.MD_parameters['barostat_number'], P_current, H_effective)
+                                                self.MD_parameters['barostat_number'], P_current, self.MD_parameters['barostat_space_size'], H_effective)
             
         return self.current_step, self.current_system
 
@@ -398,7 +398,7 @@ class NPT_Berendsen(MD):
             self.MD_log.write('\n')
             self.kinetic_energy = self.current_system.get_kinetic_energy()
             self.write_MD_NPT_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses, \
-                                                self.MD_parameters['barostat_number'], P_current, H_enthalpy)
+                                                self.MD_parameters['barostat_number'], P_current, self.MD_parameters['barostat_space_size'], H_enthalpy)
         else:
             self.MD_log = open(self.log_file_name, 'a', buffering=1)
 
@@ -429,7 +429,7 @@ class NPT_Berendsen(MD):
             write_xyz_traj(self.traj_file_name, self.current_system)
             self.kinetic_energy = self.current_system.get_kinetic_energy()
             self.write_MD_NPT_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses, \
-                                                self.MD_parameters['barostat_number'], P_current, H_enthalpy)
+                                                self.MD_parameters['barostat_number'], P_current, self.MD_parameters['barostat_space_size'], H_enthalpy)
         
         return self.current_step, self.current_system
 
@@ -472,7 +472,7 @@ class NPT_Langevin(MD):
                 self.MD_log.write(', Pressure (bar), Enthalpy (eV)')
             self.MD_log.write('\n')
             self.write_MD_NPT_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses, \
-                                                self.MD_parameters['barostat_number'], self.P_simulation, H_effective)
+                                                self.MD_parameters['barostat_number'], self.P_simulation, self.MD_parameters['barostat_space_size'], H_effective)
         else:
             self.MD_log = open(self.log_file_name, 'a', buffering=1)
 
@@ -567,7 +567,7 @@ class NPT_Langevin(MD):
             write_xyz_traj(self.traj_file_name, self.current_system)
             self.kinetic_energy = self.current_system.get_kinetic_energy()
             self.write_MD_NPT_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses, \
-                                                self.MD_parameters['barostat_number'], P_current, H_effective)
+                                                self.MD_parameters['barostat_number'], P_current, self.MD_parameters['barostat_space_size'], H_effective)
             
         return self.current_step, self.current_system
 
@@ -617,7 +617,7 @@ class NPT_SVR(MD):
                 self.MD_log.write(', Pressure (bar), Enthalpy (eV)')
             self.MD_log.write('\n')
             self.write_MD_NPT_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses, \
-                                                self.MD_parameters['barostat_number'], self.P_current, H_effective)
+                                                self.MD_parameters['barostat_number'], self.P_current, self.MD_parameters['barostat_space_size'], H_effective)
         else:
             self.MD_log = open(self.log_file_name, 'a', buffering=1)
 
@@ -734,6 +734,6 @@ class NPT_SVR(MD):
             write_xyz_traj(self.traj_file_name, self.current_system)
             self.kinetic_energy = self.current_system.get_kinetic_energy()
             self.write_MD_NPT_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses, \
-                                                self.MD_parameters['barostat_number'], self.P_current, H_effective)
+                                                self.MD_parameters['barostat_number'], self.P_current, self.MD_parameters['barostat_space_size'], H_effective)
 
         return self.current_step, self.current_system
