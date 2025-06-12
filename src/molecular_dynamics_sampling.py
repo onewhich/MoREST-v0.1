@@ -264,7 +264,7 @@ class NPH_SVR(MD):
             self.MD_log = open(self.log_file_name, 'w', buffering=1)
             self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)')
             for i in range(self.MD_parameters['barostat_number']):
-                self.MD_log.write(', Pressure (bar), Enthalpy (eV)')
+                self.MD_log.write(', Pressure (bar), Barostat size (A), Enthalpy (eV)')
             self.MD_log.write('\n')
             self.write_MD_NPT_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses, \
                                                 self.MD_parameters['barostat_number'], self.P_simulation, self.MD_parameters['barostat_space_size'], H_effective)
@@ -394,7 +394,7 @@ class NPT_Berendsen(MD):
             self.MD_log = open(self.log_file_name, 'w', buffering=1)
             self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)')
             for i in range(self.MD_parameters['barostat_number']):
-                self.MD_log.write(', Pressure (bar), Enthalpy (eV)')
+                self.MD_log.write(', Pressure (bar), Barostat size (A), Enthalpy (eV)')
             self.MD_log.write('\n')
             self.kinetic_energy = self.current_system.get_kinetic_energy()
             self.write_MD_NPT_log(self.MD_log, self.current_step, self.current_potential_energy, self.kinetic_energy, self.masses, \
@@ -469,7 +469,7 @@ class NPT_Langevin(MD):
             self.MD_log = open(self.log_file_name, 'w', buffering=1)
             self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)')
             for i in range(self.MD_parameters['barostat_number']):
-                self.MD_log.write(', Pressure (bar), Enthalpy (eV)')
+                self.MD_log.write(', Pressure (bar), Barostat size (A), Enthalpy (eV)')
             self.MD_log.write('\n')
             self.write_MD_NPT_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses, \
                                                 self.MD_parameters['barostat_number'], self.P_simulation, self.MD_parameters['barostat_space_size'], H_effective)
@@ -614,7 +614,7 @@ class NPT_SVR(MD):
             self.MD_log = open(self.log_file_name, 'w', buffering=1)
             self.MD_log.write('# MD step, Potential energy (eV), Kinetic energy (eV), Instant temperature (K), Total energy (eV)')
             for i in range(self.MD_parameters['barostat_number']):
-                self.MD_log.write(', Pressure (bar), Enthalpy (eV)')
+                self.MD_log.write(', Pressure (bar), Barostat size (A), Enthalpy (eV)')
             self.MD_log.write('\n')
             self.write_MD_NPT_log(self.MD_log, self.current_step, self.current_potential_energy, self.current_system.get_kinetic_energy(), self.masses, \
                                                 self.MD_parameters['barostat_number'], self.P_current, self.MD_parameters['barostat_space_size'], H_effective)
