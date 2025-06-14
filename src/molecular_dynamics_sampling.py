@@ -31,7 +31,15 @@ class NVE_VV(MD):
         else:
             self.MD_log = open(self.log_file_name, 'a', buffering=1)
 
-    def generate_new_step(self, time_step=None, bias_forces=None, updated_current_system=None):
+    def generate_new_step(self, time_step=None, bias_forces=None, wall_potential=None, updated_current_system=None):
+        if (bias_forces == None) and (wall_potential != None):
+            bias_forces = wall_potential(self.current_system.get_positions())
+        elif (bias_forces != None) and (wall_potential == None):
+            bias_forces = bias_forces
+        elif (bias_forces != None) and (wall_potential != None):
+            bias_forces += wall_potential(self.current_system.get_positions())
+        else:
+            bias_forces = None
         time_step = self.update_pre_step(time_step, bias_forces, updated_current_system)
 
         next_potential_energy, next_forces = self.integration.velocity_Verlet(time_step, self.current_system, self.current_forces, self.masses)
@@ -70,7 +78,15 @@ class NVK_VR(MD):
         else:
             self.MD_log = open(self.log_file_name, 'a', buffering=1)
 
-    def generate_new_step(self, time_step=None, bias_forces=None, updated_current_system=None):
+    def generate_new_step(self, time_step=None, bias_forces=None, wall_potential=None, updated_current_system=None):
+        if (bias_forces == None) and (wall_potential != None):
+            bias_forces = wall_potential(self.current_system.get_positions())
+        elif (bias_forces != None) and (wall_potential == None):
+            bias_forces = bias_forces
+        elif (bias_forces != None) and (wall_potential != None):
+            bias_forces += wall_potential(self.current_system.get_positions())
+        else:
+            bias_forces = None
         time_step = self.update_pre_step(time_step, bias_forces, updated_current_system)
             
         next_potential_energy, next_forces = self.integration.velocity_Verlet(time_step, self.current_system, self.current_forces, self.masses)
@@ -113,7 +129,15 @@ class NVT_Berendsen(MD):
         else:
             self.MD_log = open(self.log_file_name, 'a', buffering=1)
 
-    def generate_new_step(self, time_step=None, bias_forces=None, updated_current_system=None):
+    def generate_new_step(self, time_step=None, bias_forces=None, wall_potential=None, updated_current_system=None):
+        if (bias_forces == None) and (wall_potential != None):
+            bias_forces = wall_potential(self.current_system.get_positions())
+        elif (bias_forces != None) and (wall_potential == None):
+            bias_forces = bias_forces
+        elif (bias_forces != None) and (wall_potential != None):
+            bias_forces += wall_potential(self.current_system.get_positions())
+        else:
+            bias_forces = None
         time_step = self.update_pre_step(time_step, bias_forces, updated_current_system)
             
         next_potential_energy, next_forces = self.integration.velocity_Verlet(time_step, self.current_system, self.current_forces, self.masses)
@@ -161,7 +185,15 @@ class NVT_Langevin(MD):
             #self.d_Ee = 0
             #self.Wt =  0
 
-    def generate_new_step(self, time_step=None, bias_forces=None, updated_current_system=None):
+    def generate_new_step(self, time_step=None, bias_forces=None, wall_potential=None, updated_current_system=None):
+        if (bias_forces == None) and (wall_potential != None):
+            bias_forces = wall_potential(self.current_system.get_positions())
+        elif (bias_forces != None) and (wall_potential == None):
+            bias_forces = bias_forces
+        elif (bias_forces != None) and (wall_potential != None):
+            bias_forces += wall_potential(self.current_system.get_positions())
+        else:
+            bias_forces = None
         time_step = self.update_pre_step(time_step, bias_forces, updated_current_system)
             
         next_potential_energy, next_forces = self.integration.velocity_Verlet(time_step, self.current_system, self.current_forces, self.masses)
@@ -211,7 +243,15 @@ class NVT_SVR(MD):
             #self.d_Ee = 0
             #self.Wt =  0
 
-    def generate_new_step(self, time_step=None, bias_forces=None, updated_current_system=None):
+    def generate_new_step(self, time_step=None, bias_forces=None, wall_potential=None, updated_current_system=None):
+        if (bias_forces == None) and (wall_potential != None):
+            bias_forces = wall_potential(self.current_system.get_positions())
+        elif (bias_forces != None) and (wall_potential == None):
+            bias_forces = bias_forces
+        elif (bias_forces != None) and (wall_potential != None):
+            bias_forces += wall_potential(self.current_system.get_positions())
+        else:
+            bias_forces = None
         time_step = self.update_pre_step(time_step, bias_forces, updated_current_system)
             
         next_potential_energy, next_forces = self.integration.velocity_Verlet(time_step, self.current_system, self.current_forces, self.masses)
@@ -260,9 +300,8 @@ class NPH_SVR(MD):
         Ep_t = self.current_potential_energy
         for i in range(self.MD_parameters['barostat_number']):
             coordinates_all = self.current_system.get_positions()
-            forces_all = self.current_forces
             index_atom = self.MD_parameters['barostat_action_atoms'][i]
-            internal_virial = self.NPH_space.get_internal_virial(index_atom, coordinates_all, forces_all)
+            internal_virial = self.NPH_space.get_internal_virial(index_atom, coordinates_all, self.current_forces)
             self.volume[i] = self.NPH_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i])
             self.P_current[i] = self.NPH_space.get_pressure(Ek_atoms[index_atom], internal_virial, self.volume[i])
         H_effective = SVR_effective_enthalpy(Ek_t, Ep_t, self.eta, self.volume, self.T_simulation, self.P_current, self.W_barostat)
@@ -278,36 +317,42 @@ class NPH_SVR(MD):
         else:
             self.MD_log = open(self.log_file_name, 'a', buffering=1)
 
-    def generate_new_step(self, time_step=None, bias_forces=None, updated_current_system=None):
+    def generate_new_step(self, time_step=None, bias_forces=None, wall_potential=None, updated_current_system=None):
         NPH_bias_forces = self.NPH_space.get_barostat_space_bias_forces()
-        if type(bias_forces) != type(None):
+        if (bias_forces == None) and (wall_potential != None):
+            bias_forces = NPH_bias_forces + wall_potential(self.current_system.get_positions())
+        elif (bias_forces != None) and (wall_potential == None):
+            bias_forces += NPH_bias_forces
+        elif (bias_forces != None) and (wall_potential != None):
+            bias_forces += wall_potential(self.current_system.get_positions())
             bias_forces += NPH_bias_forces
         else:
             bias_forces = NPH_bias_forces
+        total_forces = next_forces + bias_forces
 
-        time_step = self.update_pre_step(time_step, bias_forces, updated_current_system)
+        time_step = self.update_pre_step(time_step, None, updated_current_system)
         half_time_step = 0.5 * time_step
 
         momenta_all = self.current_system.get_momenta()
         coordinates_all = self.current_system.get_positions()
-        forces_all = self.current_forces
 
-        Ek_atoms = barostat_space.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
+        Ek_atoms = self.NPH_space.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
         for i in range(self.MD_parameters['barostat_number']):
             index_atom = self.MD_parameters['barostat_action_atoms'][i]
             current_eta = self.eta[i]
             index_momenta = momenta_all[index_atom]
             index_coordinates = coordinates_all[index_atom]
-            index_forces = forces_all[index_atom]
+            index_forces = self.current_forces[index_atom]
+            index_total_forces = total_forces[index_atom]
             index_masses = self.masses[index_atom]
 
             # stage 2: propagate 1/2 time step momenta & eta
-            internal_virial = barostat_space.get_internal_virial(index_atom, coordinates_all, forces_all)
-            current_volume = barostat_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i])
-            self.P_current[i] = barostat_space.get_pressure(Ek_atoms[index_atom], internal_virial, current_volume)
+            internal_virial = self.NPH_space.get_internal_virial(index_atom, coordinates_all, self.current_forces)
+            current_volume = self.NPH_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i])
+            self.P_current[i] = self.NPH_space.get_pressure(Ek_atoms[index_atom], internal_virial, current_volume)
             T_current = self.current_system.get_temperature()
             current_eta, index_momenta = SVR_stage_2_propagate_momenta_eta(half_time_step, current_eta, index_momenta, current_volume, self.P_current[i], \
-                                                            self.P_simulation, T_current, self.W_barostat, index_forces, index_masses)
+                                                            self.P_simulation[i], T_current, self.W_barostat, index_forces, index_total_forces, index_masses)
 
             # stage 3: propagate 1 time step position, volume, momenta
             index_coordinates, current_volume, index_momenta, barostat_space_size = SVR_stage_3_propagate_position_volume(
@@ -323,7 +368,7 @@ class NPH_SVR(MD):
         self.current_system.set_positions(coordinates_all)
         self.current_system.set_momenta(momenta_all)
         next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(self.current_system)
-        Ek_atoms = barostat_space.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
+        Ek_atoms = self.NPH_space.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
 
         for i in range(self.MD_parameters['barostat_number']):
             index_atom = self.MD_parameters['barostat_action_atoms'][i]
@@ -331,19 +376,21 @@ class NPH_SVR(MD):
             index_momenta = momenta_all[index_atom]
             index_coordinates = coordinates_all[index_atom]
             index_forces = next_forces[index_atom]
+            index_total_forces = next_forces[index_atom] + bias_forces[index_atom]
             index_masses = self.masses[index_atom]
 
             # stage 4: propagate 1/2 time step momenta & eta (again)
-            internal_virial = barostat_space.get_internal_virial(index_atom, coordinates_all, forces_all)
-            current_volume = barostat_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i])
-            self.P_current[i] = barostat_space.get_pressure(Ek_atoms[index_atom], internal_virial, current_volume)
+            internal_virial = self.NPH_space.get_internal_virial(index_atom, coordinates_all, next_forces)
+            current_volume = self.NPH_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i])
+            self.P_current[i] = self.NPH_space.get_pressure(Ek_atoms[index_atom], internal_virial, current_volume)
             T_current = self.current_system.get_temperature()
             current_eta, index_momenta = SVR_stage_2_propagate_momenta_eta(half_time_step, current_eta, index_momenta, current_volume, self.P_current[i], \
-                                                            self.P_simulation, T_current, self.W_barostat, index_forces, index_masses)
+                                                            self.P_simulation[i], T_current, self.W_barostat, index_forces, index_total_forces, index_masses)
+
             self.eta[i] = current_eta
             self.volume[i] = current_volume
             momenta_all[index_atom] = index_momenta
-            
+
         self.current_system.set_momenta(momenta_all)
         
         self.NPH_space.update_barostat_space_wall()
@@ -408,9 +455,14 @@ class NPT_Berendsen(MD):
         else:
             self.MD_log = open(self.log_file_name, 'a', buffering=1)
 
-    def generate_new_step(self, time_step=None, bias_forces=None, updated_current_system=None):
+    def generate_new_step(self, time_step=None, bias_forces=None, wall_potential=None, updated_current_system=None):
         NPT_bias_forces = self.NPT_space.get_barostat_space_bias_forces()
-        if type(bias_forces) != type(None):
+        if (bias_forces == None) and (wall_potential != None):
+            bias_forces = NPT_bias_forces + wall_potential(self.current_system.get_positions())
+        elif (bias_forces != None) and (wall_potential == None):
+            bias_forces += NPT_bias_forces
+        elif (bias_forces != None) and (wall_potential != None):
+            bias_forces += wall_potential(self.current_system.get_positions())
             bias_forces += NPT_bias_forces
         else:
             bias_forces = NPT_bias_forces
@@ -471,9 +523,8 @@ class NPT_Langevin(MD):
         Ep_t = self.current_potential_energy
         for i in range(self.MD_parameters['barostat_number']):
             coordinates_all = self.current_system.get_positions()
-            forces_all = self.current_forces
             index_atom = self.MD_parameters['barostat_action_atoms'][i]
-            internal_virial = self.NPT_space.get_internal_virial(index_atom, coordinates_all, forces_all)
+            internal_virial = self.NPT_space.get_internal_virial(index_atom, coordinates_all, self.current_forces)
             self.volume[i] = self.NPT_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i])
             self.P_current[i] = self.NPT_space.get_pressure(Ek_atoms[index_atom], internal_virial, self.volume[i])
         H_effective = SVR_effective_enthalpy(Ek_t, Ep_t, self.eta, self.volume, self.T_simulation, self.P_current, self.W_barostat)
@@ -489,19 +540,24 @@ class NPT_Langevin(MD):
         else:
             self.MD_log = open(self.log_file_name, 'a', buffering=1)
 
-    def generate_new_step(self, time_step=None, bias_forces=None, updated_current_system=None):
+    def generate_new_step(self, time_step=None, bias_forces=None, wall_potential=None, updated_current_system=None):
         NPT_bias_forces = self.NPT_space.get_barostat_space_bias_forces()
-        if type(bias_forces) != type(None):
+        if (bias_forces == None) and (wall_potential != None):
+            bias_forces = NPT_bias_forces + wall_potential(self.current_system.get_positions())
+        elif (bias_forces != None) and (wall_potential == None):
+            bias_forces += NPT_bias_forces
+        elif (bias_forces != None) and (wall_potential != None):
+            bias_forces += wall_potential(self.current_system.get_positions())
             bias_forces += NPT_bias_forces
         else:
             bias_forces = NPT_bias_forces
+        total_forces = self.current_forces + bias_forces
 
-        time_step = self.update_pre_step(time_step, bias_forces, updated_current_system)
+        time_step = self.update_pre_step(time_step, None, updated_current_system)
         half_time_step = 0.5 * time_step
 
         momenta_all = self.current_system.get_momenta()
         coordinates_all = self.current_system.get_positions()
-        forces_all = self.current_forces
 
         Ek_atoms = self.NPT_space.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
         for i in range(self.MD_parameters['barostat_number']):
@@ -509,7 +565,8 @@ class NPT_Langevin(MD):
             current_eta = self.eta[i]
             index_momenta = momenta_all[index_atom]
             index_coordinates = coordinates_all[index_atom]
-            index_forces = forces_all[index_atom]
+            index_forces = self.current_forces[index_atom]
+            index_total_forces = total_forces[index_atom]
             index_masses = self.masses[index_atom]
             index_Nf = 3*len(index_atom) - 2
 
@@ -518,12 +575,12 @@ class NPT_Langevin(MD):
                                                      index_Nf, self.tau_T, index_momenta, current_eta, self.W_barostat)
 
             # stage 2: propagate 1/2 time step momenta & eta
-            internal_virial = self.NPT_space.get_internal_virial(index_atom, coordinates_all, forces_all)
+            internal_virial = self.NPT_space.get_internal_virial(index_atom, coordinates_all, self.current_forces)
             current_volume = self.NPT_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i])
             self.P_current[i] = self.NPT_space.get_pressure(Ek_atoms[index_atom], internal_virial, current_volume)
             T_current = self.current_system.get_temperature()
             current_eta, index_momenta = SVR_stage_2_propagate_momenta_eta(half_time_step, current_eta, index_momenta, current_volume, self.P_current[i], \
-                                                            self.P_simulation[i], T_current, self.W_barostat, index_forces, index_masses)
+                                                            self.P_simulation[i], T_current, self.W_barostat, index_forces, index_total_forces, index_masses)
 
             # stage 3: propagate 1 time step position, volume, momenta
             index_coordinates, current_volume, index_momenta, barostat_space_size = SVR_stage_3_propagate_position_volume(
@@ -546,17 +603,18 @@ class NPT_Langevin(MD):
             current_eta = self.eta[i]
             index_momenta = momenta_all[index_atom]
             index_coordinates = coordinates_all[index_atom]
-            index_forces = forces_all[index_atom]
+            index_forces = next_forces[index_atom]
+            index_total_forces = next_forces[index_atom] + NPT_bias_forces[index_atom]
             index_masses = self.masses[index_atom]
             index_Nf = 3*len(index_atom) - 2
 
             # stage 4: propagate 1/2 time step momenta & eta (again)
-            internal_virial = self.NPT_space.get_internal_virial(index_atom, coordinates_all, forces_all)
+            internal_virial = self.NPT_space.get_internal_virial(index_atom, coordinates_all, next_forces)
             current_volume = self.NPT_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i])
             self.P_current[i] = self.NPT_space.get_pressure(Ek_atoms[index_atom], internal_virial, current_volume)
             T_current = self.current_system.get_temperature()
             current_eta, index_momenta = SVR_stage_2_propagate_momenta_eta(half_time_step, current_eta, index_momenta, current_volume, self.P_current[i], \
-                                                            self.P_simulation[i], T_current, self.W_barostat, index_forces, index_masses)
+                                                            self.P_simulation[i], T_current, self.W_barostat, index_forces, index_total_forces, index_masses)
             
             # stage 5: propagate 1/2 time step thermostat (again)
             index_momenta, current_eta = Langevin_stage_1_propagate_thermostat(half_time_step, index_masses, self.T_simulation, \
@@ -615,9 +673,8 @@ class NPT_SVR(MD):
         Ep_t = self.current_potential_energy
         for i in range(self.MD_parameters['barostat_number']):
             coordinates_all = self.current_system.get_positions()
-            forces_all = self.current_forces
             index_atom = self.MD_parameters['barostat_action_atoms'][i]
-            internal_virial = self.NPT_space.get_internal_virial(index_atom, coordinates_all, forces_all)
+            internal_virial = self.NPT_space.get_internal_virial(index_atom, coordinates_all, self.current_forces)
             self.volume[i] = self.NPT_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i])
             self.P_current[i] = self.NPT_space.get_pressure(Ek_atoms[index_atom], internal_virial, self.volume[i])
         H_effective = SVR_effective_enthalpy(Ek_t, Ep_t, self.eta, self.volume, self.T_simulation, self.P_current, self.W_barostat)
@@ -633,19 +690,24 @@ class NPT_SVR(MD):
         else:
             self.MD_log = open(self.log_file_name, 'a', buffering=1)
 
-    def generate_new_step(self, time_step=None, bias_forces=None, updated_current_system=None):
+    def generate_new_step(self, time_step=None, bias_forces=None, wall_potential=None, updated_current_system=None):
         NPT_bias_forces = self.NPT_space.get_barostat_space_bias_forces()
-        if type(bias_forces) != type(None):
+        if (bias_forces == None) and (wall_potential != None):
+            bias_forces = NPT_bias_forces + wall_potential(self.current_system.get_positions())
+        elif (bias_forces != None) and (wall_potential == None):
+            bias_forces += NPT_bias_forces
+        elif (bias_forces != None) and (wall_potential != None):
+            bias_forces += wall_potential(self.current_system.get_positions())
             bias_forces += NPT_bias_forces
         else:
             bias_forces = NPT_bias_forces
+        total_forces = self.current_forces + bias_forces
 
-        time_step = self.update_pre_step(time_step, bias_forces, updated_current_system)
+        time_step = self.update_pre_step(time_step, None, updated_current_system)
         half_time_step = 0.5 * time_step
 
         momenta_all = self.current_system.get_momenta()
         coordinates_all = self.current_system.get_positions()
-        forces_all = self.current_forces
 
         Ek_atoms = self.NPT_space.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
         for i in range(self.MD_parameters['barostat_number']):
@@ -653,7 +715,8 @@ class NPT_SVR(MD):
             current_eta = self.eta[i]
             index_momenta = momenta_all[index_atom]
             index_coordinates = coordinates_all[index_atom]
-            index_forces = forces_all[index_atom]
+            index_forces = self.current_forces[index_atom]
+            index_total_forces = total_forces[index_atom]
             index_masses = self.masses[index_atom]
             index_Nf = 3*len(index_atom) - 2
 
@@ -664,12 +727,12 @@ class NPT_SVR(MD):
             current_eta *= alpha
 
             # stage 2: propagate 1/2 time step momenta & eta
-            internal_virial = self.NPT_space.get_internal_virial(index_atom, coordinates_all, forces_all)
+            internal_virial = self.NPT_space.get_internal_virial(index_atom, coordinates_all, self.current_forces)
             current_volume = self.NPT_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i])
             self.P_current[i] = self.NPT_space.get_pressure(Ek_atoms[index_atom], internal_virial, current_volume)
             T_current = self.current_system.get_temperature()
             current_eta, index_momenta = SVR_stage_2_propagate_momenta_eta(half_time_step, current_eta, index_momenta, current_volume, self.P_current[i], \
-                                                            self.P_simulation[i], T_current, self.W_barostat, index_forces, index_masses)
+                                                            self.P_simulation[i], T_current, self.W_barostat, index_forces, index_total_forces, index_masses)
 
             # stage 3: propagate 1 time step position, volume, momenta
             index_coordinates, current_volume, index_momenta, barostat_space_size = SVR_stage_3_propagate_position_volume(
@@ -692,17 +755,18 @@ class NPT_SVR(MD):
             current_eta = self.eta[i]
             index_momenta = momenta_all[index_atom]
             index_coordinates = coordinates_all[index_atom]
-            index_forces = forces_all[index_atom]
+            index_forces = next_forces[index_atom]
+            index_total_forces = next_forces[index_atom] + bias_forces[index_atom]
             index_masses = self.masses[index_atom]
             index_Nf = 3*len(index_atom) - 2
 
             # stage 4: propagate 1/2 time step momenta & eta (again)
-            internal_virial = self.NPT_space.get_internal_virial(index_atom, coordinates_all, forces_all)
+            internal_virial = self.NPT_space.get_internal_virial(index_atom, coordinates_all, next_forces)
             current_volume = self.NPT_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i])
             self.P_current[i] = self.NPT_space.get_pressure(Ek_atoms[index_atom], internal_virial, current_volume)
             T_current = self.current_system.get_temperature()
             current_eta, index_momenta = SVR_stage_2_propagate_momenta_eta(half_time_step, current_eta, index_momenta, current_volume, self.P_current[i], \
-                                                            self.P_simulation[i], T_current, self.W_barostat, index_forces, index_masses)
+                                                            self.P_simulation[i], T_current, self.W_barostat, index_forces, index_total_forces, index_masses)
             
             # stage 5: propagate 1/2 time step thermostat (again)
             alpha = SVR_stage_1_propagate_thermostat(half_time_step, np.sum(Ek_atoms[index_atom]), self.T_simulation, \

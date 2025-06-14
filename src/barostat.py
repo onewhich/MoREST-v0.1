@@ -256,7 +256,8 @@ def Berendsen_enthalpy(Ek_t, Ep_t, pressure, volume):
 
 def Langevin_stage_1_propagate_thermostat(half_time_step, masses, T_simulation, Nf, tau_T, momenta, eta, W_barostat):
     '''
-    This function implements Langevin thermostat (Bussi, Zykova-Timan and Parrinello, JCP (2009)) to do isothermal–isobaric ensemble sampling (NPT MD).
+    This function implements Langevin thermostat (Bussi, Zykova-Timan and Parrinello, JCP (2009)) to do 
+    isothermal–isobaric ensemble sampling (NPT MD).
     '''
     c = np.exp(-half_time_step / tau_T)
 
@@ -269,7 +270,8 @@ def Langevin_stage_1_propagate_thermostat(half_time_step, masses, T_simulation, 
 
 def SVR_stage_1_propagate_thermostat(half_time_step, Ek_t, T_simulation, Nf, tau_T, eta, W_barostat):
     '''
-    This function implements stochastic velocity rescaling algorithm (Bussi, Zykova-Timan and Parrinello, JCP (2009)) to do isothermal–isobaric ensenmble sampling (NPT MD).
+    This function implements stochastic velocity rescaling algorithm (Bussi, Zykova-Timan and Parrinello, 
+    JCP (2009)) to do isothermal–isobaric ensenmble sampling (NPT MD).
     '''
     Ek_eta = 0.5 * W_barostat * eta**2
     K_total = Ek_t + Ek_eta
@@ -288,9 +290,11 @@ def SVR_stage_1_propagate_thermostat(half_time_step, Ek_t, T_simulation, Nf, tau
 
     return alpha
 
-def SVR_stage_2_propagate_momenta_eta(half_time_step, eta, momenta, volume, P_current, P_simulation, T_current, W_barostat, forces, masses):
+def SVR_stage_2_propagate_momenta_eta(half_time_step, eta, momenta, volume, P_current, P_simulation, T_current, \
+                                      W_barostat, forces, total_forces, masses):
     '''
-    This function implements stochastic velocity rescaling algorithm (Bussi, Zykova-Timan and Parrinello, JCP (2009)) to do isothermal–isobaric ensenmble sampling (NPT MD).
+    This function implements stochastic velocity rescaling algorithm (Bussi, Zykova-Timan and Parrinello, 
+    JCP (2009)) to do isothermal–isobaric ensenmble sampling (NPT MD).
     '''
     dot_fp = np.einsum('ij,ij->i', forces, momenta)
     force_sq = np.einsum('ij,ij->i', forces, forces)
@@ -303,13 +307,15 @@ def SVR_stage_2_propagate_momenta_eta(half_time_step, eta, momenta, volume, P_cu
                + term1 * half_time_step**2 / W_barostat \
                + term2 * half_time_step**3 / (3 * W_barostat)
 
-    momenta_half = momenta + forces * half_time_step
+    momenta_half = momenta + total_forces * half_time_step
 
     return eta_half, momenta_half
 
-def SVR_stage_3_propagate_position_volume(time_step, coordinates, momenta, eta, masses, volume, barostat_space_size, barostat_space_type):
+def SVR_stage_3_propagate_position_volume(time_step, coordinates, momenta, eta, masses, volume, \
+                                          barostat_space_size, barostat_space_type):
     '''
-    This function implements stochastic velocity rescaling algorithm (Bussi, Zykova-Timan and Parrinello, JCP (2009)) to do isothermal–isobaric ensenmble sampling (NPT MD).
+    This function implements stochastic velocity rescaling algorithm (Bussi, Zykova-Timan and Parrinello, 
+    JCP (2009)) to do isothermal–isobaric ensenmble sampling (NPT MD).
     '''
     eta_time_step = eta*time_step
     exp_eta_time_step = np.exp(eta_time_step)
@@ -317,7 +323,9 @@ def SVR_stage_3_propagate_position_volume(time_step, coordinates, momenta, eta, 
     if barostat_space_type.lower() == 'equilibrium':
         center_of_mass = (coordinates*masses).sum(axis=0) / masses.sum()
         barostat_space_size *= exp_eta_time_step
-        coordinates = exp_eta_time_step*(coordinates-center_of_mass) + np.sinh(eta_time_step)/eta * (momenta/masses) + center_of_mass
+        coordinates = exp_eta_time_step*(coordinates-center_of_mass) \
+                    + np.sinh(eta_time_step)/eta * (momenta/masses) \
+                    + center_of_mass
         momenta *= np.exp(-eta_time_step)
     elif barostat_space_type.lower() == 'ultrafast':
         barostat_space_size *= exp_eta_time_step
