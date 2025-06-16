@@ -1103,6 +1103,9 @@ class read_parameters:
     def get_barostat_parameters(self):
         self.barostat_parameters['barostat_pressure'] = \
             np.array(self.barostat_parameters['barostat_pressure'][:self.barostat_parameters['barostat_number']]) * units.bar
+        if 'barostat_space_type' not in self.barostat_parameters:
+            for i in range(self.barostat_parameters['barostat_number']):
+                self.barostat_parameters['barostat_space_type'].append('equilibrium')
         for key in ['barostat_space_parameters', 'barostat_space_shape', 'barostat_action_atoms', 'barostat_space_type']:
             self.barostat_parameters[key] = self.barostat_parameters[key][:self.barostat_parameters['barostat_number']]
         
