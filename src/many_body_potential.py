@@ -577,7 +577,7 @@ class Molpro(FileIOCalculator):
         return chemical_symbols, np.array(positions)
 
     @staticmethod
-    def get_Atoms_from_output(file):
+    def get_system_from_output(file):
         """
         Get the ase.Atoms object from the molpro output file.
         """
