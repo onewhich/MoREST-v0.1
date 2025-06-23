@@ -59,7 +59,7 @@ RPMD_temperature                  10 # unit: K
 Barostat_number                   1 # Pressure control in NPT is implemented by controlling the size of the wall potential.
 Barostat_collective_variable      False
 Barostat_pressure                 1 # unit: Bar (10^5 Pa)
-Barostat_space_shape              sphere # sphere: spherical space for barostat; cuboid: cuboidal space for barostat; plane: planar wall for barostat used in pa eriodic system.
+Barostat_space_shape              sphere # sphere: spherical space for barostat; cuboid: cuboidal space for barostat; plane: planar wall for barostat used in periodic system.
 Barostat_space_type               equilibrium # ultrafast: only change the size of the barostat; 
                                               # equilibrium: change both the size of the barostat and the positions of atoms.
 Barostat_space_size               10 # Initial size of the space. one float number is the radius of the sphere; 5,10,7 three number are the lengths of three sides of the cuboid;
