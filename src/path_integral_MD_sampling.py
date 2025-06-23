@@ -3,8 +3,8 @@ from structure_io import write_xyz_traj
 from phase_space_sampling import RPMD
 from thermostat import velocity_rescaling, Berendsen_velocity_rescaling, Langevin_velocity_rescaling, stochastic_velocity_rescaling
 
-class RP_NVE(RPMD):
-    def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
+class RP_NVE_VV(RPMD):
+    def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
                 
         if type(log_file_name) == type(None):
             self.log_file_name = 'MoREST_RPMD.log'
@@ -15,7 +15,7 @@ class RP_NVE(RPMD):
         else:
             self.traj_file_name = traj_file_name
 
-        super().__init__(morest_parameters, sampling_parameters, RPMD_parameters, molecule, traj_file_name, calculator, log_morest)
+        super().__init__(morest_parameters, sampling_parameters, RPMD_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
 
         if self.sampling_parameters['sampling_initialization']:
             self.RPMD_log = open(self.log_file_name, 'w', buffering=1)
@@ -43,7 +43,7 @@ class RP_NVE(RPMD):
         return self.current_step, self.current_system
     
 class RP_NVK_VR(RPMD):
-    def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
+    def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
                 
         if type(log_file_name) == type(None):
             self.log_file_name = 'MoREST_RPMD.log'
@@ -54,7 +54,7 @@ class RP_NVK_VR(RPMD):
         else:
             self.traj_file_name = traj_file_name
 
-        super().__init__(morest_parameters, sampling_parameters, RPMD_parameters, molecule, traj_file_name, calculator, log_morest)
+        super().__init__(morest_parameters, sampling_parameters, RPMD_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
 
         for i in range(self.n_beads):
             old_velocities = self.current_beads[i].get_velocities()
@@ -95,7 +95,7 @@ class RP_NVK_VR(RPMD):
         return self.current_step, self.current_system
     
 class RP_NVT_Berendsen(RPMD):
-    def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
+    def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
                 
         if type(log_file_name) == type(None):
             self.log_file_name = 'MoREST_RPMD.log'
@@ -106,7 +106,7 @@ class RP_NVT_Berendsen(RPMD):
         else:
             self.traj_file_name = traj_file_name
 
-        super().__init__(morest_parameters, sampling_parameters, RPMD_parameters, molecule, traj_file_name, calculator, log_morest)
+        super().__init__(morest_parameters, sampling_parameters, RPMD_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
 
         for i in range(self.n_beads):
             old_velocities = self.current_beads[i].get_velocities()
@@ -147,7 +147,7 @@ class RP_NVT_Berendsen(RPMD):
         return self.current_step, self.current_system
     
 class RP_NVT_Langevin(RPMD):
-    def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
+    def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
                 
         if type(log_file_name) == type(None):
             self.log_file_name = 'MoREST_RPMD.log'
@@ -158,7 +158,7 @@ class RP_NVT_Langevin(RPMD):
         else:
             self.traj_file_name = traj_file_name
 
-        super().__init__(morest_parameters, sampling_parameters, RPMD_parameters, molecule, traj_file_name, calculator, log_morest)
+        super().__init__(morest_parameters, sampling_parameters, RPMD_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
 
         tmp_d_Ee_list = []
         for i in range(self.n_beads):
@@ -206,7 +206,7 @@ class RP_NVT_Langevin(RPMD):
         return self.current_step, self.current_system
     
 class RP_NVT_SVR(RPMD):
-    def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
+    def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, log_file_name=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
                 
         if type(log_file_name) == type(None):
             self.log_file_name = 'MoREST_RPMD.log'
@@ -217,7 +217,7 @@ class RP_NVT_SVR(RPMD):
         else:
             self.traj_file_name = traj_file_name
 
-        super().__init__(morest_parameters, sampling_parameters, RPMD_parameters, molecule, traj_file_name, calculator, log_morest)
+        super().__init__(morest_parameters, sampling_parameters, RPMD_parameters, molecule, traj_file_name, T_simulation, calculator, log_morest)
 
         tmp_d_Ee_list = []
         for i in range(self.n_beads):

@@ -225,7 +225,7 @@ class RPMD(initialize_sampling):
     The ring polymer molecular dynamics module.
     Annu. Rev. Phys. Chem. 2013. 64:387-413
     '''
-    def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, traj_file_name=None, calculator=None, log_morest=None):
+    def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
 
         self.beads_file_head = 'MoREST_RPMD_beads_'
 
@@ -235,7 +235,12 @@ class RPMD(initialize_sampling):
         self.n_beads = RPMD_parameters['rpmd_number_of_beads']
         self.beads_file_name = RPMD_parameters['rpmd_beads_file']
         self.time_step = RPMD_parameters['rpmd_time_step']
-        self.T_simulation = RPMD_parameters['rpmd_temperature']
+        if type(T_simulation) == type(None):
+            self.re_simulation = False
+            self.T_simulation = RPMD_parameters['rpmd_temperature']
+        else:
+            self.re_simulation = True
+            self.T_simulation = T_simulation
         self.omega_n = RPMD_parameters['omega_n']
         self.omega_k = RPMD_parameters['omega_k']
         self.C_jk = RPMD_parameters['C_jk']
@@ -389,8 +394,12 @@ class RPMD(initialize_sampling):
         except:
             pass
 
-        write_xyz_file(self.beads_file_name, self.current_beads)
-        write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
+        if not self.re_simulation:
+            write_xyz_file(self.beads_file_name, self.current_beads)
+            write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
+        else:
+            write_xyz_file('MoREST_RE_RPMD_beads_'+str(self.T_simulation)+'K.xyz', self.current_beads)
+            write_xyz_file('MoREST_RE_RPMD_'+str(self.T_simulation)+'K.xyz_new', self.current_system)
 
     def pre_thermalization(self, Tf):
         for i in range(self.n_beads):

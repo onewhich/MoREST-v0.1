@@ -4,7 +4,7 @@ from phase_space_sampling import RPMD_normal_mode
 from thermostat import velocity_rescaling, Berendsen_velocity_rescaling, Langevin_velocity_rescaling, stochastic_velocity_rescaling
 from ase import units
 
-class RP_NVE_normal_mode(RPMD_normal_mode):
+class RP_NVE_VV_normal_mode(RPMD_normal_mode):
     def __init__(self, morest_parameters, sampling_parameters, RPMD_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
                 
         if type(log_file_name) == type(None):
