@@ -44,7 +44,6 @@ class barostat_space:
         self.barostat_space_wall_parameters['wall_action_atoms'] = []
         self.barostat_space_wall_parameters['wall_shape_parameters'] = []
         for i, barostat_space in enumerate(self.barostat_parameters['barostat_space_parameters']):
-            self.barostat_space_wall_parameters['wall_number'] += 1
             self.barostat_space_wall_parameters['wall_collective_variable'].append(self.barostat_parameters['barostat_collective_variable'][i])
             self.barostat_space_wall_parameters['wall_type'].append('power_wall')
             self.barostat_space_wall_parameters['power_wall_direction'].append(1)
@@ -52,6 +51,7 @@ class barostat_space:
             self.barostat_space_wall_parameters['wall_scope'].append(4)
             self.barostat_space_wall_parameters['wall_action_atoms'].append(self.barostat_parameters['barostat_action_atoms'][i])
             if self.barostat_parameters['barostat_space_shape'][i].lower() == 'sphere':
+                self.barostat_space_wall_parameters['wall_number'] += 1
                 self.barostat_space_wall_parameters['wall_shape'].append('spherical')
                 tmp_parameters = {}
                 tmp_parameters['spherical_wall_center'] = barostat_space['barostat_sphere_center']
@@ -62,7 +62,12 @@ class barostat_space:
                 raise Exception('Cuboidal space has not been implemented yet.')
             elif self.barostat_parameters['barostat_space_shape'][i].lower() == 'plane':
                 self.barostat_space_wall_parameters['wall_number'] += 1
-                raise Exception('Planar space has not been implemented yet.')
+                self.barostat_space_wall_parameters['wall_shape'].append('planar')
+                tmp_parameters = {}
+                tmp_x, tmp_y, tmp_z = barostat_space['barostat_plane_base']
+                tmp_parameters['planar_wall_point'] = np.array([tmp_x, tmp_y, tmp_z+self.barostat_parameters['barostat_space_size'][i]])
+                tmp_parameters['planar_wall_normal_vector'] = np.array([0, 0, 1])  # Default normal vector pointing in z-direction
+                self.barostat_space_wall_parameters['wall_shape_parameters'].append(tmp_parameters)
         self.barostat_space_wall = repulsive_wall(self.barostat_space_wall_parameters)
 
     @staticmethod
@@ -141,7 +146,7 @@ class barostat_space:
 
 
     @staticmethod    
-    def get_volume(space_shape, space_size):
+    def get_volume(space_shape, space_size, lattice_vectors=None):
         """
         Compute volume of a defined simulation region.
 
@@ -165,12 +170,15 @@ class barostat_space:
             radius = space_size
             volume = (4.0 / 3.0) * np.pi * radius ** 3 # V = 4/3 * Pi * r^3
         elif shape == 'cuboid':
-            if not (isinstance(space_size, (tuple, list)) and len(space_size) == 3):
-                raise ValueError("For 'cuboid', space_size must be a tuple/list of 3 values (length, width, height).")
+            if not (isinstance(space_size, (tuple, list, np.ndarray)) and len(space_size) == 3):
+                raise ValueError("For 'cuboid', space_size must be a tuple/list/np.ndarray of 3 values (length, width, height).")
             length, width, height = space_size
             volume = length * width * height
         elif shape == 'plane':
-            raise NotImplementedError("Volume calculation for 'plane' shape requires cell-based context and is not implemented yet.")
+            if not isinstance(space_size, (int, float)):
+                raise ValueError("For 'plane', space_size should be a number (height).")
+            height = space_size
+            volume = np.linalg.norm(np.cross(lattice_vectors[0], lattice_vectors[1])) * height
         else:
             raise ValueError(f"Unsupported space shape: '{space_shape}'")
         return volume
@@ -214,7 +222,7 @@ class barostat_space:
                 barostat_bias_forces[index_atom[j]] += j_bias
         return barostat_bias_forces
 
-def Berendsen_volume_rescaling(barostat_parameters, time_step, coordinates_all, forces_all, velocities, masses, P_simulation, tau_P):
+def Berendsen_volume_rescaling(barostat_parameters, time_step, coordinates_all, forces_all, velocities, masses, P_simulation, tau_P, lattice_vectors):
     '''
     Perform Berendsen volume rescaling for NPT ensemble, defined in Berendsen et al. (1984).
     '''
@@ -223,9 +231,8 @@ def Berendsen_volume_rescaling(barostat_parameters, time_step, coordinates_all, 
     volume = np.zeros(len(P_simulation))
     for i in range(barostat_parameters['barostat_number']):
         index_atom = barostat_parameters['barostat_action_atoms'][i]
-        center_of_mass = (coordinates_all[index_atom]*masses[index_atom]).sum(axis=0) / masses[index_atom].sum()
         internal_virial = barostat_space.get_internal_virial(index_atom, coordinates_all, forces_all)
-        volume[i] = barostat_space.get_volume(barostat_parameters['barostat_space_shape'][i], barostat_parameters['barostat_space_size'][i])
+        volume[i] = barostat_space.get_volume(barostat_parameters['barostat_space_shape'][i], barostat_parameters['barostat_space_size'][i], lattice_vectors)
         P_current[i] = barostat_space.get_pressure(Eks[index_atom], internal_virial, volume[i])
         # factor_mu = 1-time_step*factor_Z/tau_P/3.*(P_simulation[i]-P_current[i])
         # factor_z (compressibility) and tau_p can be combined into single parameter, tau_P,
@@ -241,7 +248,16 @@ def Berendsen_volume_rescaling(barostat_parameters, time_step, coordinates_all, 
 
         if barostat_parameters['barostat_space_type'][i].lower() == 'equilibrium':
             barostat_parameters['barostat_space_size'][i] *= factor_mu
-            new_coordinates = (coordinates_all[index_atom] - center_of_mass) * factor_mu + center_of_mass
+            #center_of_mass = (coordinates_all[index_atom]*masses[index_atom]).sum(axis=0) / masses[index_atom].sum()
+            if barostat_parameters['barostat_space_shape'][i].lower() == 'sphere':
+                center_of_scaling = barostat_parameters['barostat_space_parameters'][i]['barostat_sphere_center']
+            elif barostat_parameters['barostat_space_shape'][i].lower() == 'plane':
+                base = [0, 0, barostat_parameters['barostat_space_parameters'][i]['barostat_plane_base'][2]]
+                center_of_scaling = np.array([base]*len(index_atom))
+                factor_mu = np.array([[1, 1, factor_mu]]*len(index_atom))
+            elif barostat_parameters['barostat_space_shape'][i].lower() == 'cuboid':
+                center_of_scaling = barostat_parameters['barostat_space_parameters'][i]['barostat_cuboid_center']
+            new_coordinates = (coordinates_all[index_atom] - center_of_scaling) * factor_mu + center_of_scaling
             coordinates_all[index_atom] = new_coordinates
         elif barostat_parameters['barostat_space_type'][i].lower() == 'ultrafast':
             barostat_parameters['barostat_space_size'][i] *= factor_mu
@@ -312,7 +328,8 @@ def SVR_stage_2_propagate_momenta_eta(half_time_step, eta, momenta, volume, P_cu
     return eta_half, momenta_half
 
 def SVR_stage_3_propagate_position_volume(time_step, coordinates, momenta, eta, masses, volume, \
-                                          barostat_space_size, barostat_space_type):
+                                          barostat_space_shape, barostat_space_size, \
+                                          barostat_space_center, barostat_space_type):
     '''
     This function implements stochastic velocity rescaling algorithm (Bussi, Zykova-Timan and Parrinello, 
     JCP (2009)) to do isothermal–isobaric ensenmble sampling (NPT MD).
@@ -321,19 +338,26 @@ def SVR_stage_3_propagate_position_volume(time_step, coordinates, momenta, eta, 
     exp_eta_time_step = np.exp(eta_time_step)
 
     if barostat_space_type.lower() == 'equilibrium':
-        center_of_mass = (coordinates*masses).sum(axis=0) / masses.sum()
         barostat_space_size *= exp_eta_time_step
-        coordinates = exp_eta_time_step*(coordinates-center_of_mass) \
-                    + np.sinh(eta_time_step)/eta * (momenta/masses) \
-                    + center_of_mass
         momenta *= np.exp(-eta_time_step)
+        n_atom = len(coordinates)
+        #center_of_mass = (coordinates*masses).sum(axis=0) / masses.sum()
+        if barostat_space_shape.lower() == 'sphere':
+            center_of_scaling = barostat_space_center
+        elif barostat_space_shape.lower() == 'plane':
+            center_of_scaling = np.array([[0, 0, barostat_space_center[2]]]*n_atom)
+            exp_eta_time_step = np.array([[1, 1, exp_eta_time_step]]*n_atom)
+        elif barostat_space_shape.lower() == 'cuboid':
+            center_of_scaling = barostat_space_center
+        coordinates = exp_eta_time_step*(coordinates-center_of_scaling) \
+                    + np.sinh(eta_time_step)/eta * (momenta/masses) \
+                    + center_of_scaling
     elif barostat_space_type.lower() == 'ultrafast':
         exp_eta_time_step = max(0.9, min(1.1, exp_eta_time_step))
         barostat_space_size *= exp_eta_time_step
         coordinates += momenta * time_step / masses
 
     volume *= np.exp(3 * eta_time_step)
-
 
     return coordinates, volume, momenta, barostat_space_size
 

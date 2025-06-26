@@ -5,12 +5,12 @@ class initialize_calculator:
         self.morest_parameters = morest_parameters
         self.log_morest = log_morest
         
-        if self.morest_parameters['many_body_potential'].upper() in ['on_the_fly'.upper()]:
+        if self.morest_parameters['many_body_potential'].lower() in ['on_the_fly']:
             if calculator == None:
                 raise Exception('Please specify the electronic structure method.')
             self.many_body_potential = on_the_fly(calculator)
             self.calculator = calculator
-        elif self.morest_parameters['many_body_potential'].upper() in ['molpro'.upper()]:
+        elif self.morest_parameters['many_body_potential'].lower() in ['molpro']:
             if type(calculator) == type({}):
                 molpro_para_dict = calculator
                 self.many_body_potential = molpro_calculator(molpro_para_dict)

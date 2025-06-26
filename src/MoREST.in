@@ -62,15 +62,19 @@ Barostat_pressure                 1 # unit: Bar (10^5 Pa)
 Barostat_space_shape              sphere # sphere: spherical space for barostat; cuboid: cuboidal space for barostat; plane: planar wall for barostat used in periodic system.
 Barostat_space_type               equilibrium # ultrafast: only change the size of the barostat; 
                                               # equilibrium: change both the size of the barostat and the positions of atoms.
-Barostat_space_size               10 # Initial size of the space. one float number is the radius of the sphere; 5,10,7 three number are the lengths of three sides of the cuboid;
+Barostat_space_size               10 # Initial size of the space. one float number is the radius of the sphere or the height of the plane; 5,10,7 three number are the lengths of three sides of the cuboid;
 Barostat_action_atoms             all # all; 1 ; 0,2,4,7.  Indicating the atoms affected by the wall potential.
 Barostat_sphere_center            0 0 0 # This point and radius determine the parameter b in the spherical wall. 
 #Barostat_shpere_radius            # The radius and center point determine the parameter b in the spherical wall. It is calculated from the pressure.
 Barostat_cuboid_center            0 0 0 # This point and normal vector determine the parameter b of six planar walls of the cube.
 Barostat_cuboid_normal_vector     0 0 5 # The normal vector does not have to be a unit vector. It will be normalized after reading.
 Barostat_cuboid_length_ratio      4 5 6 # The length on each side of the cuboid. The last number (6) is the length along the normal vector. The actual lengths are calculated from the pressure.
-Barostat_plane_point              0 0 3 # This point and normal vector determine the parameter b in the planar wall.
-Barostat_plane_normal_vector      0 0 -5 # The normal vector does not have to be a unit vector. It will be normalized after reading.
+#Barostat_plane_point              # This point and normal vector determine the parameter b in the planar wall.
+#Barostat_plane_normal_vector      # The normal vector does not have to be a unit vector. It will be normalized after reading.
+                                   # The normal vector is given as default with 0 0 1.
+                                   # The plane barostat space is designed for adsorbates on periodic surface.
+                                   # The slab model should locate on x-y plane while the surface normal vector should point to the vaccum along z-axis.
+Barostat_plane_base               0 0 12 # This base point and normal vector (0,0,1) determine the base plane, which is fixed, to calculate the volume together with the other movable plane and lattice vector.
 
 
 Trajectory_scattering             False

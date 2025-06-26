@@ -209,6 +209,15 @@ class MD(initialize_sampling):
         else:
             write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.xyz_new', self.current_system)
 
+    def check_lattice_vectors_plane_barostat(self, barostat_shape):
+        if 'plane' in barostat_shape:
+            if sum(self.current_system.get_pbc()) >= 2:
+                lattice_vectors = self.current_system.get_cell()
+                if not (lattice_vectors[0][-1] == 0.0 and lattice_vectors[1][-1] == 0.0):
+                    raise Exception('The first Two of the lattice vectors must lie in the xy-plane. Please check the input structure.')
+            else:
+                raise Exception('The planar barostat space is not suitable for 0D or 1D systems, please check the input structure.')
+
     def pre_thermalization(self, Tf):
         Ek_i = self.current_system.get_kinetic_energy()
         Ti = 2/3 * Ek_i/units.kB /self.n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle

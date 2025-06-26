@@ -283,6 +283,8 @@ class NPH_SVR(MD):
         else:
             self.traj_file_name = traj_file_name
 
+        self.check_lattice_vectors_plane_barostat(MD_parameters['barostat_space_shape'])
+
         super().__init__(morest_parameters, sampling_parameters, MD_parameters, molecule, self.traj_file_name, calculator, log_morest)
 
         self.NPH_space = barostat_space(MD_parameters, self.current_system)
@@ -298,11 +300,12 @@ class NPH_SVR(MD):
         Ek_atoms = self.NPH_space.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
         Ek_t = self.current_system.get_kinetic_energy()
         Ep_t = self.current_potential_energy
+        self.lattice_vectors = self.current_system.get_cell()
         for i in range(self.MD_parameters['barostat_number']):
             coordinates_all = self.current_system.get_positions()
             index_atom = self.MD_parameters['barostat_action_atoms'][i]
             internal_virial = self.NPH_space.get_internal_virial(index_atom, coordinates_all, self.current_forces)
-            self.volume[i] = self.NPH_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i])
+            self.volume[i] = self.NPH_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i], self.lattice_vectors)
             self.P_current[i] = self.NPH_space.get_pressure(Ek_atoms[index_atom], internal_virial, self.volume[i])
         H_effective = SVR_effective_enthalpy(Ek_t, Ep_t, self.eta, self.volume, self.T_simulation, self.P_current, self.W_barostat)
 
@@ -348,7 +351,7 @@ class NPH_SVR(MD):
 
             # stage 2: propagate 1/2 time step momenta & eta
             internal_virial = self.NPH_space.get_internal_virial(index_atom, coordinates_all, self.current_forces)
-            current_volume = self.NPH_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i])
+            current_volume = self.NPH_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i], self.lattice_vectors)
             self.P_current[i] = self.NPH_space.get_pressure(Ek_atoms[index_atom], internal_virial, current_volume)
             T_current = self.current_system.get_temperature()
             current_eta, index_momenta = SVR_stage_2_propagate_momenta_eta(half_time_step, current_eta, index_momenta, current_volume, self.P_current[i], \
@@ -381,7 +384,7 @@ class NPH_SVR(MD):
 
             # stage 4: propagate 1/2 time step momenta & eta (again)
             internal_virial = self.NPH_space.get_internal_virial(index_atom, coordinates_all, next_forces)
-            current_volume = self.NPH_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i])
+            current_volume = self.NPH_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i], self.lattice_vectors)
             self.P_current[i] = self.NPH_space.get_pressure(Ek_atoms[index_atom], internal_virial, current_volume)
             T_current = self.current_system.get_temperature()
             current_eta, index_momenta = SVR_stage_2_propagate_momenta_eta(half_time_step, current_eta, index_momenta, current_volume, self.P_current[i], \
@@ -421,6 +424,8 @@ class NPT_Berendsen(MD):
         else:
             self.traj_file_name = traj_file_name
 
+        self.check_lattice_vectors_plane_barostat(MD_parameters['barostat_space_shape'])
+
         super().__init__(morest_parameters, sampling_parameters, MD_parameters, molecule, self.traj_file_name, T_simulation, calculator, log_morest)
 
         self.NPT_space = barostat_space(MD_parameters, self.current_system)
@@ -428,6 +433,7 @@ class NPT_Berendsen(MD):
         self.P_simulation = self.MD_parameters['barostat_pressure']
         self.tau_T = self.sampling_parameters['npt_Berendsen_tau_t']
         self.tau_P = self.sampling_parameters['npt_Berendsen_tau_p']
+        self.lattice_vectors = self.current_system.get_cell()
         # self.factor_Z = self.sampling_parameters['npt_Berendsen_compressibility']
         # factor_z (compressibility) and tau_p can be combined into single parameter, tau_P,
         # because factor_Z is only used in conjunction with tau_P.
@@ -437,7 +443,8 @@ class NPT_Berendsen(MD):
                                                       self.T_simulation, self.tau_T, self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
         new_coordinates, P_current, volume = Berendsen_volume_rescaling(self.MD_parameters, self.time_step, self.current_system.get_positions(), \
-                                                               self.current_system.get_forces(), new_velocities, self.masses, self.P_simulation, self.tau_P)
+                                                            self.current_system.get_forces(), new_velocities, self.masses, self.P_simulation, self.tau_P, \
+                                                            self.lattice_vectors)
         self.current_system.set_positions(new_coordinates)
         self.NPT_space.update_barostat_space_wall()
 
@@ -475,7 +482,8 @@ class NPT_Berendsen(MD):
                                                       self.T_simulation, self.tau_T, self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
         new_coordinates, P_current, volume = Berendsen_volume_rescaling(self.MD_parameters, self.time_step, self.current_system.get_positions(), \
-                                                               self.current_system.get_forces(), new_velocities, self.masses, self.P_simulation, self.tau_P)
+                                                            self.current_system.get_forces(), new_velocities, self.masses, self.P_simulation, self.tau_P, \
+                                                            self.lattice_vectors)
         self.current_system.set_positions(new_coordinates)
         self.NPT_space.update_barostat_space_wall()
         
@@ -504,6 +512,8 @@ class NPT_Langevin(MD):
         else:
             self.traj_file_name = traj_file_name
 
+        self.check_lattice_vectors_plane_barostat(MD_parameters['barostat_space_shape'])
+
         super().__init__(morest_parameters, sampling_parameters, MD_parameters, molecule, self.traj_file_name, T_simulation, calculator, log_morest)
 
         self.NPT_space = barostat_space(MD_parameters, self.current_system)
@@ -521,11 +531,12 @@ class NPT_Langevin(MD):
         Ek_atoms = self.NPT_space.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
         Ek_t = self.current_system.get_kinetic_energy()
         Ep_t = self.current_potential_energy
+        self.lattice_vectors = self.current_system.get_cell()
         for i in range(self.MD_parameters['barostat_number']):
             coordinates_all = self.current_system.get_positions()
             index_atom = self.MD_parameters['barostat_action_atoms'][i]
             internal_virial = self.NPT_space.get_internal_virial(index_atom, coordinates_all, self.current_forces)
-            self.volume[i] = self.NPT_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i])
+            self.volume[i] = self.NPT_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i], self.lattice_vectors)
             self.P_current[i] = self.NPT_space.get_pressure(Ek_atoms[index_atom], internal_virial, self.volume[i])
         H_effective = SVR_effective_enthalpy(Ek_t, Ep_t, self.eta, self.volume, self.T_simulation, self.P_current, self.W_barostat)
 
@@ -576,7 +587,7 @@ class NPT_Langevin(MD):
 
             # stage 2: propagate 1/2 time step momenta & eta
             internal_virial = self.NPT_space.get_internal_virial(index_atom, coordinates_all, self.current_forces)
-            current_volume = self.NPT_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i])
+            current_volume = self.NPT_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i], self.lattice_vectors)
             self.P_current[i] = self.NPT_space.get_pressure(Ek_atoms[index_atom], internal_virial, current_volume)
             T_current = self.current_system.get_temperature()
             current_eta, index_momenta = SVR_stage_2_propagate_momenta_eta(half_time_step, current_eta, index_momenta, current_volume, self.P_current[i], \
@@ -610,7 +621,7 @@ class NPT_Langevin(MD):
 
             # stage 4: propagate 1/2 time step momenta & eta (again)
             internal_virial = self.NPT_space.get_internal_virial(index_atom, coordinates_all, next_forces)
-            current_volume = self.NPT_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i])
+            current_volume = self.NPT_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i], self.lattice_vectors)
             self.P_current[i] = self.NPT_space.get_pressure(Ek_atoms[index_atom], internal_virial, current_volume)
             T_current = self.current_system.get_temperature()
             current_eta, index_momenta = SVR_stage_2_propagate_momenta_eta(half_time_step, current_eta, index_momenta, current_volume, self.P_current[i], \
@@ -654,6 +665,8 @@ class NPT_SVR(MD):
         else:
             self.traj_file_name = traj_file_name
 
+        self.check_lattice_vectors_plane_barostat(MD_parameters['barostat_space_shape'])
+
         super().__init__(morest_parameters, sampling_parameters, MD_parameters, molecule, self.traj_file_name, T_simulation, calculator, log_morest)
 
         self.NPT_space = barostat_space(MD_parameters, self.current_system)
@@ -671,11 +684,12 @@ class NPT_SVR(MD):
         Ek_atoms = self.NPT_space.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
         Ek_t = self.current_system.get_kinetic_energy()
         Ep_t = self.current_potential_energy
+        self.lattice_vectors = self.current_system.get_cell()
         for i in range(self.MD_parameters['barostat_number']):
             coordinates_all = self.current_system.get_positions()
             index_atom = self.MD_parameters['barostat_action_atoms'][i]
             internal_virial = self.NPT_space.get_internal_virial(index_atom, coordinates_all, self.current_forces)
-            self.volume[i] = self.NPT_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i])
+            self.volume[i] = self.NPT_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i], self.lattice_vectors)
             self.P_current[i] = self.NPT_space.get_pressure(Ek_atoms[index_atom], internal_virial, self.volume[i])
         H_effective = SVR_effective_enthalpy(Ek_t, Ep_t, self.eta, self.volume, self.T_simulation, self.P_current, self.W_barostat)
 
@@ -728,7 +742,7 @@ class NPT_SVR(MD):
 
             # stage 2: propagate 1/2 time step momenta & eta
             internal_virial = self.NPT_space.get_internal_virial(index_atom, coordinates_all, self.current_forces)
-            current_volume = self.NPT_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i])
+            current_volume = self.NPT_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i], self.lattice_vectors)
             self.P_current[i] = self.NPT_space.get_pressure(Ek_atoms[index_atom], internal_virial, current_volume)
             T_current = self.current_system.get_temperature()
             current_eta, index_momenta = SVR_stage_2_propagate_momenta_eta(half_time_step, current_eta, index_momenta, current_volume, self.P_current[i], \
@@ -762,7 +776,7 @@ class NPT_SVR(MD):
 
             # stage 4: propagate 1/2 time step momenta & eta (again)
             internal_virial = self.NPT_space.get_internal_virial(index_atom, coordinates_all, next_forces)
-            current_volume = self.NPT_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i])
+            current_volume = self.NPT_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i], self.lattice_vectors)
             self.P_current[i] = self.NPT_space.get_pressure(Ek_atoms[index_atom], internal_virial, current_volume)
             T_current = self.current_system.get_temperature()
             current_eta, index_momenta = SVR_stage_2_propagate_momenta_eta(half_time_step, current_eta, index_momenta, current_volume, self.P_current[i], \

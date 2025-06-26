@@ -103,7 +103,7 @@ class repulsive_wall:
         wall_force = -1 * a * c * norm_gc_b**(c-1) * vec_gc_b/norm_gc_b
         wall_potential = a * norm_gc_b**c
         if self.wall_potential_parameters['wall_shape'][i_wall] == 'planar':
-            if np.dot(norm_gc_b,self.wall_potential_parameters['wall_shape_parameters'][i_wall]['planar_wall_normal_vector']) * \
+            if np.dot(vec_gc_b,self.wall_potential_parameters['wall_shape_parameters'][i_wall]['planar_wall_normal_vector']) * \
                 self.wall_potential_parameters['power_wall_direction'][i_wall] <= 0:
                 return np.zeros(np.shape(vec_gc_b)), 0.
             else:
