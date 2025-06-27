@@ -87,12 +87,12 @@ class replica_exchange:
             self.RE_parameters['re_current_swap_step'] = (current_step/self.RE_parameters['re_swap_interval']).astype(int)
             starting_index = self.RE_parameters['re_current_swap_step'][-1] % 2
             for i in range(starting_index, self.RE_parameters['re_number_of_replica']-1, 2):
-                delta = (replica_beta[i+1] - replica_beta[i]) * (current_potential_energy[i] - current_potential_energy[i+1])
+                delta = (replica_beta[i] - replica_beta[i+1]) * (current_potential_energy[i] - current_potential_energy[i+1])
                 if delta <= 0:
                     #p_swap = 1
                     current_step, current_system = self.REMD_swap(i, current_step, current_system)
                 else:
-                    p_swap = np.exp(-delta)
+                    p_swap = np.exp(delta)
                     if p_swap >= np.random.random():
                         current_step, current_system = self.REMD_swap(i, current_step, current_system)
             self.write_replica_index()
