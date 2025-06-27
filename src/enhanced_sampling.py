@@ -4,7 +4,7 @@ import numpy as np
 from ase import units
 from structure_io import read_xyz_file, read_xyz_traj
 
-class RE:
+class replica_exchange:
     '''
     The replica exchange molecular dynamics / Monte Carlo module
     Y. Sugita, Y. Okamotor Chemical Physics Letters 314 (1999) 141–151
@@ -98,7 +98,7 @@ class RE:
             self.write_replica_index()
         return current_step, current_system
 
-class ITS:
+class integrated_tempering_sampling:
     '''
     The integrated tempering sampling module.
     Yi Qin Gao The Journal of Chemical Physics 128, 064105 (2008);
