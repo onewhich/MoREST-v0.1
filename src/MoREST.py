@@ -172,15 +172,18 @@ class morest(initialize_modules):
         if self.morest_parameters['enhanced_sampling']:
             self.morest_parameters['enhanced_sampling'] = False # TODO: enhanced sampling method for structure searching.
         else:
-            current_convergence, current_step, current_system = self.searching_job.current_convergence, self.searching_job.current_step, self.searching_job.current_system
-            if self.morest_parameters['wall_potential']:
-                while current_convergence >= searching_convergence and current_step <= searching_maxsteps:
-                    general_coordinate = current_system.get_positions()
-                    bias_forces = self.wall_potential(general_coordinate)
-                    current_convergence, current_step, current_system= self.searching_job.generate_new_step(bias_forces)
+            if self.searching_parameters['searching_method'].upper() in ['L-BFGS-B']:
+                self.searching_job.optimize()
             else:
-                while current_convergence >= searching_convergence and current_step <= searching_maxsteps:
-                    current_convergence, current_step, current_system= self.searching_job.generate_new_step()
+                current_convergence, current_step, current_system = self.searching_job.current_convergence, self.searching_job.current_step, self.searching_job.current_system
+                if self.morest_parameters['wall_potential']:
+                    while current_convergence >= searching_convergence and current_step <= searching_maxsteps:
+                        general_coordinate = current_system.get_positions()
+                        bias_forces = self.wall_potential(general_coordinate)
+                        current_convergence, current_step, current_system= self.searching_job.generate_new_step(bias_forces)
+                else:
+                    while current_convergence >= searching_convergence and current_step <= searching_maxsteps:
+                        current_convergence, current_step, current_system= self.searching_job.generate_new_step()
         self.log_morest.write('Structure optimization with '+self.searching_parameters['searching_method']+' method is finished!\n\n')
         self.mission_complete()
 

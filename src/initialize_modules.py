@@ -6,7 +6,7 @@ from path_integral_MD_sampling import RP_NVE_VV, RP_NVK_VR, RP_NVT_Berendsen, RP
 from path_integral_MD_sampling_normal_mode import RP_NVE_VV_normal_mode, RP_NVK_VR_normal_mode, RP_NVT_Berendsen_normal_mode, RP_NVT_Langevin_normal_mode, RP_NVT_SVR_normal_mode
 from molecular_dynamics_scattering import scattering_velocity_Verlet, scattering_Suzuki_Yoshida_4th, scattering_Runge_Kutta_4th, scattering_Langevin_dynamics
 from molecule_rovibrating import rovibrating_velocity_Verlet, rovibrating_Suzuki_Yoshida_4th, rovibrating_Runge_Kutta_4th
-from structure_searching import gradient_descent, FIRE_velocity_Verlet
+from structure_searching import gradient_descent, L_BFGS_descent, scipy_L_BFGS_B_descent, FIRE_velocity_Verlet, BFGS_TS, L_BFGS_TS, dimer, GAD_velocity_Verlet
 from enhanced_sampling import replica_exchange, integrated_tempering_sampling
 from wall_potential import repulsive_wall
             
@@ -192,24 +192,36 @@ class initialize_modules:
     def initialize_structure_searching(self, MoREST_parameters):
         if not self.morest_parameters['morest_load_parameters_file']:
             self.searching_parameters = MoREST_parameters.get_searching_parameters(self.log_morest)
-            if self.searching_parameters['searching_method'].upper() in ['GD','CG','BFGS']:
+            if self.searching_parameters['searching_method'].upper() in ['GD','CG','BFGS','L-BFGS','L-BFGS-B','BFGS-TS','L-BFGS-TS','SGD', 'ADAM']:
                 self.gradient_parameters = MoREST_parameters.get_gradient_parameters(self.log_morest)
             elif self.searching_parameters['searching_method'].upper() in ['FIRE']:
                 self.fire_parameters = MoREST_parameters.get_fire_parameters(self.log_morest)
+            elif self.searching_parameters['searching_method'].upper() in ['DIMER']:
+                self.dimer_parameters = MoREST_parameters.get_dimer_parameters(self.log_morest)
+            elif self.searching_parameters['searching_method'].upper() in ['GAD']:
+                self.GAD_parameters = MoREST_parameters.get_GAD_parameters(self.log_morest)
         else:
             try:
                 self.searching_parameters = np.load('MoREST_searching_parameters.npy',allow_pickle=True).item()
-                if self.searching_parameters['searching_method'].upper() in ['GD','CG','BFGS']:
+                if self.searching_parameters['searching_method'].upper() in ['GD','CG','BFGS','L-BFGS','L-BFGS-B','BFGS-TS','L-BFGS-TS','SGD', 'ADAM']:
                     self.gradient_parameters = np.load('MoREST_gradient_parameters.npy',allow_pickle=True).item()
                 elif self.searching_parameters['searching_method'].upper() in ['FIRE']:
                     self.fire_parameters = np.load('MoREST_FIRE_parameters.npy',allow_pickle=True).item()
+                elif self.searching_parameters['searching_method'].upper() in ['DIMER']:
+                    self.dimer_parameters = np.load('MoREST_dimer_parameters.npy',allow_pickle=True).item()
+                elif self.searching_parameters['searching_method'].upper() in ['GAD']:
+                    self.GAD_parameters = np.load('MoREST_GAD_parameters.npy',allow_pickle=True).item()
             except:
                 self.log_morest.write('Can not find parameters files: MoREST_searching_parameters.npy, MoREST_FIRE_parameters.npy\n Read parameters from input file.\n\n')
                 self.searching_parameters = MoREST_parameters.get_searching_parameters(self.log_morest)
-                if self.searching_parameters['searching_method'].upper() in ['GD','CG','BFGS']:
+                if self.searching_parameters['searching_method'].upper() in ['GD','CG','BFGS','L-BFGS','L-BFGS-B','BFGS-TS','L-BFGS-TS','SGD', 'ADAM']:
                     self.gradient_parameters = MoREST_parameters.get_gradient_parameters(self.log_morest)
                 elif self.searching_parameters['searching_method'].upper() in ['FIRE']:
                     self.fire_parameters = MoREST_parameters.get_fire_parameters(self.log_morest)
+                elif self.searching_parameters['searching_method'].upper() in ['DIMER']:
+                    self.dimer_parameters = MoREST_parameters.get_dimer_parameters(self.log_morest)
+                elif self.searching_parameters['searching_method'].upper() in ['GAD']:
+                    self.GAD_parameters = MoREST_parameters.get_GAD_parameters(self.log_morest)
 
         if self.searching_parameters['searching_initialization']:
             self.log_morest.write('Start to search the stationary structure.\n\n')
@@ -222,12 +234,30 @@ class initialize_modules:
                 pass
         else:
             self.log_morest.write('Continue to search the stationary structure.\n\n')
-        if self.searching_parameters['searching_method'].upper() in ['GD', 'CG', 'BFGS']:
+        if self.searching_parameters['searching_method'].upper() in ['GD', 'CG', 'BFGS', 'SGD', 'ADAM']:
             self.searching_job = gradient_descent(self.morest_parameters, self.searching_parameters, self.gradient_parameters, calculator=self.calculator, \
                                                    method=self.searching_parameters['searching_method'], log_morest=self.log_morest)
+        elif self.searching_parameters['searching_method'].upper() in ['L-BFGS']:
+            self.searching_job = L_BFGS_descent(self.morest_parameters, self.searching_parameters, self.gradient_parameters, calculator=self.calculator, \
+                                               log_morest=self.log_morest)
+        elif self.searching_parameters['searching_method'].upper() in ['L-BFGS-B']:
+            self.searching_job = scipy_L_BFGS_B_descent(self.morest_parameters, self.searching_parameters, self.gradient_parameters, calculator=self.calculator, \
+                                                      log_morest=self.log_morest)
         elif self.searching_parameters['searching_method'].upper() in ['FIRE']:
             self.searching_job = FIRE_velocity_Verlet(self.morest_parameters, self.searching_parameters, self.fire_parameters, calculator=self.calculator, \
                                                       log_morest=self.log_morest)
+        elif self.searching_parameters['searching_method'].upper() in ['BFGS-TS']:
+            self.searching_job = BFGS_TS(self.morest_parameters, self.searching_parameters, self.gradient_parameters, calculator=self.calculator, \
+                                         log_morest=self.log_morest)
+        elif self.searching_parameters['searching_method'].upper() in ['L-BFGS-TS']:
+            self.searching_job = L_BFGS_TS(self.morest_parameters, self.searching_parameters, self.gradient_parameters, calculator=self.calculator, \
+                                           log_morest=self.log_morest)
+        elif self.searching_parameters['searching_method'].upper() in ['DIMER']:
+            self.searching_job = dimer(self.morest_parameters, self.searching_parameters, self.dimer_parameters, calculator=self.calculator, \
+                                       log_morest=self.log_morest)
+        elif self.searching_parameters['searching_method'].upper() in ['GAD']:
+            self.searching_job = GAD_velocity_Verlet(self.morest_parameters, self.searching_parameters, self.GAD_parameters, calculator=self.calculator, \
+                                                     log_morest=self.log_morest)
         else:
             self.log_morest.write('It is not clear which searching method will be used.\n')
             self.log_morest.close()

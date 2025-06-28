@@ -87,11 +87,16 @@ class read_parameters:
         self.searching_parameters = {}
         self.searching_parameters['searching_initialization'] = False
         self.searching_parameters['searching_starting_point'] = 'MoREST_searching.xyz'
-        self.searching_parameters['searching_convergence'] = 5e-3
+        self.searching_parameters['searching_convergence'] = 1e-4
         self.searching_parameters['searching_max_steps'] = 100
         self.searching_parameters['searching_constrained'] = False
         self.gradient_parameters = {}
         self.gradient_parameters['gradient_step_size'] = 3 # This value will multiply by 1e-2 in actual using.
+        self.gradient_parameters['lbfgs_history_step'] = 5
+        self.gradient_parameters['sgd_fraction'] = 0.2
+        self.gradient_parameters['adam_beta1'] = 0.9
+        self.gradient_parameters['adam_beta2'] = 0.999
+        self.gradient_parameters['adam_eps'] = 1e-8
         self.FIRE_parameters = {}
         self.FIRE_parameters['fire_equal_masses'] = True
         self.FIRE_parameters['fire_time_step'] = 3
@@ -100,6 +105,11 @@ class read_parameters:
         self.FIRE_parameters['fire_f_increase'] = 1.1
         self.FIRE_parameters['fire_f_decrease'] = 0.5
         self.FIRE_parameters['fire_f_alpha'] = 0.99
+        self.dimer_parameters = {}
+        self.dimer_parameters['dimer_distance'] = 0.01
+        self.dimer_parameters['dimer_rotation_step'] = 0.01
+        self.GAD_parameters = {}
+        self.GAD_parameters['gad_time_step'] = 3
         self.enhanced_sampling_parameters = {}
         self.RE_parameters = {}
         self.RE_parameters['re_initialization'] = False
@@ -297,12 +307,18 @@ class read_parameters:
                 self.read_searching_parameters(i_parameter)
                 if 'searching_method' in self.searching_parameters:
                     ########################## GD CG BFGS #################################
-                    if self.searching_parameters['searching_method'].upper() in ['GD', 'CG', 'BFGS']:
+                    if self.searching_parameters['searching_method'].upper() in ['GD','CG','BFGS','L-BFGS','L-BFGS-B','BFGS-TS','L-BFGS-TS']:
                         self.read_gradient_parameters(i_parameter)
                     ########################## FIRE #######################################
                     if self.searching_parameters['searching_method'].upper() in ['FIRE']:
                         self.read_FIRE_parameters(i_parameter)
-                
+                    ########################## Dimer method ################################
+                    if self.searching_parameters['searching_method'].upper() in ['DIMER']:
+                        self.read_dimer_parameters(i_parameter)
+                    ########################## GAD ########################################
+                    if self.searching_parameters['searching_method'].upper() in ['GAD']:
+                        self.read_GAD_parameters(i_parameter)
+
             ########################## Enhanced sampling ##########################
             if self.morest_parameters['enhanced_sampling']:
                 if i_parameter.split()[0].upper() == 'Enhanced_sampling_method'.upper():
@@ -727,7 +743,22 @@ class read_parameters:
     def read_gradient_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'Gradient_step_size'.upper():
             self.gradient_parameters['gradient_step_size'] = 1e-2 * float(i_parameter.split()[1])
-    
+
+        elif i_parameter.split()[0].upper() == 'LBFGS_history_step'.upper():
+            self.gradient_parameters['lbfgs_history_step'] = float(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'SGD_fraction'.upper():
+            self.gradient_parameters['sgd_fraction'] = float(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'Adam_beta1'.upper():
+            self.gradient_parameters['adam_beta1'] = float(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'Adam_beta2'.upper():
+            self.gradient_parameters['adam_beta2'] = float(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'Adam_eps'.upper():
+            self.gradient_parameters['adam_eps'] = float(i_parameter.split()[1])
+
     def read_FIRE_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'FIRE_equal_masses'.upper():
             if i_parameter.split()[1].upper() == 'True'.upper():
@@ -757,6 +788,17 @@ class read_parameters:
 
         elif i_parameter.split()[0].upper() == 'FIRE_f_alpha'.upper():
             self.FIRE_parameters['fire_f_alpha'] = float(i_parameter.split()[1])
+
+    def read_dimer_parameters(self, i_parameter):
+        if i_parameter.split()[0].upper() == 'Dimer_distance'.upper():
+            self.dimer_parameters['dimer_distance'] = float(i_parameter.split()[1])
+
+        elif i_parameter.split()[0].upper() == 'Dimer_rotation_step'.upper():
+            self.dimer_parameters['dimer_rotation_step'] = float(i_parameter.split()[1])
+
+    def read_GAD_parameters(self, i_parameter):
+        if i_parameter.split()[0].upper() == 'GAD_time_step'.upper():
+            self.GAD_parameters['gad_time_step'] = float(i_parameter.split()[1])
 
     def read_RE_parameters(self, i_parameter):
         if i_parameter.split()[0].upper() == 'RE_initialization'.upper():
@@ -1280,6 +1322,28 @@ class read_parameters:
                     log_morest.write(key+' : '+str(self.FIRE_parameters[key])+'\n')
             log_morest.write('\n')
         return self.FIRE_parameters
+    
+    def get_dimer_parameters(self, log_morest=None):
+        if self.morest_parameters['morest_save_parameters_file']:
+            np.save('MoREST_dimer_parameters.npy', self.dimer_parameters)
+        if log_morest != None:
+            for key in self.dimer_parameters:
+                log_morest.write(key+' : '+str(self.dimer_parameters[key])+'\n')
+            log_morest.write('\n')
+        return self.dimer_parameters
+    
+    def get_GAD_parameters(self, log_morest=None):
+        self.GAD_parameters['gad_time_step'] *= units.fs
+        if self.morest_parameters['morest_save_parameters_file']:
+            np.save('MoREST_GAD_parameters.npy', self.GAD_parameters)
+        if log_morest != None:
+            for key in self.GAD_parameters:
+                if key in ['gad_time_step']:
+                    log_morest.write(key+' : '+str(self.GAD_parameters[key]/units.fs)+'\n')
+                else:
+                    log_morest.write(key+' : '+str(self.GAD_parameters[key])+'\n')
+            log_morest.write('\n')
+        return self.GAD_parameters
 
     def get_enhanced_sampling_parameters(self, log_morest=None):
         if self.morest_parameters['morest_save_parameters_file']:

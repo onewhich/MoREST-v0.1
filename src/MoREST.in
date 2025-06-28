@@ -132,13 +132,18 @@ Searching_constrained             False #TODO: whether constrained optimization 
 Searching_method                  FIRE # for local minimum: GD: steepest/gradient descent;
                                        #                    CG: conjugate gradient descent;
                                        #                    BFGS;
+                                       #                    L-BFGS;
+                                       #                    L-BFGS-B: SciPy's L-BFGS-B algorithm;
                                        #                    FIRE;
                                        #                    RP_BFGS: BFGS for ring polymer
-                                       # for transition state: BFGS: quasi-Newton variants for transition states;
+                                       # for transition state: BFGS-TS: quasi-Newton variants for transition states;
+                                       #                       L-BFGS-TS;
                                        #                       dimer;
                                        #                       GAD: Gentle Ascent Dynamics;
                                        # for global minimum: SGD: stochastic gradient descent;
-Gradient_step_size                3
+                                       #                     Adam;
+Gradient_step_size                3 # This value will multiply by 1e-2 in actual using.
+LBFGS_history_step                5 # default value is 5
 FIRE_equal_masses                 True # Setting all the atom masses equal.
 FIRE_time_step                    1 # unit in fs
 FIRE_max_time_step                10 # unit in fs. It is usually 10 times of time step.
@@ -149,6 +154,13 @@ FIRE_f_decrease                   0.5
 FIRE_f_alpha                      0.99
 #TODO RP_number_of_beads          10
 #TODO RP_temperature              1
+Dimer_distance                    0.01
+Dimer_rotation_step               0.01
+GAD_time_step                     3 # unit in fs
+SGD_fraction                      0.2 # 使用 20% 的随机力分量进行更新
+Adam_beta1                        0.9
+Adam_beta2                        0.999
+Adam_eps                          1e-8
 
 Enhanced_sampling                 False
 Enhanced_sampling_method          RE   # for sampling: RE; 
