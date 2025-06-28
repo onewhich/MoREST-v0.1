@@ -913,7 +913,7 @@ class GAD_velocity_Verlet(searching_velocity_Verlet):
             else:
                 self.searching_log = open(self.log_file_name, 'a', buffering=1)
 
-    def apply_GAD_forces(self):
+    def get_GAD_forces(self):
         """
         Modify forces using Gentle Ascent Dynamics:
         Project out component along the maximal force direction and reverse it.
@@ -933,7 +933,7 @@ class GAD_velocity_Verlet(searching_velocity_Verlet):
 
     def generate_new_step(self, updated_current_system=None):
         # Apply GAD modified forces
-        gad_forces = self.apply_GAD_forces()
+        gad_forces = self.get_GAD_forces()
 
         # Proceed to next step with modified forces
         self.VV_next_step(bias_forces=gad_forces, updated_current_system=updated_current_system)
