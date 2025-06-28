@@ -6,7 +6,7 @@ from initialize_calculator import initialize_calculator
 #from copy import deepcopy
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution
 # Stationary and ZeroRotation from ase will not change the total kinetic energy, the vibrational energy will arise after these two processes.
-from kinetic_energy_assignment import clean_translation, clean_rotation
+from kinetic_energy_assignment import clean_translation, clean_rotation, clean_translation_vm
 from numerical_integraion import MD_integration
 from ase import units
 
@@ -208,9 +208,10 @@ class initialize_scattering(initialize_calculator):
     def update_step(self, next_potential_energy, next_forces):
 
         if self.scattering_parameters['scattering_fix_target']:
-            next_momenta = self.current_system.get_momenta()
-            next_momenta[0:self.n_atom_target] = clean_translation(next_momenta[0:self.n_atom_target])
-            self.current_system.set_momenta(next_momenta)
+            next_velocities = self.current_system.get_velocities()
+            masses = self.current_system.get_masses()
+            next_velocities[0:self.n_atom_target] = clean_translation_vm(next_velocities[0:self.n_atom_target], masses)
+            self.current_system.set_velocities(next_velocities)
         
         self.current_system.info['step'] = self.current_step
         self.current_forces = next_forces

@@ -436,6 +436,18 @@ class read_parameters:
             else:
                 raise Exception('It is not clear whether the translation will be removed.')
 
+        elif i_parameter.split()[0].upper() == 'MD_fix_atoms_all'.upper():
+            self.MD_parameters['md_fix_atoms_all'] = get_index_from_string(str(i_parameter.split()[1]))
+
+        elif i_parameter.split()[0].upper() == 'MD_fix_atoms_x'.upper():
+            self.MD_parameters['md_fix_atoms_x'] = get_index_from_string(str(i_parameter.split()[1]))
+
+        elif i_parameter.split()[0].upper() == 'MD_fix_atoms_y'.upper():
+            self.MD_parameters['md_fix_atoms_y'] = get_index_from_string(str(i_parameter.split()[1]))
+
+        elif i_parameter.split()[0].upper() == 'MD_fix_atoms_z'.upper():
+            self.MD_parameters['md_fix_atoms_z'] = get_index_from_string(str(i_parameter.split()[1]))
+
     def read_RPMD_parameters(self, i_parameter):            
         if i_parameter.split()[0].upper() == 'RPMD_number_of_beads'.upper():
             self.RPMD_parameters['rpmd_number_of_beads'] = int(i_parameter.split()[1])
@@ -498,7 +510,7 @@ class read_parameters:
             if tmp_atoms.lower() == 'all':
                 tmp_atoms = 'all'
             else:
-                tmp_atoms = np.array(tmp_atoms.split(','), dtype='int')
+                tmp_atoms = get_index_from_string(tmp_atoms)
             self.barostat_parameters['barostat_action_atoms'].append(tmp_atoms)
 
         ########################## spherical space ##################################
@@ -921,7 +933,7 @@ class read_parameters:
             if tmp_atoms.lower() == 'all':
                 tmp_atoms = 'all'
             else:
-                tmp_atoms = np.array(tmp_atoms.split(','), dtype='int')
+                tmp_atoms = get_index_from_string(tmp_atoms)
             self.wall_potential_parameters['wall_action_atoms'].append(tmp_atoms)
             
         ########################## Planar wall #################################
@@ -1458,3 +1470,18 @@ class read_parameters:
             log_morest.write('\n')
         return self.wall_potential_parameters
     
+def get_index_from_string(string):
+    '''
+    string: '1-3,5,7-9'
+    Returns: np.array([1,2,3,5,7,8,9])
+    This function converts a string of indices into a numpy array of integers.
+    '''
+    string_list = string.split(',')
+    index = []
+    for i_str in string_list:
+        i_str_list = i_str.split('-')
+        if len(i_str_list) == 2:
+            index += list(range(int(i_str_list[0]),int(i_str_list[1])+1))
+        else:
+            index += [int(i_str_list[0])]
+    return np.array(index, dtype='int')

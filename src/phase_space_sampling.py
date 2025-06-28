@@ -185,6 +185,19 @@ class MD(initialize_sampling):
         if type(bias_forces) != type(None):
             self.current_forces = self.current_forces + bias_forces
 
+        if 'md_fix_atoms_all' in self.MD_parameters:
+            index = self.MD_parameters['md_fix_atoms_all']
+            self.current_forces[index,:] = 0
+        elif 'md_fix_atoms_x' in self.MD_parameters:
+            index = self.MD_parameters['md_fix_atoms_x']
+            self.current_forces[index,0] = 0
+        elif 'md_fix_atoms_y' in self.MD_parameters:
+            index = self.MD_parameters['md_fix_atoms_y']
+            self.current_forces[index,1] = 0
+        elif 'md_fix_atoms_z' in self.MD_parameters:
+            index = self.MD_parameters['md_fix_atoms_z']
+            self.current_forces[index,2] = 0
+
         return time_step
         
     def update_step(self, next_potential_energy, next_forces):
@@ -208,6 +221,23 @@ class MD(initialize_sampling):
             write_xyz_file(self.sampling_parameters['sampling_molecule']+'_new', self.current_system)
         else:
             write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.xyz_new', self.current_system)
+
+    def remove_forces(self, forces_all):
+
+        if 'md_fix_atoms_all' in self.MD_parameters:
+            index = self.MD_parameters['md_fix_atoms_all']
+            forces_all[index,:] = 0
+        elif 'md_fix_atoms_x' in self.MD_parameters:
+            index = self.MD_parameters['md_fix_atoms_x']
+            forces_all[index,0] = 0
+        elif 'md_fix_atoms_y' in self.MD_parameters:
+            index = self.MD_parameters['md_fix_atoms_y']
+            forces_all[index,1] = 0
+        elif 'md_fix_atoms_z' in self.MD_parameters:
+            index = self.MD_parameters['md_fix_atoms_z']
+            forces_all[index,2] = 0
+
+        return forces_all
 
     def check_lattice_vectors_plane_barostat(self, barostat_shape):
         if 'plane' in barostat_shape:
