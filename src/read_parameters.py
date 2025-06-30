@@ -1472,8 +1472,8 @@ class read_parameters:
     
 def get_index_from_string(string):
     '''
-    string: '1-3,5,7-9'
-    Returns: np.array([1,2,3,5,7,8,9])
+    string: '0-3,5,7-9'
+    Returns: np.array([0,1,2,3,5,7,8,9])
     This function converts a string of indices into a numpy array of integers.
     '''
     string_list = string.split(',')

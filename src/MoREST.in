@@ -67,7 +67,7 @@ Barostat_space_shape              sphere # sphere: spherical space for barostat;
 Barostat_space_type               equilibrium # ultrafast: only change the size of the barostat; 
                                               # equilibrium: change both the size of the barostat and the positions of atoms.
 Barostat_space_size               10 # Initial size of the space. one float number is the radius of the sphere or the height of the plane; 5,10,7 three number are the lengths of three sides of the cuboid;
-Barostat_action_atoms             all # all; 1 ; 0,2,4,7.  Indicating the atoms affected by the wall potential.
+Barostat_action_atoms             all # all; 1 ; 0,2,4-7.  Indicating the atoms affected by the wall potential.
 Barostat_sphere_center            0 0 0 # This point and radius determine the parameter b in the spherical wall. 
 #Barostat_shpere_radius            # The radius and center point determine the parameter b in the spherical wall. It is calculated from the pressure.
 Barostat_cuboid_center            0 0 0 # This point and normal vector determine the parameter b of six planar walls of the cube.
