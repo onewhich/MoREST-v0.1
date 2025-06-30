@@ -186,17 +186,29 @@ class MD(initialize_sampling):
             self.current_forces = self.current_forces + bias_forces
 
         if 'md_fix_atoms_all' in self.MD_parameters:
+            velocities = self.current_system.get_velocities()
             index = self.MD_parameters['md_fix_atoms_all']
             self.current_forces[index,:] = 0
-        elif 'md_fix_atoms_x' in self.MD_parameters:
+            velocities[index,:] = 0
+            self.current_system.set_velocities(velocities)
+        if 'md_fix_atoms_x' in self.MD_parameters:
+            velocities = self.current_system.get_velocities()
             index = self.MD_parameters['md_fix_atoms_x']
             self.current_forces[index,0] = 0
-        elif 'md_fix_atoms_y' in self.MD_parameters:
+            velocities[index,0] = 0
+            self.current_system.set_velocities(velocities)
+        if 'md_fix_atoms_y' in self.MD_parameters:
+            velocities = self.current_system.get_velocities()
             index = self.MD_parameters['md_fix_atoms_y']
             self.current_forces[index,1] = 0
-        elif 'md_fix_atoms_z' in self.MD_parameters:
+            velocities[index,1] = 0
+            self.current_system.set_velocities(velocities)
+        if 'md_fix_atoms_z' in self.MD_parameters:
+            velocities = self.current_system.get_velocities()
             index = self.MD_parameters['md_fix_atoms_z']
             self.current_forces[index,2] = 0
+            velocities[index,2] = 0
+            self.current_system.set_velocities(velocities)
 
         return time_step
         
@@ -225,17 +237,29 @@ class MD(initialize_sampling):
     def remove_forces(self, forces_all):
 
         if 'md_fix_atoms_all' in self.MD_parameters:
+            velocities = self.current_system.get_velocities()
             index = self.MD_parameters['md_fix_atoms_all']
             forces_all[index,:] = 0
-        elif 'md_fix_atoms_x' in self.MD_parameters:
+            velocities[index,:] = 0
+            self.current_system.set_velocities(velocities)
+        if 'md_fix_atoms_x' in self.MD_parameters:
+            velocities = self.current_system.get_velocities()
             index = self.MD_parameters['md_fix_atoms_x']
             forces_all[index,0] = 0
-        elif 'md_fix_atoms_y' in self.MD_parameters:
+            velocities[index,0] = 0
+            self.current_system.set_velocities(velocities)
+        if 'md_fix_atoms_y' in self.MD_parameters:
+            velocities = self.current_system.get_velocities()
             index = self.MD_parameters['md_fix_atoms_y']
             forces_all[index,1] = 0
-        elif 'md_fix_atoms_z' in self.MD_parameters:
+            velocities[index,1] = 0
+            self.current_system.set_velocities(velocities)
+        if 'md_fix_atoms_z' in self.MD_parameters:
+            velocities = self.current_system.get_velocities()
             index = self.MD_parameters['md_fix_atoms_z']
             forces_all[index,2] = 0
+            velocities[index,2] = 0
+            self.current_system.set_velocities(velocities)
 
         return forces_all
 
