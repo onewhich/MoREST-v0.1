@@ -893,7 +893,7 @@ class dimer(initialize_searching):
 
 class GAD_velocity_Verlet(searching_velocity_Verlet):
     '''
-    Implements Gentle Ascent Dynamics (GAD) for transition state search.
+    Implements Gentlest Ascent Dynamics (GAD) for transition state search.
     Based on the velocity Verlet integrator.
     '''
     def __init__(self, morest_parameters, searching_parameters, GAD_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, log_morest=None):
@@ -915,7 +915,7 @@ class GAD_velocity_Verlet(searching_velocity_Verlet):
 
     def get_GAD_forces(self):
         """
-        Modify forces using Gentle Ascent Dynamics:
+        Modify forces using Gentlest Ascent Dynamics:
         Project out component along the maximal force direction and reverse it.
         """
         forces = self.current_forces.copy()
