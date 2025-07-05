@@ -12,7 +12,7 @@ class barostat_space:
         for i in range(self.barostat_parameters['barostat_number']):
             self.P_simulation[i] = self.barostat_parameters['barostat_pressure'][i]
             index = self.barostat_parameters['barostat_action_atoms'][i]
-            if index == 'all':
+            if type(index) == str and index == 'all':
                 index = np.arange(self.n_atom)
                 self.barostat_parameters['barostat_action_atoms'][i] = index
         self.P_simulation = np.array(self.P_simulation)
