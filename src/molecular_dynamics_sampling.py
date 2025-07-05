@@ -334,7 +334,7 @@ class NPH_SVR(MD):
         total_forces = next_forces + bias_forces
 
         time_step = self.update_pre_step(time_step, None, updated_current_system)
-        total_forces = self.remove_forces(total_forces)
+        total_forces = self.fix_atoms(total_forces)
         half_time_step = 0.5 * time_step
 
         momenta_all = self.current_system.get_momenta()
@@ -373,8 +373,8 @@ class NPH_SVR(MD):
         self.current_system.set_momenta(momenta_all)
         next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(self.current_system)
         total_forces = next_forces + bias_forces
-        next_forces = self.remove_forces(next_forces)
-        total_forces = self.remove_forces(total_forces)
+        next_forces = self.fix_atoms(next_forces)
+        total_forces = self.fix_atoms(total_forces)
         Ek_atoms = self.NPH_space.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
 
         for i in range(self.MD_parameters['barostat_number']):
@@ -569,7 +569,7 @@ class NPT_Langevin(MD):
         total_forces = self.current_forces + bias_forces
 
         time_step = self.update_pre_step(time_step, None, updated_current_system)
-        total_forces = self.remove_forces(total_forces)
+        total_forces = self.fix_atoms(total_forces)
         half_time_step = 0.5 * time_step
 
         momenta_all = self.current_system.get_momenta()
@@ -613,8 +613,8 @@ class NPT_Langevin(MD):
         self.current_system.set_momenta(momenta_all)
         next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(self.current_system)
         total_forces = next_forces + bias_forces
-        next_forces = self.remove_forces(next_forces)
-        total_forces = self.remove_forces(total_forces)
+        next_forces = self.fix_atoms(next_forces)
+        total_forces = self.fix_atoms(total_forces)
         Ek_atoms = self.NPT_space.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
 
         for i in range(self.MD_parameters['barostat_number']):
@@ -726,7 +726,7 @@ class NPT_SVR(MD):
         total_forces = self.current_forces + bias_forces
 
         time_step = self.update_pre_step(time_step, None, updated_current_system)
-        total_forces = self.remove_forces(total_forces)
+        total_forces = self.fix_atoms(total_forces)
         half_time_step = 0.5 * time_step
 
         momenta_all = self.current_system.get_momenta()
@@ -772,8 +772,8 @@ class NPT_SVR(MD):
         self.current_system.set_momenta(momenta_all)
         next_potential_energy, next_forces = self.many_body_potential.get_potential_forces(self.current_system)
         total_forces = next_forces + bias_forces
-        next_forces = self.remove_forces(next_forces)
-        total_forces = self.remove_forces(total_forces)
+        next_forces = self.fix_atoms(next_forces)
+        total_forces = self.fix_atoms(total_forces)
         Ek_atoms = self.NPT_space.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
 
         for i in range(self.MD_parameters['barostat_number']):

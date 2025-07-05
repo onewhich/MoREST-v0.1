@@ -234,7 +234,7 @@ class MD(initialize_sampling):
         else:
             write_xyz_file('MoREST_RE_'+str(self.T_simulation)+'K.xyz_new', self.current_system)
 
-    def remove_forces(self, forces_all):
+    def fix_atoms(self, forces_all):
 
         if 'md_fix_atoms_all' in self.MD_parameters:
             velocities = self.current_system.get_velocities()
