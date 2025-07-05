@@ -142,7 +142,11 @@ class MD(initialize_sampling):
     
     def __init__(self, morest_parameters, sampling_parameters, MD_parameters, molecule=None, traj_file_name=None, T_simulation=None, calculator=None, log_morest=None):
         super(MD, self).__init__(morest_parameters, sampling_parameters, molecule, traj_file_name, calculator, log_morest)
+
         self.MD_parameters = MD_parameters
+        if self.sampling_parameters['sampling_ensemble'].upper()  in ['NPT_Langevin'.upper(), 'NPT_Berendsen'.upper(), 'NPH_SVR', 'NPT_SVR']:
+            self.check_lattice_vectors_plane_barostat(self.MD_parameters['barostat_shape'])
+
         self.time_step = self.MD_parameters['md_time_step']
         self.current_potential_energy, self.current_forces = self.many_body_potential.get_potential_forces(self.current_system)
         

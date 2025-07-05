@@ -283,11 +283,9 @@ class NPH_SVR(MD):
         else:
             self.traj_file_name = traj_file_name
 
-        self.check_lattice_vectors_plane_barostat(MD_parameters['barostat_space_shape'])
-
         super().__init__(morest_parameters, sampling_parameters, MD_parameters, molecule, self.traj_file_name, calculator, log_morest)
 
-        self.NPH_space = barostat_space(MD_parameters, self.current_system)
+        self.NPH_space = barostat_space(self.MD_parameters, self.current_system)
 
         self.P_simulation = self.MD_parameters['barostat_pressure']
         self.tau_P = self.sampling_parameters['nph_svr_tau']
@@ -428,11 +426,9 @@ class NPT_Berendsen(MD):
         else:
             self.traj_file_name = traj_file_name
 
-        self.check_lattice_vectors_plane_barostat(MD_parameters['barostat_space_shape'])
-
         super().__init__(morest_parameters, sampling_parameters, MD_parameters, molecule, self.traj_file_name, T_simulation, calculator, log_morest)
 
-        self.NPT_space = barostat_space(MD_parameters, self.current_system)
+        self.NPT_space = barostat_space(self.MD_parameters, self.current_system)
 
         self.P_simulation = self.MD_parameters['barostat_pressure']
         self.tau_T = self.sampling_parameters['npt_Berendsen_tau_t']
@@ -516,11 +512,9 @@ class NPT_Langevin(MD):
         else:
             self.traj_file_name = traj_file_name
 
-        self.check_lattice_vectors_plane_barostat(MD_parameters['barostat_space_shape'])
-
         super().__init__(morest_parameters, sampling_parameters, MD_parameters, molecule, self.traj_file_name, T_simulation, calculator, log_morest)
 
-        self.NPT_space = barostat_space(MD_parameters, self.current_system)
+        self.NPT_space = barostat_space(self.MD_parameters, self.current_system)
 
         self.P_simulation = self.MD_parameters['barostat_pressure']
         self.tau_T = self.sampling_parameters['npt_Langevin_tau_t']
@@ -673,11 +667,9 @@ class NPT_SVR(MD):
         else:
             self.traj_file_name = traj_file_name
 
-        self.check_lattice_vectors_plane_barostat(MD_parameters['barostat_space_shape'])
-
         super().__init__(morest_parameters, sampling_parameters, MD_parameters, molecule, self.traj_file_name, T_simulation, calculator, log_morest)
 
-        self.NPT_space = barostat_space(MD_parameters, self.current_system)
+        self.NPT_space = barostat_space(self.MD_parameters, self.current_system)
 
         self.P_simulation = self.MD_parameters['barostat_pressure']
         self.tau_T = self.sampling_parameters['npt_svr_tau_t']
