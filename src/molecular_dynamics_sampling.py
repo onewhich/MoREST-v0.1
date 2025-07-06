@@ -359,7 +359,8 @@ class NPH_SVR(MD):
             # stage 3: propagate 1 time step position, volume, momenta
             index_coordinates, current_volume, index_momenta, barostat_space_size = SVR_stage_3_propagate_position_volume(
                                                 time_step, index_coordinates, index_momenta, current_eta, index_masses, current_volume, \
-                                                self.MD_parameters['barostat_space_size'][i], self.MD_parameters['barostat_space_type'][i])
+                                                self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i], \
+                                                self.NPH_space.barostat_space_center, self.MD_parameters['barostat_space_type'][i])
             self.MD_parameters['barostat_space_size'][i] = barostat_space_size
 
             self.eta[i] = current_eta
@@ -595,7 +596,8 @@ class NPT_Langevin(MD):
             # stage 3: propagate 1 time step position, volume, momenta
             index_coordinates, current_volume, index_momenta, barostat_space_size = SVR_stage_3_propagate_position_volume(
                                                 time_step, index_coordinates, index_momenta, current_eta, index_masses, current_volume, \
-                                                self.MD_parameters['barostat_space_size'][i], self.MD_parameters['barostat_space_type'][i])
+                                                self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i], \
+                                                self.NPT_space.barostat_space_center, self.MD_parameters['barostat_space_type'][i])
             self.MD_parameters['barostat_space_size'][i] = barostat_space_size
 
             self.eta[i] = current_eta
@@ -752,7 +754,8 @@ class NPT_SVR(MD):
             # stage 3: propagate 1 time step position, volume, momenta
             index_coordinates, current_volume, index_momenta, barostat_space_size = SVR_stage_3_propagate_position_volume(
                                                 time_step, index_coordinates, index_momenta, current_eta, index_masses, current_volume, \
-                                                self.MD_parameters['barostat_space_size'][i], self.MD_parameters['barostat_space_type'][i])
+                                                self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i], \
+                                                self.NPT_space.barostat_space_center, self.MD_parameters['barostat_space_type'][i])
             self.MD_parameters['barostat_space_size'][i] = barostat_space_size
 
             self.eta[i] = current_eta
