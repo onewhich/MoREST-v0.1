@@ -125,7 +125,7 @@ class barostat_space:
         coords = coordinates_all[index_atom]   # shape (M, 3)
         forces = forces_all[index_atom]        # shape (M, 3)
 
-        virial = -np.sum(np.einsum('ij,ij->i', coords, forces))
+        virial = 0.5 * np.sum(np.einsum('ij,ij->i', coords, forces))
         return virial
     
     @staticmethod
@@ -152,7 +152,7 @@ class barostat_space:
         forces = forces_all[index_atom]        # (M, 3)
 
         # virial tensor: W_αβ = -Σ_i r_i^α F_i^β
-        virial_tensor = -np.einsum('ia,ib->ab', coords, forces)  # shape (3, 3)
+        virial_tensor = 0.5 * np.einsum('ia,ib->ab', coords, forces)  # shape (3, 3)
 
         return virial_tensor
 
@@ -208,7 +208,7 @@ class barostat_space:
         Returns:
             Instantaneous pressure
         """
-        return (np.sum(Ek_atoms) - internal_virial)*2/(3 * volume)
+        return (np.sum(Ek_atoms) * 2 + internal_virial) / (3 * volume)
 
     def update_barostat_space_wall(self):
         for i in range(self.barostat_parameters['barostat_number']):
