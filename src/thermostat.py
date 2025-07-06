@@ -1,22 +1,24 @@
 import numpy as np
 from ase import units
 
-def velocity_rescaling(dT, T_simulation, Ek, n_atom, velocities):
+def velocity_rescaling(dT, T_simulation, Ek, Nf, velocities):
     lower_T = T_simulation - dT
     upper_T = T_simulation + dT
-    Ti = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+    #Ti = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+    Ti = 2 * Ek / units.kB / Nf # Ek = 1/2 m v^2 = 1/2 kB T for each degree of freedom
     if Ti > upper_T or Ti < lower_T:
         factor = np.sqrt(T_simulation / Ti)
         new_velocities = factor * velocities
 
     return new_velocities
 
-def Berendsen_velocity_rescaling(time_step, Ek, n_atom, T_simulation, tau, velocities):
+def Berendsen_velocity_rescaling(time_step, Ek, Nf, T_simulation, tau, velocities):
     '''
     This function implements Berendsen thermostat (Berendsen, Postma, van Gunsteren, DiNola and Haak, JCP (1984))
     to do canonical ensemble sampling (NVT MD).
     '''
-    Ti = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+    #Ti = 2/3 * Ek/units.kB /n_atom   # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+    Ti = 2 * Ek / units.kB / Nf # Ek = 1/2 m v^2 = 1/2 kB T for each degree of freedom
     factor = np.sqrt(1 + time_step/tau * (T_simulation/Ti -1))
     new_velocities = factor * velocities
 

@@ -68,7 +68,7 @@ class NVK_VR(MD):
         super().__init__(morest_parameters, sampling_parameters, MD_parameters, molecule, self.traj_file_name, T_simulation, calculator, log_morest)
 
         new_velocities = velocity_rescaling(self.sampling_parameters['nvk_vr_dt'], self.T_simulation, self.current_system.get_kinetic_energy(), \
-                                        self.n_atom, self.current_system.get_velocities())
+                                            self.Nf, self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
 
         if self.sampling_parameters['sampling_initialization']:
@@ -91,7 +91,7 @@ class NVK_VR(MD):
             
         next_potential_energy, next_forces = self.integration.velocity_Verlet(time_step, self.current_system, self.current_forces, self.masses)
         new_velocities = velocity_rescaling(self.sampling_parameters['nvk_vr_dt'], self.T_simulation, self.current_system.get_kinetic_energy(), \
-                                        self.n_atom, self.current_system.get_velocities())
+                                            self.Nf, self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
             
         self.update_step(next_potential_energy, next_forces)
@@ -118,8 +118,8 @@ class NVT_Berendsen(MD):
 
         super().__init__(morest_parameters, sampling_parameters, MD_parameters, molecule, self.traj_file_name, T_simulation, calculator, log_morest)
 
-        new_velocities = Berendsen_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.n_atom, \
-                                                      self.T_simulation, self.sampling_parameters['nvt_berendsen_tau'], self.current_system.get_velocities())
+        new_velocities = Berendsen_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.Nf, self.T_simulation, \
+                                                      self.sampling_parameters['nvt_berendsen_tau'], self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
         
         if self.sampling_parameters['sampling_initialization']:
@@ -141,8 +141,8 @@ class NVT_Berendsen(MD):
         time_step = self.update_pre_step(time_step, bias_forces, updated_current_system)
             
         next_potential_energy, next_forces = self.integration.velocity_Verlet(time_step, self.current_system, self.current_forces, self.masses)
-        new_velocities = Berendsen_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.n_atom, \
-                                                      self.T_simulation, self.sampling_parameters['nvt_berendsen_tau'], self.current_system.get_velocities())
+        new_velocities = Berendsen_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.Nf, self.T_simulation, \
+                                                      self.sampling_parameters['nvt_berendsen_tau'], self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
             
         self.update_step(next_potential_energy, next_forces)
@@ -170,7 +170,7 @@ class NVT_Langevin(MD):
         super().__init__(morest_parameters, sampling_parameters, MD_parameters, molecule, self.traj_file_name, T_simulation, calculator, log_morest)
         
         new_velocities, self.d_Ee = Langevin_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.K_simulation, \
-                                                                3*self.n_atom, self.sampling_parameters['nvt_Langevin_gamma'], self.current_system.get_velocities())
+                                                                self.Nf, self.sampling_parameters['nvt_Langevin_gamma'], self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
 
         if self.sampling_parameters['sampling_initialization']:
@@ -198,7 +198,7 @@ class NVT_Langevin(MD):
             
         next_potential_energy, next_forces = self.integration.velocity_Verlet(time_step, self.current_system, self.current_forces, self.masses)
         new_velocities, self.d_Ee = Langevin_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.K_simulation, \
-                                                                3*self.n_atom, self.sampling_parameters['nvt_Langevin_gamma'], self.current_system.get_velocities())
+                                                                self.Nf, self.sampling_parameters['nvt_Langevin_gamma'], self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
             
         self.update_step(next_potential_energy, next_forces)
@@ -228,7 +228,7 @@ class NVT_SVR(MD):
         super().__init__(morest_parameters, sampling_parameters, MD_parameters, molecule, self.traj_file_name, T_simulation, calculator, log_morest)
         
         new_velocities, self.d_Ee = stochastic_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.K_simulation, \
-                                                                  3*self.n_atom, self.sampling_parameters['nvt_svr_tau'], self.current_system.get_velocities())
+                                                                  self.Nf, self.sampling_parameters['nvt_svr_tau'], self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
 
         if self.sampling_parameters['sampling_initialization']:
@@ -256,7 +256,7 @@ class NVT_SVR(MD):
             
         next_potential_energy, next_forces = self.integration.velocity_Verlet(time_step, self.current_system, self.current_forces, self.masses)
         new_velocities, self.d_Ee = stochastic_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.K_simulation, \
-                                                                  3*self.n_atom, self.sampling_parameters['nvt_svr_tau'], self.current_system.get_velocities())
+                                                                  self.Nf, self.sampling_parameters['nvt_svr_tau'], self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
             
         self.update_step(next_potential_energy, next_forces)
@@ -299,9 +299,11 @@ class NPH_SVR(MD):
         Ek_t = self.current_system.get_kinetic_energy()
         Ep_t = self.current_potential_energy
         self.lattice_vectors = self.current_system.get_cell()
+        self.index_thermostat_atom = np.arange(self.n_atom, dtype=int)
         for i in range(self.MD_parameters['barostat_number']):
             coordinates_all = self.current_system.get_positions()
             index_atom = self.MD_parameters['barostat_action_atoms'][i]
+            self.index_thermostat_atom = [atom for atom in self.index_thermostat_atom if atom not in index_atom]
             internal_virial = self.NPH_space.get_internal_virial(index_atom, coordinates_all, self.current_forces)
             self.volume[i] = self.NPH_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i], self.lattice_vectors)
             self.P_current[i] = self.NPH_space.get_pressure(Ek_atoms[index_atom], internal_virial, self.volume[i])
@@ -339,6 +341,11 @@ class NPH_SVR(MD):
         coordinates_all = self.current_system.get_positions()
 
         Ek_atoms = self.NPH_space.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
+        momenta_all[self.index_thermostat_atom] = self.integration.propagate_momenta_half(time_step, momenta_all[self.index_thermostat_atom], \
+                                                                                         total_forces[self.index_thermostat_atom])
+        coordinates_all[self.index_thermostat_atom] = self.integration.propagate_positions_p_half(time_step, coordinates_all[self.index_thermostat_atom], \
+                                                                                                 momenta_all[self.index_thermostat_atom], \
+                                                                                                 self.masses[self.index_thermostat_atom])
         for i in range(self.MD_parameters['barostat_number']):
             index_atom = self.MD_parameters['barostat_action_atoms'][i]
             current_eta = self.eta[i]
@@ -376,6 +383,8 @@ class NPH_SVR(MD):
         total_forces = self.fix_atoms(total_forces)
         Ek_atoms = self.NPH_space.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
 
+        momenta_all[self.index_thermostat_atom] = self.integration.propagate_momenta_half(time_step, momenta_all[self.index_thermostat_atom], \
+                                                                                         total_forces[self.index_thermostat_atom])
         for i in range(self.MD_parameters['barostat_number']):
             index_atom = self.MD_parameters['barostat_action_atoms'][i]
             current_eta = self.eta[i]
@@ -440,7 +449,7 @@ class NPT_Berendsen(MD):
         # because factor_Z is only used in conjunction with tau_P.
         # init_miu = np.ones(self.MD_parameters['barostat_number']) # the first rescaling factor should be one for each barostat space
 
-        new_velocities = Berendsen_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.n_atom, \
+        new_velocities = Berendsen_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.Nf, \
                                                       self.T_simulation, self.tau_T, self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
         new_coordinates, P_current, volume = Berendsen_volume_rescaling(self.MD_parameters, self.time_step, self.current_system.get_positions(), \
@@ -479,7 +488,7 @@ class NPT_Berendsen(MD):
 
         next_potential_energy, next_forces = self.integration.velocity_Verlet(time_step, self.current_system, self.current_forces, self.masses)
 
-        new_velocities = Berendsen_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.n_atom, \
+        new_velocities = Berendsen_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.Nf, \
                                                       self.T_simulation, self.tau_T, self.current_system.get_velocities())
         self.current_system.set_velocities(new_velocities)
         new_coordinates, P_current, volume = Berendsen_volume_rescaling(self.MD_parameters, self.time_step, self.current_system.get_positions(), \
@@ -531,13 +540,17 @@ class NPT_Langevin(MD):
         Ek_t = self.current_system.get_kinetic_energy()
         Ep_t = self.current_potential_energy
         self.lattice_vectors = self.current_system.get_cell()
+        self.index_thermostat_atom = np.arange(self.n_atom, dtype=int)
         for i in range(self.MD_parameters['barostat_number']):
             coordinates_all = self.current_system.get_positions()
             index_atom = self.MD_parameters['barostat_action_atoms'][i]
+            self.index_thermostat_atom = [atom for atom in self.index_thermostat_atom if atom not in index_atom]
             internal_virial = self.NPT_space.get_internal_virial(index_atom, coordinates_all, self.current_forces)
             self.volume[i] = self.NPT_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i], self.lattice_vectors)
             self.P_current[i] = self.NPT_space.get_pressure(Ek_atoms[index_atom], internal_virial, self.volume[i])
         H_effective = SVR_effective_enthalpy(Ek_t, Ep_t, self.eta, self.volume, self.T_simulation, self.P_current, self.W_barostat)
+
+        self.Nf_thermostat_atom = self.correction_degree_of_freedom(self.index_thermostat_atom, 3*len(self.index_thermostat_atom))
 
         if self.sampling_parameters['sampling_initialization']:
             self.MD_log = open(self.log_file_name, 'w', buffering=1)
@@ -571,6 +584,11 @@ class NPT_Langevin(MD):
         coordinates_all = self.current_system.get_positions()
 
         Ek_atoms = self.NPT_space.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
+        momenta_all[self.index_thermostat_atom] = self.integration.propagate_momenta_half(time_step, momenta_all[self.index_thermostat_atom], \
+                                                                                         total_forces[self.index_thermostat_atom])
+        coordinates_all[self.index_thermostat_atom] = self.integration.propagate_positions_p_half(time_step, coordinates_all[self.index_thermostat_atom], \
+                                                                                                 momenta_all[self.index_thermostat_atom], \
+                                                                                                 self.masses[self.index_thermostat_atom])
         for i in range(self.MD_parameters['barostat_number']):
             index_atom = self.MD_parameters['barostat_action_atoms'][i]
             current_eta = self.eta[i]
@@ -579,7 +597,7 @@ class NPT_Langevin(MD):
             index_forces = self.current_forces[index_atom]
             index_total_forces = total_forces[index_atom]
             index_masses = self.masses[index_atom]
-            index_Nf = 3*len(index_atom) - 2
+            index_Nf = self.correction_degree_of_freedom(index_atom, 3*len(index_atom)-2)
 
             # stage 1: propagate 1/2 time step thermostat
             index_momenta, current_eta = Langevin_stage_1_propagate_thermostat(half_time_step, index_masses, self.T_simulation, \
@@ -613,6 +631,8 @@ class NPT_Langevin(MD):
         total_forces = self.fix_atoms(total_forces)
         Ek_atoms = self.NPT_space.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
 
+        momenta_all[self.index_thermostat_atom] = self.integration.propagate_momenta_half(time_step, momenta_all[self.index_thermostat_atom], \
+                                                                                         total_forces[self.index_thermostat_atom])
         for i in range(self.MD_parameters['barostat_number']):
             index_atom = self.MD_parameters['barostat_action_atoms'][i]
             current_eta = self.eta[i]
@@ -621,7 +641,7 @@ class NPT_Langevin(MD):
             index_forces = next_forces[index_atom]
             index_total_forces = total_forces[index_atom]
             index_masses = self.masses[index_atom]
-            index_Nf = 3*len(index_atom) - 2
+            index_Nf = self.correction_degree_of_freedom(index_atom, 3*len(index_atom)-2)
 
             # stage 4: propagate 1/2 time step momenta & eta (again)
             internal_virial = self.NPT_space.get_internal_virial(index_atom, coordinates_all, next_forces)
@@ -638,6 +658,12 @@ class NPT_Langevin(MD):
             self.eta[i] = current_eta
             self.volume[i] = current_volume
             momenta_all[index_atom] = index_momenta
+
+        new_velocities, self.d_Ee = Langevin_velocity_rescaling(time_step, np.sum(Ek_atoms[self.index_thermostat_atom]), \
+                                                                  self.K_simulation * (3*len(self.index_thermostat_atom)) / self.Nf, \
+                                                                  3*len(self.index_thermostat_atom), self.tau_T, \
+                                                                  self.current_system.get_velocities()[self.index_thermostat_atom])
+        momenta_all[self.index_thermostat_atom] = new_velocities * self.masses[self.index_thermostat_atom]
 
         self.current_system.set_momenta(momenta_all)
 
@@ -687,13 +713,17 @@ class NPT_SVR(MD):
         Ek_t = self.current_system.get_kinetic_energy()
         Ep_t = self.current_potential_energy
         self.lattice_vectors = self.current_system.get_cell()
+        self.index_thermostat_atom = np.arange(self.n_atom, dtype=int)
         for i in range(self.MD_parameters['barostat_number']):
             coordinates_all = self.current_system.get_positions()
             index_atom = self.MD_parameters['barostat_action_atoms'][i]
+            self.index_thermostat_atom = [atom for atom in self.index_thermostat_atom if atom not in index_atom]
             internal_virial = self.NPT_space.get_internal_virial(index_atom, coordinates_all, self.current_forces)
             self.volume[i] = self.NPT_space.get_volume(self.MD_parameters['barostat_space_shape'][i], self.MD_parameters['barostat_space_size'][i], self.lattice_vectors)
             self.P_current[i] = self.NPT_space.get_pressure(Ek_atoms[index_atom], internal_virial, self.volume[i])
         H_effective = SVR_effective_enthalpy(Ek_t, Ep_t, self.eta, self.volume, self.T_simulation, self.P_current, self.W_barostat)
+
+        self.Nf_thermostat_atom = self.correction_degree_of_freedom(self.index_thermostat_atom, 3*len(self.index_thermostat_atom))
 
         if self.sampling_parameters['sampling_initialization']:
             self.MD_log = open(self.log_file_name, 'w', buffering=1)
@@ -727,6 +757,11 @@ class NPT_SVR(MD):
         coordinates_all = self.current_system.get_positions()
 
         Ek_atoms = self.NPT_space.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
+        momenta_all[self.index_thermostat_atom] = self.integration.propagate_momenta_half(time_step, momenta_all[self.index_thermostat_atom], \
+                                                                                         total_forces[self.index_thermostat_atom])
+        coordinates_all[self.index_thermostat_atom] = self.integration.propagate_positions_p_half(time_step, coordinates_all[self.index_thermostat_atom], \
+                                                                                                 momenta_all[self.index_thermostat_atom], \
+                                                                                                 self.masses[self.index_thermostat_atom])
         for i in range(self.MD_parameters['barostat_number']):
             index_atom = self.MD_parameters['barostat_action_atoms'][i]
             current_eta = self.eta[i]
@@ -735,7 +770,7 @@ class NPT_SVR(MD):
             index_forces = self.current_forces[index_atom]
             index_total_forces = total_forces[index_atom]
             index_masses = self.masses[index_atom]
-            index_Nf = 3*len(index_atom) - 2
+            index_Nf = self.correction_degree_of_freedom(index_atom, 3*len(index_atom)-2)
 
             # stage 1: propagate 1/2 time step thermostat
             alpha = SVR_stage_1_propagate_thermostat(half_time_step, np.sum(Ek_atoms[index_atom]), self.T_simulation, \
@@ -771,6 +806,8 @@ class NPT_SVR(MD):
         total_forces = self.fix_atoms(total_forces)
         Ek_atoms = self.NPT_space.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
 
+        momenta_all[self.index_thermostat_atom] = self.integration.propagate_momenta_half(time_step, momenta_all[self.index_thermostat_atom], \
+                                                                                         total_forces[self.index_thermostat_atom])
         for i in range(self.MD_parameters['barostat_number']):
             index_atom = self.MD_parameters['barostat_action_atoms'][i]
             current_eta = self.eta[i]
@@ -779,7 +816,7 @@ class NPT_SVR(MD):
             index_forces = next_forces[index_atom]
             index_total_forces = total_forces[index_atom]
             index_masses = self.masses[index_atom]
-            index_Nf = 3*len(index_atom) - 2
+            index_Nf = self.correction_degree_of_freedom(index_atom, 3*len(index_atom)-2)
 
             # stage 4: propagate 1/2 time step momenta & eta (again)
             internal_virial = self.NPT_space.get_internal_virial(index_atom, coordinates_all, next_forces)
@@ -798,6 +835,12 @@ class NPT_SVR(MD):
             self.eta[i] = current_eta
             self.volume[i] = current_volume
             momenta_all[index_atom] = index_momenta
+
+        new_velocities, self.d_Ee = stochastic_velocity_rescaling(time_step, np.sum(Ek_atoms[self.index_thermostat_atom]), \
+                                                                  self.K_simulation * self.Nf_thermostat_atom / self.Nf, \
+                                                                  self.Nf_thermostat_atom, self.tau_T, \
+                                                                  self.current_system.get_velocities()[self.index_thermostat_atom])
+        momenta_all[self.index_thermostat_atom] = new_velocities * self.masses[self.index_thermostat_atom]
 
         self.current_system.set_momenta(momenta_all)
 

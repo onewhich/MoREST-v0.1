@@ -173,8 +173,18 @@ class MD(initialize_sampling):
             write_xyz_traj(traj_file_name, self.current_system)
         
         ### kinetic energy at simulation temperature
-        Nf = 3 * self.n_atom
-        self.K_simulation = Nf/2 * units.kB * self.T_simulation # Ek = 1/2 m v^2 = 3/2 kB T for each particle
+        
+        Nf_fix = 0
+        if 'md_fix_atoms_all' in self.MD_parameters:
+            Nf_fix += 3 * len(self.MD_parameters['md_fix_atoms_all'])
+        if 'md_fix_atoms_x' in self.MD_parameters:
+            Nf_fix += len(self.MD_parameters['md_fix_atoms_x'])
+        if 'md_fix_atoms_y' in self.MD_parameters:
+            Nf_fix += len(self.MD_parameters['md_fix_atoms_y'])
+        if 'md_fix_atoms_z' in self.MD_parameters:
+            Nf_fix += len(self.MD_parameters['md_fix_atoms_z'])
+        self.Nf = 3 * self.n_atom - Nf_fix
+        self.K_simulation = self.Nf/2 * units.kB * self.T_simulation # Ek = 1/2 m v^2 = 3/2 kB T for each particle
 
         self.integration = MD_integration(self.many_body_potential)
 
@@ -266,6 +276,25 @@ class MD(initialize_sampling):
             self.current_system.set_velocities(velocities)
 
         return forces_all
+    
+    def correction_degree_of_freedom(self, index_atom, Nf):
+        if 'md_fix_atoms_all' in self.MD_parameters:
+            for atom in self.MD_parameters['md_fix_atoms_all']:
+                if atom in index_atom:
+                    Nf -= 3
+        if 'md_fix_atoms_x' in self.MD_parameters:
+            for atom in self.MD_parameters['md_fix_atoms_x']:
+                if atom in index_atom:
+                    Nf -= 1
+        if 'md_fix_atoms_y' in self.MD_parameters:
+            for atom in self.MD_parameters['md_fix_atoms_y']:
+                if atom in index_atom:
+                    Nf -= 1
+        if 'md_fix_atoms_z' in self.MD_parameters:
+            for atom in self.MD_parameters['md_fix_atoms_z']:
+                if atom in index_atom:
+                    Nf -= 1
+        return Nf
 
     def check_lattice_vectors_plane_barostat(self, barostat_shape):
         if 'plane' in barostat_shape:
