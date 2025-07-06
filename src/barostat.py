@@ -17,6 +17,12 @@ class barostat_space:
             if type(index) == str and index == 'all':
                 index = np.arange(self.n_atom)
                 self.barostat_parameters['barostat_action_atoms'][i] = index
+            if self.barostat_parameters['barostat_space_shape'][i].lower() == 'sphere':
+                self.barostat_space_center = self.barostat_parameters['barostat_space_parameters'][i]['barostat_sphere_center']
+            elif self.barostat_parameters['barostat_space_shape'][i].lower() == 'cuboid':
+                raise NotImplementedError("Cuboidal space has not been implemented yet.")
+            elif self.barostat_parameters['barostat_space_shape'][i].lower() == 'plane':
+                self.barostat_space_center = self.barostat_parameters['barostat_space_parameters'][i]['barostat_plane_base']
         self.P_simulation = np.array(self.P_simulation)
         #self.initialize_barostat_space_size()
         self.initialize_barostat_space_wall()
@@ -31,12 +37,10 @@ class barostat_space:
             volume = 2*(np.sum(Eks[index]) - internal_virial)/(3*self.P_simulation[i])
             if self.barostat_parameters['barostat_space_shape'][i].lower() == 'sphere':
                 self.barostat_parameters['barostat_space_size'].append(np.power((3*volume)/(4*np.pi), 1./3.))  # V = 4/3 * Pi * r^3; r = (3V/(4Pi))^(1/3)
-                self.barostat_space_center = self.barostat_parameters['barostat_space_parameters'][i]['barostat_sphere_center']
             elif self.barostat_parameters['barostat_space_shape'][i].lower() == 'cuboid':
                 raise NotImplementedError("Cuboidal space has not been implemented yet.")
             elif self.barostat_parameters['barostat_space_shape'][i].lower() == 'plane':
                 self.barostat_parameters['barostat_space_size'].append(volume / np.linalg.norm(np.cross(self.lattice_vectors[0], self.lattice_vectors[1])))
-                self.barostat_space_center = self.barostat_parameters['barostat_space_parameters'][i]['barostat_plane_base']
             else:
                 raise ValueError(f"Unsupported space shape: '{self.barostat_parameters['barostat_space_shape'][i]}'")
 
