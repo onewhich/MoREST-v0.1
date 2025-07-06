@@ -151,7 +151,7 @@ class barostat_space:
         coords = coordinates_all[index_atom]   # (M, 3)
         forces = forces_all[index_atom]        # (M, 3)
 
-        # virial tensor: W_αβ = -Σ_i r_i^α F_i^β
+        # virial tensor: W_αβ = 0.5 * Σ_i r_i^α F_i^β
         virial_tensor = 0.5 * np.einsum('ia,ib->ab', coords, forces)  # shape (3, 3)
 
         return virial_tensor
