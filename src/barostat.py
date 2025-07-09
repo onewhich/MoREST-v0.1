@@ -99,7 +99,7 @@ class barostat_space:
         return Eks
 
     @staticmethod
-    def get_internal_virial(coordinates, forces, masses):
+    def get_internal_virial(coordinates, forces, masses=None):
         """
         Approximate the virial contribution from a subset of atoms.
 
@@ -118,9 +118,9 @@ class barostat_space:
         if len(coordinates) == 0:
             return 0.0
         
-        center_of_mass = np.sum(coordinates * masses, axis=0) / np.sum(masses)
+        #center_of_mass = np.sum(coordinates * masses, axis=0) / np.sum(masses)
 
-        virial = 0.5 * np.sum(np.einsum('ij,ij->i', coordinates - center_of_mass, forces))
+        virial = 0.5 * np.sum(np.einsum('ij,ij->i', coordinates, forces))
         return virial
     
     @staticmethod
