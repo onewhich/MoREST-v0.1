@@ -33,7 +33,7 @@ class barostat_space:
         coordinates_all = self.current_system.get_positions()
         for i in range(self.barostat_parameters['barostat_number']):
             index = self.barostat_parameters['barostat_action_atoms'][i]
-            internal_virial = self.get_internal_virial(index, coordinates_all, forces_all)
+            internal_virial = self.get_internal_virial(coordinates_all[index], forces_all[index], self.masses[index])
             volume = 2*(np.sum(Eks[index]) - internal_virial)/(3*self.P_simulation[i])
             if self.barostat_parameters['barostat_space_shape'][i].lower() == 'sphere':
                 self.barostat_parameters['barostat_space_size'].append(np.power((3*volume)/(4*np.pi), 1./3.))  # V = 4/3 * Pi * r^3; r = (3V/(4Pi))^(1/3)
@@ -99,52 +99,47 @@ class barostat_space:
         return Eks
 
     @staticmethod
-    def get_internal_virial(coordinates, forces):
+    def get_internal_virial(coordinates, forces, masses):
         """
         Approximate the virial contribution from a subset of atoms.
 
         Assumes total forces are available per atom (not per pairwise interaction).
         The virial is approximated as:
-            W ≈ -sum_i (r_i · F_i), for i in index_atom
+            W ≈ 0.5 * sum_i (r_i · F_i), for i in index_atoms
 
         Parameters:
             coordinates (ndarray): shape (N, 3), positions of atoms
             forces (ndarray): shape (N, 3), total forces on atoms
+            masses (ndarray): shape (N, 1), masses of atoms
 
         Returns:
             float: scalar virial of the specified group
         """
         if len(coordinates) == 0:
             return 0.0
+        
+        center_of_mass = np.sum(coordinates * masses, axis=0) / np.sum(masses)
 
-        virial = 0.5 * np.sum(np.einsum('ij,ij->i', coordinates, forces))
+        virial = 0.5 * np.sum(np.einsum('ij,ij->i', coordinates - center_of_mass, forces))
         return virial
     
     @staticmethod
-    def get_internal_virial_tensor(index_atom, coordinates_all, forces_all):
+    def get_internal_virial_tensor(coordinates, forces):
         """
         Compute the virial tensor (3x3) for a group of atoms.
 
         Parameters:
-            index_atom (array-like): indices of atoms in the group
-            coordinates_all (ndarray): shape (N, 3), positions of all atoms
-            forces_all (ndarray): shape (N, 3), forces on all atoms
+            coordinates (ndarray): shape (N, 3), positions of atoms
+            forces (ndarray): shape (N, 3), forces on atoms
 
         Returns:
             ndarray: (3, 3) virial tensor
         """
-        index_atom = np.asarray(index_atom, dtype=int)
-        if len(index_atom) == 0:
+        if len(coordinates) == 0:
             return np.zeros((3, 3))
-        
-        if np.any(index_atom < 0) or np.any(index_atom >= coordinates_all.shape[0]):
-            raise IndexError("index_atom contains out-of-bounds indices")
-        
-        coords = coordinates_all[index_atom]   # (M, 3)
-        forces = forces_all[index_atom]        # (M, 3)
 
         # virial tensor: W_αβ = 0.5 * Σ_i r_i^α F_i^β
-        virial_tensor = 0.5 * np.einsum('ia,ib->ab', coords, forces)  # shape (3, 3)
+        virial_tensor = 0.5 * np.einsum('ia,ib->ab', coordinates, forces)  # shape (3, 3)
 
         return virial_tensor
 
@@ -200,7 +195,7 @@ class barostat_space:
         Returns:
             Instantaneous pressure
         """
-        return (np.sum(Ek_atoms) * 2 + internal_virial) / (3 * volume)
+        return (np.sum(Ek_atoms) + internal_virial) * 2 / (3 * volume)
 
     def update_barostat_space_wall(self):
         for i in range(self.barostat_parameters['barostat_number']):
@@ -235,7 +230,7 @@ def Berendsen_volume_rescaling(barostat_parameters, time_step, coordinates_all, 
     volume = np.zeros(len(P_simulation))
     for i in range(barostat_parameters['barostat_number']):
         index_atom = barostat_parameters['barostat_action_atoms'][i]
-        internal_virial = barostat_space.get_internal_virial(index_atom, coordinates_all, forces_all)
+        internal_virial = barostat_space.get_internal_virial(coordinates_all[index_atom], forces_all[index_atom], masses[index_atom])
         volume[i] = barostat_space.get_volume(barostat_parameters['barostat_space_shape'][i], barostat_parameters['barostat_space_size'][i], lattice_vectors)
         P_current[i] = barostat_space.get_pressure(Eks[index_atom], internal_virial, volume[i])
         # factor_mu = 1-time_step*factor_Z/tau_P/3.*(P_simulation[i]-P_current[i])
