@@ -99,7 +99,7 @@ class barostat_space:
         return Eks
 
     @staticmethod
-    def get_internal_virial(index_atom, coordinates_all, forces_all):
+    def get_internal_virial(coordinates, forces):
         """
         Approximate the virial contribution from a subset of atoms.
 
@@ -108,24 +108,16 @@ class barostat_space:
             W ≈ -sum_i (r_i · F_i), for i in index_atom
 
         Parameters:
-            index_atom (array-like): indices of atoms in the group of interest
-            coordinates_all (ndarray): shape (N, 3), positions of all atoms
-            forces_all (ndarray): shape (N, 3), total forces on all atoms
+            coordinates (ndarray): shape (N, 3), positions of atoms
+            forces (ndarray): shape (N, 3), total forces on atoms
 
         Returns:
             float: scalar virial of the specified group
         """
-        index_atom = np.asarray(index_atom, dtype=int)
-        if len(index_atom) == 0:
+        if len(coordinates) == 0:
             return 0.0
-        n_atom_all = coordinates_all.shape[0]
-        if np.any(index_atom >= n_atom_all) or np.any(index_atom < 0):
-            raise IndexError("index_atom contains out-of-bounds index")
 
-        coords = coordinates_all[index_atom]   # shape (M, 3)
-        forces = forces_all[index_atom]        # shape (M, 3)
-
-        virial = 0.5 * np.sum(np.einsum('ij,ij->i', coords, forces))
+        virial = 0.5 * np.sum(np.einsum('ij,ij->i', coordinates, forces))
         return virial
     
     @staticmethod
