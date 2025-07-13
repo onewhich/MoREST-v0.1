@@ -216,11 +216,11 @@ class collective_variables:
 
     def exp_r(self, system, group_1, group_2):
         R = self.distance(system, group_1, group_2)
-        return np.exp(1/R)
+        return np.exp(-R)
 
     def inverse_r_exp_r(self, system, group_1, group_2):
-        inverse_R = 1/self.distance(system, group_1, group_2)
-        return np.array([inverse_R, np.exp(inverse_R)])
+        R = self.distance(system, group_1, group_2)
+        return np.array([1/R, np.exp(-R)])
 
     def min_distance(self, system, group_list):
         R_list = []
