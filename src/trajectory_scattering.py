@@ -7,7 +7,7 @@ from initialize_calculator import initialize_calculator
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution
 # Stationary and ZeroRotation from ase will not change the total kinetic energy, the vibrational energy will arise after these two processes.
 from kinetic_energy_assignment import clean_translation, clean_rotation, clean_translation_vm
-from numerical_integraion import MD_integration
+from numerical_integration import MD_integration
 from ase import units
 
 class initialize_scattering(initialize_calculator):

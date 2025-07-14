@@ -3,7 +3,7 @@ from scipy.optimize import minimize
 from scipy.sparse.linalg import eigsh
 from structure_io import read_xyz_file, read_xyz_traj, write_xyz_traj, write_xyz_file
 from initialize_calculator import initialize_calculator
-from numerical_integraion import MD_integration
+from numerical_integration import MD_integration
 # Stationary and ZeroRotation from ase will not change the total kinetic energy, the vibrational energy will arise after these two processes.
 from kinetic_energy_assignment import clean_translation
 from ase import units
