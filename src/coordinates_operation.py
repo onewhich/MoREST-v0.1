@@ -34,7 +34,7 @@ def rotate_system_at_center(system, theta, unit_normal_vector, center=[0., 0., 0
     unit_normal_vector = unit_normal_vector / norm_n
 
     if isinstance(center, (list, np.ndarray)):
-        center = np.array(center)
+        center = np.array(center, dtype=float)
     elif center.lower() == 'geometry':
         center = np.sum(coordinates, axis=0)/len(coordinates)
     elif center.lower() == 'mass':
