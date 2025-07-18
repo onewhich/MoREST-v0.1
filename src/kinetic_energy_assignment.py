@@ -49,7 +49,10 @@ def get_kinetic_energies(system):
 
     return E_translation, E_rotation, E_vibration
     
-
+def get_translation_momenta(system):
+    masses = system.get_masses()[:, np.newaxis]
+    velocities = system.get_velocities()
+    return np.sum(masses * velocities, axis=0)
 
 def get_translation_velocities(system):
     masses = system.get_masses()[:,np.newaxis]

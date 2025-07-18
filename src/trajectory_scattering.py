@@ -7,6 +7,7 @@ from initialize_calculator import initialize_calculator
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution
 # Stationary and ZeroRotation from ase will not change the total kinetic energy, the vibrational energy will arise after these two processes.
 from kinetic_energy_assignment import clean_translation, clean_rotation, clean_translation_vm
+from coordinates_operation import reset_mass_center
 from numerical_integration import MD_integration
 from ase import units
 
@@ -74,9 +75,9 @@ class initialize_scattering(initialize_calculator):
             clean_rotation(incident_molecule)
             clean_rotation(target_molecule)
         clean_translation(incident_molecule)
-        self.reset_mass_center(incident_molecule)
+        reset_mass_center(incident_molecule)
         clean_translation(target_molecule)
-        self.reset_mass_center(target_molecule)
+        reset_mass_center(target_molecule)
 
         # uniform sampling on a sphere for inciden point and on a disc for target point.
         if not self.scattering_parameters['scattering_fix_incident']:
@@ -224,127 +225,6 @@ class initialize_scattering(initialize_calculator):
         
         self.current_step += 1
     
-    @staticmethod
-    def reset_geometric_center(system):
-        '''
-        set the geometric center to [0,0,0]
-        '''
-        coordinates = system.get_positions()
-        n_atom = system.get_global_number_of_atoms()
-        geometric_center = np.sum(coordinates, axis=0)/n_atom
-        system.set_positions(coordinates - geometric_center)
-
-    @staticmethod
-    def reset_mass_center(system):
-        '''
-        set the mass center to [0,0,0]
-        '''
-        coordinates = system.get_positions()
-        masses = system.get_masses()[:,np.newaxis]
-        mass_center = np.sum(masses*coordinates, axis=0)/np.sum(masses)
-        system.set_positions(coordinates - mass_center)
-
-    @staticmethod
-    def get_translational_momentum(system):
-        n_atom = system.get_global_number_of_atoms()
-        return np.sum(system.get_momenta(), axis=0)/n_atom
-
-    @staticmethod
-    def get_translational_velocity(system):
-        n_atom = system.get_global_number_of_atoms()
-        return np.sum(system.get_velocities(),axis=0)/n_atom
-
-    @staticmethod
-    def rotate_system_at_center(system, theta, unit_normal_vector, center=[0,0,0]):
-        '''
-        theta: angles, in degree
-        center: 1-D list of 3 numbers (define the position of the center), or 'geometry' (calculate geometric center), or 'mass' (calculate mass' center)
-        r x r' = n,
-        when r and n are orthogonal, r' = (n x r) / (|r|*|n|) * r +  cos(theta) * r
-        '''
-        # (r x r_new) / (|r| * |r_new|) = sin(theta) * unit_normal_vector, where |r| == |r_new|
-        # r x r_new = sin(theta) * unit_normal_vector * |r|^2
-        theta = np.deg2rad(theta)
-        unit_normal_vector = np.array(unit_normal_vector)
-        unit_normal_vector = unit_normal_vector / np.linalg.norm(unit_normal_vector)
-        coordinates = system.get_positions()
-        if type(center) == list:
-            center = np.array(center)
-        elif center.lower() == 'geometry':
-            center = np.sum(coordinates, axis=0)/len(coordinates)
-        elif center.lower() == 'mass':
-            #masses = system.get_masses()[:,np.newaxis]
-            #center = np.sum(masses*coordinates, axis=0)/np.sum(masses)
-            center = system.get_center_of_mass()
-        coordinates = coordinates - center
-
-        r_cross_r_new = np.sin(theta) * unit_normal_vector
-        r = np.linalg.norm(coordinates, axis=1)[:,np.newaxis]
-        r2 = r**2
-        r_cross_r_new = r_cross_r_new * r2
-
-        system_new = system.copy()
-        coordinates_new = np.cross(r_cross_r_new, coordinates) / r2 + np.cos(theta) * coordinates
-        system_new.set_positions(coordinates_new)
-
-        return system_new
-
-    def rotate_at_center(coordinates, theta, unit_normal_vector, center=np.array([0, 0, 0], dtype=float)):
-        """
-        Rotates a set of coordinates around a specified center point
-        by an angle theta about an arbitrary axis defined by a unit normal vector.
-
-        Args:
-            coordinates (np.ndarray): An N x 3 numpy array of points to rotate.
-            theta (float): The angle of rotation in radians.
-            unit_normal_vector (np.ndarray): A 3-element numpy array representing the
-                                            unit vector of the rotation axis.
-            center (np.ndarray, optional): A 3-element numpy array representing the
-                                        center of rotation. Defaults to [0,0,0]
-                                        if None is provided.
-
-        Returns:
-            np.ndarray: The N x 3 numpy array of rotated coordinates.
-        """
-
-        center = np.array(center, dtype=float)
-
-        unit_normal_vector = np.array(unit_normal_vector, dtype=float)
-        
-        # Ensure the normal vector is a unit vector
-        norm_n = np.linalg.norm(unit_normal_vector)
-        if norm_n == 0:
-            raise ValueError("The unit_normal_vector cannot be a zero vector.")
-        unit_normal_vector = unit_normal_vector / norm_n
-
-        # Convert coordinates to numpy array and shift to origin for rotation
-        coordinates = np.array(coordinates, dtype=float)
-        shifted_coordinates = coordinates - center
-
-        # Apply Rodrigues' Rotation Formula
-        # v_rot = v * cos(theta) + (k x v) * sin(theta) + k * (k . v) * (1 - cos(theta))
-
-        # Component 1: v * cos(theta)
-        term1 = shifted_coordinates * np.cos(theta)
-
-        # Component 2: (k x v) * sin(theta)
-        # np.cross handles broadcasting when one argument has more dimensions
-        term2 = np.cross(unit_normal_vector, shifted_coordinates) * np.sin(theta)
-
-        # Component 3: k * (k . v) * (1 - cos(theta))
-        # np.dot(shifted_coordinates, unit_normal_vector) computes the dot product
-        # for each row of shifted_coordinates with unit_normal_vector
-        term3_scalar = np.dot(shifted_coordinates, unit_normal_vector) * (1 - np.cos(theta))
-        term3 = unit_normal_vector * term3_scalar[:, np.newaxis] # Reshape term3_scalar for broadcasting
-
-        # Sum the terms
-        rotated_coordinates = term1 + term2 + term3
-
-        # Shift coordinates back from origin
-        rotated_coordinates_shifted_back = rotated_coordinates + center
-
-        return rotated_coordinates_shifted_back
-
     @staticmethod
     def write_MD_log(MD_log, step, Ep, Ek, masses):
         try:
