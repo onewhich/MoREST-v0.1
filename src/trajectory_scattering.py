@@ -270,9 +270,9 @@ class initialize_scattering(initialize_calculator):
         coordinates = system.get_positions()
         if type(center) == list:
             center = np.array(center)
-        elif center.upper() == 'geometry'.upper():
+        elif center.lower() == 'geometry':
             center = np.sum(coordinates, axis=0)/len(coordinates)
-        elif center.upper() == 'mass'.upper():
+        elif center.lower() == 'mass':
             #masses = system.get_masses()[:,np.newaxis]
             #center = np.sum(masses*coordinates, axis=0)/np.sum(masses)
             center = system.get_center_of_mass()
