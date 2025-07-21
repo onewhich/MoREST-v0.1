@@ -201,7 +201,13 @@ class barostat_space:
         for i in range(self.barostat_parameters['barostat_number']):
             if self.barostat_parameters['barostat_space_shape'][i].lower() == 'sphere':
                 self.barostat_space_wall_parameters['wall_shape_parameters'][i]['spherical_wall_radius'] = \
-                                                                                self.barostat_parameters['barostat_space_size'][i]
+                    self.barostat_parameters['barostat_space_size'][i]
+            elif self.barostat_parameters['barostat_space_shape'][i].lower() == 'cuboid':
+                raise Exception('Cuboidal space has not been implemented yet.')
+            elif self.barostat_parameters['barostat_space_shape'][i].lower() == 'plane':
+                tmp_x, tmp_y, tmp_z = self.barostat_parameters['barostat_space_parameters'][i]['barostat_plane_base']
+                self.barostat_space_wall_parameters['wall_shape_parameters'][i]['planar_wall_point'] = \
+                    np.array([tmp_x, tmp_y, tmp_z+self.barostat_parameters['barostat_space_size'][i]])
         self.barostat_space_wall.update_wall_parameters(self.barostat_space_wall_parameters)
 
     def get_barostat_space_bias_forces(self):

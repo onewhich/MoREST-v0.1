@@ -294,6 +294,8 @@ class NPH_SVR(MD):
         self.P_current = np.zeros(self.MD_parameters['barostat_number'])
         # N_f = 3 * N - 3 + 1, remove the center of mass DOF, add the barostat volume DOF
         self.W_barostat = np.sum(self.masses) * self.tau_P**2
+        if not self.sampling_parameters['sampling_initialization']:
+            self.MD_parameters['barostat_space_size'] = self.current_system.info.get('barostat_space_size')
 
         Ek_atoms = self.NPH_space.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
         Ek_t = self.current_system.get_kinetic_energy()
@@ -407,6 +409,7 @@ class NPH_SVR(MD):
             momenta_all[index_atom] = index_momenta
 
         self.current_system.set_momenta(momenta_all)
+        self.current_system.info['barostat_space_size'] = self.MD_parameters['barostat_space_size']
         
         self.NPH_space.update_barostat_space_wall()
         self.update_step(next_potential_energy, next_forces)
@@ -448,6 +451,8 @@ class NPT_Berendsen(MD):
         # factor_z (compressibility) and tau_p can be combined into single parameter, tau_P,
         # because factor_Z is only used in conjunction with tau_P.
         # init_miu = np.ones(self.MD_parameters['barostat_number']) # the first rescaling factor should be one for each barostat space
+        if not self.sampling_parameters['sampling_initialization']:
+            self.MD_parameters['barostat_space_size'] = self.current_system.info.get('barostat_space_size')
 
         new_velocities = Berendsen_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.Nf, \
                                                       self.T_simulation, self.tau_T, self.current_system.get_velocities())
@@ -495,8 +500,9 @@ class NPT_Berendsen(MD):
                                                             self.current_system.get_forces(), new_velocities, self.masses, self.P_simulation, self.tau_P, \
                                                             self.lattice_vectors)
         self.current_system.set_positions(new_coordinates)
+        self.current_system.info['barostat_space_size'] = self.MD_parameters['barostat_space_size']
+
         self.NPT_space.update_barostat_space_wall()
-        
         self.update_step(next_potential_energy, next_forces)
 
         H_enthalpy = Berendsen_enthalpy(self.current_system.get_kinetic_energy(), self.current_potential_energy, P_current, volume)
@@ -535,6 +541,8 @@ class NPT_Langevin(MD):
         # N_f = 3 * N - 3 + 1, remove the center of mass DOF, add the barostat volume DOF
         self.Nf_all = 3*self.n_atom - 2
         self.W_barostat = self.Nf_all * units.kB * self.T_simulation * self.tau_P**2
+        if not self.sampling_parameters['sampling_initialization']:
+            self.MD_parameters['barostat_space_size'] = self.current_system.info.get('barostat_space_size')
 
         Ek_atoms = self.NPT_space.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
         Ek_t = self.current_system.get_kinetic_energy()
@@ -666,6 +674,7 @@ class NPT_Langevin(MD):
         momenta_all[self.index_thermostat_atom] = new_velocities * self.masses[self.index_thermostat_atom]
 
         self.current_system.set_momenta(momenta_all)
+        self.current_system.info['barostat_space_size'] = self.MD_parameters['barostat_space_size']
 
         self.NPT_space.update_barostat_space_wall()
         self.update_step(next_potential_energy, next_forces)
@@ -708,6 +717,8 @@ class NPT_SVR(MD):
         # N_f = 3 * N - 3 + 1, remove the center of mass DOF, add the barostat volume DOF
         self.Nf_all = 3*self.n_atom - 2
         self.W_barostat = self.Nf_all * units.kB * self.T_simulation * self.tau_P**2
+        if not self.sampling_parameters['sampling_initialization']:
+            self.MD_parameters['barostat_space_size'] = self.current_system.info.get('barostat_space_size')
 
         Ek_atoms = self.NPT_space.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
         Ek_t = self.current_system.get_kinetic_energy()
@@ -843,6 +854,7 @@ class NPT_SVR(MD):
         momenta_all[self.index_thermostat_atom] = new_velocities * self.masses[self.index_thermostat_atom]
 
         self.current_system.set_momenta(momenta_all)
+        self.current_system.info['barostat_space_size'] = self.MD_parameters['barostat_space_size']
 
         self.NPT_space.update_barostat_space_wall()
         self.update_step(next_potential_energy, next_forces)
