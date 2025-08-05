@@ -25,8 +25,8 @@ class RP_NVE_VV(RPMD):
         else:
             self.RPMD_log = open(self.log_file_name, 'a', buffering=1)
 
-    def generate_new_step(self, time_step=None, bias_forces=None, updated_current_beads=None):
-        time_step = self.RPMD_update_pre_step(time_step, bias_forces, updated_current_beads)
+    def generate_new_step(self, time_step=None, bias_forces=None, wall_potential=None, updated_current_beads=None):
+        time_step = self.RPMD_update_pre_step(time_step, bias_forces, wall_potential, updated_current_beads)
 
         self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta = \
             self.integration.RP_velocity_Verlet(time_step, self.current_beads, self.current_beads_forces, self.masses)
@@ -71,8 +71,8 @@ class RP_NVK_VR(RPMD):
         else:
             self.RPMD_log = open(self.log_file_name, 'a', buffering=1)
 
-    def generate_new_step(self, time_step=None, bias_forces=None, updated_current_beads=None):
-        time_step = self.RPMD_update_pre_step(time_step, bias_forces, updated_current_beads)
+    def generate_new_step(self, time_step=None, bias_forces=None, wall_potential=None, updated_current_beads=None):
+        time_step = self.RPMD_update_pre_step(time_step, bias_forces, wall_potential, updated_current_beads)
 
         self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta = \
             self.integration.RP_velocity_Verlet(time_step, self.current_beads, self.current_beads_forces, self.masses)
@@ -123,8 +123,8 @@ class RP_NVT_Berendsen(RPMD):
         else:
             self.RPMD_log = open(self.log_file_name, 'a', buffering=1)
 
-    def generate_new_step(self, time_step=None, bias_forces=None, updated_current_beads=None):
-        time_step = self.RPMD_update_pre_step(time_step, bias_forces, updated_current_beads)
+    def generate_new_step(self, time_step=None, bias_forces=None, wall_potential=None, updated_current_beads=None):
+        time_step = self.RPMD_update_pre_step(time_step, bias_forces, wall_potential, updated_current_beads)
 
         self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta = \
             self.integration.RP_velocity_Verlet(time_step, self.current_beads, self.current_beads_forces, self.masses)
@@ -178,8 +178,8 @@ class RP_NVT_Langevin(RPMD):
         else:
             self.RPMD_log = open(self.log_file_name, 'a', buffering=1)
 
-    def generate_new_step(self, time_step=None, bias_forces=None, updated_current_beads=None):
-        time_step = self.RPMD_update_pre_step(time_step, bias_forces, updated_current_beads)
+    def generate_new_step(self, time_step=None, bias_forces=None, wall_potential=None, updated_current_beads=None):
+        time_step = self.RPMD_update_pre_step(time_step, bias_forces, wall_potential, updated_current_beads)
 
         self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta = \
             self.integration.RP_velocity_Verlet(time_step, self.current_beads, self.current_beads_forces, self.masses)
@@ -237,8 +237,8 @@ class RP_NVT_SVR(RPMD):
         else:
             self.RPMD_log = open(self.log_file_name, 'a', buffering=1)
 
-    def generate_new_step(self, time_step=None, bias_forces=None, updated_current_beads=None):
-        time_step = self.RPMD_update_pre_step(time_step, bias_forces, updated_current_beads)
+    def generate_new_step(self, time_step=None, bias_forces=None, wall_potential=None, updated_current_beads=None):
+        time_step = self.RPMD_update_pre_step(time_step, bias_forces, wall_potential, updated_current_beads)
 
         self.current_beads_potential_energy, self.current_beads_forces, current_beads_positions, current_beads_momenta = \
             self.integration.RP_velocity_Verlet(time_step, self.current_beads, self.current_beads_forces, self.masses)

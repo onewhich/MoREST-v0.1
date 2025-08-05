@@ -32,15 +32,7 @@ class NVE_VV(MD):
             self.MD_log = open(self.log_file_name, 'a', buffering=1)
 
     def generate_new_step(self, time_step=None, bias_forces=None, wall_potential=None, updated_current_system=None):
-        if (bias_forces == None) and (wall_potential != None):
-            bias_forces = wall_potential(self.current_system.get_positions())
-        elif (bias_forces != None) and (wall_potential == None):
-            bias_forces = bias_forces
-        elif (bias_forces != None) and (wall_potential != None):
-            bias_forces += wall_potential(self.current_system.get_positions())
-        else:
-            bias_forces = None
-        time_step = self.update_pre_step(time_step, bias_forces, updated_current_system)
+        time_step = self.update_pre_step(time_step, bias_forces, wall_potential, updated_current_system)
 
         next_potential_energy, next_forces = self.integration.velocity_Verlet(time_step, self.current_system, self.current_forces, self.masses)
             
@@ -79,15 +71,7 @@ class NVK_VR(MD):
             self.MD_log = open(self.log_file_name, 'a', buffering=1)
 
     def generate_new_step(self, time_step=None, bias_forces=None, wall_potential=None, updated_current_system=None):
-        if (bias_forces == None) and (wall_potential != None):
-            bias_forces = wall_potential(self.current_system.get_positions())
-        elif (bias_forces != None) and (wall_potential == None):
-            bias_forces = bias_forces
-        elif (bias_forces != None) and (wall_potential != None):
-            bias_forces += wall_potential(self.current_system.get_positions())
-        else:
-            bias_forces = None
-        time_step = self.update_pre_step(time_step, bias_forces, updated_current_system)
+        time_step = self.update_pre_step(time_step, bias_forces, wall_potential, updated_current_system)
             
         next_potential_energy, next_forces = self.integration.velocity_Verlet(time_step, self.current_system, self.current_forces, self.masses)
         new_velocities = velocity_rescaling(self.sampling_parameters['nvk_vr_dt'], self.T_simulation, self.current_system.get_kinetic_energy(), \
@@ -130,15 +114,7 @@ class NVT_Berendsen(MD):
             self.MD_log = open(self.log_file_name, 'a', buffering=1)
 
     def generate_new_step(self, time_step=None, bias_forces=None, wall_potential=None, updated_current_system=None):
-        if (bias_forces == None) and (wall_potential != None):
-            bias_forces = wall_potential(self.current_system.get_positions())
-        elif (bias_forces != None) and (wall_potential == None):
-            bias_forces = bias_forces
-        elif (bias_forces != None) and (wall_potential != None):
-            bias_forces += wall_potential(self.current_system.get_positions())
-        else:
-            bias_forces = None
-        time_step = self.update_pre_step(time_step, bias_forces, updated_current_system)
+        time_step = self.update_pre_step(time_step, bias_forces, wall_potential, updated_current_system)
             
         next_potential_energy, next_forces = self.integration.velocity_Verlet(time_step, self.current_system, self.current_forces, self.masses)
         new_velocities = Berendsen_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.Nf, self.T_simulation, \
@@ -186,15 +162,7 @@ class NVT_Langevin(MD):
             #self.Wt =  0
 
     def generate_new_step(self, time_step=None, bias_forces=None, wall_potential=None, updated_current_system=None):
-        if (bias_forces == None) and (wall_potential != None):
-            bias_forces = wall_potential(self.current_system.get_positions())
-        elif (bias_forces != None) and (wall_potential == None):
-            bias_forces = bias_forces
-        elif (bias_forces != None) and (wall_potential != None):
-            bias_forces += wall_potential(self.current_system.get_positions())
-        else:
-            bias_forces = None
-        time_step = self.update_pre_step(time_step, bias_forces, updated_current_system)
+        time_step = self.update_pre_step(time_step, bias_forces, wall_potential, updated_current_system)
             
         next_potential_energy, next_forces = self.integration.velocity_Verlet(time_step, self.current_system, self.current_forces, self.masses)
         new_velocities, self.d_Ee = Langevin_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.K_simulation, \
@@ -244,15 +212,7 @@ class NVT_SVR(MD):
             #self.Wt =  0
 
     def generate_new_step(self, time_step=None, bias_forces=None, wall_potential=None, updated_current_system=None):
-        if (bias_forces == None) and (wall_potential != None):
-            bias_forces = wall_potential(self.current_system.get_positions())
-        elif (bias_forces != None) and (wall_potential == None):
-            bias_forces = bias_forces
-        elif (bias_forces != None) and (wall_potential != None):
-            bias_forces += wall_potential(self.current_system.get_positions())
-        else:
-            bias_forces = None
-        time_step = self.update_pre_step(time_step, bias_forces, updated_current_system)
+        time_step = self.update_pre_step(time_step, bias_forces, wall_potential, updated_current_system)
             
         next_potential_energy, next_forces = self.integration.velocity_Verlet(time_step, self.current_system, self.current_forces, self.masses)
         new_velocities, self.d_Ee = stochastic_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.K_simulation, \
@@ -335,7 +295,7 @@ class NPH_SVR(MD):
             bias_forces = NPH_bias_forces
         total_forces = next_forces + bias_forces
 
-        time_step = self.update_pre_step(time_step, None, updated_current_system)
+        time_step = self.update_pre_step(time_step, None, None, updated_current_system)
         total_forces = self.fix_atoms(total_forces)
         half_time_step = 0.5 * time_step
 
@@ -479,17 +439,12 @@ class NPT_Berendsen(MD):
 
     def generate_new_step(self, time_step=None, bias_forces=None, wall_potential=None, updated_current_system=None):
         NPT_bias_forces = self.NPT_space.get_barostat_space_bias_forces()
-        if (bias_forces == None) and (wall_potential != None):
-            bias_forces = NPT_bias_forces + wall_potential(self.current_system.get_positions())
-        elif (bias_forces != None) and (wall_potential == None):
-            bias_forces += NPT_bias_forces
-        elif (bias_forces != None) and (wall_potential != None):
-            bias_forces += wall_potential(self.current_system.get_positions())
+        if bias_forces != None:
             bias_forces += NPT_bias_forces
         else:
             bias_forces = NPT_bias_forces
 
-        time_step = self.update_pre_step(time_step, bias_forces, updated_current_system)
+        time_step = self.update_pre_step(time_step, bias_forces, wall_potential, updated_current_system)
 
         next_potential_energy, next_forces = self.integration.velocity_Verlet(time_step, self.current_system, self.current_forces, self.masses)
 
@@ -584,7 +539,7 @@ class NPT_Langevin(MD):
             bias_forces = NPT_bias_forces
         total_forces = self.current_forces + bias_forces
 
-        time_step = self.update_pre_step(time_step, None, updated_current_system)
+        time_step = self.update_pre_step(time_step, None, None, updated_current_system)
         total_forces = self.fix_atoms(total_forces)
         half_time_step = 0.5 * time_step
 
@@ -760,7 +715,7 @@ class NPT_SVR(MD):
             bias_forces = NPT_bias_forces
         total_forces = self.current_forces + bias_forces
 
-        time_step = self.update_pre_step(time_step, None, updated_current_system)
+        time_step = self.update_pre_step(time_step, None, None, updated_current_system)
         total_forces = self.fix_atoms(total_forces)
         half_time_step = 0.5 * time_step
 

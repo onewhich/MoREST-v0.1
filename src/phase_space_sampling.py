@@ -188,16 +188,21 @@ class MD(initialize_sampling):
 
         self.integration = MD_integration(self.many_body_potential)
 
-    def update_pre_step(self, time_step=None, bias_forces=None, updated_current_system=None):
-        if type(time_step) == type(None):
+    def update_pre_step(self, time_step=None, bias_forces=None, wall_potential=None, updated_current_system=None):
+        if time_step == None:
             time_step = self.time_step
 
-        if type(updated_current_system) != type(None):
+        if updated_current_system != None:
             self.current_system = updated_current_system
-        
-        ### F(t) + bias
-        if type(bias_forces) != type(None):
+            self.current_forces = self.current_system.get_forces()
+            self.current_potential_energy = self.current_system.get_potential_energy()
+
+        if (bias_forces == None) and (wall_potential != None):
+            self.current_forces = self.current_forces + wall_potential(self.current_system.get_positions())
+        elif (bias_forces != None) and (wall_potential == None):
             self.current_forces = self.current_forces + bias_forces
+        elif (bias_forces != None) and (wall_potential != None):
+            self.current_forces = self.current_forces + bias_forces + wall_potential(self.current_system.get_positions())
 
         if 'md_fix_atoms_all' in self.MD_parameters:
             velocities = self.current_system.get_velocities()
@@ -452,17 +457,31 @@ class RPMD(initialize_sampling):
             tmp_system.set_positions(tmp_pos)
             self.current_beads.append(tmp_system)
 
-    def RPMD_update_pre_step(self, time_step=None, bias_forces=None, updated_current_beads=None):
-        if type(updated_current_beads) != type(None):
+    def RPMD_update_pre_step(self, time_step=None, bias_forces=None, wall_potential=None, updated_current_beads=None):
+        if updated_current_beads != None:
             self.current_beads = updated_current_beads
+            self.current_beads_potential_energy, self.current_beads_forces = self.get_beads_potential_forces(self.current_beads)
+            self.current_beads_positions = self.get_beads_positions(self.current_beads)
+            self.current_beads_momenta = self.get_beads_momenta(self.current_beads)
+            self.update_centroid_positions_momenta(self.current_beads)
+            self.update_centroid_potential_energy_forces(self.current_beads_potential_energy, self.current_beads_forces)
         
-        ### F(t) + bias
-        if type(bias_forces) != type(None):
+        if (bias_forces == None) and (wall_potential != None):
+            beads_positions = self.get_beads_positions(self.current_beads)
+            for i in range(self.n_beads):
+                current_forces = self.current_beads_forces[i]
+                self.current_beads_forces[i] = current_forces + wall_potential(beads_positions[i])
+        elif (bias_forces != None) and (wall_potential == None):
             for i in range(self.n_beads):
                 current_forces = self.current_beads_forces[i]
                 self.current_beads_forces[i] = current_forces + bias_forces
-            
-        if type(time_step) == type(None):
+        elif (bias_forces != None) and (wall_potential != None):
+            beads_positions = self.get_beads_positions(self.current_beads)
+            for i in range(self.n_beads):
+                current_forces = self.current_beads_forces[i]
+                self.current_beads_forces[i] = current_forces + bias_forces + wall_potential(beads_positions[i])
+
+        if time_step == None:
             time_step = self.time_step
 
         return time_step
