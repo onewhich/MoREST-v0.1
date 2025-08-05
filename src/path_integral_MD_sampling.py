@@ -177,6 +177,7 @@ class RP_NVT_Langevin(RPMD):
                                             np.mean(self.get_beads_kinetic_energy(self.current_beads)), self.masses, 0, self.d_Ee)
         else:
             self.RPMD_log = open(self.log_file_name, 'a', buffering=1)
+            self.Ee = 0
 
     def generate_new_step(self, time_step=None, bias_forces=None, wall_potential=None, updated_current_beads=None):
         time_step = self.RPMD_update_pre_step(time_step, bias_forces, wall_potential, updated_current_beads)
@@ -236,6 +237,7 @@ class RP_NVT_SVR(RPMD):
                                             np.mean(self.get_beads_kinetic_energy(self.current_beads)), self.masses, 0, self.d_Ee)
         else:
             self.RPMD_log = open(self.log_file_name, 'a', buffering=1)
+            self.Ee = 0
 
     def generate_new_step(self, time_step=None, bias_forces=None, wall_potential=None, updated_current_beads=None):
         time_step = self.RPMD_update_pre_step(time_step, bias_forces, wall_potential, updated_current_beads)
