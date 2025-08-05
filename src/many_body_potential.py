@@ -126,7 +126,7 @@ class ml_potential(Calculator):
         #if type(system_list) != list:
         #    raise ValueError
         #representation_list = [generate_representation.generate_Al2F2_representation(i_system) for i_system in system_list]
-        representation_list = generate_representation(system_list).inverse_r_exp_r_unsorted()
+        representation_list = generate_representation(system_list).inverse_r_exp_r()
         if self.additional_features == None:
             representation_list = representation_list
         else:
@@ -270,7 +270,7 @@ class ml_potential(Calculator):
         #self.log_morest.write("Model is training.\n")
         if len(self.training_set) < 1:
             raise Exception('The training set has no system.')
-        x_train = generate_representation(self.training_set).inverse_r_exp_r_unsorted()
+        x_train = generate_representation(self.training_set).inverse_r_exp_r()
         if self.additional_features == None:
             x_train = x_train
         else:
