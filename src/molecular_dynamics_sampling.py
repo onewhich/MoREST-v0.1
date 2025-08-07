@@ -255,7 +255,9 @@ class NPH_SVR(MD):
         # N_f = 3 * N - 3 + 1, remove the center of mass DOF, add the barostat volume DOF
         self.W_barostat = np.sum(self.masses) * self.tau_P**2
         if not self.sampling_parameters['sampling_initialization']:
-            self.MD_parameters['barostat_space_size'] = self.current_system.info.get('barostat_space_size')
+            tmp_barostat_space_size = self.current_system.info.get('barostat_space_size')
+            if type(tmp_barostat_space_size) == float or type(tmp_barostat_space_size) == int:
+                self.MD_parameters['barostat_space_size'] = [tmp_barostat_space_size]
 
         Ek_atoms = self.NPH_space.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
         Ek_t = self.current_system.get_kinetic_energy()
@@ -412,7 +414,9 @@ class NPT_Berendsen(MD):
         # because factor_Z is only used in conjunction with tau_P.
         # init_miu = np.ones(self.MD_parameters['barostat_number']) # the first rescaling factor should be one for each barostat space
         if not self.sampling_parameters['sampling_initialization']:
-            self.MD_parameters['barostat_space_size'] = self.current_system.info.get('barostat_space_size')
+            tmp_barostat_space_size = self.current_system.info.get('barostat_space_size')
+            if type(tmp_barostat_space_size) == float or type(tmp_barostat_space_size) == int:
+                self.MD_parameters['barostat_space_size'] = [tmp_barostat_space_size]
 
         new_velocities = Berendsen_velocity_rescaling(self.time_step, self.current_system.get_kinetic_energy(), self.Nf, \
                                                       self.T_simulation, self.tau_T, self.current_system.get_velocities())
@@ -497,7 +501,9 @@ class NPT_Langevin(MD):
         self.Nf_all = 3*self.n_atom - 2
         self.W_barostat = self.Nf_all * units.kB * self.T_simulation * self.tau_P**2
         if not self.sampling_parameters['sampling_initialization']:
-            self.MD_parameters['barostat_space_size'] = self.current_system.info.get('barostat_space_size')
+            tmp_barostat_space_size = self.current_system.info.get('barostat_space_size')
+            if type(tmp_barostat_space_size) == float or type(tmp_barostat_space_size) == int:
+                self.MD_parameters['barostat_space_size'] = [tmp_barostat_space_size]
 
         Ek_atoms = self.NPT_space.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
         Ek_t = self.current_system.get_kinetic_energy()
@@ -673,7 +679,9 @@ class NPT_SVR(MD):
         self.Nf_all = 3*self.n_atom - 2
         self.W_barostat = self.Nf_all * units.kB * self.T_simulation * self.tau_P**2
         if not self.sampling_parameters['sampling_initialization']:
-            self.MD_parameters['barostat_space_size'] = self.current_system.info.get('barostat_space_size')
+            tmp_barostat_space_size = self.current_system.info.get('barostat_space_size')
+            if type(tmp_barostat_space_size) == float or type(tmp_barostat_space_size) == int:
+                self.MD_parameters['barostat_space_size'] = [tmp_barostat_space_size]
 
         Ek_atoms = self.NPT_space.get_atom_kinetic_energies(self.current_system.get_velocities(), self.masses)
         Ek_t = self.current_system.get_kinetic_energy()
