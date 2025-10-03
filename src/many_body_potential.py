@@ -196,7 +196,7 @@ class ml_potential(Calculator):
                 self.log_morest.write("The current system has been added to the training set.\n")
                 self.log_morest.write("The appending_set_counter is now: "+str(self.appending_set_counter)+"\n\n")
                 self.appending_set_counter += 1
-                if self.appending_set_counter == self.appending_set_number:
+                if self.appending_set_counter >= self.appending_set_number:
                     self.log_morest.write("Start to train a new model:\n")
                     self.ml_potential = self.train_ml_potential()
                     self.appending_set_counter = 0
@@ -235,7 +235,7 @@ class ml_potential(Calculator):
                 self.log_morest.write("The current system has been added to the training set.\n")
                 self.log_morest.write("The appending_set_counter is now: "+str(self.appending_set_counter)+"\n\n")
                 self.appending_set_counter += 1
-                if self.appending_set_counter == self.appending_set_number:
+                if self.appending_set_counter >= self.appending_set_number:
                     self.log_morest.write("Start to train a new model:\n")
                     self.ml_potential = self.train_ml_potential()
                     self.appending_set_counter = 0
