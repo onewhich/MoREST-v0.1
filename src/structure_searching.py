@@ -90,8 +90,8 @@ class gradient_descent(initialize_searching):
     '''
     This class implements steepest descent algorithm for structure optimization.
     '''
-    def __init__(self, morest_parameters, searching_parameters, gradient_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, \
-                 method=None, log_morest=None):
+    def __init__(self, morest_parameters, searching_parameters, gradient_parameters, method=None, molecule=None, log_file_name=None, traj_file_name=None, \
+                calculator=None, log_morest=None):
         super().__init__(morest_parameters, searching_parameters, molecule, log_file_name, traj_file_name, calculator, log_morest)
         self.method = method.upper()
         self.step_size = gradient_parameters['gradient_step_size']
@@ -233,10 +233,9 @@ class L_BFGS_descent(gradient_descent):
     '''
     Implements the L-BFGS (Limited-memory BFGS) structure optimization algorithm.
     '''
-    def __init__(self, morest_parameters, searching_parameters, gradient_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, \
-                 method='L-BFGS', log_morest=None):
-        super().__init__(morest_parameters, searching_parameters, gradient_parameters, molecule, log_file_name, traj_file_name, calculator, \
-                         method, log_morest)
+    def __init__(self, morest_parameters, searching_parameters, gradient_parameters, method='L-BFGS', molecule=None, log_file_name=None, traj_file_name=None, \
+                 calculator=None, log_morest=None):
+        super().__init__(morest_parameters, searching_parameters, gradient_parameters, method, molecule, log_file_name, traj_file_name, calculator, log_morest)
 
         self.m = gradient_parameters['lbfgs_history_step']  # Number of historical steps to store
         self.s_list = []  # List of position differences s_k
@@ -546,10 +545,9 @@ class BFGS_TS(gradient_descent):
     """
     Transition State search using full BFGS with min-mode correction (BFGS-TS).
     """
-    def __init__(self, morest_parameters, searching_parameters, gradient_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, \
-                 method='BFGS-TS', log_morest=None):
-        super().__init__(morest_parameters, searching_parameters, gradient_parameters, molecule, log_file_name, traj_file_name, calculator, \
-                         method, log_morest)
+    def __init__(self, morest_parameters, searching_parameters, gradient_parameters, method='BFGS-TS', molecule=None, log_file_name=None, traj_file_name=None, \
+                 calculator=None, log_morest=None):
+        super().__init__(morest_parameters, searching_parameters, gradient_parameters, method, molecule, log_file_name, traj_file_name, calculator, log_morest)
         self.I = np.eye(3 * self.n_atom)
         self.H_k = self.I.copy()
 
@@ -618,10 +616,9 @@ class L_BFGS_TS(gradient_descent):
     """
     Limited-memory BFGS for Transition State search (L-BFGS-TS).
     """
-    def __init__(self, morest_parameters, searching_parameters, gradient_parameters, molecule=None, log_file_name=None, traj_file_name=None, calculator=None, \
-                 method='L-BFGS-TS', log_morest=None):
-        super().__init__(morest_parameters, searching_parameters, gradient_parameters, molecule, log_file_name, traj_file_name, calculator, \
-                         method, log_morest)
+    def __init__(self, morest_parameters, searching_parameters, gradient_parameters, method='L-BFGS-TS', molecule=None, log_file_name=None, traj_file_name=None, \
+                 calculator=None, log_morest=None):
+        super().__init__(morest_parameters, searching_parameters, gradient_parameters, method, molecule, log_file_name, traj_file_name, calculator, log_morest)
         self.history_s = []
         self.history_y = []
         self.m = gradient_parameters['lbfgs_history_step']  # memory size
