@@ -34,7 +34,7 @@ class initialize_scattering(initialize_calculator):
             self.current_traj = []
             self.current_step = 0
             try:
-                self.ml_calculator.get_current_step(self.current_step)
+                self.ml_calculator.set_current_step(self.current_step)
             except:
                 pass
             self.current_system = self.get_current_structure()
@@ -219,7 +219,7 @@ class initialize_scattering(initialize_calculator):
         self.current_potential_energy = next_potential_energy
             
         try:
-            self.ml_calculator.get_current_step(self.current_step)
+            self.ml_calculator.set_current_step(self.current_step)
         except:
             pass
         

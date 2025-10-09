@@ -246,8 +246,14 @@ class ml_potential(Calculator):
                 self.potential_energy = potential_energy
                 self.forces = forces
         return self.potential_energy, self.forces
-    
-    def get_current_step(self, current_step):
+
+    def get_appending_set_counter(self):
+        return self.appending_set_counter
+
+    def set_appending_set_counter(self, counter):
+        self.appending_set_counter = counter
+
+    def set_current_step(self, current_step):
         self.current_step = current_step
 
     @staticmethod

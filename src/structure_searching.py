@@ -21,7 +21,7 @@ class initialize_searching(initialize_calculator):
         if self.searching_parameters['searching_initialization']:
             self.current_step = 0
             try:
-                self.ml_calculator.get_current_step(self.current_step)
+                self.ml_calculator.set_current_step(self.current_step)
             except:
                 pass
             self.current_system = self.get_current_structure(molecule)
@@ -33,7 +33,7 @@ class initialize_searching(initialize_calculator):
                 self.current_traj = read_xyz_traj(self.traj_file_name)
                 self.current_step = len(self.current_traj) - 1
                 try:
-                    self.ml_calculator.get_current_step(self.current_step)
+                    self.ml_calculator.set_current_step(self.current_step)
                 except:
                     pass
                 self.current_system = self.get_current_structure()
@@ -42,7 +42,7 @@ class initialize_searching(initialize_calculator):
             except:
                 self.current_step = 0
                 try:
-                    self.ml_calculator.get_current_step(self.current_step)
+                    self.ml_calculator.set_current_step(self.current_step)
                 except:
                     pass
                 self.current_system = self.get_current_structure(molecule)
@@ -202,7 +202,7 @@ class gradient_descent(initialize_searching):
         self.potential_energy_list.append(self.current_potential_energy)
 
         try:
-            self.ml_calculator.get_current_step(self.current_step)
+            self.ml_calculator.set_current_step(self.current_step)
         except:
             pass
         
@@ -302,7 +302,7 @@ class L_BFGS_descent(gradient_descent):
         self.potential_energy_list.append(self.current_potential_energy)
 
         try:
-            self.ml_calculator.get_current_step(self.current_step)
+            self.ml_calculator.set_current_step(self.current_step)
         except:
             pass
 
@@ -423,7 +423,7 @@ class searching_velocity_Verlet(initialize_searching):
         clean_translation(self.current_system)
             
         try:
-            self.ml_calculator.get_current_step(self.current_step)
+            self.ml_calculator.set_current_step(self.current_step)
         except:
             pass
         
@@ -599,7 +599,7 @@ class BFGS_TS(gradient_descent):
         self.potential_energy_list.append(self.current_potential_energy)
 
         try:
-            self.ml_calculator.get_current_step(self.current_step)
+            self.ml_calculator.set_current_step(self.current_step)
         except:
             pass
 
@@ -701,7 +701,7 @@ class L_BFGS_TS(gradient_descent):
         self.potential_energy_list.append(self.current_potential_energy)
 
         try:
-            self.ml_calculator.get_current_step(self.current_step)
+            self.ml_calculator.set_current_step(self.current_step)
         except:
             pass
 
@@ -819,7 +819,7 @@ class dimer(initialize_searching):
         self.current_step += 1
         
         try:
-            self.ml_calculator.get_current_step(self.current_step)
+            self.ml_calculator.set_current_step(self.current_step)
         except:
             pass
         

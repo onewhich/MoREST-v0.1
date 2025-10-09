@@ -17,7 +17,7 @@ class initialize_sampling(initialize_calculator):
         if self.sampling_parameters['sampling_initialization']:
             self.current_step = 0
             try:
-                self.ml_calculator.get_current_step(self.current_step)
+                self.ml_calculator.set_current_step(self.current_step)
             except:
                 pass
             self.current_system = self.get_current_structure(molecule)
@@ -27,7 +27,7 @@ class initialize_sampling(initialize_calculator):
                 self.current_traj = read_xyz_traj(traj_file_name)
                 self.current_step = (len(self.current_traj) - 1) * self.sampling_parameters['sampling_traj_interval']
                 try:
-                    self.ml_calculator.get_current_step(self.current_step)
+                    self.ml_calculator.set_current_step(self.current_step)
                 except:
                     pass
                 self.current_system = self.get_current_structure() #TODO: need to read current step and system from MoREST.str_new instead of MoREST_traj.xyz
@@ -35,7 +35,7 @@ class initialize_sampling(initialize_calculator):
             except:
                 self.current_step = 0
                 try:
-                    self.ml_calculator.get_current_step(self.current_step)
+                    self.ml_calculator.set_current_step(self.current_step)
                 except:
                     pass
                 self.current_system = self.get_current_structure(molecule)
@@ -239,7 +239,7 @@ class MD(initialize_sampling):
         self.current_potential_energy = next_potential_energy
             
         try:
-            self.ml_calculator.get_current_step(self.current_step)
+            self.ml_calculator.set_current_step(self.current_step)
         except:
             pass
 
@@ -505,7 +505,7 @@ class RPMD(initialize_sampling):
             self.clean_translation_centroid()
             
         try:
-            self.ml_calculator.get_current_step(self.current_step)
+            self.ml_calculator.set_current_step(self.current_step)
         except:
             pass
 
