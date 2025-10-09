@@ -212,7 +212,7 @@ class morest(initialize_modules):
                     current_potential_energy[i] = i_sampling_job.current_potential_energy
         # --------------- (REMD) run ----------------------------------------------------------------
         if self.morest_parameters['ml_active_learning']:
-            list_appending_set_counter = np.zeros(len(self.sampling_job))
+            list_appending_set_counter = np.zeros(len(self.sampling_job),dtype=int)
             sum_appending_set_counter = 0
             tmp_sum = 0
             if self.morest_parameters['wall_potential']:
