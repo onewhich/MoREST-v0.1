@@ -213,38 +213,39 @@ class morest(initialize_modules):
         # --------------- (REMD) run ----------------------------------------------------------------
         if self.morest_parameters['ml_active_learning']:
             list_appending_set_counter = np.zeros(len(self.sampling_job),dtype=int)
-            sum_appending_set_counter = 0
+            appending_set_counter = 0
+            tmp_sum_counter = 0
             tmp_previous_round_counter = 0
             if self.morest_parameters['wall_potential']:
                 while current_step[-1] <= simulation_maxsteps:
                     for i,i_sampling_job in enumerate(self.sampling_job):
-                        i_sampling_job.calculator.set_appending_set_counter(sum_appending_set_counter)
+                        i_sampling_job.calculator.set_appending_set_counter(appending_set_counter)
                         current_step[i], current_system[i] = i_sampling_job.generate_new_step(wall_potential=self.wall_potential, \
                                                                                             updated_current_system=current_system[i])
                         current_potential_energy[i] = i_sampling_job.current_potential_energy
                         list_appending_set_counter[i] = i_sampling_job.calculator.get_appending_set_counter()
-                    sum_appending_set_counter = np.sum(list_appending_set_counter)
-                    if sum_appending_set_counter < tmp_previous_round_counter:
-                        sum_appending_set_counter = 0
+                    tmp_sum_counter = np.sum(list_appending_set_counter)
+                    if tmp_sum_counter < tmp_previous_round_counter:
+                        appending_set_counter = 0
                         tmp_previous_round_counter = 0
                     else:
-                        sum_appending_set_counter += (sum_appending_set_counter - tmp_previous_round_counter)
-                        tmp_previous_round_counter = sum_appending_set_counter
+                        appending_set_counter += (tmp_sum_counter - tmp_previous_round_counter)
+                        tmp_previous_round_counter = tmp_sum_counter
                     current_step, current_system = self.re_sampling.REMD(current_step, current_potential_energy, current_system)
             else:
                 while current_step[-1] <= simulation_maxsteps:
                     for i,i_sampling_job in enumerate(self.sampling_job):
-                        i_sampling_job.calculator.set_appending_set_counter(sum_appending_set_counter)
+                        i_sampling_job.calculator.set_appending_set_counter(appending_set_counter)
                         current_step[i], current_system[i] = i_sampling_job.generate_new_step(updated_current_system=current_system[i])
                         current_potential_energy[i] = i_sampling_job.current_potential_energy
                         list_appending_set_counter[i] = i_sampling_job.calculator.get_appending_set_counter()
-                    sum_appending_set_counter = np.sum(list_appending_set_counter)
-                    if sum_appending_set_counter < tmp_previous_round_counter:
-                        sum_appending_set_counter = 0
+                    tmp_sum_counter = np.sum(list_appending_set_counter)
+                    if tmp_sum_counter < tmp_previous_round_counter:
+                        appending_set_counter = 0
                         tmp_previous_round_counter = 0
                     else:
-                        sum_appending_set_counter += (sum_appending_set_counter - tmp_previous_round_counter)
-                        tmp_previous_round_counter = sum_appending_set_counter
+                        appending_set_counter += (tmp_sum_counter - tmp_previous_round_counter)
+                        tmp_previous_round_counter = tmp_sum_counter
                     current_step, current_system = self.re_sampling.REMD(current_step, current_potential_energy, current_system)
         else:
             if self.morest_parameters['wall_potential']:
