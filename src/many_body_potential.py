@@ -194,8 +194,8 @@ class ml_potential(Calculator):
                 write_xyz_traj(self.filename_training_set, system)
                 self.training_set = read_xyz_traj(self.filename_training_set)
                 self.log_morest.write("The current system has been added to the training set.\n")
-                self.log_morest.write("The appending_set_counter is now: "+str(self.appending_set_counter)+"\n\n")
                 self.appending_set_counter += 1
+                self.log_morest.write("The appending_set_counter is now: "+str(self.appending_set_counter)+"\n\n")
                 if self.appending_set_counter >= self.appending_set_number:
                     self.log_morest.write("Start to train a new model:\n")
                     self.ml_potential = self.train_ml_potential()
@@ -233,8 +233,8 @@ class ml_potential(Calculator):
                 write_xyz_traj(self.filename_training_set, system)
                 self.training_set = read_xyz_traj(self.filename_training_set)
                 self.log_morest.write("The current system has been added to the training set.\n")
-                self.log_morest.write("The appending_set_counter is now: "+str(self.appending_set_counter)+"\n\n")
                 self.appending_set_counter += 1
+                self.log_morest.write("The appending_set_counter is now: "+str(self.appending_set_counter)+"\n\n")
                 if self.appending_set_counter >= self.appending_set_number:
                     self.log_morest.write("Start to train a new model:\n")
                     self.ml_potential = self.train_ml_potential()
