@@ -229,8 +229,8 @@ class morest(initialize_modules):
                         appending_set_counter = 0
                         tmp_previous_round_counter = 0
                     else:
+                        tmp_previous_round_counter = appending_set_counter * len(self.sampling_job)
                         appending_set_counter += (tmp_sum_counter - tmp_previous_round_counter)
-                        tmp_previous_round_counter = tmp_sum_counter
                     current_step, current_system = self.re_sampling.REMD(current_step, current_potential_energy, current_system)
             else:
                 while current_step[-1] <= simulation_maxsteps:
@@ -244,8 +244,8 @@ class morest(initialize_modules):
                         appending_set_counter = 0
                         tmp_previous_round_counter = 0
                     else:
+                        tmp_previous_round_counter = appending_set_counter * len(self.sampling_job)
                         appending_set_counter += (tmp_sum_counter - tmp_previous_round_counter)
-                        tmp_previous_round_counter = tmp_sum_counter
                     current_step, current_system = self.re_sampling.REMD(current_step, current_potential_energy, current_system)
         else:
             if self.morest_parameters['wall_potential']:
