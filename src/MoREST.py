@@ -239,11 +239,12 @@ class morest(initialize_modules):
                         current_potential_energy[i] = i_sampling_job.current_potential_energy
                         list_appending_set_counter[i] = i_sampling_job.calculator.get_appending_set_counter()
                     sum_appending_set_counter = np.sum(list_appending_set_counter)
-                    if sum_appending_set_counter < tmp_sum:
+                    if sum_appending_set_counter < tmp_previous_round_counter:
                         sum_appending_set_counter = 0
-                        tmp_sum = 0
+                        tmp_previous_round_counter = 0
                     else:
-                        tmp_sum = sum_appending_set_counter
+                        sum_appending_set_counter += (sum_appending_set_counter - tmp_previous_round_counter)
+                        tmp_previous_round_counter = sum_appending_set_counter
                     current_step, current_system = self.re_sampling.REMD(current_step, current_potential_energy, current_system)
         else:
             if self.morest_parameters['wall_potential']:
