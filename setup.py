@@ -4,5 +4,5 @@ setup(
     name="MoREST",
     version="0.1",
     packages=find_packages(),
-    install_requires=["numpy","scipy","ase","tqdm","copy"],
+    install_requires=["numpy","scipy","ase","tqdm"],
 )
