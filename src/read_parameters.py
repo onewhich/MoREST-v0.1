@@ -660,6 +660,8 @@ class read_parameters:
                 self.scattering_parameters['scattering_fix_target'] = True
             elif i_parameter.split()[1].upper() == 'False'.upper():
                 self.scattering_parameters['scattering_fix_target'] = False
+            else:
+                self.scattering_parameters['scattering_fix_target_atoms'] = get_index_from_string(i_parameter.split()[1])
                 
         elif i_parameter.split()[0].upper() == 'Scattering_fix_incident'.upper():
             if i_parameter.split()[1].upper() == 'True'.upper():

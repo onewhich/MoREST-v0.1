@@ -92,7 +92,10 @@ class initialize_scattering(initialize_calculator):
         else:
             incident_point = np.array([0.0, 0.0, self.scattering_parameters['scattering_R_incident']])
         if self.scattering_parameters['scattering_fix_target']:
-            self.n_atom_target = target_molecule.get_global_number_of_atoms()
+            if 'scattering_fix_target_atoms' in self.scattering_parameters:
+                self.index_fix_target_atoms = self.scattering_parameters['scattering_fix_target_atoms']
+            else:
+                self.index_fix_target_atoms = np.arange(0, target_molecule.get_global_number_of_atoms(), dtype=int)
         # the plane including the disc is perpendicular to the vector from incident point to the coordinate origin.
         # the plane is formed with the normal vector (a,b,c) and the point (x1,y1,z1) on the plane.
         # the plane formular is a(x-x1) + b(y-y1) + c(z-z1) = 0
@@ -211,7 +214,7 @@ class initialize_scattering(initialize_calculator):
         if self.scattering_parameters['scattering_fix_target']:
             next_velocities = self.current_system.get_velocities()
             masses = self.current_system.get_masses()
-            next_velocities[0:self.n_atom_target] = clean_translation_vm(next_velocities[0:self.n_atom_target], masses)
+            next_velocities[self.index_fix_target_atoms] = clean_translation_vm(next_velocities[self.index_fix_target_atoms], masses)
             self.current_system.set_velocities(next_velocities)
         
         self.current_system.info['step'] = self.current_step
