@@ -587,6 +587,9 @@ class read_parameters:
                 self.scattering_parameters['scattering_initialization'] = False
             else:
                 raise Exception('It is not clear whether the scattering method will be initialized.')
+            
+        elif i_parameter.split()[0].upper() == 'Scattering_type'.upper():
+            self.scattering_parameters['scattering_type'] = str(i_parameter.split()[1])
                 
         elif i_parameter.split()[0].upper() == 'Scattering_pre_thermalized'.upper():
             if i_parameter.split()[1].upper() == 'True'.upper():

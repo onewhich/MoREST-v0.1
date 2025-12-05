@@ -71,15 +71,25 @@ class initialize_scattering(initialize_calculator):
         collision_energy = 0.5 * np.sum(incident_molecule.get_masses()) * scalar_translational_velocity**2
         
         # initialize incident and target molecules
-        if self.scattering_parameters['scattering_clean_rotation']:
-            clean_rotation(incident_molecule)
+        if self.scattering_parameters['scattering_type'] == 'molecule':
+            if self.scattering_parameters['scattering_clean_rotation']:
+                clean_rotation(incident_molecule)
+                clean_rotation(target_molecule)
+            clean_translation(incident_molecule)
+            reset_mass_center(incident_molecule)
+            clean_translation(target_molecule)
+            reset_mass_center(target_molecule)
+        elif self.scattering_parameters['scattering_type'] == 'surface':
+            if self.scattering_parameters['scattering_clean_rotation']:
+                clean_rotation(incident_molecule)
+            # always clean rotation and translation for target surface
             clean_rotation(target_molecule)
-        clean_translation(incident_molecule)
-        reset_mass_center(incident_molecule)
-        clean_translation(target_molecule)
-        reset_mass_center(target_molecule)
+            clean_translation(incident_molecule)
+            reset_mass_center(incident_molecule)
+            # only reset mass center for incident molecule
+            clean_translation(target_molecule)
 
-        # uniform sampling on a sphere for inciden point and on a disc for target point.
+        # uniform sampling on a sphere for inciden point and on a disc(for molecule type)/plane(for surface type) for target point.
         if not self.scattering_parameters['scattering_fix_incident']:
             # sampling spherical coordinate system (r,theta,phi), angle in radians.
             # x = r * sin(theta) * cos(phi)
@@ -96,35 +106,44 @@ class initialize_scattering(initialize_calculator):
                 self.index_fix_target_atoms = self.scattering_parameters['scattering_fix_target_atoms']
             else:
                 self.index_fix_target_atoms = np.arange(0, target_molecule.get_global_number_of_atoms(), dtype=int)
-        # the plane including the disc is perpendicular to the vector from incident point to the coordinate origin.
-        # the plane is formed with the normal vector (a,b,c) and the point (x1,y1,z1) on the plane.
-        # the plane formular is a(x-x1) + b(y-y1) + c(z-z1) = 0
-        # first generate a uniform sampling on the plane, then screen out the samples on the disc.
-        [nv_a,nv_b,nv_c] = incident_point
-        d_r = self.scattering_parameters['scattering_R_target']
-        if d_r < 0.1:
-            target_point = np.array([0.0,0.0,0.0])
-        elif nv_a > 1e-4:
-            while True:
-                [p_y,p_z] = np.random.uniform(-d_r,d_r,2)
-                p_x = -(nv_b*p_y + nv_c*p_z) / nv_a
-                target_point = np.array([p_x,p_y,p_z])
-                if np.linalg.norm(target_point) < d_r:
-                    break
-        elif nv_b > 1e-4:
-            while True:
-                [p_x,p_z] = np.random.uniform(-d_r,d_r,2)
-                p_y = -(nv_a*p_x + nv_c*p_z) / nv_b
-                target_point = np.array([p_x,p_y,p_z])
-                if np.linalg.norm(target_point) < d_r:
-                    break
-        else:
-            while True:
-                [p_x,p_y] = np.random.uniform(-d_r,d_r,2)
-                p_z = -(nv_a*p_x + nv_b*p_y) / nv_c
-                target_point = np.array([p_x,p_y,p_z])
-                if np.linalg.norm(target_point) < d_r:
-                    break
+        if self.scattering_parameters['scattering_type'] == 'molecule':
+            # the plane including the disc is perpendicular to the vector from incident point to the coordinate origin.
+            # the plane is formed with the normal vector (a,b,c) and the point (x1,y1,z1) on the plane.
+            # the plane formular is a(x-x1) + b(y-y1) + c(z-z1) = 0
+            # first generate a uniform sampling on the plane, then screen out the samples on the disc.
+            [nv_a,nv_b,nv_c] = incident_point
+            d_r = self.scattering_parameters['scattering_R_target']
+            if d_r < 0.1:
+                target_point = np.array([0.0,0.0,0.0])
+            elif nv_a > 1e-4:
+                while True:
+                    [p_y,p_z] = np.random.uniform(-d_r,d_r,2)
+                    p_x = -(nv_b*p_y + nv_c*p_z) / nv_a
+                    target_point = np.array([p_x,p_y,p_z])
+                    if np.linalg.norm(target_point) < d_r:
+                        break
+            elif nv_b > 1e-4:
+                while True:
+                    [p_x,p_z] = np.random.uniform(-d_r,d_r,2)
+                    p_y = -(nv_a*p_x + nv_c*p_z) / nv_b
+                    target_point = np.array([p_x,p_y,p_z])
+                    if np.linalg.norm(target_point) < d_r:
+                        break
+            else:
+                while True:
+                    [p_x,p_y] = np.random.uniform(-d_r,d_r,2)
+                    p_z = -(nv_a*p_x + nv_b*p_y) / nv_c
+                    target_point = np.array([p_x,p_y,p_z])
+                    if np.linalg.norm(target_point) < d_r:
+                        break
+        elif self.scattering_parameters['scattering_type'] == 'surface':
+            # the plane is parallel to the x-y plane, and z is given by self.scattering_parameters['scattering_R_target']
+            # the area of the plane if defined by the lattice vectors of target surface.
+            p_z = self.scattering_parameters['scattering_R_target']
+            lattice_vectors = target_molecule.get_cell()
+            p_u, p_v = np.random.uniform(0,1,2)
+            target_point = p_u * lattice_vectors[0] + p_v * lattice_vectors[1]
+            target_point[2] = p_z
         
         # normalized collision_vector
         collision_vector = (target_point - incident_point) / np.linalg.norm(target_point - incident_point)
