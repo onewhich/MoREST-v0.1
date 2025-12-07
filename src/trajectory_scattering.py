@@ -24,7 +24,10 @@ class initialize_scattering(initialize_calculator):
         
         if self.scattering_parameters['scattering_initialization']:
             self.scattering_log = open('MoREST_scattering.log', 'w', buffering=1)
-            self.scattering_log.write('# traj number, impact parameter (A), collision energy (eV)\n')
+            if self.scattering_parameters['scattering_type'] == 'molecule':
+                self.scattering_log.write('# traj number, impact parameter (A), collision energy (eV)\n')
+            elif self.scattering_parameters['scattering_type'] == 'surface':
+                self.scattering_log.write('# traj number, incident angle (degree), collision energy (eV)\n')
 
             i_traj = 0
             self.traj_filename = 'MoREST_scattering_traj_'+str(i_traj)+'.xyz'
@@ -91,14 +94,23 @@ class initialize_scattering(initialize_calculator):
 
         # uniform sampling on a sphere for inciden point and on a disc(for molecule type)/plane(for surface type) for target point.
         if not self.scattering_parameters['scattering_fix_incident']:
-            # sampling spherical coordinate system (r,theta,phi), angle in radians.
-            # x = r * sin(theta) * cos(phi)
-            # y = r * sin(theta) * sin(phi)
-            # z = r * cos(theta)
-            s_theta = np.random.uniform(0,np.pi)
-            s_phi = np.random.uniform(0,2*np.pi)
-            s_r = self.scattering_parameters['scattering_R_incident']
-            incident_point = np.array([s_r*np.sin(s_theta)*np.cos(s_phi), s_r*np.sin(s_theta)*np.sin(s_phi), s_r*np.cos(s_theta)])
+            if self.scattering_parameters['scattering_type'] == 'molecule':
+                # sampling spherical coordinate system (r,theta,phi), angle in radians.
+                # x = r * sin(theta) * cos(phi)
+                # y = r * sin(theta) * sin(phi)
+                # z = r * cos(theta)
+                s_theta = np.random.uniform(0,np.pi)
+                s_phi = np.random.uniform(0,2*np.pi)
+                s_r = self.scattering_parameters['scattering_R_incident']
+                incident_point = np.array([s_r*np.sin(s_theta)*np.cos(s_phi), s_r*np.sin(s_theta)*np.sin(s_phi), s_r*np.cos(s_theta)])
+            elif self.scattering_parameters['scattering_type'] == 'surface':
+                # the plane is parallel to the x-y plane, and z is given by self.scattering_parameters['scattering_R_incident']
+                # the area of the plane if defined by the lattice vectors of target surface.
+                p_z = self.scattering_parameters['scattering_R_incident']
+                lattice_vectors = target_molecule.get_cell()
+                p_u, p_v = np.random.uniform(0,1,2)
+                incident_point = p_u * lattice_vectors[0] + p_v * lattice_vectors[1]
+                incident_point[2] = p_z
         else:
             incident_point = np.array([0.0, 0.0, self.scattering_parameters['scattering_R_incident']])
         if self.scattering_parameters['scattering_fix_target']:
@@ -148,18 +160,21 @@ class initialize_scattering(initialize_calculator):
         # normalized collision_vector
         collision_vector = (target_point - incident_point) / np.linalg.norm(target_point - incident_point)
         
-        # calculate the impact parameter (ip): the distance of point (x0,y0,z0) to the collision line.
-        # the collision line is formed with the vector (m,n,p) and the online point (x1,y1,z1).
-        # the collision line formular is (x-x1)/m = (y-y1)/n = (z-z1)/p = t,
-        # where t = [m*(x0-x1)+n*(y0-y1)+p*(z0-z1)]/(m*m+n*n+p*p).
-        # and point (xf,yf,zf) is the perpendicular foot of point (x0,y0,z0) on the collision line,
-        # where xf = m*t+x1, yf = n*t+y1, zf = p*t+z1.
-        # the distance is the norm of (x0-xf,y0-yf,z0-zf).
-        # point (x0,y0,z0) is the coordinate origin point (0,0,0) here.
-        [ip_m,ip_n,ip_p] = collision_vector
-        [ip_x1,ip_y1,ip_z1] = incident_point
-        ip_t = (-ip_m*ip_x1-ip_n*ip_y1-ip_p*ip_z1)/(ip_m*ip_m+ip_n*ip_n+ip_p*ip_p)
-        impact_parameter = np.linalg.norm([ip_m*ip_t+ip_x1, ip_n*ip_t+ip_y1, ip_p*ip_t+ip_z1])
+        if self.scattering_parameters['scattering_type'] == 'molecule':
+            # calculate the impact parameter (ip): the distance of point (x0,y0,z0) to the collision line.
+            # the collision line is formed with the vector (m,n,p) and the online point (x1,y1,z1).
+            # the collision line formular is (x-x1)/m = (y-y1)/n = (z-z1)/p = t,
+            # where t = [m*(x0-x1)+n*(y0-y1)+p*(z0-z1)]/(m*m+n*n+p*p).
+            # and point (xf,yf,zf) is the perpendicular foot of point (x0,y0,z0) on the collision line,
+            # where xf = m*t+x1, yf = n*t+y1, zf = p*t+z1.
+            # the distance is the norm of (x0-xf,y0-yf,z0-zf).
+            # point (x0,y0,z0) is the coordinate origin point (0,0,0) here.
+            [ip_m,ip_n,ip_p] = collision_vector
+            [ip_x1,ip_y1,ip_z1] = incident_point
+            ip_t = (-ip_m*ip_x1-ip_n*ip_y1-ip_p*ip_z1)/(ip_m*ip_m+ip_n*ip_n+ip_p*ip_p)
+            impact_parameter = np.linalg.norm([ip_m*ip_t+ip_x1, ip_n*ip_t+ip_y1, ip_p*ip_t+ip_z1])
+        elif self.scattering_parameters['scattering_type'] == 'surface':
+            incident_angle = np.degrees(np.arccos(np.dot(collision_vector, np.array([0.0,0.0,-1.0]))/np.linalg.norm(collision_vector)))
         
         # if Scattering_E_collision is given, Scattering_V_collision will be ignored.
         # if scattering_Maxwell_Boltzmann_collision is True, scattering_E_collision and scattering_V_collision will be ignored
@@ -180,7 +195,10 @@ class initialize_scattering(initialize_calculator):
         self.scattering_system = target_molecule + incident_molecule
         #write_xyz_file('MoREST_scattering.xyz', self.scattering_system)
 
-        self.scattering_log.write(str(i_traj)+'    '+str(impact_parameter)+'    '+str(collision_energy)+'\n')
+        if self.scattering_parameters['scattering_type'] == 'molecule':
+            self.scattering_log.write(str(i_traj)+'    '+str(impact_parameter)+'    '+str(collision_energy)+'\n')
+        elif self.scattering_parameters['scattering_type'] == 'surface':
+            self.scattering_log.write(str(i_traj)+'    '+str(incident_angle)+'    '+str(collision_energy)+'\n')
 
     def generate_new_traj(self, i_traj):
         self.traj_filename = 'MoREST_scattering_traj_'+str(i_traj)+'.xyz'
