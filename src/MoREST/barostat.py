@@ -1,6 +1,6 @@
 import numpy as np
 from ase import units
-from wall_potential import repulsive_wall
+from MoREST.wall_potential import repulsive_wall
 
 class barostat_space:
     def __init__(self, barostat_parameters, current_system):

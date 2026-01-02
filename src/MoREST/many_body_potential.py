@@ -3,10 +3,10 @@ import numpy as np
 import pickle
 from copy import deepcopy
 from ase import units
-from structure_io import read_xyz_traj, write_xyz_traj
+from MoREST.structure_io import read_xyz_traj, write_xyz_traj
 import subprocess
 import os
-from collective_variable import collective_variables
+from MoREST.collective_variable import collective_variables
 from ase.calculators.calculator import Calculator, FileIOCalculator
 from ase.calculators.singlepoint import SinglePointCalculator
 from ase.atoms import Atoms

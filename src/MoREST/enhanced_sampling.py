@@ -2,7 +2,7 @@ import os
 import numpy as np
 #import scipy.constants
 from ase import units
-from structure_io import read_xyz_file, read_xyz_traj
+from MoREST.structure_io import read_xyz_file, read_xyz_traj
 
 class replica_exchange:
     '''

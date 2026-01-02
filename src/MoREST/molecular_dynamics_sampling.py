@@ -2,11 +2,11 @@
 import numpy as np
 #import sys
 #sys.path.append('..')
-from structure_io import  write_xyz_traj
+from MoREST.structure_io import  write_xyz_traj
 from ase import units
-from phase_space_sampling import MD
-from thermostat import velocity_rescaling, Berendsen_velocity_rescaling, Langevin_velocity_rescaling, stochastic_velocity_rescaling
-from barostat import barostat_space, Berendsen_volume_rescaling, Berendsen_enthalpy, Langevin_stage_1_propagate_thermostat, \
+from MoREST.phase_space_sampling import MD
+from MoREST.thermostat import velocity_rescaling, Berendsen_velocity_rescaling, Langevin_velocity_rescaling, stochastic_velocity_rescaling
+from MoREST.barostat import barostat_space, Berendsen_volume_rescaling, Berendsen_enthalpy, Langevin_stage_1_propagate_thermostat, \
                     SVR_stage_1_propagate_thermostat, SVR_stage_2_propagate_momenta_eta, SVR_stage_3_propagate_position_volume, \
                     SVR_effective_enthalpy
 

@@ -1,8 +1,8 @@
 import numpy as np
 from glob import glob
-from initialize_modules import initialize_modules
-from read_parameters import read_parameters
-from collective_variable import collective_variables
+from MoREST.initialize_modules import initialize_modules
+from MoREST.read_parameters import read_parameters
+from MoREST.collective_variable import collective_variables
 
 
 class morest(initialize_modules):

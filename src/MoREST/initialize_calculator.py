@@ -1,4 +1,4 @@
-from many_body_potential import ml_potential, on_the_fly, molpro_calculator
+from MoREST.many_body_potential import ml_potential, on_the_fly, molpro_calculator
 
 class initialize_calculator:
     def __init__(self, morest_parameters, calculator=None, log_morest=None):

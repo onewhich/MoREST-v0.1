@@ -1,5 +1,5 @@
-from structure_io import write_xyz_traj
-from trajectory_scattering import initialize_scattering
+from MoREST.structure_io import write_xyz_traj
+from MoREST.trajectory_scattering import initialize_scattering
 
 class scattering_velocity_Verlet(initialize_scattering):
     '''

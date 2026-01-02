@@ -1,7 +1,7 @@
 import numpy as np
-from structure_io import write_xyz_file, write_xyz_traj
-from phase_space_sampling import RPMD_normal_mode
-from thermostat import velocity_rescaling, Berendsen_velocity_rescaling, Langevin_velocity_rescaling, stochastic_velocity_rescaling
+from MoREST.structure_io import write_xyz_file, write_xyz_traj
+from MoREST.phase_space_sampling import RPMD_normal_mode
+from MoREST.thermostat import velocity_rescaling, Berendsen_velocity_rescaling, Langevin_velocity_rescaling, stochastic_velocity_rescaling
 from ase import units
 
 class RP_NVE_VV_normal_mode(RPMD_normal_mode):

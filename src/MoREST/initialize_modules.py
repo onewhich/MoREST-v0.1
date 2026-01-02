@@ -1,14 +1,14 @@
 import os
 from glob import glob
 import numpy as np
-from molecular_dynamics_sampling import NVE_VV, NVK_VR, NVT_Berendsen, NVT_Langevin, NVT_SVR, NPH_SVR, NPT_Berendsen, NPT_Langevin, NPT_SVR
-from path_integral_MD_sampling import RP_NVE_VV, RP_NVK_VR, RP_NVT_Berendsen, RP_NVT_Langevin, RP_NVT_SVR
-from path_integral_MD_sampling_normal_mode import RP_NVE_VV_normal_mode, RP_NVK_VR_normal_mode, RP_NVT_Berendsen_normal_mode, RP_NVT_Langevin_normal_mode, RP_NVT_SVR_normal_mode
-from molecular_dynamics_scattering import scattering_velocity_Verlet, scattering_Suzuki_Yoshida_4th, scattering_Runge_Kutta_4th, scattering_Langevin_dynamics
-from molecule_rovibrating import rovibrating_velocity_Verlet, rovibrating_Suzuki_Yoshida_4th, rovibrating_Runge_Kutta_4th
-from structure_searching import gradient_descent, L_BFGS_descent, scipy_L_BFGS_B_descent, FIRE_velocity_Verlet, BFGS_TS, L_BFGS_TS, dimer, GAD_velocity_Verlet
-from enhanced_sampling import replica_exchange, integrated_tempering_sampling
-from wall_potential import repulsive_wall
+from MoREST.molecular_dynamics_sampling import NVE_VV, NVK_VR, NVT_Berendsen, NVT_Langevin, NVT_SVR, NPH_SVR, NPT_Berendsen, NPT_Langevin, NPT_SVR
+from MoREST.path_integral_MD_sampling import RP_NVE_VV, RP_NVK_VR, RP_NVT_Berendsen, RP_NVT_Langevin, RP_NVT_SVR
+from MoREST.path_integral_MD_sampling_normal_mode import RP_NVE_VV_normal_mode, RP_NVK_VR_normal_mode, RP_NVT_Berendsen_normal_mode, RP_NVT_Langevin_normal_mode, RP_NVT_SVR_normal_mode
+from MoREST.molecular_dynamics_scattering import scattering_velocity_Verlet, scattering_Suzuki_Yoshida_4th, scattering_Runge_Kutta_4th, scattering_Langevin_dynamics
+from MoREST.molecule_rovibrating import rovibrating_velocity_Verlet, rovibrating_Suzuki_Yoshida_4th, rovibrating_Runge_Kutta_4th
+from MoREST.structure_searching import gradient_descent, L_BFGS_descent, scipy_L_BFGS_B_descent, FIRE_velocity_Verlet, BFGS_TS, L_BFGS_TS, dimer, GAD_velocity_Verlet
+from MoREST.enhanced_sampling import replica_exchange, integrated_tempering_sampling
+from MoREST.wall_potential import repulsive_wall
             
 class initialize_modules:
     def __init__(self, morest_parameters, calculator, log_morest):
