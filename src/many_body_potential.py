@@ -6,7 +6,6 @@ from ase import units
 from structure_io import read_xyz_traj, write_xyz_traj
 import subprocess
 import os
-import math
 from collective_variable import collective_variables
 from ase.calculators.calculator import Calculator, FileIOCalculator
 from ase.calculators.singlepoint import SinglePointCalculator
@@ -264,13 +263,13 @@ class ml_potential(Calculator):
         N = 0
         #print(true, len(true))
         for i in range(len(true)):
-            if(math.isnan(true[i])):
+            if(np.isnan(true[i])):
                 continue
-            if(math.isnan(pred[i])):
+            if(np.isnan(pred[i])):
                 continue
             RMSE_value += (pred[i] - true[i]) ** 2
             N += 1
-        RMSE_value = math.sqrt(RMSE_value/N)
+        RMSE_value = np.sqrt(RMSE_value/N)
         return RMSE_value
 
     def train_ml_potential(self):

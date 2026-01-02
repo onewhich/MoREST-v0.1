@@ -1,3 +1,0 @@
-[submodule "src/MoREAT"]
-	path = src/MoREAT
-	url = https://github.com/onewhich/molecular-reaction-analysis-toolkit.git
