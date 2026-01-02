@@ -10,7 +10,7 @@ from collective_variable import collective_variables
 from ase.calculators.calculator import Calculator, FileIOCalculator
 from ase.calculators.singlepoint import SinglePointCalculator
 from ase.atoms import Atoms
-from MoREAT.src.representation import generate_representation
+from MoREAT.representation import generate_representation
 from sklearn.gaussian_process import GaussianProcessRegressor, kernels
 
 

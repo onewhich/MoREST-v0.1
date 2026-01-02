@@ -2,7 +2,5 @@ numpy
 scipy
 ase
 tqdm
-copy
-json (optional)
-periodictable (optional)
-dscribe (optional)
+scikit-learn
+MoREAT
