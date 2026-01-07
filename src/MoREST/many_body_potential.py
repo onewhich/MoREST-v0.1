@@ -50,6 +50,7 @@ class ml_potential(Calculator):
         self.log_morest = kwargs['log_file']
         self.if_print_uncertainty = kwargs['ml_parameters']['ml_print_uncertainty']
         self.if_fd_forces = kwargs['ml_parameters']['ml_fd_forces']
+        self.representation_name = kwargs['ml_parameters'].get('ml_representation', 'inverse_r_exp_r')
         if self.if_fd_forces:
             self.fd_displacement = kwargs['ml_parameters']['fd_displacement']
         self.if_active_learning = kwargs['ml_parameters']['ml_active_learning']
@@ -121,11 +122,22 @@ class ml_potential(Calculator):
         Calculator.calculate(self, *args, **kwargs)
         self.results['energy'], self.results['forces'] = self.get_potential_forces(self.atoms)
 
+    def _build_representation(self, system_list):
+        representation_name = str(self.representation_name).strip()
+        representation_generator = generate_representation(system_list)
+        if hasattr(representation_generator, representation_name):
+            representation_method = getattr(representation_generator, representation_name)
+        elif hasattr(representation_generator, representation_name.lower()):
+            representation_method = getattr(representation_generator, representation_name.lower())
+        else:
+            raise Exception('Unknown ML representation: '+representation_name)
+        return representation_method()
+
     def get_ml_potential(self, system_list):
         #if type(system_list) != list:
         #    raise ValueError
         #representation_list = [generate_representation.generate_Al2F2_representation(i_system) for i_system in system_list]
-        representation_list = generate_representation(system_list).inverse_r_exp_r()
+        representation_list = self._build_representation(system_list)
         if self.additional_features == None:
             representation_list = representation_list
         else:
@@ -277,7 +289,7 @@ class ml_potential(Calculator):
         #self.log_morest.write("Model is training.\n")
         if len(self.training_set) < 1:
             raise Exception('The training set has no system.')
-        x_train = generate_representation(self.training_set).inverse_r_exp_r()
+        x_train = self._build_representation(self.training_set)
         if self.additional_features == None:
             x_train = x_train
         else:
@@ -813,5 +825,4 @@ class molpro_calculator:
                 return energy * units.Hartree, np.array(force) * (units.Hartree/units.Bohr) * -1
             else:
                 return energy * units.Hartree
-
 

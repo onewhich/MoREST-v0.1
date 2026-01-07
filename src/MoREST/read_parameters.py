@@ -30,6 +30,7 @@ class read_parameters:
         self.morest_parameters['morest_initialization'] = False
         self.morest_parameters['morest_save_parameters_file'] = False
         self.morest_parameters['morest_load_parameters_file'] = False
+        self.morest_parameters['ml_representation'] = 'inverse_r_exp_r'
         self.morest_parameters['ml_print_uncertainty'] = False
         self.morest_parameters['ml_fd_forces'] = True
         self.morest_parameters['fd_displacement'] = 0.0025
@@ -990,6 +991,13 @@ class read_parameters:
     ################################################################################################################
 
     def get_morest_parameters(self):
+        if self.morest_parameters['morest_load_parameters_file']:
+            try:
+                loaded_parameters = np.load('MoREST_morest_parameters.npy', allow_pickle=True).item()
+                loaded_parameters.setdefault('ml_representation', self.morest_parameters['ml_representation'])
+                self.morest_parameters.update(loaded_parameters)
+            except Exception:
+                pass
         if self.morest_parameters['morest_save_parameters_file']:
             np.save('MoREST_morest_parameters.npy', self.morest_parameters)
         if self.morest_parameters['ml_add_features_number'] == 0:
