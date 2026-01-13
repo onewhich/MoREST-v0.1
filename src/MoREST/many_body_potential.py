@@ -12,6 +12,8 @@ from ase.calculators.singlepoint import SinglePointCalculator
 from ase.atoms import Atoms
 from MoREAT.representation import generate_representation
 from sklearn.gaussian_process import GaussianProcessRegressor, kernels
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import BayesianRidge
 
 
 class on_the_fly:
@@ -29,6 +31,61 @@ class on_the_fly:
         self.potential_energy = system.get_potential_energy()
         
         return self.potential_energy, self.forces
+
+
+class ModelWithUncertainty:
+    def __init__(self, model, model_type):
+        self.model = model
+        self.model_type = model_type
+
+    def fit(self, x_train, y_train):
+        self.model.fit(x_train, y_train)
+        return self
+
+    def predict(self, x_values, return_std=False):
+        prediction = self.model.predict(x_values)
+        if not return_std:
+            return prediction
+        if self.model_type == 'rf' and hasattr(self.model, 'estimators_'):
+            tree_predictions = np.array([tree.predict(x_values) for tree in self.model.estimators_])
+            prediction_std = np.std(tree_predictions, axis=0)
+            return prediction, prediction_std
+        if self.model_type == 'bayesian_ridge' and hasattr(self.model, 'predict'):
+            prediction, prediction_std = self.model.predict(x_values, return_std=True)
+            return prediction, prediction_std
+        prediction_std = np.zeros_like(prediction)
+        return prediction, prediction_std
+
+
+class BayesianRidgeMultiOutput:
+    def __init__(self):
+        self.models = []
+
+    def fit(self, x_train, y_train):
+        if y_train.ndim == 1:
+            y_train = y_train.reshape(-1, 1)
+        self.models = []
+        for i in range(y_train.shape[1]):
+            model = BayesianRidge()
+            model.fit(x_train, y_train[:, i])
+            self.models.append(model)
+        return self
+
+    def predict(self, x_values, return_std=False):
+        predictions = []
+        stds = []
+        for model in self.models:
+            if return_std:
+                prediction, prediction_std = model.predict(x_values, return_std=True)
+                predictions.append(prediction)
+                stds.append(prediction_std)
+            else:
+                predictions.append(model.predict(x_values))
+        predictions = np.array(predictions).T
+        if not return_std:
+            return predictions
+        stds = np.array(stds).T
+        return predictions, stds
 
 class ml_potential(Calculator):
     '''
@@ -50,6 +107,7 @@ class ml_potential(Calculator):
         self.log_morest = kwargs['log_file']
         self.if_print_uncertainty = kwargs['ml_parameters']['ml_print_uncertainty']
         self.if_fd_forces = kwargs['ml_parameters']['ml_fd_forces']
+        self.ml_model_type = kwargs['ml_parameters'].get('ml_model_type', 'gpr')
         self.representation_name = kwargs['ml_parameters'].get('ml_representation', 'inverse_r_exp_r')
         if self.if_fd_forces:
             self.fd_displacement = kwargs['ml_parameters']['fd_displacement']
@@ -316,22 +374,33 @@ class ml_potential(Calculator):
             y_train = np.hstack((potential_energy_list,forces_list))
         np.savetxt('training_set_label',y_train)
 
-        gpr_kernel=kernels.Matern(nu=2.5)*kernels.DotProduct(sigma_0=10)  + kernels.WhiteKernel(noise_level=0.1, \
-                                                                            noise_level_bounds=(self.noise_level_bounds[0],self.noise_level_bounds[1]))
         self.log_morest.write("Training set:\n\tShape of feature: "+str(np.shape(x_train))+"\n")
         self.log_morest.write("\tShape of label: "+str(np.shape(y_train))+"\n")
-        gpr = GaussianProcessRegressor(kernel=gpr_kernel,normalize_y=True)
-        gpr.fit(x_train, y_train)
+        model_type = str(self.ml_model_type).strip().lower()
+        self.log_morest.write("ML model type: "+model_type+"\n")
+        if model_type == 'gpr':
+            gpr_kernel=kernels.Matern(nu=2.5)*kernels.DotProduct(sigma_0=10)  + kernels.WhiteKernel(noise_level=0.1, \
+                                                                                noise_level_bounds=(self.noise_level_bounds[0],self.noise_level_bounds[1]))
+            ml_model = GaussianProcessRegressor(kernel=gpr_kernel,normalize_y=True)
+            ml_model.fit(x_train, y_train)
+            self.log_morest.write("The trained kernel: "+str(ml_model.kernel_)+"\n")
+        elif model_type == 'rf':
+            ml_model = ModelWithUncertainty(RandomForestRegressor(n_estimators=200, random_state=0), model_type)
+            ml_model.fit(x_train, y_train)
+        elif model_type == 'bayesian_ridge':
+            ml_model = ModelWithUncertainty(BayesianRidgeMultiOutput(), model_type)
+            ml_model.fit(x_train, y_train)
+        else:
+            raise Exception('Unknown ML model type: '+model_type)
         with open(self.trained_ml_potential,'wb') as trained_model_file:
-            pickle.dump(gpr, trained_model_file, protocol=4)
-        self.log_morest.write("The trained kernel: "+str(gpr.kernel_)+"\n")
+            pickle.dump(ml_model, trained_model_file, protocol=4)
 
-        y_train_pred, y_train_pred_std = gpr.predict(x_train, return_std=True)
+        y_train_pred, y_train_pred_std = ml_model.predict(x_train, return_std=True)
         self.log_morest.write("Training RMSE: "+str(self.RMSE(y_train, y_train_pred))+"\n")
         self.log_morest.write("Training uncertainty: "+str(np.average(y_train_pred_std))+"\n")
         self.log_morest.write("Median training uncertainty: "+str(np.median(y_train_pred_std))+"\n\n")
 
-        return gpr
+        return ml_model
 
     '''
     def train_ml_model_energy(self, feature_keys, label_keys, data_train, data_valid, if_train_forces):
@@ -825,4 +894,3 @@ class molpro_calculator:
                 return energy * units.Hartree, np.array(force) * (units.Hartree/units.Bohr) * -1
             else:
                 return energy * units.Hartree
-

@@ -31,6 +31,7 @@ class read_parameters:
         self.morest_parameters['morest_save_parameters_file'] = False
         self.morest_parameters['morest_load_parameters_file'] = False
         self.morest_parameters['ml_representation'] = 'inverse_r_exp_r'
+        self.morest_parameters['ml_model_type'] = 'gpr'
         self.morest_parameters['ml_print_uncertainty'] = False
         self.morest_parameters['ml_fd_forces'] = True
         self.morest_parameters['fd_displacement'] = 0.0025
@@ -182,6 +183,9 @@ class read_parameters:
 
             elif i_parameter.split()[0].upper() == 'ML_representation'.upper():
                 self.morest_parameters['ml_representation'] = str(i_parameter.split()[1])
+
+            elif i_parameter.split()[0].upper() == 'ML_model_type'.upper():
+                self.morest_parameters['ml_model_type'] = str(i_parameter.split()[1])
 
             elif i_parameter.split()[0].upper() == 'ML_add_features_number'.upper():
                 self.morest_parameters['ml_add_features_number'] = int(i_parameter.split()[1])
