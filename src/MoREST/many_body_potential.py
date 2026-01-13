@@ -46,7 +46,7 @@ class ModelWithUncertainty:
         prediction = self.model.predict(x_values)
         if not return_std:
             return prediction
-        if self.model_type == 'rf' and hasattr(self.model, 'estimators_'):
+        if self.model_type == 'rfr' and hasattr(self.model, 'estimators_'):
             tree_predictions = np.array([tree.predict(x_values) for tree in self.model.estimators_])
             prediction_std = np.std(tree_predictions, axis=0)
             return prediction, prediction_std
@@ -384,7 +384,7 @@ class ml_potential(Calculator):
             ml_model = GaussianProcessRegressor(kernel=gpr_kernel,normalize_y=True)
             ml_model.fit(x_train, y_train)
             self.log_morest.write("The trained kernel: "+str(ml_model.kernel_)+"\n")
-        elif model_type == 'rf':
+        elif model_type == 'rfr':
             ml_model = ModelWithUncertainty(RandomForestRegressor(n_estimators=200, random_state=0), model_type)
             ml_model.fit(x_train, y_train)
         elif model_type == 'bayesian_ridge':
