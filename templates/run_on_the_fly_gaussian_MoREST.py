@@ -1,4 +1,4 @@
-from MoREST import morest
+from MoREST.main import morest
 from ase.calculators.gaussian import Gaussian
 
 cpu='0-39'

@@ -1,5 +1,5 @@
-from MoREST import morest
-from many_body_potential import Molpro
+from MoREST.main import morest
+from MoREST.many_body_potential import Molpro
 
 molpro_dir = "/home/wang/software/molpro/bin/molpro"
 ntasks = 1

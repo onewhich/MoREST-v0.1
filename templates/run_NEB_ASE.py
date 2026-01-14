@@ -1,10 +1,10 @@
 # including active learning
 
-from read_parameters import read_parameters
-from many_body_potential import Molpro
-from initialize_calculator import initialize_calculator
-from structure_io import read_xyz_file
-from ase.neb import NEB
+from MoREST.read_parameters import read_parameters
+from MoREST.many_body_potential import Molpro
+from MoREST.initialize_calculator import initialize_calculator
+from MoREST.structure_io import read_xyz_file
+from ase.mep.neb import NEB
 from ase.optimize import MDMin
 
 molpro_dir = "/home/wang/software/molpro/bin/molpro"

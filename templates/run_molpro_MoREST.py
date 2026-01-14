@@ -1,4 +1,4 @@
-from MoREST import morest
+from MoREST.main import morest
 
 molpro_para_dict={}
 molpro_para_dict['molpro_dir'] = "/home/wang/software/molpro/bin/molpro"
