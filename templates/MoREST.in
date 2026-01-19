@@ -10,11 +10,21 @@ Many_body_potential               ML_potential  # ML_potential: machine learning
 ML_potential_model                ../../../fhicloud-wang/Al2F2/gpr_AlF_dimer_potential_from_test11 # It can be not offered when active learning is used.
 ML_training_set                   training_set.xyz # the xyz trajectory for the training set.
 ML_model_type                     GPR # GPR: Gaussian Process Regressor; RFR: Random Forest Regressor; bayesian_ridge: Bayesian Ridge
-ML_representation                 inverse_r_exp_r # Available representations: Cartesian, 
-                                                  #                            inverse_r_exp_r, inverse_r_exp_r_unsorted, inverse_r, inverse_r_unsorted, 
-                                                  #                            distance_matrix, adjacency_matrix, adjacency_matrix_full, adjacency_matrix_symmetric_expansion, 
-                                                  #                            PIP_global, MBTR, SOAP, MACE,
-                                                  #                            generate_Al2F2_representation
+ML_representation                 inverse_r_exp_r # Available representations: 
+                                                  #   Cartesian True: True=center coordinates to origin; False=use absolute coordinates
+                                                  #   inverse_r_exp_r True: True=normalized distances (relative to covalent radius); False=absolute distances
+                                                  #   inverse_r_exp_r_unsorted True: True=normalized distances; False=absolute distances (unsorted, canonical pair order)
+                                                  #   inverse_r True: True=normalized distances; False=absolute distances (inverse distance only, grouped)
+                                                  #   inverse_r_unsorted True: True=normalized distances; False=absolute distances (inverse distance only, unsorted)
+                                                  #   distance_matrix False True 1.5: relative_r False=absolute, True=normalized; bond_length_cutoff True=apply cutoff, False=no cutoff; cutoff_factor=1.5 (threshold multiplier for bond cutoff)
+                                                  #   adjacency_matrix 1.6: cutoff_factor=1.6 (bond connectivity threshold, ratio to covalent radius)
+                                                  #   adjacency_matrix_full 1.6: cutoff_factor=1.6 (full adjacency matrix including diagonal, ratio to covalent radius)
+                                                  #   adjacency_matrix_symmetric_expansion 1.6: cutoff_factor=1.6 (adjacency with exchange symmetry for identical atoms)
+                                                  #   PIP_global 6 1.058 True: maximum_total_degree=6 (max polynomial degree); morse_lambda=1.058 Å (Morse parameter); include_constant_term=True (include constant term in PIP)
+                                                  #   MBTR: species k grid periodic normalize (all optional, requires DScribe library)
+                                                  #   SOAP 5.0 8 6 1.0 False False: rcut=5.0 Å (cutoff radius); nmax=8 (radial basis functions); lmax=6 (angular momentum); sigma=1.0 (Gaussian width); periodic=False; sparse=False (requires DScribe)
+                                                  #   MACE model_path cpu float32: model_path=path to pretrained MACE model; device=cpu/cuda; dtype=float32/float64
+                                                  #   generate_Al2F2_representation inverse_r_exp_r_relative: inverse_r_exp_r (absolute); inverse_r_exp_r_relative (normalized by equilibrium distances)
 #ML_add_features_number            2 # The number of additional features (setted in ML_additional_features) which will be added into the representation.
 #ML_additional_features            inverse_r_exp_r 1,2 3,4 inverse_r_exp_r 1,4 2,3 # min_distance: calculte the minimum distance between atoms / atom groups (group1: 1,2; group2: 3,4; group3: 1,4; group4: 2,3). max_distance: caluclate the maximum distance between atoms / atom groups.
 ML_features_min_number            2 # The number of features calculated for checking the minimum value in ML_additional_features_min
