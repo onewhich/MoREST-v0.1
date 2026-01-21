@@ -98,16 +98,10 @@ class BayesianRidgeMultiOutput:
         self.models = []
         self.n_jobs = n_jobs
 
-    def __setstate__(self, state):
-        self.__dict__.update(state)
-        if not hasattr(self, "n_jobs"):
-            self.n_jobs = -1
-
     def fit(self, x_train, y_train):
         if y_train.ndim == 1:
             y_train = y_train.reshape(-1, 1)
-        n_jobs = getattr(self, "n_jobs", -1)
-        self.models = Parallel(n_jobs=n_jobs)(
+        self.models = Parallel(n_jobs=self.n_jobs)(
             delayed(_fit_bayesian_ridge)(x_train, y_train[:, i])
             for i in range(y_train.shape[1])
         )
@@ -115,8 +109,7 @@ class BayesianRidgeMultiOutput:
 
     def predict(self, x_values, return_std=False):
         if return_std:
-            n_jobs = getattr(self, "n_jobs", -1)
-            results = Parallel(n_jobs=n_jobs)(
+            results = Parallel(n_jobs=self.n_jobs)(
                 delayed(_predict_bayesian_ridge)(model, x_values, True)
                 for model in self.models
             )
@@ -124,8 +117,7 @@ class BayesianRidgeMultiOutput:
             predictions = np.array(predictions).T
             stds = np.array(stds).T
             return predictions, stds
-        n_jobs = getattr(self, "n_jobs", -1)
-        predictions = Parallel(n_jobs=n_jobs)(
+        predictions = Parallel(n_jobs=self.n_jobs)(
             delayed(_predict_bayesian_ridge)(model, x_values, False)
             for model in self.models
         )
