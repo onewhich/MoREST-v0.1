@@ -14,6 +14,37 @@ from MoREAT.representation import generate_representation
 from sklearn.gaussian_process import GaussianProcessRegressor, kernels
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import BayesianRidge
+from joblib import Parallel, delayed
+
+
+def _get_n_jobs():
+    try:
+        return int(os.environ.get("MOREST_N_JOBS", "-1"))
+    except ValueError:
+        return -1
+
+
+def _fit_bayesian_ridge(x_train, y_train_column):
+    model = BayesianRidge()
+    model.fit(x_train, y_train_column)
+    return model
+
+
+def _predict_bayesian_ridge(model, x_values, return_std):
+    if return_std:
+        return model.predict(x_values, return_std=True)
+    return model.predict(x_values)
+
+
+def _predict_tree(tree, x_values):
+    return tree.predict(x_values)
+
+
+def _build_gaussian_process(kernel, n_jobs):
+    try:
+        return GaussianProcessRegressor(kernel=kernel, normalize_y=True, n_jobs=n_jobs)
+    except TypeError:
+        return GaussianProcessRegressor(kernel=kernel, normalize_y=True)
 
 
 class on_the_fly:
@@ -34,9 +65,10 @@ class on_the_fly:
 
 
 class ModelWithUncertainty:
-    def __init__(self, model, model_type):
+    def __init__(self, model, model_type, n_jobs=-1):
         self.model = model
         self.model_type = model_type
+        self.n_jobs = n_jobs
 
     def fit(self, x_train, y_train):
         self.model.fit(x_train, y_train)
@@ -47,7 +79,11 @@ class ModelWithUncertainty:
         if not return_std:
             return prediction
         if self.model_type == 'rfr' and hasattr(self.model, 'estimators_'):
-            tree_predictions = np.array([tree.predict(x_values) for tree in self.model.estimators_])
+            tree_predictions = Parallel(n_jobs=self.n_jobs)(
+                delayed(_predict_tree)(tree, x_values)
+                for tree in self.model.estimators_
+            )
+            tree_predictions = np.array(tree_predictions)
             prediction_std = np.std(tree_predictions, axis=0)
             return prediction, prediction_std
         if self.model_type == 'bayesian_ridge' and hasattr(self.model, 'predict'):
@@ -58,34 +94,45 @@ class ModelWithUncertainty:
 
 
 class BayesianRidgeMultiOutput:
-    def __init__(self):
+    def __init__(self, n_jobs=-1):
         self.models = []
+        self.n_jobs = n_jobs
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        if not hasattr(self, "n_jobs"):
+            self.n_jobs = -1
 
     def fit(self, x_train, y_train):
         if y_train.ndim == 1:
             y_train = y_train.reshape(-1, 1)
-        self.models = []
-        for i in range(y_train.shape[1]):
-            model = BayesianRidge()
-            model.fit(x_train, y_train[:, i])
-            self.models.append(model)
+        n_jobs = getattr(self, "n_jobs", -1)
+        self.models = Parallel(n_jobs=n_jobs)(
+            delayed(_fit_bayesian_ridge)(x_train, y_train[:, i])
+            for i in range(y_train.shape[1])
+        )
         return self
 
     def predict(self, x_values, return_std=False):
-        predictions = []
-        stds = []
-        for model in self.models:
-            if return_std:
-                prediction, prediction_std = model.predict(x_values, return_std=True)
-                predictions.append(prediction)
-                stds.append(prediction_std)
-            else:
-                predictions.append(model.predict(x_values))
+        if return_std:
+            n_jobs = getattr(self, "n_jobs", -1)
+            results = Parallel(n_jobs=n_jobs)(
+                delayed(_predict_bayesian_ridge)(model, x_values, True)
+                for model in self.models
+            )
+            predictions, stds = zip(*results)
+            predictions = np.array(predictions).T
+            stds = np.array(stds).T
+            return predictions, stds
+        n_jobs = getattr(self, "n_jobs", -1)
+        predictions = Parallel(n_jobs=n_jobs)(
+            delayed(_predict_bayesian_ridge)(model, x_values, False)
+            for model in self.models
+        )
         predictions = np.array(predictions).T
         if not return_std:
             return predictions
-        stds = np.array(stds).T
-        return predictions, stds
+        return predictions, None
 
 class ml_potential(Calculator):
     '''
@@ -381,14 +428,21 @@ class ml_potential(Calculator):
         if model_type == 'gpr':
             gpr_kernel=kernels.Matern(nu=2.5)*kernels.DotProduct(sigma_0=10)  + kernels.WhiteKernel(noise_level=0.1, \
                                                                                 noise_level_bounds=(self.noise_level_bounds[0],self.noise_level_bounds[1]))
-            ml_model = GaussianProcessRegressor(kernel=gpr_kernel,normalize_y=True)
+            n_jobs = _get_n_jobs()
+            ml_model = _build_gaussian_process(gpr_kernel, n_jobs)
             ml_model.fit(x_train, y_train)
             self.log_morest.write("The trained kernel: "+str(ml_model.kernel_)+"\n")
         elif model_type == 'rfr':
-            ml_model = ModelWithUncertainty(RandomForestRegressor(n_estimators=200, random_state=0), model_type)
+            n_jobs = _get_n_jobs()
+            ml_model = ModelWithUncertainty(
+                RandomForestRegressor(n_estimators=200, random_state=0, n_jobs=n_jobs),
+                model_type,
+                n_jobs=n_jobs,
+            )
             ml_model.fit(x_train, y_train)
         elif model_type == 'bayesian_ridge':
-            ml_model = ModelWithUncertainty(BayesianRidgeMultiOutput(), model_type)
+            n_jobs = _get_n_jobs()
+            ml_model = ModelWithUncertainty(BayesianRidgeMultiOutput(n_jobs=n_jobs), model_type, n_jobs=n_jobs)
             ml_model.fit(x_train, y_train)
         else:
             raise Exception('Unknown ML model type: '+model_type)
