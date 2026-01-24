@@ -113,7 +113,7 @@ class BayesianRidgeMultiOutput:
                 delayed(_predict_bayesian_ridge)(model, x_values, True)
                 for model in self.models
             )
-            predictions, stds = zip(*results)
+            predictions, stds = zip(*results) if results else ([], [])
             predictions = np.array(predictions).T
             stds = np.array(stds).T
             return predictions, stds
@@ -434,7 +434,7 @@ class ml_potential(Calculator):
             ml_model.fit(x_train, y_train)
         elif model_type == 'bayesian_ridge':
             n_jobs = _get_n_jobs()
-            ml_model = ModelWithUncertainty(BayesianRidgeMultiOutput(n_jobs=n_jobs), model_type, n_jobs=n_jobs)
+            ml_model = ModelWithUncertainty(BayesianRidgeMultiOutput(n_jobs=n_jobs), model_type)
             ml_model.fit(x_train, y_train)
         else:
             raise Exception('Unknown ML model type: '+model_type)
