@@ -11,7 +11,7 @@ Calculate the initial velocity of an incident molecule with particular vibration
 ## Machine learning potential parameters
 MoREST supports multiple ML potential backends. The parameter `ML_model_type` controls the model:
 * `gpr` (default): GaussianProcessRegressor with uncertainty.
-* `rf`: RandomForestRegressor with ensemble-based uncertainty.
+* `rfr`: RandomForestRegressor with ensemble-based uncertainty.
 * `bayesian_ridge`: BayesianRidge with predictive standard deviations.
 
 ## Units in MoREST (Discarded)
