@@ -94,33 +94,32 @@ class ModelWithUncertainty:
 
 
 class BayesianRidgeMultiOutput:
-    def __init__(self, n_jobs=-1):
+    def __init__(self):
         self.models = []
-        self.n_jobs = n_jobs
 
     def fit(self, x_train, y_train):
         if y_train.ndim == 1:
             y_train = y_train.reshape(-1, 1)
-        self.models = Parallel(n_jobs=self.n_jobs)(
-            delayed(_fit_bayesian_ridge)(x_train, y_train[:, i])
+        self.models = [
+            _fit_bayesian_ridge(x_train, y_train[:, i])
             for i in range(y_train.shape[1])
-        )
+        ]
         return self
 
     def predict(self, x_values, return_std=False):
         if return_std:
-            results = Parallel(n_jobs=self.n_jobs)(
-                delayed(_predict_bayesian_ridge)(model, x_values, True)
+            results = [
+                _predict_bayesian_ridge(model, x_values, True)
                 for model in self.models
-            )
+            ]
             predictions, stds = zip(*results) if results else ([], [])
             predictions = np.array(predictions).T
             stds = np.array(stds).T
             return predictions, stds
-        predictions = Parallel(n_jobs=self.n_jobs)(
-            delayed(_predict_bayesian_ridge)(model, x_values, False)
+        predictions = [
+            _predict_bayesian_ridge(model, x_values, False)
             for model in self.models
-        )
+        ]
         predictions = np.array(predictions).T
         if not return_std:
             return predictions
@@ -433,8 +432,7 @@ class ml_potential(Calculator):
             )
             ml_model.fit(x_train, y_train)
         elif model_type == 'bayesian_ridge':
-            n_jobs = _get_n_jobs()
-            ml_model = ModelWithUncertainty(BayesianRidgeMultiOutput(n_jobs=n_jobs), model_type)
+            ml_model = ModelWithUncertainty(BayesianRidgeMultiOutput(), model_type)
             ml_model.fit(x_train, y_train)
         else:
             raise Exception('Unknown ML model type: '+model_type)
