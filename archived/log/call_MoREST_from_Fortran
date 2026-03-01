@@ -1,1 +1,0 @@
-Fortran can NOT run "os.path" code in python. Any line with "os.path" will be translated as ".False." in Fortran.

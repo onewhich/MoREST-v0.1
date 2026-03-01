@@ -1,8 +1,0 @@
-Method 1:
-This API is implemented by using CFFI python package, which transfers a python function to a C type function, and then called in Fortran as an extern C function.
-The generated dynamic link library should be compiled with the Fortran code. The path of the generated dynamic link library should be added to the environment variable before calling.
-https://www.noahbrenowitz.com/post/calling-fortran-from-python/
-
-Method 2:
-Use forpy module in Fortran
-https://github.com/ylikx/forpy
